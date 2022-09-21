@@ -1,8 +1,11 @@
 use std::collections::HashMap;
+use std::fs::File;
+use std::io::BufReader;
 use std::path::Path;
 
 use configparser::ini::{Ini, IniDefault};
 use naive_cityhash::cityhash64;
+use serde_json::Value;
 use tracing::{debug, info};
 
 use crate::InstalledBrowserProfile;
@@ -120,6 +123,32 @@ pub fn find_firefox_profiles(
             continue;
         }
 
+        let mut container_names = Vec::new();
+
+        let mut open_url_in_container_extension_installed = false;
+        let extensions_json_file = profile_dir.join("extensions.json");
+        if !extensions_json_file.exists() {
+            info!(
+                "Skipping containers for profile '{}', because it does not have extensions.json file",
+                profile_dir.display()
+            );
+        } else {
+            open_url_in_container_extension_installed = has_open_url_in_container_extension_installed(extensions_json_file.as_path());
+        }
+
+        if open_url_in_container_extension_installed {
+            let containers_json_file = profile_dir.join("containers.json");
+            if !containers_json_file.exists() {
+                info!(
+                "Skipping containers for profile '{}', because it does not have containers.json file",
+                profile_dir.display()
+            );
+            } else {
+                // container names for this profile
+                container_names = containers_json_map(containers_json_file.as_path());
+            }
+        }
+
         let name_maybe = profile_values
             .get("Name")
             .and_then(|a| a.as_ref())
@@ -127,14 +156,82 @@ pub fn find_firefox_profiles(
 
         let profile_name = name_maybe.unwrap();
 
+        // Even if profile has containers, also add a non-container option
         browser_profiles.push(InstalledBrowserProfile {
             profile_cli_arg_value: profile_name.to_string(),
+            profile_cli_container_name: None,
             profile_name: profile_name.to_string(),
             profile_icon: Some(profile_name.to_string()),
-        })
+        });
+
+        if !container_names.is_empty() {
+            for container_name in container_names {
+                browser_profiles.push(InstalledBrowserProfile {
+                    profile_cli_arg_value: profile_name.to_string(),
+                    profile_cli_container_name: Some(container_name.to_string()),
+                    profile_name: profile_name.to_string() + " " + container_name.as_str(),
+                    profile_icon: Some(profile_name.to_string()),
+                })
+            }
+        }
     }
 
     return browser_profiles;
+}
+
+// has "open-url-in-container" extension installed, which adds "ext+container" protocol support
+fn has_open_url_in_container_extension_installed(extensions_json_file_path: &Path) -> bool {
+    // Open the file in read-only mode with buffer.
+    let file = File::open(extensions_json_file_path).unwrap();
+    let reader = BufReader::new(file);
+    let v: Value = serde_json::from_reader(reader).unwrap();
+    let addons = &v["addons"];
+    let addons_arr = addons.as_array().unwrap();
+    for addon in addons_arr {
+        let addon_id = addon["id"].as_str().unwrap();
+        // https://addons.mozilla.org/en-US/firefox/addon/open-url-in-container/
+        let extension_id = "{f069aec0-43c5-4bbf-b6b4-df95c4326b98}";
+        if addon_id == extension_id {
+            let is_active = addon["active"].as_bool().unwrap();
+            return is_active;
+        }
+    }
+
+    return false;
+}
+
+fn containers_json_map(containers_json_file_path: &Path) -> Vec<String> {
+    // Open the file in read-only mode with buffer.
+    let file = File::open(containers_json_file_path).unwrap();
+    let reader = BufReader::new(file);
+    let v: Value = serde_json::from_reader(reader).unwrap();
+    let identities = &v["identities"];
+    let identities_arr = identities.as_array().unwrap();
+
+    let mut container_names: Vec<String> = Vec::new();
+
+    for identity in identities_arr {
+        let is_public = identity["public"].as_bool().unwrap();
+        if is_public {
+            let l10n_id_maybe = identity["l10nID"].as_str();
+            let mut name = "Not Determined";
+
+            if l10n_id_maybe.is_some() {
+                let l10n_id = l10n_id_maybe.unwrap();
+                name = match l10n_id {
+                    "userContextPersonal.label" => "Personal",
+                    "userContextWork.label" => "Work",
+                    "userContextBanking.label" => "Banking",
+                    "userContextShopping.label" => "Shopping",
+                    _ => "Unknown"
+                };
+            } else {
+                name = identity["name"].as_str().unwrap();
+            }
+            container_names.push(name.to_string());
+        }
+    }
+    return container_names;
 }
 
 fn hash_firefox_install_dir(ff_binary_dir: &str) -> String {

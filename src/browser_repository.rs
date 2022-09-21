@@ -265,7 +265,7 @@ impl SupportedAppRepository {
                 vec![format!("--profile-directory={}", profile_cli_arg_value)]
             },
             incognito_args: vec!["-incognito".to_string()],
-            url_transform_fn: |url| url.to_string(),
+            url_transform_fn: |profile_cli_container_name, url| url.to_string(),
             url_as_first_arg: true,
         }
     }
@@ -280,7 +280,16 @@ impl SupportedAppRepository {
                 vec!["-P".to_string(), profile_cli_arg_value.to_string()]
             },
             incognito_args: vec!["-private".to_string()],
-            url_transform_fn: |url| url.to_string(),
+            url_transform_fn: |container_name_maybe, url| {
+                return if container_name_maybe.is_some() {
+                    let container_name = container_name_maybe.unwrap();
+                    let fake_url = "ext+container:name=".to_string() + container_name;
+                    let full_url = fake_url + "&url=" + url.clone();
+                    full_url.to_string()
+                } else {
+                    url.to_string()
+                };
+            },
             url_as_first_arg: true,
         }
     }
@@ -293,7 +302,7 @@ impl SupportedAppRepository {
             restricted_domains: vec![],
             profile_args_fn: |_profile_cli_arg_value| vec![],
             incognito_args: vec![],
-            url_transform_fn: |url| url.to_string(),
+            url_transform_fn: |profile_cli_container_name, url| url.to_string(),
             url_as_first_arg: false,
         }
     }
@@ -329,7 +338,7 @@ impl SupportedAppRepository {
             restricted_domains: vec!["https://zoom.us".to_string()],
             profile_args_fn: |_profile_cli_arg_value| vec![],
             incognito_args: vec![],
-            url_transform_fn: |url| url.to_string(),
+            url_transform_fn: |profile_cli_container_name, url| url.to_string(),
             url_as_first_arg: true,
         }
     }
@@ -345,7 +354,7 @@ pub struct SupportedApp {
     >,
     profile_args_fn: fn(profile_cli_arg_value: &str) -> Vec<String>,
     incognito_args: Vec<String>,
-    url_transform_fn: fn(url: &str) -> String,
+    url_transform_fn: fn(profile_cli_container_name: Option<&String>, url: &str) -> String,
     url_as_first_arg: bool,
 }
 
@@ -375,6 +384,7 @@ impl SupportedApp {
 
         browser_profiles.push(InstalledBrowserProfile {
             profile_cli_arg_value: "".to_string(),
+            profile_cli_container_name: None,
             profile_name: "".to_string(),
             profile_icon: Some("Default".to_string()),
         });
@@ -398,8 +408,8 @@ impl SupportedApp {
         return &self.incognito_args;
     }
 
-    pub fn get_transformed_url(&self, url: &str) -> String {
-        return (self.url_transform_fn)(url);
+    pub fn get_transformed_url(&self, profile_cli_container_name: Option<&String>, url: &str) -> String {
+        return (self.url_transform_fn)(profile_cli_container_name, url);
     }
 
     pub fn is_url_as_first_arg(&self) -> bool {
@@ -472,7 +482,7 @@ impl AppConfigDir {
     }
 }
 
-fn convert_spotify_uri(url: &str) -> String {
+fn convert_spotify_uri(profile_cli_container_name: Option<&String>, url: &str) -> String {
     let unknown = "spotify:track:2QFvsZEjbketrpCgCNC9Zp".to_string();
 
     let result = Url::parse(url);

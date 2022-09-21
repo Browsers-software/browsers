@@ -89,11 +89,12 @@ impl BrowserCommon {
     fn create_command(
         &self,
         profile_cli_arg_value: &str,
+        profile_cli_container_name: Option<&String>,
         url: &str,
         incognito_mode: bool,
     ) -> Command {
         let profile_args = self.supported_app.get_profile_args(profile_cli_arg_value);
-        let app_url = self.supported_app.get_transformed_url(url);
+        let app_url = self.supported_app.get_transformed_url(profile_cli_container_name, url);
 
         // TODO: support BSD - https://doc.rust-lang.org/reference/conditional-compilation.html
         if cfg!(target_os = "macos") {
@@ -142,6 +143,7 @@ impl BrowserCommon {
 #[derive(Clone)]
 pub struct CommonBrowserProfile {
     profile_cli_arg_value: String,
+    profile_cli_container_name: Option<String>,
     profile_name: String,
     profile_icon: Option<String>,
     app: Arc<BrowserCommon>,
@@ -151,16 +153,24 @@ impl CommonBrowserProfile {
     fn new(installed_browser_profile: &InstalledBrowserProfile, app: Arc<BrowserCommon>) -> Self {
         CommonBrowserProfile {
             profile_cli_arg_value: installed_browser_profile.profile_cli_arg_value.to_string(),
+            profile_cli_container_name: installed_browser_profile.profile_cli_container_name.clone(),
             profile_name: installed_browser_profile.profile_name.to_string(),
             profile_icon: installed_browser_profile.profile_icon.clone(),
             app: app,
         }
     }
 
-    // used in configuration file to uniquely identify this app+profile
+    // used in configuration file to uniquely identify this app+profile+container
     fn get_unique_id(&self) -> String {
         let app_id = self.get_unique_app_id();
-        return app_id + "#" + self.profile_cli_arg_value.as_str();
+        let app_and_profile = app_id + "#" + self.profile_cli_arg_value.as_str();
+
+        if self.profile_cli_container_name.is_some() {
+            let container_name = self.profile_cli_container_name.as_ref().unwrap();
+            return app_and_profile + "#" + container_name.as_str();
+        }
+
+        return app_and_profile;
     }
 
     // used in configuration file to uniquely identify this app
@@ -199,7 +209,7 @@ impl CommonBrowserProfile {
     fn create_command(&self, url: &str, incognito_mode: bool) -> Command {
         return self
             .app
-            .create_command(&self.profile_cli_arg_value, url, incognito_mode);
+            .create_command(&self.profile_cli_arg_value, self.profile_cli_container_name.as_ref(), url, incognito_mode);
     }
 }
 
@@ -224,6 +234,7 @@ pub struct InstalledBrowser {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct InstalledBrowserProfile {
     profile_cli_arg_value: String,
+    profile_cli_container_name: Option<String>,
     profile_name: String,
     profile_icon: Option<String>,
 }

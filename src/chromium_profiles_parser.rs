@@ -29,6 +29,7 @@ pub fn find_chromium_profiles(
         let profile_dir_name = profile.profile_dir_name;
         browser_profiles.push(InstalledBrowserProfile {
             profile_cli_arg_value: profile_dir_name.to_string(),
+            profile_cli_container_name: None,
             profile_name: profile_name,
             profile_icon: profile_avatar_url,
         })
