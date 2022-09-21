@@ -23,7 +23,7 @@ fn main() {
         RollingConditionBasic::new().daily(),
         3,
     )
-        .unwrap();
+    .unwrap();
 
     //let file_appender = tracing_appender::rolling::daily(logs_root_dir, "browsers.log");
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);

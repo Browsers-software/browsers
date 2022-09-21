@@ -408,7 +408,11 @@ impl SupportedApp {
         return &self.incognito_args;
     }
 
-    pub fn get_transformed_url(&self, profile_cli_container_name: Option<&String>, url: &str) -> String {
+    pub fn get_transformed_url(
+        &self,
+        profile_cli_container_name: Option<&String>,
+        url: &str,
+    ) -> String {
         return (self.url_transform_fn)(profile_cli_container_name, url);
     }
 

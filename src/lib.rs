@@ -1,8 +1,8 @@
-use std::{env, thread};
 use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::process::Command;
-use std::sync::{Arc, mpsc};
+use std::sync::{mpsc, Arc};
+use std::{env, thread};
 
 use druid::Target;
 use serde::{Deserialize, Serialize};
@@ -15,8 +15,8 @@ use crate::utils::OSAppFinder;
 
 mod ui;
 
-pub mod utils;
 pub mod paths;
+pub mod utils;
 
 mod browser_repository;
 
@@ -95,7 +95,9 @@ impl BrowserCommon {
         incognito_mode: bool,
     ) -> Command {
         let profile_args = self.supported_app.get_profile_args(profile_cli_arg_value);
-        let app_url = self.supported_app.get_transformed_url(profile_cli_container_name, url);
+        let app_url = self
+            .supported_app
+            .get_transformed_url(profile_cli_container_name, url);
 
         // TODO: support BSD - https://doc.rust-lang.org/reference/conditional-compilation.html
         if cfg!(target_os = "macos") {
@@ -154,7 +156,9 @@ impl CommonBrowserProfile {
     fn new(installed_browser_profile: &InstalledBrowserProfile, app: Arc<BrowserCommon>) -> Self {
         CommonBrowserProfile {
             profile_cli_arg_value: installed_browser_profile.profile_cli_arg_value.to_string(),
-            profile_cli_container_name: installed_browser_profile.profile_cli_container_name.clone(),
+            profile_cli_container_name: installed_browser_profile
+                .profile_cli_container_name
+                .clone(),
             profile_name: installed_browser_profile.profile_name.to_string(),
             profile_icon: installed_browser_profile.profile_icon.clone(),
             app: app,
@@ -208,9 +212,12 @@ impl CommonBrowserProfile {
     }
 
     fn create_command(&self, url: &str, incognito_mode: bool) -> Command {
-        return self
-            .app
-            .create_command(&self.profile_cli_arg_value, self.profile_cli_container_name.as_ref(), url, incognito_mode);
+        return self.app.create_command(
+            &self.profile_cli_arg_value,
+            self.profile_cli_container_name.as_ref(),
+            url,
+            incognito_mode,
+        );
     }
 }
 

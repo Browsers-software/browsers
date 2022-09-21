@@ -133,7 +133,8 @@ pub fn find_firefox_profiles(
                 profile_dir.display()
             );
         } else {
-            open_url_in_container_extension_installed = has_open_url_in_container_extension_installed(extensions_json_file.as_path());
+            open_url_in_container_extension_installed =
+                has_open_url_in_container_extension_installed(extensions_json_file.as_path());
         }
 
         if open_url_in_container_extension_installed {
@@ -223,7 +224,7 @@ fn containers_json_map(containers_json_file_path: &Path) -> Vec<String> {
                     "userContextWork.label" => "Work",
                     "userContextBanking.label" => "Banking",
                     "userContextShopping.label" => "Shopping",
-                    _ => "Unknown"
+                    _ => "Unknown",
                 };
             } else {
                 name = identity["name"].as_str().unwrap();

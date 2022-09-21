@@ -6,11 +6,11 @@ use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 use tracing::info;
 
-use crate::{InstalledBrowser, paths, SupportedAppRepository};
 #[cfg(target_os = "linux")]
 use crate::linux_utils;
 #[cfg(target_os = "macos")]
 use crate::macos_utils;
+use crate::{paths, InstalledBrowser, SupportedAppRepository};
 
 #[cfg(target_os = "macos")]
 pub fn set_as_default_web_browser() -> bool {
@@ -192,7 +192,6 @@ impl OSAppFinder {
         }
     }
 }
-
 
 #[cfg(target_os = "macos")]
 pub fn get_chrome_user_dir_root() -> PathBuf {

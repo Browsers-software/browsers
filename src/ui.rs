@@ -2,11 +2,19 @@ use std::cmp;
 use std::fs::File;
 use std::io::{BufReader, Error};
 use std::path::Path;
-use std::sync::Arc;
 use std::sync::mpsc::Sender;
+use std::sync::Arc;
 
+use druid::commands::QUIT_APP;
+use druid::image::DynamicImage;
+use druid::keyboard_types::Key;
+use druid::piet::InterpolationMode;
+use druid::widget::{
+    Container, Controller, ControllerHost, CrossAxisAlignment, Either, Flex, Image, Label,
+    LineBreaking, List, MainAxisAlignment,
+};
 use druid::{
-    Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, image, LayoutCtx, LensExt,
+    image, Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, LayoutCtx, LensExt,
     LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, TextAlignment, UpdateCtx,
     WindowHandle, WindowLevel,
 };
@@ -15,15 +23,10 @@ use druid::{
     ImageBuf, KbKey, KeyEvent, Lens, PaintCtx, Point, RenderContext, Selector, Size, Target,
     Widget, WidgetExt, WindowDesc, WindowId,
 };
-use druid::commands::QUIT_APP;
-use druid::image::DynamicImage;
-use druid::keyboard_types::Key;
-use druid::piet::InterpolationMode;
-use druid::widget::{Container, Controller, ControllerHost, CrossAxisAlignment, Either, Flex, Image, Label, LineBreaking, List, MainAxisAlignment};
 use image::codecs::png;
 use tracing::{debug, info};
 
-use crate::{CommonBrowserProfile, MessageToMain, paths};
+use crate::{paths, CommonBrowserProfile, MessageToMain};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -555,19 +558,20 @@ fn show_about_dialog(ctx: &mut DelegateCtx) {
     let logs_root_dir = logs_root_dir.as_path().to_str().unwrap().to_string();
 
     let paths_row = Flex::row()
-        .with_child(Flex::column()
-            .cross_axis_alignment(CrossAxisAlignment::End)
-            .with_child(Label::new("Config").with_text_size(6.0))
-            .with_child(Label::new("Cache").with_text_size(6.0))
-            .with_child(Label::new("Logs").with_text_size(6.0))
+        .with_child(
+            Flex::column()
+                .cross_axis_alignment(CrossAxisAlignment::End)
+                .with_child(Label::new("Config").with_text_size(6.0))
+                .with_child(Label::new("Cache").with_text_size(6.0))
+                .with_child(Label::new("Logs").with_text_size(6.0)),
         )
-        .with_child(Flex::column()
-            .cross_axis_alignment(CrossAxisAlignment::Start)
-            .with_child(Label::new(config_root_dir).with_text_size(6.0))
-            .with_child(Label::new(cache_root_dir).with_text_size(6.0))
-            .with_child(Label::new(logs_root_dir).with_text_size(6.0))
+        .with_child(
+            Flex::column()
+                .cross_axis_alignment(CrossAxisAlignment::Start)
+                .with_child(Label::new(config_root_dir).with_text_size(6.0))
+                .with_child(Label::new(cache_root_dir).with_text_size(6.0))
+                .with_child(Label::new(logs_root_dir).with_text_size(6.0)),
         );
-
 
     let col = Flex::column()
         .with_spacer(10.0)
@@ -578,7 +582,6 @@ fn show_about_dialog(ctx: &mut DelegateCtx) {
         .with_child(version_row)
         .with_spacer(8.0)
         .with_child(copyright_row)
-
         .with_spacer(6.0)
         .with_child(paths_row)
         .with_flex_spacer(1.0)
