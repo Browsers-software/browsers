@@ -6,11 +6,11 @@ use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 use tracing::info;
 
+use crate::{InstalledBrowser, paths, SupportedAppRepository};
 #[cfg(target_os = "linux")]
 use crate::linux_utils;
 #[cfg(target_os = "macos")]
 use crate::macos_utils;
-use crate::{InstalledBrowser, SupportedAppRepository};
 
 #[cfg(target_os = "macos")]
 pub fn set_as_default_web_browser() -> bool {
@@ -111,7 +111,7 @@ impl OSAppFinder {
     }
 
     pub(crate) fn save_installed_browsers_config(&self, config: &Config) {
-        let config_root_dir = get_config_root_dir();
+        let config_root_dir = paths::get_config_root_dir();
         fs::create_dir_all(config_root_dir.as_path()).unwrap();
         let config_json_path = self.get_config_json_path(config_root_dir.as_path());
         let buffer = File::create(config_json_path).unwrap();
@@ -119,7 +119,7 @@ impl OSAppFinder {
     }
 
     pub(crate) fn get_installed_browsers_config(&self) -> Config {
-        let config_root_dir = get_config_root_dir();
+        let config_root_dir = paths::get_config_root_dir();
         fs::create_dir_all(config_root_dir.as_path()).unwrap();
         let config_json_path = self.get_config_json_path(config_root_dir.as_path());
         info!("Config: {}", config_json_path.display());
@@ -170,7 +170,7 @@ impl OSAppFinder {
         &self,
         force_reload: bool,
     ) -> Vec<InstalledBrowser> {
-        let cache_root_dir = get_cache_root_dir();
+        let cache_root_dir = paths::get_cache_root_dir();
         fs::create_dir_all(cache_root_dir.as_path()).unwrap();
 
         let installed_browsers_json_path = cache_root_dir.join("installed_browsers.json");
@@ -193,35 +193,6 @@ impl OSAppFinder {
     }
 }
 
-#[cfg(target_os = "macos")]
-fn get_config_root_dir() -> PathBuf {
-    return macos_utils::get_this_app_config_root_dir();
-}
-
-#[cfg(target_os = "linux")]
-fn get_config_root_dir() -> PathBuf {
-    return linux_utils::get_this_app_config_root_dir();
-}
-
-#[cfg(target_os = "macos")]
-fn get_cache_root_dir() -> PathBuf {
-    return macos_utils::get_this_app_cache_root_dir();
-}
-
-#[cfg(target_os = "linux")]
-fn get_cache_root_dir() -> PathBuf {
-    return linux_utils::get_this_app_cache_root_dir();
-}
-
-#[cfg(target_os = "macos")]
-pub fn get_logs_root_dir() -> PathBuf {
-    return macos_utils::get_this_app_logs_root_dir();
-}
-
-#[cfg(target_os = "linux")]
-pub fn get_logs_root_dir() -> PathBuf {
-    return linux_utils::get_this_app_logs_root_dir();
-}
 
 #[cfg(target_os = "macos")]
 pub fn get_chrome_user_dir_root() -> PathBuf {

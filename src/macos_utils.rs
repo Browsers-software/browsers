@@ -181,9 +181,7 @@ pub fn macos_get_directory(directory: u64) -> PathBuf {
         panic!("no")
     }
 
-    let x = option.unwrap().as_concrete_TypeRef();
-    let x: core_services::CFString = unsafe { TCFType::wrap_under_create_rule(x) };
-    let x = x.to_string();
+    let x = option.unwrap().to_string();
 
     return PathBuf::from(x);
 }

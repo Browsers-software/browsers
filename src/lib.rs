@@ -1,8 +1,8 @@
+use std::{env, thread};
 use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::process::Command;
-use std::sync::{mpsc, Arc};
-use std::{env, thread};
+use std::sync::{Arc, mpsc};
 
 use druid::Target;
 use serde::{Deserialize, Serialize};
@@ -16,6 +16,7 @@ use crate::utils::OSAppFinder;
 mod ui;
 
 pub mod utils;
+pub mod paths;
 
 mod browser_repository;
 

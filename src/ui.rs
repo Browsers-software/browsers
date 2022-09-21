@@ -2,19 +2,11 @@ use std::cmp;
 use std::fs::File;
 use std::io::{BufReader, Error};
 use std::path::Path;
-use std::sync::mpsc::Sender;
 use std::sync::Arc;
+use std::sync::mpsc::Sender;
 
-use druid::commands::QUIT_APP;
-use druid::image::DynamicImage;
-use druid::keyboard_types::Key;
-use druid::piet::InterpolationMode;
-use druid::widget::{
-    Container, Controller, ControllerHost, CrossAxisAlignment, Either, Flex, Image, Label,
-    LineBreaking, List,
-};
 use druid::{
-    image, Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, LayoutCtx, LensExt,
+    Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, image, LayoutCtx, LensExt,
     LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, TextAlignment, UpdateCtx,
     WindowHandle, WindowLevel,
 };
@@ -23,10 +15,15 @@ use druid::{
     ImageBuf, KbKey, KeyEvent, Lens, PaintCtx, Point, RenderContext, Selector, Size, Target,
     Widget, WidgetExt, WindowDesc, WindowId,
 };
+use druid::commands::QUIT_APP;
+use druid::image::DynamicImage;
+use druid::keyboard_types::Key;
+use druid::piet::InterpolationMode;
+use druid::widget::{Container, Controller, ControllerHost, CrossAxisAlignment, Either, Flex, Image, Label, LineBreaking, List, MainAxisAlignment};
 use image::codecs::png;
 use tracing::{debug, info};
 
-use crate::{CommonBrowserProfile, MessageToMain};
+use crate::{CommonBrowserProfile, MessageToMain, paths};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -534,7 +531,7 @@ fn show_about_dialog(ctx: &mut DelegateCtx) {
     if result.is_ok() {
         buf = result.unwrap();
     }
-    let image = Image::new(buf).fix_width(48.0).fix_height(48.0);
+    let image = Image::new(buf).fix_width(64.0).fix_height(64.0);
 
     let app_icon_row = image;
 
@@ -547,6 +544,31 @@ fn show_about_dialog(ctx: &mut DelegateCtx) {
     let copyright_row: Label<UIState> =
         Label::new("https://browsers.software").with_text_size(10.0);
 
+    // .join("") adds trailing "/", indicating for the user that it's a directory
+    let config_root_dir = paths::get_config_root_dir().join("");
+    let config_root_dir = config_root_dir.as_path().to_str().unwrap().to_string();
+
+    let cache_root_dir = paths::get_cache_root_dir().join("");
+    let cache_root_dir = cache_root_dir.as_path().to_str().unwrap().to_string();
+
+    let logs_root_dir = paths::get_logs_root_dir().join("");
+    let logs_root_dir = logs_root_dir.as_path().to_str().unwrap().to_string();
+
+    let paths_row = Flex::row()
+        .with_child(Flex::column()
+            .cross_axis_alignment(CrossAxisAlignment::End)
+            .with_child(Label::new("Config").with_text_size(6.0))
+            .with_child(Label::new("Cache").with_text_size(6.0))
+            .with_child(Label::new("Logs").with_text_size(6.0))
+        )
+        .with_child(Flex::column()
+            .cross_axis_alignment(CrossAxisAlignment::Start)
+            .with_child(Label::new(config_root_dir).with_text_size(6.0))
+            .with_child(Label::new(cache_root_dir).with_text_size(6.0))
+            .with_child(Label::new(logs_root_dir).with_text_size(6.0))
+        );
+
+
     let col = Flex::column()
         .with_spacer(10.0)
         .with_child(app_icon_row)
@@ -556,10 +578,13 @@ fn show_about_dialog(ctx: &mut DelegateCtx) {
         .with_child(version_row)
         .with_spacer(8.0)
         .with_child(copyright_row)
+
+        .with_spacer(6.0)
+        .with_child(paths_row)
         .with_flex_spacer(1.0)
         .background(Color::from_hex_str("1b2020").unwrap());
 
-    let size = Size::new(285.0, 160.0);
+    let size = Size::new(285.0, 180.0);
     let (_, monitor) = druid::Screen::get_mouse_position();
     let screen_rect = monitor.virtual_work_rect();
 
