@@ -11,7 +11,7 @@ use druid::keyboard_types::Key;
 use druid::piet::InterpolationMode;
 use druid::widget::{
     Container, Controller, ControllerHost, CrossAxisAlignment, Either, Flex, Image, Label,
-    LineBreaking, List, MainAxisAlignment,
+    LineBreaking, List,
 };
 use druid::{
     image, Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, LayoutCtx, LensExt,
@@ -300,13 +300,6 @@ impl UIBrowser {
         }
 
         return full_name;
-    }
-
-    pub fn get_menu_name(&self) -> String {
-        if self.supports_profiles {
-            return self.profile_name.clone();
-        }
-        return self.browser_name.clone();
     }
 }
 
