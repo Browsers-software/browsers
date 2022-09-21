@@ -8,7 +8,10 @@ fi
 
 THIS_DIR="$(dirname "$0")"
 
-SRC_BINARY_PATH="$THIS_DIR/browsers"
+# armv7l, (arm64 on macos), aarch64, x86_64
+ARCH="$(uname -m)"
+
+SRC_BINARY_PATH="$THIS_DIR/$ARCH/browsers"
 if [ ! -f "$SRC_BINARY_PATH" ]; then
     echo "$SRC_BINARY_PATH does not exist. Please install manually"
     exit 1

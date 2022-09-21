@@ -57,7 +57,9 @@ objc = "0.2.7"
 xdg-mime = "^0.3"
 
 # to find default registered icons
-glib = { version = "0.15.12", package = "gio" }
+# with glib 1.15.x there is an error for icon_theme.lookup_by_gicon,
+# maybe it'll work if gtk can also be updated
+glib = { version = "0.14.8", package = "gio" }
 
 # to find icon theme and icon; 0.14.0 because druid would conflict with newer
 gtk = { version = "0.14.0" }
@@ -81,3 +83,15 @@ identifier = "software.Browsers"
 linux_mime_types = ["x-scheme-handler/http;", "x-scheme-handler/https;"]
 linux_exec_args = "%u"
 icon = ["extra/icon512x512.png"]
+
+# Base image is ubuntu:20.04, see https://github.com/cross-rs/cross/blob/main/docker/Dockerfile.x86_64-unknown-linux-gnu
+# Unfortunately https://github.com/cross-rs/cross/pull/591 is not yet in stable version,
+# so update from main to specific version once released https://github.com/cross-rs/cross/pkgs/container/x86_64-unknown-linux-gnu/versions?filters%5Bversion_type%5D=tagged
+# Additionally install some libraries we need
+[package.metadata.cross.target.x86_64-unknown-linux-gnu]
+image = "ghcr.io/cross-rs/x86_64-unknown-linux-gnu:main"
+pre-build = ["DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install libpango-1.0-0 libpango1.0-dev libgtk-3-dev"]
+
+[package.metadata.cross.target.aarch64-unknown-linux-gnu]
+image = "ghcr.io/cross-rs/aarch64-unknown-linux-gnu:main"
+pre-build = ["dpkg --add-architecture arm64 && DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install libpango-1.0-0:arm64 libpango1.0-dev:arm64 libgtk-3-dev:arm64"]

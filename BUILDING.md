@@ -4,3 +4,7 @@
     rustup target add aarch64-apple-darwin
 
     ./build-mac.sh
+
+# Build Linux binary
+
+    ./build-linux.sh
