@@ -1,0 +1,83 @@
+[package]
+name = "browsers"
+version = "0.1.0"
+authors = ["Madis Liias <madisliias@gmail.com>"]
+edition = "2021"
+description = "Browsers"
+homepage = "https://browsers.software/"
+repository = "https://github.com/Browsers-software/browsers"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+
+# command-line argument parser
+clap = "3.2.21"
+
+# logging library
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["fmt", "std", "time", "local-time"] }
+tracing-appender = "0.2"
+
+rolling-file="0.1.0"
+
+libc = "0.2"
+dirs = "4.0"
+
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+
+# UI library
+#druid = { git = "https://github.com/linebender/druid.git", features = ["svg", "image"] }
+
+# for local development
+#druid = { path = "../druid/druid", features = ["png", "image"] }
+
+druid = { git = "https://github.com/browsers-software/druid.git", branch = "browsers-with-scrollfix", features = ["png", "image"] }
+#druid = { git = "https://github.com/browsers-software/druid.git", branch = "browsers", features = ["png", "image"] }
+
+# parse urls
+url = "2.2.2"
+
+# Parse .ini files (e.g Firefox profiles.ini)
+configparser = "3.0.0"
+
+# Hash Firefox path with cityhash64, to map it to
+# locked installation in profiles.ini
+naive-cityhash = "0.2.0"
+
+# macOS Core Foundation bindings
+# small selection of Core Foundation libs I happen to need
+[target.'cfg(target_os = "macos")'.dependencies]
+core-services = "0.2.0"
+core-foundation = "0.9.2"
+cocoa-foundation = "0.1.0"
+objc = "0.2.7"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+xdg-mime = "^0.3"
+
+# to find default registered icons
+glib = { version = "0.15.12", package = "gio" }
+
+# to find icon theme and icon; 0.14.0 because druid would conflict with newer
+gtk = { version = "0.14.0" }
+
+
+#[profile.dev]
+#lto = true
+
+[profile.release]
+#opt-level = 'z'     # Optimize for size.
+lto = true           # Enable Link Time Optimization
+#codegen-units = 1   # Reduce number of codegen units to increase optimizations.
+#panic = 'abort'     # Abort on panic
+
+# cargo bundle --release
+# see https://github.com/burtonageo/cargo-bundle
+# TODO: how to integrate with cross?
+[package.metadata.bundle]
+name = "Browsers"
+identifier = "software.Browsers"
+linux_mime_types = ["x-scheme-handler/http;", "x-scheme-handler/https;"]
+linux_exec_args = "%u"
+icon = ["extra/icon512x512.png"]

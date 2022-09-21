@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>com.apple.application-identifier</key>
+        <string>VA2658ACC3.software.Browsers</string>
+
+        <key>com.apple.developer.team-identifier</key>
+        <string>VA2658ACC3</string>
+
+        <key>com.apple.security.app-sandbox</key>
+        <false/>
+
+        <!--<key>com.apple.security.app-sandbox</key>
+        <true/>
+        <key>com.apple.security.temporary-exception.files.home-relative-path.read-only</key>
+        <array>
+            <string>/Library/Application Support/Firefox/profiles.ini</string>
+            <string>/Library/Application Support/Google/Chrome/Local State</string>
+            <string>/Library/Application Support/Google/Chrome Beta/Local State</string>
+            <string>/Library/Application Support/Google/Chrome Dev/Local State</string>
+            <string>/Library/Application Support/Google/Chrome Canary/Local State</string>
+            <string>/Library/Application Support/Chromium/Local State</string>
+            <string>/Library/Application Support/AVAST Software/Browser/Local State</string>
+            <string>/Library/Application Support/Coccoc/Local State</string>
+            <string>/Library/Application Support/360Chrome/Local State</string>
+            <string>/Library/Application Support/Yandex/YandexBrowser/Local State</string>
+            <string>/Library/Application Support/Microsoft Edge/Local State</string>
+            <string>/Library/Application Support/BraveSoftware/Brave-Browser/Local State</string>
+            <string>/Library/Application Support/BraveSoftware/Brave-Browser-Beta/Local State</string>
+            <string>/Library/Application Support/BraveSoftware/Brave-Browser-Nightly/Local State</string>
+            <string>/Library/Application Support/Vivaldi/Local State</string>
+        </array>-->
+    </dict>
+</plist>

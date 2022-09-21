@@ -2,6 +2,7 @@
 
 ![MIT/Apache 2.0](https://img.shields.io/badge/license-MIT%2FApache-blue.svg)
 
+![](docs/browsers.gif)
 
 ## About
 

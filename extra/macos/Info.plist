@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>CFBundleDevelopmentRegion</key>
+        <string>en</string>
+
+        <!--  https://chromium.googlesource.com/chromium/src/+/lkgr/chrome/app/app-Info.plist -->
+        <key>CFBundleExecutable</key>
+        <string>Browsers</string>
+
+        <key>CFBundleIdentifier</key>
+        <string>software.Browsers</string>
+
+        <key>CFBundleIconFile</key>
+        <string>Browsers.icns</string>
+
+        <key>CFBundlePackageType</key>
+        <string>APPL</string>
+
+        <!-- Required to show up in Default browsers list in macOS -->
+        <key>CFBundleDocumentTypes</key>
+        <array>
+            <dict>
+                <key>CFBundleTypeName</key>
+                <string>HTML document</string>
+
+                <key>CFBundleTypeRole</key>
+                <string>Viewer</string>
+
+                <!-- The ranking of this app among apps that declare themselves
+                     as editors or viewers of the given file type.
+                     One of: Owner, Default, Alternate, None -->
+                <key>LSHandlerRank</key>
+                <string>Default</string>
+
+                <key>LSItemContentTypes</key>
+                <array>
+                    <string>public.html</string>
+                    <string>public.xhtml</string>
+                </array>
+            </dict>
+        </array>
+
+        <key>CFBundleURLTypes</key>
+        <array>
+            <dict>
+                <key>CFBundleURLName</key>
+                <string>Web site URL</string>
+                <key>CFBundleURLSchemes</key>
+                <array>
+                    <string>http</string>
+                    <string>https</string>
+                </array>
+            </dict>
+        </array>
+
+        <key>CFBundleInfoDictionaryVersion</key>
+        <string>6.0</string>
+
+        <key>CFBundleName</key>
+        <string>Browsers</string>
+
+        <key>CFBundleDisplayName</key>
+        <string>Browsers</string>
+
+        <key>CFBundlePackageType</key>
+        <string>APPL</string>
+
+        <key>CFBundleShortVersionString</key>
+        <string>1.0.0</string>
+
+        <key>CFBundleVersion</key>
+        <string>20</string>
+
+        <key>LSMinimumSystemVersion</key>
+        <string>10.7.0</string>
+
+        <key>LSUIElement</key>
+        <string>1</string>
+
+        <!-- The category that best describes your app for the App Store. -->
+        <key>LSApplicationCategoryType</key>
+        <string>public.app-category.utilities</string>
+    </dict>
+</plist>

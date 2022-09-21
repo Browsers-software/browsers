@@ -1,0 +1,6 @@
+/target
+/.idea
+*.iml
+.DS_Store
+!extra/macos/dmg/dmg_source/.DS_Store
+.env
