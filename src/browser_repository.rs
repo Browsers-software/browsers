@@ -8,6 +8,7 @@ use crate::{chromium_profiles_parser, firefox_profiles_parser, InstalledBrowserP
 // Holds list of custom SupportedApp configurations
 // All other apps will be the "default" supported app implementation
 pub struct SupportedAppRepository {
+    snap_base: PathBuf,
     chromium_user_dir_base: PathBuf,
     firefox_user_dir_base: PathBuf,
     supported_apps: HashMap<String, SupportedApp>,
@@ -16,6 +17,7 @@ pub struct SupportedAppRepository {
 impl SupportedAppRepository {
     pub fn new() -> Self {
         let mut repository = Self {
+            snap_base: crate::utils::get_snap_root(),
             chromium_user_dir_base: crate::utils::get_chrome_user_dir_root(),
             firefox_user_dir_base: crate::utils::get_firefox_user_dir_root(),
             supported_apps: HashMap::new(),
@@ -67,9 +69,10 @@ impl SupportedAppRepository {
                 "Google/Chrome Canary",
                 "google-chrome-canary",
             )
-            .add_chromium_based_app(
+            .add_chromium_based_app_with_snap(
                 "org.chromium.Chromium",
                 "chromium_chromium.desktop",
+                "chromium",
                 "Chromium",
                 "chromium",
             )
@@ -121,11 +124,12 @@ impl SupportedAppRepository {
                 "Microsoft Edge Canary",
                 "TODOTODOTODO",
             )
-            .add_chromium_based_app(
+            .add_chromium_based_app_with_snap(
                 "com.brave.Browser",
-                "TODOTODOTODO",
+                "brave-browser.desktop",
+                "brave",
                 "BraveSoftware/Brave-Browser",
-                "TODOTODOTODO",
+                "BraveSoftware/Brave-Browser",
             )
             .add_chromium_based_app(
                 "com.brave.Browser.beta",
@@ -169,9 +173,10 @@ impl SupportedAppRepository {
                 "Iridium",
                 "TODOTODOTODO",
             )
-            .add_firefox_based_app(
+            .add_firefox_based_app_with_snap(
                 "org.mozilla.firefox",
                 "firefox_firefox.desktop",
+                "firefox",
                 "Firefox",
                 ".mozilla/firefox",
             )
@@ -216,6 +221,23 @@ impl SupportedAppRepository {
         mac_config_dir_relative: &str,
         linux_config_dir_relative: &str,
     ) -> &mut SupportedAppRepository {
+        return self.add_firefox_based_app_with_snap(
+            mac_bundle_id,
+            linux_desktop_id,
+            "",
+            mac_config_dir_relative,
+            linux_config_dir_relative,
+        );
+    }
+
+    fn add_firefox_based_app_with_snap(
+        &mut self,
+        mac_bundle_id: &str,
+        linux_desktop_id: &str,
+        linux_snap_id: &str,
+        mac_config_dir_relative: &str,
+        linux_config_dir_relative: &str,
+    ) -> &mut SupportedAppRepository {
         let app_id = AppIdentifier {
             mac_bundle_id: mac_bundle_id.to_string(),
             linux_desktop_id: linux_desktop_id.to_string(),
@@ -226,7 +248,14 @@ impl SupportedAppRepository {
             linux_config_dir_relative: PathBuf::from(linux_config_dir_relative),
         };
 
-        let app = Self::firefox_based_app(app_id, app_config_dir.config_dir_absolute());
+        let snap_app_config_dir_absolute =
+            self.snap_config_dir_absolute_path(linux_snap_id, linux_config_dir_relative);
+
+        let app = Self::firefox_based_app(
+            app_id,
+            app_config_dir.config_dir_absolute(),
+            snap_app_config_dir_absolute,
+        );
         return self.add(app);
     }
 
@@ -241,6 +270,23 @@ impl SupportedAppRepository {
         mac_config_dir_relative: &str,
         linux_config_dir_relative: &str,
     ) -> &mut SupportedAppRepository {
+        return self.add_chromium_based_app_with_snap(
+            mac_bundle_id,
+            linux_desktop_id,
+            "",
+            mac_config_dir_relative,
+            linux_config_dir_relative,
+        );
+    }
+
+    fn add_chromium_based_app_with_snap(
+        &mut self,
+        mac_bundle_id: &str,
+        linux_desktop_id: &str,
+        linux_snap_id: &str,
+        mac_config_dir_relative: &str,
+        linux_config_dir_relative: &str,
+    ) -> &mut SupportedAppRepository {
         let app_id = AppIdentifier {
             mac_bundle_id: mac_bundle_id.to_string(),
             linux_desktop_id: linux_desktop_id.to_string(),
@@ -251,14 +297,39 @@ impl SupportedAppRepository {
             linux_config_dir_relative: PathBuf::from(linux_config_dir_relative),
         };
 
-        let app = Self::chromium_based_app(app_id, app_config_dir.config_dir_absolute());
+        let snap_app_config_dir_absolute =
+            self.snap_config_dir_absolute_path(linux_snap_id, linux_config_dir_relative);
+
+        let app = Self::chromium_based_app(
+            app_id,
+            app_config_dir.config_dir_absolute(),
+            snap_app_config_dir_absolute,
+        );
         return self.add(app);
     }
 
-    fn chromium_based_app(app_id: AppIdentifier, app_config_dir_absolute: PathBuf) -> SupportedApp {
+    fn snap_config_dir_absolute_path(
+        &self,
+        snap_name: &str,
+        linux_config_dir_relative: &str,
+    ) -> PathBuf {
+        let snap_root_path = self.snap_base.clone();
+        let snap_linux_config_dir_relative_path = PathBuf::from(snap_name)
+            .join("common")
+            .join(linux_config_dir_relative);
+        let config_dir_absolute = snap_root_path.join(snap_linux_config_dir_relative_path);
+        return config_dir_absolute;
+    }
+
+    fn chromium_based_app(
+        app_id: AppIdentifier,
+        app_config_dir_absolute: PathBuf,
+        snap_app_config_dir_absolute: PathBuf,
+    ) -> SupportedApp {
         SupportedApp {
             app_id: app_id,
             app_config_dir_absolute: app_config_dir_absolute,
+            snap_app_config_dir_absolute: snap_app_config_dir_absolute,
             find_profiles_fn: Some(chromium_profiles_parser::find_chromium_profiles),
             restricted_domains: vec![],
             profile_args_fn: |profile_cli_arg_value| {
@@ -270,10 +341,15 @@ impl SupportedAppRepository {
         }
     }
 
-    fn firefox_based_app(app_id: AppIdentifier, app_config_dir_absolute: PathBuf) -> SupportedApp {
+    fn firefox_based_app(
+        app_id: AppIdentifier,
+        app_config_dir_absolute: PathBuf,
+        snap_app_config_dir_absolute: PathBuf,
+    ) -> SupportedApp {
         SupportedApp {
             app_id: app_id,
             app_config_dir_absolute: app_config_dir_absolute,
+            snap_app_config_dir_absolute: snap_app_config_dir_absolute,
             find_profiles_fn: Some(firefox_profiles_parser::find_firefox_profiles),
             restricted_domains: vec![],
             profile_args_fn: |profile_cli_arg_value| {
@@ -298,6 +374,7 @@ impl SupportedAppRepository {
         SupportedApp {
             app_id: app_id,
             app_config_dir_absolute: PathBuf::new(),
+            snap_app_config_dir_absolute: PathBuf::new(),
             find_profiles_fn: None,
             restricted_domains: vec![],
             profile_args_fn: |_profile_cli_arg_value| vec![],
@@ -316,6 +393,7 @@ impl SupportedAppRepository {
         SupportedApp {
             app_id: app_id,
             app_config_dir_absolute: PathBuf::new(),
+            snap_app_config_dir_absolute: PathBuf::new(),
             find_profiles_fn: None,
             restricted_domains: vec!["https://open.spotify.com".to_string()],
             profile_args_fn: |_profile_cli_arg_value| vec![],
@@ -334,6 +412,7 @@ impl SupportedAppRepository {
         SupportedApp {
             app_id: app_id,
             app_config_dir_absolute: PathBuf::new(),
+            snap_app_config_dir_absolute: PathBuf::new(),
             find_profiles_fn: None,
             restricted_domains: vec!["https://zoom.us".to_string()],
             profile_args_fn: |_profile_cli_arg_value| vec![],
@@ -348,6 +427,7 @@ impl SupportedAppRepository {
 pub struct SupportedApp {
     app_id: AppIdentifier,
     app_config_dir_absolute: PathBuf,
+    snap_app_config_dir_absolute: PathBuf,
     restricted_domains: Vec<String>,
     find_profiles_fn: Option<
         fn(app_config_dir_absolute: &Path, binary_path: &Path) -> Vec<InstalledBrowserProfile>,
@@ -363,17 +443,26 @@ impl SupportedApp {
         return self.app_id.app_id();
     }
 
-    pub fn get_app_config_dir_absolute(&self) -> &str {
-        return &self.app_config_dir_absolute.as_path().to_str().unwrap();
+    pub fn get_app_config_dir_abs(&self, is_snap: bool) -> &Path {
+        return if is_snap {
+            &self.snap_app_config_dir_absolute.as_path()
+        } else {
+            &self.app_config_dir_absolute.as_path()
+        };
+    }
+
+    pub fn get_app_config_dir_absolute(&self, is_snap: bool) -> &str {
+        return self.get_app_config_dir_abs(is_snap).to_str().unwrap();
     }
 
     pub fn get_restricted_domains(&self) -> &Vec<String> {
         return &self.restricted_domains;
     }
 
-    pub fn find_profiles(&self, binary_path: &Path) -> Vec<InstalledBrowserProfile> {
+    pub fn find_profiles(&self, binary_path: &Path, is_snap: bool) -> Vec<InstalledBrowserProfile> {
         return if self.find_profiles_fn.is_some() {
-            (self.find_profiles_fn.unwrap())(self.app_config_dir_absolute.as_path(), binary_path)
+            let app_config_dir_abs = self.get_app_config_dir_abs(is_snap);
+            (self.find_profiles_fn.unwrap())(app_config_dir_abs, binary_path)
         } else {
             Self::find_placeholder_profiles()
         };
