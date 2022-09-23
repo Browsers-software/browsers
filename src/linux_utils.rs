@@ -74,10 +74,18 @@ impl OsHelper {
             let command_components: Vec<&str> = command_str.split(' ').collect();
             let actual_cmd_maybe = command_components.get(2);
             let actual_cmd = actual_cmd_maybe.unwrap();
-            let actual_cmd_str = actual_cmd.to_string();
+            let actual_cmd_str = actual_cmd.to_string().trim().to_string();
             command_str = actual_cmd_str;
             //let actual_command = command_components.get(2);
         }
+
+        //let snap_root_path = self.snap_base.clone();
+        //let snap_linux_config_dir_relative_path = PathBuf::from(snap_name)
+        //    .join("common")
+        //    .join(linux_config_dir_relative);
+        //let config_dir_absolute = snap_root_path.join(snap_linux_config_dir_relative_path);
+
+        let is_snap = command_str.starts_with("/snap/bin/");
         let executable_path = Path::new(command_str.as_str());
 
         // TODO: get correct path for firefox snap, which one is actually used to calculate installation id in profiles.ini
@@ -141,13 +149,15 @@ impl OsHelper {
         // https://lazka.github.io/pgi-docs/Gio-2.0/interfaces/Icon.html#Gio.Icon.to_string
         // either file path or themed icon name
 
-        let profiles = supported_app.find_profiles(executable_path.clone());
+        let profiles = supported_app.find_profiles(executable_path.clone(), is_snap);
 
         let browser = crate::InstalledBrowser {
             executable_path: executable_path.to_str().unwrap().to_string(),
             display_name: display_name.to_string(),
             bundle: supported_app.get_app_id().to_string(),
-            user_dir: supported_app.get_app_config_dir_absolute().to_string(),
+            user_dir: supported_app
+                .get_app_config_dir_absolute(is_snap)
+                .to_string(),
             icon_path: icon_path_str.clone(),
             profiles: profiles,
         };
@@ -185,8 +195,17 @@ fn get_this_app_xdg_state_dir() -> PathBuf {
 }
 
 pub fn linux_get_unsandboxed_config_dir() -> PathBuf {
-    // TODO: escape sandbox if in snap/flatpak
+    // TODO: escape sandbox if Browsers is running in snap/flatpak
     return dirs::config_dir().unwrap();
+}
+
+pub fn get_snap_root_dir() -> PathBuf {
+    // TODO: escape sandbox if Browsers is running in snap/flatpak
+    let home_dir = dirs::home_dir().unwrap();
+    let buf1 = home_dir.join("snap");
+    return buf1;
+    //let buf = buf1.join("chromium").join("common");
+    //return buf;
 }
 
 pub fn linux_get_unsandboxed_home_dir() -> PathBuf {

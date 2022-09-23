@@ -322,9 +322,9 @@ impl OsHelper {
             executable_path: executable_path.to_str().unwrap().to_string(),
             display_name: display_name.to_string(),
             bundle: supported_app.get_app_id().to_string(),
-            user_dir: supported_app.get_app_config_dir_absolute().to_string(),
+            user_dir: supported_app.get_app_config_dir_absolute(false).to_string(),
             icon_path: icon_path_str.clone(),
-            profiles: supported_app.find_profiles(executable_path.as_path()),
+            profiles: supported_app.find_profiles(executable_path.as_path(), false),
         };
 
         return Some(browser);
