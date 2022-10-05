@@ -89,6 +89,12 @@ impl SupportedAppRepository {
                 "TODOTODOTODO",
             )
             .add_chromium_based_app(
+                "com.bookry.wavebox",
+                "TODOTODOTODO",
+                "WaveboxApp",
+                "TODOTODOTODO",
+            )
+            .add_chromium_based_app(
                 "com.coccoc.Coccoc",
                 "TODOTODOTODO",
                 "Coccoc",
