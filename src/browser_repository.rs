@@ -83,6 +83,12 @@ impl SupportedAppRepository {
                 "TODOTODOTODO",
             )
             .add_chromium_based_app(
+                "com.whisttechnologies.whist",
+                "TODOTODOTODO",
+                "Whist/Whist-Browser",
+                "TODOTODOTODO",
+            )
+            .add_chromium_based_app(
                 "com.coccoc.Coccoc",
                 "TODOTODOTODO",
                 "Coccoc",
