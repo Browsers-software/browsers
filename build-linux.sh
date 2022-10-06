@@ -14,7 +14,7 @@ cp "target/aarch64-unknown-linux-gnu/release/browsers" "target/universal-unknown
 cp "extra/linux/dist/install.sh" "target/universal-unknown-linux-gnu/release/install.sh"
 cp "extra/linux/dist/software.Browsers.desktop" "target/universal-unknown-linux-gnu/release/software.Browsers.desktop"
 
-rm ./target/universal-unknown-linux-gnu/release/browsers_linux.zip
+rm -f ./target/universal-unknown-linux-gnu/release/browsers_linux.zip
 
 (cd ./target/universal-unknown-linux-gnu/release && zip -r browsers_linux.zip \
   ./x86_64/browsers \
