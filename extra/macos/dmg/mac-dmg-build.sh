@@ -5,7 +5,7 @@ MACOS_RELEASE_DIR="$PROJECT_ROOT/target/universal-apple-darwin/release"
 MACOS_APP_DIR="$MACOS_RELEASE_DIR/Browsers.app"
 
 # Load in some secrets
-source "$PROJECT_ROOT/.env"
+source "$PROJECT_ROOT/.env" || true
 
 DMG_FROM_DIR="dmg_source"
 
@@ -42,13 +42,17 @@ SetFile -a C "$MACOS_RELEASE_DIR/Browsers.dmg"
 
 rm -rf $DMG_SRC_DIR
 
-
-codesign -s "$APP_CERT_ID" -f -o runtime --timestamp "$MACOS_RELEASE_DIR/Browsers.dmg"
+# Sign with hardened runtime (hardened runtime is required for notarization)
+rcodesign sign \
+  --p12-file "$P12_FILE" \
+  --p12-password "$P12_PASSWORD" \
+  --code-signature-flags runtime \
+  "$MACOS_RELEASE_DIR/Browsers.dmg"
 
 # Once signed you can do the notarization
 # https://gregoryszorc.com/docs/apple-codesign/main/apple_codesign_getting_started.html#apple-codesign-app-store-connect-api-key
 
 rcodesign notary-submit \
-  --api-key-path ~/.appstoreconnect/key.json \
+  --api-key-path "$NOTARY_API_KEY_JSON_FILE" \
   --staple \
   "$MACOS_RELEASE_DIR/Browsers.dmg"

@@ -2,23 +2,43 @@ name: CI
 run-name: CI Build
 on: [push]
 jobs:
-  build-job:
+  build-linux:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
       - name: Check out repository code
         uses: actions/checkout@v3
-      - name: Toolchain info
-        run: |
-          cargo --version --verbose
-          rustc --version
-      - name: Install Pango and GTK
-        run: |
-          DEBIAN_FRONTEND=noninteractive sudo apt-get update
-          DEBIAN_FRONTEND=noninteractive sudo apt-get -y --no-install-recommends install libpango-1.0-0 libpango1.0-dev libgtk-3-dev
-      - name: Use Cache
+      - name: Set up Docker Buildx
+        id: buildx
+        # Use the action from the master, as we've seen some inconsistencies with @v1
+        # Issue: https://github.com/docker/build-push-action/issues/286
+        uses: docker/setup-buildx-action@master
+        with:
+          install: true
+      - name: Build cross builder image for x86_64
+        uses: docker/build-push-action@v3
+        with:
+          context: ./cross/
+          builder: ${{ steps.buildx.outputs.name }}
+          file: cross/Dockerfile.linux_x86_64
+          push: false
+          tags: browsers.software/x86_64-unknown-linux-gnu-gtk:local
+          cache-from: type=gha,scope=x86_64
+          cache-to: type=gha,scope=x86_64,mode=max
+          load: true # load the created image into docker, so cross can find it
+      - name: Build cross builder image for aarch64
+        uses: docker/build-push-action@v3
+        with:
+          context: ./cross/
+          builder: ${{ steps.buildx.outputs.name }}
+          file: cross/Dockerfile.linux_aarch64
+          push: false
+          tags: browsers.software/aarch64-unknown-linux-gnu-gtk:local
+          cache-from: type=gha,scope=aarch64
+          cache-to: type=gha,scope=aarch64,mode=max
+          load: true # load the created image into docker, so cross can find it
+      # even though we build inside a docker container via `cross`, then `cross` mounts
+      # target/
+      - name: Download cache
         uses: actions/cache@v3
         with:
           path: |
@@ -26,7 +46,95 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: cargo build
-        run: cargo build --target x86_64-unknown-linux-gnu --release
+          key: cross-${{ hashFiles('**/Cargo.lock') }}
+      - name: Install cross
+        # cargo install does check if dependency already exists,
+        # but there's some conflict with github cache about it, so checking manually
+        run: cargo install --list --target-dir ./target/cross | grep cross || cargo install --force cross --git https://github.com/cross-rs/cross --target-dir ./target/cross
+      - name: Test x86_64 and aarch64 binaries
+        run: |
+          CROSS_BUILD_OPTS="--builder ${{ steps.buildx.outputs.name }} --cache-from type=gha,scope=x86_64 --cache-to type=gha,scope=x86_64,mode=max" cross build --target x86_64-unknown-linux-gnu --release
+          CROSS_BUILD_OPTS="--builder ${{ steps.buildx.outputs.name }} --cache-from type=gha,scope=aarch64 --cache-to type=gha,scope=aarch64,mode=max" cross build --target aarch64-unknown-linux-gnu --release
+      - name: Build binaries and package
+        run: |
+          ./build-linux.sh
+        shell: bash
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: browsers_linux.zip
+          path: target/universal-unknown-linux-gnu/release/browsers_linux.zip
+  build-macos:
+    environment: PROD
+    runs-on: macos-12
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Download cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
+            target/
+          key: macos-${{ hashFiles('**/Cargo.lock') }}
+      - name: Install apple-codesign
+        run: cargo install apple-codesign --target-dir ./target/apple-codesign
+      - name: Add Rust targets
+        run: |
+          rustup target add x86_64-apple-darwin
+          rustup target add aarch64-apple-darwin
+      - name: Build Universal Binary
+        run: |
+          export MACOSX_DEPLOYMENT_TARGET=10.7
+          cargo build --target aarch64-apple-darwin --release
+          cargo build --target x86_64-apple-darwin --release
+          rm -rf target/universal-apple-darwin/release/
+          mkdir -p target/universal-apple-darwin/release/
+          lipo -create -output target/universal-apple-darwin/release/Browsers target/x86_64-apple-darwin/release/browsers target/aarch64-apple-darwin/release/browsers
+      - name: Build with signing
+        env:
+          APPLE_DEVELOPER_ID_APP_P12_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_APP_P12 }}
+          P12_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_APP_P12_PASSWORD }}
+          APP_STORE_CONNECT_JSON: ${{ secrets.APP_STORE_CONNECT_JSON }}
+        run: |
+          mkdir -p secrets
+          echo $APPLE_DEVELOPER_ID_APP_P12_BASE64 | base64 --decode > secrets/DeveloperIDApplication.p12
+          export P12_FILE="${GITHUB_WORKSPACE}/secrets/DeveloperIDApplication.p12"
+          echo $APP_STORE_CONNECT_JSON > secrets/app_store_connect.json
+          export NOTARY_API_KEY_JSON_FILE="${GITHUB_WORKSPACE}/secrets/app_store_connect.json"
+          echo "1. P12_FILE=$P12_FILE"
+          ./build-mac.sh
+        shell: bash
+      - name: Upload .dmg artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Browsers.dmg
+          path: target/universal-apple-darwin/release/Browsers.dmg
+  release:
+    needs: [build-linux, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+      - name: Verify files exist
+        run: |
+          [ -e "artifacts/browsers_linux.zip" ]
+          [ -e "artifacts/Browsers.dmg" ]
+        shell: bash
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            artifacts/browsers_linux.zip
+            artifacts/Browsers.dmg

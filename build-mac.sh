@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Load in some secrets
-source .env
+source .env || true
 
 build_binary() {
   # Set minimum macOS version to support older OS versions
@@ -14,7 +14,7 @@ build_binary() {
   cargo build --target x86_64-apple-darwin --release
 
   # Clean universal binary and app bundle
-  rm -r target/universal-apple-darwin/release/
+  rm -rf target/universal-apple-darwin/release/
 
   # Build universal binary
   mkdir -p target/universal-apple-darwin/release/
@@ -42,7 +42,7 @@ sign() {
 
 notarize() {
   rcodesign notary-submit \
-    --api-key-path ~/.appstoreconnect/key.json \
+    --api-key-path "$NOTARY_API_KEY_JSON_FILE" \
     --staple \
     "./target/universal-apple-darwin/release/Browsers.app"
 }
