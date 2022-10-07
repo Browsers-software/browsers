@@ -37,7 +37,7 @@ xdg-icon-resource install --novendor --size 512 icons/512x512/software.Browsers.
 # Use XDG_DATA_HOME or default to $HOME/.local/share if it's missing
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 # $HOME/.local/share/applications
-TARGET_ICON_DIR_PATH="$XDG_DATA_HOME/applications"
+TARGET_DESKTOP_DIR_PATH="$XDG_DATA_HOME/applications"
 
 # Copy .desktop file to $HOME/.local/share/applications/
 desktop-file-install --dir="$TARGET_DESKTOP_DIR_PATH" --rebuild-mime-info-cache "$SOURCE_DESKTOP_FILE_PATH"
