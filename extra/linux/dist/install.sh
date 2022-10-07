@@ -44,6 +44,3 @@ desktop-file-install --dir="$TARGET_DESKTOP_DIR_PATH" --rebuild-mime-info-cache 
 
 # Refresh desktop database
 update-desktop-database "$TARGET_DESKTOP_DIR_PATH"
-
-# Use XDG_DATA_HOME or default to $HOME/.local/share if it's missing
-TARGET_ICON_DIR_PATH="${XDG_DATA_HOME:-$HOME/.local/share}"
