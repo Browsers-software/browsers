@@ -124,17 +124,17 @@ jobs:
     steps:
       - name: Download release artifacts
         uses: actions/download-artifact@v3
-        with:
-          path: artifacts
       - name: Verify files exist
         run: |
-          [ -e "artifacts/browsers_linux.tar.gz" ]
-          [ -e "artifacts/Browsers.dmg" ]
+          [ -e "browsers_linux.tar.gz" ]
+          [ -e "Browsers.dmg" ]
+          ls -altrh .
         shell: bash
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
+          fail_on_unmatched_files: true
           files: |
-            artifacts/browsers_linux.tar.gz
-            artifacts/Browsers.dmg
+            browsers_linux.tar.gz
+            Browsers.dmg
