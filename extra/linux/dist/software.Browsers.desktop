@@ -2,7 +2,7 @@
 Type=Application
 Terminal=false
 Name=Browsers
-Icon=/snap/firefox/current/default256.png
+Icon=software.Browsers
 Categories=Network;WebBrowser;
 MimeType=x-scheme-handler/http;x-scheme-handler/https;
 StartupNotify=true
