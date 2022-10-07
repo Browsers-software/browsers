@@ -128,10 +128,6 @@ jobs:
         run: |
           [ -e "browsers_linux.tar.gz" ]
           [ -e "Browsers.dmg" ]
-          ls -altrh .
-          ls -altrh browsers_linux.tar.gz
-          ls -altrh Browsers.dmg
-          ls -altrh Browsers.dmg
         shell: bash
       - name: Release
         uses: softprops/action-gh-release@v1
