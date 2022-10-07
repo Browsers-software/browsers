@@ -6,5 +6,9 @@
     ./build-mac.sh
 
 # Build Linux binary
+    
+    cd cross
+    ./build-cross-images.sh
+    cd..
 
     ./build-linux.sh
