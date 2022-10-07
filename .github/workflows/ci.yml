@@ -129,6 +129,9 @@ jobs:
           [ -e "browsers_linux.tar.gz" ]
           [ -e "Browsers.dmg" ]
           ls -altrh .
+          ls -altrh browsers_linux.tar.gz
+          ls -altrh Browsers.dmg
+          ls -altrh Browsers.dmg
         shell: bash
       - name: Release
         uses: softprops/action-gh-release@v1
@@ -136,5 +139,5 @@ jobs:
         with:
           fail_on_unmatched_files: true
           files: |
-            browsers_linux.tar.gz
-            Browsers.dmg
+            browsers_linux.tar.gz/browsers_linux.tar.gz
+            Browsers.dmg/Browsers.dmg
