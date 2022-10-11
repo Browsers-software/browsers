@@ -1,12 +1,15 @@
 use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::process::Command;
+use std::str::FromStr;
 use std::sync::{mpsc, Arc};
 use std::{env, thread};
 
 use druid::Target;
+use libc::open;
 use serde::{Deserialize, Serialize};
 use tracing::{info, warn};
+use url::Url;
 
 use ui::UI;
 
@@ -247,14 +250,35 @@ pub struct InstalledBrowserProfile {
     profile_icon: Option<String>,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct OpeningRule {
+    source_app: Option<String>,
+    url_pattern: Option<String>,
+    profile: String,
+}
+
 fn generate_all_browser_profiles(
     app_finder: &OSAppFinder,
     force_reload: bool,
-) -> (Vec<CommonBrowserProfile>, Vec<CommonBrowserProfile>) {
+) -> (
+    Vec<OpeningRule>,
+    Vec<CommonBrowserProfile>,
+    Vec<CommonBrowserProfile>,
+) {
     let installed_browsers = app_finder.get_installed_browsers_cached(force_reload);
     let config = app_finder.get_installed_browsers_config();
     let hidden_apps = config.get_hidden_apps();
     let hidden_profiles = config.get_hidden_profiles();
+
+    let config_rules = config.get_rules();
+    let opening_rules = config_rules
+        .iter()
+        .map(|r| OpeningRule {
+            source_app: r.source_app.clone(),
+            url_pattern: r.url_pattern.clone(),
+            profile: r.profile.clone(),
+        })
+        .collect();
 
     let mut visible_browser_profiles: Vec<CommonBrowserProfile> = Vec::new();
     let mut hidden_browser_profiles: Vec<CommonBrowserProfile> = Vec::new();
@@ -301,14 +325,86 @@ fn generate_all_browser_profiles(
         return order_maybe.unwrap_or(unordered_index);
     });
 
-    return (visible_browser_profiles, hidden_browser_profiles);
+    return (
+        opening_rules,
+        visible_browser_profiles,
+        hidden_browser_profiles,
+    );
+}
+
+fn get_rule_for_source_app_and_url<'a>(
+    opening_rules: &'a Vec<OpeningRule>,
+    url: &String,
+    source_app_maybe: Option<String>,
+) -> Option<&'a OpeningRule> {
+    let url_result = Url::from_str(url);
+    if url_result.is_err() {
+        return None;
+    }
+    let given_url = url_result.unwrap();
+    let given_url_domain = given_url.domain().unwrap();
+
+    for r in opening_rules {
+        let mut url_match = false;
+        let mut source_app_match = false;
+        if r.url_pattern.is_some() {
+            let url_pattern_rule = r.url_pattern.as_ref().unwrap().clone();
+            let url_rule_result = Url::from_str(url_pattern_rule.as_str());
+            if url_rule_result.is_err() {
+                continue;
+            }
+            let url_rule = url_rule_result.unwrap();
+            let domains_match = url_rule.domain().unwrap() == given_url_domain;
+            url_match = domains_match;
+        } else {
+            url_match = true
+        }
+
+        if r.source_app.is_some() {
+            let source_app_rule = r.source_app.as_ref().unwrap().clone();
+            if source_app_maybe.is_some() {
+                let source_app = source_app_maybe.as_ref().unwrap().clone();
+                source_app_match = source_app_rule == source_app;
+            }
+        } else {
+            source_app_match = true;
+        }
+
+        if url_match && source_app_match {
+            return Some(r);
+        }
+    }
+
+    return None;
+}
+
+fn get_browser_profile_by_id<'a>(
+    visible_profiles: &'a [CommonBrowserProfile],
+    hidden_profiles: &'a [CommonBrowserProfile],
+    unique_id: &str,
+) -> Option<&'a CommonBrowserProfile> {
+    let visible_profile_maybe = visible_profiles
+        .iter()
+        .find(|p| p.get_unique_id() == unique_id);
+    if visible_profile_maybe.is_some() {
+        return visible_profile_maybe;
+    }
+
+    let hidden_profile_maybe = hidden_profiles
+        .iter()
+        .find(|p| p.get_unique_id() == unique_id);
+    if hidden_profile_maybe.is_some() {
+        return hidden_profile_maybe;
+    }
+
+    return None;
 }
 
 pub fn basically_main() {
     let args: Vec<String> = env::args().collect();
     //info!("{:?}", args);
 
-    let mut url = "https://github.com".to_string();
+    let mut url = "".to_string();
     let url_input_maybe = args.iter().find(|i| i.starts_with("http"));
     if url_input_maybe.is_some() {
         url = url_input_maybe.unwrap().to_string();
@@ -322,8 +418,27 @@ pub fn basically_main() {
     let is_default = utils::set_as_default_web_browser();
     let show_set_as_default = !is_default;
 
-    let (mut visible_browser_profiles, mut hidden_browser_profiles) =
+    let (opening_rules, mut visible_browser_profiles, mut hidden_browser_profiles) =
         generate_all_browser_profiles(&app_finder, force_reload);
+
+    // TODO: url should not be considered here in case of macos
+    //       and only the one in LinkOpenedFromBundle should be considered
+    let opening_rule_maybe = get_rule_for_source_app_and_url(&opening_rules, &url, None);
+    if opening_rule_maybe.is_some() {
+        let opening_rule = opening_rule_maybe.unwrap();
+        let profile_id = opening_rule.profile.clone();
+
+        let profile_maybe = get_browser_profile_by_id(
+            visible_browser_profiles.as_slice(),
+            hidden_browser_profiles.as_slice(),
+            profile_id.as_str(),
+        );
+        if profile_maybe.is_some() {
+            let profile = profile_maybe.unwrap();
+            profile.open_link(url.as_str(), false);
+            return;
+        }
+    }
 
     let (main_sender, main_receiver) = mpsc::channel::<MessageToMain>();
 
@@ -343,9 +458,8 @@ pub fn basically_main() {
             match message {
                 MessageToMain::Refresh => {
                     info!("refresh called");
-                    let profiles = generate_all_browser_profiles(&app_finder, true);
-                    visible_browser_profiles = profiles.0;
-                    hidden_browser_profiles = profiles.1;
+                    let (opening_rules, visible_browser_profiles, hidden_browser_profiles) =
+                        generate_all_browser_profiles(&app_finder, true);
 
                     let ui_browsers = UI::real_to_ui_browsers(&visible_browser_profiles);
                     ui_event_sink
@@ -369,6 +483,32 @@ pub fn basically_main() {
                     //       prioritize/default browsers based on source app and/or url
                     info!("source_bundle_id: {}", from_bundle_id.clone());
                     info!("url: {}", url);
+                    let opening_rule_maybe = get_rule_for_source_app_and_url(
+                        &opening_rules,
+                        &url,
+                        Some(from_bundle_id.clone()),
+                    );
+                    if opening_rule_maybe.is_some() {
+                        let opening_rule = opening_rule_maybe.unwrap();
+                        let profile_id = opening_rule.profile.clone();
+
+                        let profile_maybe = get_browser_profile_by_id(
+                            visible_browser_profiles.as_slice(),
+                            hidden_browser_profiles.as_slice(),
+                            profile_id.as_str(),
+                        );
+                        if profile_maybe.is_some() {
+                            let profile = profile_maybe.unwrap();
+                            profile.open_link(url.as_str(), false);
+                            ui_event_sink
+                                .submit_command(
+                                    ui::OPEN_LINK_IN_BROWSER_COMPLETED,
+                                    "meh2".to_string(),
+                                    Target::Global,
+                                )
+                                .ok();
+                        }
+                    }
                 }
                 MessageToMain::SetBrowsersAsDefaultBrowser => {
                     utils::set_as_default_web_browser();

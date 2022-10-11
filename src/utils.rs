@@ -22,11 +22,20 @@ pub fn set_as_default_web_browser() -> bool {
     return true;
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
+#[serde(default)]
 pub struct Config {
     hidden_apps: Vec<String>,
     hidden_profiles: Vec<String>,
     profile_order: Vec<String>,
+    rules: Vec<ConfigRule>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ConfigRule {
+    pub source_app: Option<String>,
+    pub url_pattern: Option<String>,
+    pub profile: String,
 }
 
 impl Config {
@@ -76,6 +85,10 @@ impl Config {
 
     pub fn set_profile_order(&mut self, profile_order: &Vec<String>) {
         self.profile_order = profile_order.clone();
+    }
+
+    pub fn get_rules(&self) -> &Vec<ConfigRule> {
+        return &self.rules;
     }
 }
 
@@ -139,22 +152,12 @@ impl OSAppFinder {
 
                 // just use empty config, but don't write it yet, it will be overwritten on first
                 // change in config
-                let config = Config {
-                    hidden_apps: vec![],
-                    hidden_profiles: vec![],
-                    profile_order: vec![],
-                };
-                return config;
+                return Config::default();
             }
             let config = result.unwrap();
             return config;
         } else {
-            let config = Config {
-                hidden_apps: vec![],
-                hidden_profiles: vec![],
-                profile_order: vec![],
-            };
-
+            let config = Config::default();
             let buffer = File::create(config_json_path.as_path()).unwrap();
             serde_json::to_writer_pretty(buffer, &config).unwrap();
             return config;
