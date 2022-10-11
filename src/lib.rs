@@ -6,7 +6,6 @@ use std::sync::{mpsc, Arc};
 use std::{env, thread};
 
 use druid::Target;
-use libc::open;
 use serde::{Deserialize, Serialize};
 use tracing::{info, warn};
 use url::Url;
