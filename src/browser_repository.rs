@@ -204,6 +204,7 @@ impl SupportedAppRepository {
                 "Firefox",
                 ".mozilla/firefox",
             )
+            .add_firefox_based_app("org.mozilla.floorp", "TODOTODOTODO", "Floorp", "")
             .add_firefox_based_app(
                 "org.torproject.torbrowser",
                 "TODOTODOTODO",
