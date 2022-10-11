@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 
 use url::Url;
 
-use crate::{chromium_profiles_parser, firefox_profiles_parser, InstalledBrowserProfile};
+use crate::{chromium_profiles_parser, firefox_profiles_parser, paths, InstalledBrowserProfile};
 
 // Holds list of custom SupportedApp configurations
 // All other apps will be the "default" supported app implementation
@@ -17,9 +17,9 @@ pub struct SupportedAppRepository {
 impl SupportedAppRepository {
     pub fn new() -> Self {
         let mut repository = Self {
-            snap_base: crate::utils::get_snap_root(),
-            chromium_user_dir_base: crate::utils::get_chrome_user_dir_root(),
-            firefox_user_dir_base: crate::utils::get_firefox_user_dir_root(),
+            snap_base: paths::get_snap_root(),
+            chromium_user_dir_base: paths::get_chrome_user_dir_root(),
+            firefox_user_dir_base: paths::get_firefox_user_dir_root(),
             supported_apps: HashMap::new(),
         };
         repository.generate_app_id_to_supported_app();
