@@ -171,8 +171,7 @@ impl UI {
         let initial_ui_state = UIState {
             url: self.url.to_string(),
             selected_browser: "".to_string(),
-            selected_index: 0,
-            hovered_index: None,
+            focused_index: None,
             incognito_mode: false,
             browsers: self.ui_browsers.clone(),
             restorable_app_profiles: self.restorable_app_profiles.clone(),
@@ -211,7 +210,7 @@ impl UI {
             .fix_height(OPTIONS_LABEL_SIZE);
 
         let show_set_as_default = self.show_set_as_default;
-        let options_button = Hover::new(
+        let options_button = FocusWidget::new(
             options_label,
             |ctx, _data: &UIState, _env| {
                 let size = ctx.size();
@@ -266,12 +265,24 @@ impl UI {
 pub struct UIState {
     url: String,
     selected_browser: String,
-    selected_index: usize,
-    hovered_index: Option<usize>,
+    focused_index: Option<usize>,
     incognito_mode: bool,
 
     browsers: Arc<Vec<UIBrowser>>,
     restorable_app_profiles: Arc<Vec<UIBrowser>>,
+}
+
+impl FocusData for UIState {
+    fn has_autofocus(&self) -> bool {
+        return false;
+    }
+}
+// need to implement this for the Widget<(bool, UIBrowser)> types we declared
+impl FocusData for (bool, UIBrowser) {
+    fn has_autofocus(&self) -> bool {
+        let browser = &self.1;
+        return browser.browser_profile_index == 0;
+    }
 }
 
 #[derive(Clone, Data, Lens)]
@@ -309,7 +320,7 @@ pub const URL_OPENED: Selector<druid::UrlOpenInfo> = Selector::new("url_opened")
 
 pub const EXIT_APP: Selector<String> = Selector::new("browsers.exit_app");
 
-pub const HOVER_BROWSER: Selector<Option<usize>> = Selector::new("browsers.hover");
+pub const SET_FOCUSED_INDEX: Selector<Option<usize>> = Selector::new("browsers.hover");
 
 // command to open a link in a selected web browser profile (browser profile index sent via command)
 pub const OPEN_LINK_IN_BROWSER: Selector<usize> = Selector::new("browsers.open_link");
@@ -375,6 +386,31 @@ impl AppDelegate<UIState> for UIDelegate {
         }
 
         match event {
+            Event::KeyDown(KeyEvent {
+                key: KbKey::Enter, ..
+            }) => {
+                info!("Enter caught in delegate");
+                if let Some(focused_index) = data.focused_index {
+                    ctx.get_external_handle()
+                        .submit_command(OPEN_LINK_IN_BROWSER, focused_index, Target::Global)
+                        .ok();
+                }
+            }
+            Event::KeyDown(KeyEvent {
+                key: KbKey::Character(ref char),
+                ..
+            }) if char == " " => {
+                info!("Space caught in delegate");
+                if let Some(focused_index) = data.focused_index {
+                    ctx.get_external_handle()
+                        .submit_command(OPEN_LINK_IN_BROWSER, focused_index, Target::Global)
+                        .ok();
+                }
+            }
+            _ => {}
+        }
+
+        match event {
             Event::KeyDown(ref key) => {
                 if key.key == Key::Shift {
                     //info!("{:?} pressed", key);
@@ -415,10 +451,9 @@ impl AppDelegate<UIState> for UIDelegate {
                 ))
                 .ok();
             Handled::Yes
-        } else if cmd.is(HOVER_BROWSER) {
-            let profile_index = cmd.get_unchecked(HOVER_BROWSER);
-            data.hovered_index = profile_index.clone();
-            //let browser_profile = self.all_browser_profiles.get(*profile_index).unwrap();
+        } else if cmd.is(SET_FOCUSED_INDEX) {
+            let profile_index = cmd.get_unchecked(SET_FOCUSED_INDEX);
+            data.focused_index = profile_index.clone();
             Handled::Yes
         } else if cmd.is(OPEN_LINK_IN_BROWSER) {
             let profile_index = cmd.get_unchecked(OPEN_LINK_IN_BROWSER);
@@ -483,7 +518,7 @@ impl AppDelegate<UIState> for UIDelegate {
             show_about_dialog(ctx);
             Handled::Yes
         } else {
-            println!("cmd forwarded: {:?}", cmd);
+            //println!("cmd forwarded: {:?}", cmd);
             Handled::No
         }
     }
@@ -688,11 +723,7 @@ impl Controller<String, Image> for UIImageController {
         icon_path: &String,
         env: &Env,
     ) {
-        // TODO LifeCycleCtx::register_for_focus() maybe?
         match event {
-            LifeCycle::FocusChanged(_a) => {
-                debug!("FOCUS CHANGED!");
-            }
             LifeCycle::WidgetAdded => {
                 debug!("WidgetAdded WAS CALLED for icon {}", icon_path.clone());
                 if let Ok(buf) = self.get_image_buf(icon_path.as_str()) {
@@ -821,6 +852,9 @@ fn create_browser(buf: ImageBuf) -> impl Widget<(bool, UIBrowser)> {
             Flex::column()
                 .cross_axis_alignment(CrossAxisAlignment::Fill)
                 .with_child(create_browser_label())
+                // for some odd reason omitting this child will steal focus away
+                // from some items, very confusing :/
+                .with_child(Label::new("").with_text_size(1.0))
         },
     );
 
@@ -840,7 +874,7 @@ fn create_browser(buf: ImageBuf) -> impl Widget<(bool, UIBrowser)> {
                 .ok();
         });
 
-    let container = Hover::new(
+    let container = FocusWidget::new(
         container,
         |ctx, _: &(bool, UIBrowser), _env| {
             let size = ctx.size();
@@ -854,18 +888,14 @@ fn create_browser(buf: ImageBuf) -> impl Widget<(bool, UIBrowser)> {
             ctx.fill(rounded_rect, &color);
         },
         |ctx, (_, data): &(bool, UIBrowser), _env| {
-            if ctx.is_hot() {
+            if ctx.has_focus() {
                 ctx.get_external_handle()
                     .submit_command(
-                        HOVER_BROWSER,
+                        SET_FOCUSED_INDEX,
                         Some(data.browser_profile_index),
                         Target::Global,
                     )
                     .ok();
-            } else {
-                //ctx.get_external_handle()
-                //    .submit_command(HOVER_BROWSER, None, Target::Global)
-                //    .ok();
             }
         },
     );
@@ -882,37 +912,122 @@ fn create_browser(buf: ImageBuf) -> impl Widget<(bool, UIBrowser)> {
     // re-draw on HotChanged
 }
 
-struct Hover<S: druid::Data, W> {
+pub trait FocusData {
+    fn has_autofocus(&self) -> bool;
+}
+
+pub const FOCUS_WIDGET_SET_FOCUS: Selector<bool> = Selector::new("focus_widget.set_focus");
+
+struct FocusWidget<S: druid::Data + FocusData, W> {
     inner: W,
-    hover_fn: fn(ctx: &mut PaintCtx, data: &S, env: &Env),
+    paint_fn_on_focus: fn(ctx: &mut PaintCtx, data: &S, env: &Env),
     lifecycle_fn: fn(ctx: &mut LifeCycleCtx, data: &S, env: &Env),
 }
 
-impl<S: druid::Data, W> Hover<S, W> {}
+impl<S: druid::Data + FocusData, W> FocusWidget<S, W> {}
 
-impl<S: druid::Data, W> Hover<S, W> {
+impl<S: druid::Data + FocusData, W> FocusWidget<S, W> {
     pub fn new(
         inner: W,
-        hover_fn: fn(ctx: &mut PaintCtx, data: &S, env: &Env),
+        paint_fn_on_focus: fn(ctx: &mut PaintCtx, data: &S, env: &Env),
         lifecycle_fn: fn(ctx: &mut LifeCycleCtx, data: &S, env: &Env),
-    ) -> Hover<S, W> {
-        Hover {
+    ) -> FocusWidget<S, W> {
+        FocusWidget {
             inner,
-            hover_fn,
+            paint_fn_on_focus,
             lifecycle_fn,
         }
     }
 }
 
-impl<S: druid::Data, W: Widget<S>> Widget<S> for Hover<S, W> {
+impl<S: druid::Data + FocusData, W: Widget<S>> Widget<S> for FocusWidget<S, W> {
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut S, env: &Env) {
+        match event {
+            Event::Command(cmd) if cmd.is(FOCUS_WIDGET_SET_FOCUS) => {
+                //info!("received FOCUS_WIDGET_SET_FOCUS");
+                ctx.request_focus();
+                ctx.request_paint();
+                ctx.set_handled();
+                ctx.request_update();
+            }
+            Event::WindowConnected => {
+                if data.has_autofocus() {
+                    // ask for focus on launch
+                    ctx.request_focus();
+                }
+            }
+            Event::KeyDown(KeyEvent {
+                key: KbKey::Tab,
+                mods,
+                ..
+            }) => {
+                if mods.shift() {
+                    info!("Shift+Tab PRESSED");
+                    ctx.focus_prev();
+                } else {
+                    info!("Tab PRESSED");
+                    ctx.focus_next();
+                };
+
+                ctx.request_paint();
+                ctx.set_handled();
+            }
+            Event::KeyDown(KeyEvent {
+                key: KbKey::ArrowDown,
+                ..
+            }) => {
+                info!("ArrowDown PRESSED");
+
+                ctx.focus_next();
+                ctx.request_paint();
+                ctx.set_handled();
+            }
+            Event::KeyDown(KeyEvent {
+                key: KbKey::ArrowUp,
+                ..
+            }) => {
+                info!("ArrowUp PRESSED");
+
+                ctx.focus_prev();
+                ctx.request_paint();
+                ctx.set_handled();
+            }
+            _ => {}
+        }
+
         self.inner.event(ctx, event, data, env);
     }
 
     fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, data: &S, env: &Env) {
-        if let LifeCycle::HotChanged(_) = event {
-            (self.lifecycle_fn)(ctx, data, env);
-            ctx.request_paint();
+        match event {
+            LifeCycle::BuildFocusChain => {
+                // widget which can be hovered with a mouse,
+                // can also be focused with keyboard navigation
+                ctx.register_for_focus();
+            }
+            LifeCycle::FocusChanged(to_focused) => {
+                if *to_focused {
+                    // enable scrolling once getting edge cases right
+                    // (sometimes too eager to scroll top/bottom item)
+                    ctx.scroll_to_view();
+                    (self.lifecycle_fn)(ctx, data, env);
+                }
+                ctx.request_paint();
+            }
+            LifeCycle::HotChanged(to_hot) => {
+                if *to_hot {
+                    // when mouse starts "hovering" this item, let's also request focus,
+                    // because we consider keyboard navigation and mouse hover the same here
+                    let cmd = Command::new(
+                        FOCUS_WIDGET_SET_FOCUS,
+                        true,
+                        Target::Widget(ctx.widget_id()),
+                    );
+                    ctx.submit_command(cmd);
+                    //ctx.request_paint();
+                }
+            }
+            _ => {}
         }
         self.inner.lifecycle(ctx, event, data, env);
     }
@@ -929,8 +1044,8 @@ impl<S: druid::Data, W: Widget<S>> Widget<S> for Hover<S, W> {
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &S, env: &Env) {
-        if ctx.is_hot() {
-            (self.hover_fn)(ctx, data, env);
+        if ctx.has_focus() {
+            (self.paint_fn_on_focus)(ctx, data, env);
         }
         self.inner.paint(ctx, data, env);
     }
