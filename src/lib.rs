@@ -1,5 +1,6 @@
 use std::borrow::Borrow;
 use std::fmt::Debug;
+use std::path::PathBuf;
 use std::process::Command;
 use std::str::FromStr;
 use std::sync::{mpsc, Arc};
@@ -439,9 +440,12 @@ pub fn basically_main() {
         }
     }
 
+    let localizations_basedir = paths::get_localizations_basedir();
+
     let (main_sender, main_receiver) = mpsc::channel::<MessageToMain>();
 
     let ui2 = UI::new(
+        localizations_basedir,
         main_sender,
         url.as_str(),
         UI::real_to_ui_browsers(visible_browser_profiles.as_slice()),

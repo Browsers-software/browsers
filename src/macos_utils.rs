@@ -3,6 +3,7 @@ use std::ffi::{CStr, OsString};
 
 use std::os::unix::ffi::OsStringExt;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use std::{fs, mem, ptr};
 
 use cocoa_foundation::base::{id, nil};
@@ -21,6 +22,7 @@ use crate::browser_repository::SupportedAppRepository;
 use crate::InstalledBrowser;
 
 const APP_DIR_NAME: &'static str = "software.Browsers";
+const APP_BUNDLE_ID: &'static str = "software.Browsers";
 
 /// Create a new NSString from a &str.
 pub(crate) fn make_nsstring(s: &str) -> *mut Object {
@@ -329,6 +331,18 @@ impl OsHelper {
 
         return Some(browser);
     }
+}
+
+// e.g /Applications/Browsers.app/
+pub fn get_this_app_bundle_dir() -> PathBuf {
+    get_bundle_path(APP_BUNDLE_ID)
+}
+
+// e.g /Applications/<bundle>/
+fn get_bundle_path(bundle_id: &str) -> PathBuf {
+    let bundle_url = get_bundle_url(bundle_id);
+    let bundle_path = from_nsstring(bundle_url);
+    return PathBuf::from_str(bundle_path.as_str()).unwrap();
 }
 
 pub fn get_this_app_cache_root_dir() -> PathBuf {
