@@ -26,8 +26,10 @@ build_app_bundle() {
   mkdir -p target/universal-apple-darwin/release/Browsers.app/Contents
   mkdir -p target/universal-apple-darwin/release/Browsers.app/Contents/MacOS
   mkdir -p target/universal-apple-darwin/release/Browsers.app/Contents/Resources
+  mkdir -p target/universal-apple-darwin/release/Browsers.app/Contents/Resources/i18n/en-US
   cp extra/macos/Info.plist target/universal-apple-darwin/release/Browsers.app/Contents/Info.plist
   cp extra/macos/icons/Browsers.icns target/universal-apple-darwin/release/Browsers.app/Contents/Resources/Browsers.icns
+  cp resources/i18n/en-US/builtin.ftl target/universal-apple-darwin/release/Browsers.app/Contents/Resources/i18n/en-US/builtin.ftl
   cp target/universal-apple-darwin/release/Browsers target/universal-apple-darwin/release/Browsers.app/Contents/MacOS/Browsers
 }
 

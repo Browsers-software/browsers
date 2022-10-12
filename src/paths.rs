@@ -64,3 +64,23 @@ pub fn get_snap_root() -> PathBuf {
 pub fn get_snap_root() -> PathBuf {
     return linux_utils::get_snap_root_dir();
 }
+
+// This directory should be of the structure base_dir/{locale}/{resource},
+// where '{locale}' is a valid BCP47 language tag, and {resource} is a .ftl included in resources.
+
+// on macOS basedir should be "/Applications/Browsers.app/Contents/Resources/i18n/"
+#[cfg(target_os = "macos")]
+pub fn get_localizations_basedir() -> PathBuf {
+    let app_bundle_dir = macos_utils::get_this_app_bundle_dir();
+    let buf = app_bundle_dir
+        .join("Contents")
+        .join("Resources")
+        .join("i18n");
+    return buf;
+}
+
+#[cfg(target_os = "linux")]
+pub fn get_localizations_basedir() -> PathBuf {
+    let basedir = "./resources/i18n".to_string();
+    return PathBuf::from_str(basedir.as_str()).unwrap();
+}

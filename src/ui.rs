@@ -1,7 +1,7 @@
 use std::cmp;
 use std::fs::File;
 use std::io::{BufReader, Error};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::mpsc::Sender;
 use std::sync::Arc;
 
@@ -35,6 +35,7 @@ const PADDING_Y: f64 = 10.0;
 const ITEM_HEIGHT: f64 = 32.0;
 
 pub struct UI {
+    localizations_basedir: PathBuf,
     main_sender: Sender<MessageToMain>,
     url: String,
     ui_browsers: Arc<Vec<UIBrowser>>,
@@ -68,6 +69,7 @@ impl UI {
     }
 
     pub fn new(
+        localizations_basedir: PathBuf,
         main_sender: Sender<MessageToMain>,
         url: &str,
         ui_browsers: Vec<UIBrowser>,
@@ -75,6 +77,7 @@ impl UI {
         show_set_as_default: bool,
     ) -> Self {
         Self {
+            localizations_basedir: localizations_basedir,
             main_sender: main_sender.clone(),
             url: url.to_string(),
             ui_browsers: Arc::new(ui_browsers),
@@ -90,6 +93,11 @@ impl UI {
             main_sender: self.main_sender.clone(),
             windows: Vec::new(),
         });
+
+        let basedir = self.localizations_basedir.to_str().unwrap().to_string();
+        let druid_app_launcher =
+            druid_app_launcher.localization_resources(vec!["builtin.ftl".to_string()], basedir);
+
         return druid_app_launcher;
     }
 
