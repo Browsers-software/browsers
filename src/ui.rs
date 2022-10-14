@@ -24,7 +24,7 @@ use druid::{
     Widget, WidgetExt, WindowDesc, WindowId,
 };
 use image::codecs::png;
-use tracing::{debug, info};
+use tracing::{debug, info, Instrument};
 
 use crate::{paths, CommonBrowserProfile, MessageToMain};
 
@@ -397,7 +397,7 @@ impl AppDelegate<UIState> for UIDelegate {
             Event::KeyDown(KeyEvent {
                 key: KbKey::Enter, ..
             }) => {
-                info!("Enter caught in delegate");
+                debug!("Enter caught in delegate");
                 if let Some(focused_index) = data.focused_index {
                     ctx.get_external_handle()
                         .submit_command(OPEN_LINK_IN_BROWSER, focused_index, Target::Global)
@@ -408,7 +408,7 @@ impl AppDelegate<UIState> for UIDelegate {
                 key: KbKey::Character(ref char),
                 ..
             }) if char == " " => {
-                info!("Space caught in delegate");
+                debug!("Space caught in delegate");
                 if let Some(focused_index) = data.focused_index {
                     ctx.get_external_handle()
                         .submit_command(OPEN_LINK_IN_BROWSER, focused_index, Target::Global)
@@ -539,7 +539,7 @@ impl AppDelegate<UIState> for UIDelegate {
         _env: &Env,
         _ctx: &mut DelegateCtx,
     ) {
-        info!("Window added, id: {:?}", id);
+        debug!("Window added, id: {:?}", id);
         self.windows.push(id);
     }
 
@@ -550,7 +550,7 @@ impl AppDelegate<UIState> for UIDelegate {
         _env: &Env,
         _ctx: &mut DelegateCtx,
     ) {
-        info!("Window removed, id: {:?}", id);
+        debug!("Window removed, id: {:?}", id);
         if let Some(pos) = self.windows.iter().position(|x| *x == id) {
             self.windows.remove(pos);
         }
@@ -773,7 +773,7 @@ impl Controller<String, Image> for UIImageController {
 
 // icon styles are conventionally different on platforms,
 // e.g most macos icons are actually with a lot of padding
-fn get_icon_size() -> f64 {
+const fn get_icon_size() -> f64 {
     // 8 + 8; 64/8 = 8
     // 48/8 = 6
     if cfg!(target_os = "macos") {
@@ -785,7 +785,7 @@ fn get_icon_size() -> f64 {
     }
 }
 
-fn get_icon_padding() -> f64 {
+const fn get_icon_padding() -> f64 {
     if cfg!(target_os = "macos") {
         0.0
     } else if cfg!(target_os = "linux") {
@@ -828,10 +828,12 @@ fn create_browser(buf: ImageBuf) -> impl Widget<(bool, UIBrowser)> {
     let icon_size = get_icon_size();
     let icon_padding = get_icon_padding();
 
+    if icon_size + icon_padding > ITEM_HEIGHT {
+        // ideally this could be compile time check
+        panic!("icon_size + icon_padding > ITEM_HEIGHT");
+    }
+
     let image_widget = Image::new(buf)
-        //   .lens(UIBrowser::url)
-        // set the fill strategy
-        //.fill_mode(FillStrat::Fill)
         .interpolation_mode(InterpolationMode::Bilinear)
         .controller(UIImageController)
         .fix_width(icon_size)
@@ -870,8 +872,6 @@ fn create_browser(buf: ImageBuf) -> impl Widget<(bool, UIBrowser)> {
     let icon_and_label = Flex::row().with_child(image_widget).with_child(item_label);
 
     let container = Container::new(icon_and_label)
-        //.background(Color::rgba(1.0, 1.0, 1.0, 0.25))
-        .rounded(10.0)
         .fix_size(192.0, ITEM_HEIGHT)
         .on_click(move |_ctx, (_, data): &mut (bool, UIBrowser), _env| {
             _ctx.get_external_handle()
@@ -887,12 +887,7 @@ fn create_browser(buf: ImageBuf) -> impl Widget<(bool, UIBrowser)> {
         container,
         |ctx, _: &(bool, UIBrowser), _env| {
             let size = ctx.size();
-            let rounded_rect = size
-                .to_rect()
-                //.inset(-stroke_width / 2.0)
-                .to_rounded_rect(5.0);
-
-            //let bounds = ctx.size().to_rect();
+            let rounded_rect = size.to_rounded_rect(5.0);
             let color = Color::rgba(1.0, 1.0, 1.0, 0.25);
             ctx.fill(rounded_rect, &color);
         },
@@ -909,7 +904,7 @@ fn create_browser(buf: ImageBuf) -> impl Widget<(bool, UIBrowser)> {
         },
     );
 
-    let container = Container::new(container).rounded(10.0);
+    let container = Container::new(container);
 
     let container = ControllerHost::new(container, ContextMenuController);
 
@@ -925,7 +920,7 @@ pub trait FocusData {
     fn has_autofocus(&self) -> bool;
 }
 
-pub const FOCUS_WIDGET_SET_FOCUS: Selector<bool> = Selector::new("focus_widget.set_focus");
+pub const FOCUS_WIDGET_SET_FOCUS_ON_HOVER: Selector<bool> = Selector::new("focus_widget.set_focus");
 
 struct FocusWidget<S: druid::Data + FocusData, W> {
     inner: W,
@@ -952,7 +947,8 @@ impl<S: druid::Data + FocusData, W> FocusWidget<S, W> {
 impl<S: druid::Data + FocusData, W: Widget<S>> Widget<S> for FocusWidget<S, W> {
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut S, env: &Env) {
         match event {
-            Event::Command(cmd) if cmd.is(FOCUS_WIDGET_SET_FOCUS) => {
+            // on mouse hover request focus
+            Event::Command(cmd) if cmd.is(FOCUS_WIDGET_SET_FOCUS_ON_HOVER) => {
                 //info!("received FOCUS_WIDGET_SET_FOCUS");
                 ctx.request_focus();
                 ctx.request_paint();
@@ -971,10 +967,10 @@ impl<S: druid::Data + FocusData, W: Widget<S>> Widget<S> for FocusWidget<S, W> {
                 ..
             }) => {
                 if mods.shift() {
-                    info!("Shift+Tab PRESSED");
+                    debug!("Shift+Tab PRESSED");
                     ctx.focus_prev();
                 } else {
-                    info!("Tab PRESSED");
+                    debug!("Tab PRESSED");
                     ctx.focus_next();
                 };
 
@@ -985,7 +981,7 @@ impl<S: druid::Data + FocusData, W: Widget<S>> Widget<S> for FocusWidget<S, W> {
                 key: KbKey::ArrowDown,
                 ..
             }) => {
-                info!("ArrowDown PRESSED");
+                debug!("ArrowDown PRESSED");
 
                 ctx.focus_next();
                 ctx.request_paint();
@@ -995,7 +991,7 @@ impl<S: druid::Data + FocusData, W: Widget<S>> Widget<S> for FocusWidget<S, W> {
                 key: KbKey::ArrowUp,
                 ..
             }) => {
-                info!("ArrowUp PRESSED");
+                debug!("ArrowUp PRESSED");
 
                 ctx.focus_prev();
                 ctx.request_paint();
@@ -1028,7 +1024,7 @@ impl<S: druid::Data + FocusData, W: Widget<S>> Widget<S> for FocusWidget<S, W> {
                     // when mouse starts "hovering" this item, let's also request focus,
                     // because we consider keyboard navigation and mouse hover the same here
                     let cmd = Command::new(
-                        FOCUS_WIDGET_SET_FOCUS,
+                        FOCUS_WIDGET_SET_FOCUS_ON_HOVER,
                         true,
                         Target::Widget(ctx.widget_id()),
                     );
