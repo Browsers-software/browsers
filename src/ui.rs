@@ -87,18 +87,14 @@ impl UI {
     }
 
     pub fn create_app_launcher(self) -> AppLauncher<UIState> {
-        let main_window = self.create_window();
-
-        let druid_app_launcher = AppLauncher::with_window(main_window).delegate(UIDelegate {
-            main_sender: self.main_sender.clone(),
-            windows: Vec::new(),
-        });
-
         let basedir = self.localizations_basedir.to_str().unwrap().to_string();
-        let druid_app_launcher =
-            druid_app_launcher.localization_resources(vec!["builtin.ftl".to_string()], basedir);
-
-        return druid_app_launcher;
+        let main_window = self.create_window();
+        return AppLauncher::with_window(main_window)
+            .delegate(UIDelegate {
+                main_sender: self.main_sender.clone(),
+                windows: Vec::new(),
+            })
+            .localization_resources(vec!["builtin.ftl".to_string()], basedir);
     }
 
     fn calculate_window_position(window_size: Size) -> Point {
