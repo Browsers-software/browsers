@@ -6,6 +6,7 @@ cross build --target aarch64-unknown-linux-gnu --release
 # Build universal binary
 mkdir -p target/universal-unknown-linux-gnu/release/
 mkdir -p target/universal-unknown-linux-gnu/release/x86_64/
+mkdir -p target/universal-unknown-linux-gnu/release/aarch64/
 mkdir -p target/universal-unknown-linux-gnu/release/icons/
 mkdir -p target/universal-unknown-linux-gnu/release/icons/16x16
 mkdir -p target/universal-unknown-linux-gnu/release/icons/32x32
