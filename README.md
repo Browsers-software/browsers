@@ -1,4 +1,7 @@
-# [Browsers](https://browsers.software)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Browsers-software/browsers/main/resources/icons/256x256/software.Browsers.png" width="128" />
+  <h1 align="center">Browsers</h1>
+</p>
 
 ![MIT/Apache 2.0](https://img.shields.io/badge/license-MIT%2FApache-blue.svg)
 
