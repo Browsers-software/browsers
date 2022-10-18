@@ -18,7 +18,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["fmt", "std", "time", "local-time"] }
 tracing-appender = "0.2"
 
-rolling-file="0.1.0"
+rolling-file = "0.1.0"
 
 libc = "0.2"
 dirs = "4.0"
@@ -73,16 +73,6 @@ gtk = { version = "0.14.0" }
 lto = true           # Enable Link Time Optimization
 #codegen-units = 1   # Reduce number of codegen units to increase optimizations.
 #panic = 'abort'     # Abort on panic
-
-# cargo bundle --release
-# see https://github.com/burtonageo/cargo-bundle
-# TODO: how to integrate with cross?
-[package.metadata.bundle]
-name = "Browsers"
-identifier = "software.Browsers"
-linux_mime_types = ["x-scheme-handler/http;", "x-scheme-handler/https;"]
-linux_exec_args = "%u"
-icon = ["resources/icons/512x512/software.Browsers.png"]
 
 # Base image is ubuntu:20.04, see https://github.com/cross-rs/cross/blob/main/docker/Dockerfile.x86_64-unknown-linux-gnu
 # Unfortunately https://github.com/cross-rs/cross/pull/591 is not yet in stable version,
