@@ -11,7 +11,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 
 # command-line argument parser
-clap = "3.2.21"
+clap = "4.0.15"
 
 # logging library
 tracing = "0.1"
