@@ -14,18 +14,23 @@ mkdir -p target/universal-unknown-linux-gnu/release/icons/64x64
 mkdir -p target/universal-unknown-linux-gnu/release/icons/128x128
 mkdir -p target/universal-unknown-linux-gnu/release/icons/256x256
 mkdir -p target/universal-unknown-linux-gnu/release/icons/512x512
+mkdir -p target/universal-unknown-linux-gnu/release/i18n
+mkdir -p target/universal-unknown-linux-gnu/release/i18n/en-US
 
 cp "target/x86_64-unknown-linux-gnu/release/browsers" "target/universal-unknown-linux-gnu/release/x86_64/browsers"
 cp "target/aarch64-unknown-linux-gnu/release/browsers" "target/universal-unknown-linux-gnu/release/aarch64/browsers"
 
 cp "extra/linux/dist/install.sh" "target/universal-unknown-linux-gnu/release/install.sh"
 cp "extra/linux/dist/software.Browsers.desktop" "target/universal-unknown-linux-gnu/release/software.Browsers.desktop"
-cp "extra/linux/dist/icons/16x16/software.Browsers.png" "target/universal-unknown-linux-gnu/release/icons/16x16/software.Browsers.png"
-cp "extra/linux/dist/icons/32x32/software.Browsers.png" "target/universal-unknown-linux-gnu/release/icons/32x32/software.Browsers.png"
-cp "extra/linux/dist/icons/64x64/software.Browsers.png" "target/universal-unknown-linux-gnu/release/icons/64x64/software.Browsers.png"
-cp "extra/linux/dist/icons/128x128/software.Browsers.png" "target/universal-unknown-linux-gnu/release/icons/128x128/software.Browsers.png"
-cp "extra/linux/dist/icons/256x256/software.Browsers.png" "target/universal-unknown-linux-gnu/release/icons/256x256/software.Browsers.png"
-cp "extra/linux/dist/icons/512x512/software.Browsers.png" "target/universal-unknown-linux-gnu/release/icons/512x512/software.Browsers.png"
+
+cp "resources/icons/16x16/software.Browsers.png" "target/universal-unknown-linux-gnu/release/icons/16x16/software.Browsers.png"
+cp "resources/icons/32x32/software.Browsers.png" "target/universal-unknown-linux-gnu/release/icons/32x32/software.Browsers.png"
+cp "resources/icons/64x64/software.Browsers.png" "target/universal-unknown-linux-gnu/release/icons/64x64/software.Browsers.png"
+cp "resources/icons/128x128/software.Browsers.png" "target/universal-unknown-linux-gnu/release/icons/128x128/software.Browsers.png"
+cp "resources/icons/256x256/software.Browsers.png" "target/universal-unknown-linux-gnu/release/icons/256x256/software.Browsers.png"
+cp "resources/icons/512x512/software.Browsers.png" "target/universal-unknown-linux-gnu/release/icons/512x512/software.Browsers.png"
+
+cp "resources/i18n/en-US/builtin.ftl" "target/universal-unknown-linux-gnu/release/i18n/en-US/builtin.ftl"
 
 rm -f ./target/universal-unknown-linux-gnu/release/browsers_linux.tar.gz
 

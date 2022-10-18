@@ -66,22 +66,26 @@ pub fn get_snap_root() -> PathBuf {
     return linux_utils::get_snap_root_dir();
 }
 
-// This directory should be of the structure base_dir/{locale}/{resource},
-// where '{locale}' is a valid BCP47 language tag, and {resource} is a .ftl included in resources.
-
-// on macOS basedir should be "/Applications/Browsers.app/Contents/Resources/i18n/"
-#[cfg(target_os = "macos")]
-pub fn get_localizations_basedir() -> PathBuf {
-    let app_bundle_dir = macos_utils::get_this_app_bundle_dir();
-    let buf = app_bundle_dir
-        .join("Contents")
-        .join("Resources")
-        .join("i18n");
-    return buf;
+pub fn get_app_icon_path() -> PathBuf {
+    return get_resources_basedir().join("icons/512x512/software.Browsers.png");
 }
 
-#[cfg(target_os = "linux")]
+// This is the {base_dir} of the path {base_dir}/{locale}/{resource},
+// where '{locale}' is a valid BCP47 language tag, and {resource} is a file with .ftl extension.
 pub fn get_localizations_basedir() -> PathBuf {
-    let basedir = "./resources/i18n".to_string();
+    return get_resources_basedir().join("i18n");
+}
+
+// on macOS basedir should be "/Applications/Browsers.app/Contents/Resources/"
+#[cfg(target_os = "macos")]
+pub fn get_resources_basedir() -> PathBuf {
+    let app_bundle_dir = macos_utils::get_this_app_bundle_dir();
+    return app_bundle_dir.join("Contents").join("Resources");
+}
+
+// TODO: find the best path for resources of a linux app
+#[cfg(target_os = "linux")]
+pub fn get_resources_basedir() -> PathBuf {
+    let basedir = "./resources".to_string();
     return PathBuf::from_str(basedir.as_str()).unwrap();
 }

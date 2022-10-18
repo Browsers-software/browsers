@@ -68,7 +68,7 @@
         <string>APPL</string>
 
         <key>CFBundleShortVersionString</key>
-        <string>1.0.0</string>
+        <string>0.0.1</string>
 
         <key>CFBundleVersion</key>
         <string>20</string>
@@ -82,5 +82,8 @@
         <!-- The category that best describes your app for the App Store. -->
         <key>LSApplicationCategoryType</key>
         <string>public.app-category.utilities</string>
+
+        <key>NSHumanReadableCopyright</key>
+        <string>Copyright © 2022 Browsers.software.</string>
     </dict>
 </plist>

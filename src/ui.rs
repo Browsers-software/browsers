@@ -562,7 +562,8 @@ fn show_about_dialog(ctx: &mut DelegateCtx) {
 
     let mut buf = ImageBuf::empty();
 
-    let result = ImageBuf::from_file("extra/icon512x512.png");
+    let app_icon_path = paths::get_app_icon_path();
+    let result = ImageBuf::from_file(app_icon_path);
     if result.is_ok() {
         buf = result.unwrap();
     }
@@ -576,9 +577,10 @@ fn show_about_dialog(ctx: &mut DelegateCtx) {
     let version_row: Label<UIState> =
         Label::new(format!("Version {}", VERSION)).with_text_size(10.0);
 
-    let copyright_row: Label<UIState> =
-        Label::new("Copyright © 2022 Browsers.software. \nVisit us at https://browsers.software")
-            .with_text_size(10.0);
+    let copyright_row: Label<UIState> = Label::new(
+        "Copyright © 2022 Browsers.software team. \nVisit us at https://browsers.software.",
+    )
+    .with_text_size(10.0);
 
     // .join("") adds trailing "/", indicating for the user that it's a directory
     let config_root_dir = paths::get_config_root_dir().join("");
@@ -594,16 +596,16 @@ fn show_about_dialog(ctx: &mut DelegateCtx) {
         .with_child(
             Flex::column()
                 .cross_axis_alignment(CrossAxisAlignment::End)
-                .with_child(Label::new("Config").with_text_size(6.0))
-                .with_child(Label::new("Cache").with_text_size(6.0))
-                .with_child(Label::new("Logs").with_text_size(6.0)),
+                .with_child(Label::new("Config").with_text_size(8.0))
+                .with_child(Label::new("Cache").with_text_size(8.0))
+                .with_child(Label::new("Logs").with_text_size(8.0)),
         )
         .with_child(
             Flex::column()
                 .cross_axis_alignment(CrossAxisAlignment::Start)
-                .with_child(Label::new(config_root_dir).with_text_size(6.0))
-                .with_child(Label::new(cache_root_dir).with_text_size(6.0))
-                .with_child(Label::new(logs_root_dir).with_text_size(6.0)),
+                .with_child(Label::new(config_root_dir).with_text_size(8.0))
+                .with_child(Label::new(cache_root_dir).with_text_size(8.0))
+                .with_child(Label::new(logs_root_dir).with_text_size(8.0)),
         );
 
     let col = Flex::column()
@@ -620,7 +622,7 @@ fn show_about_dialog(ctx: &mut DelegateCtx) {
         .with_flex_spacer(1.0)
         .background(Color::from_hex_str("1b2020").unwrap());
 
-    let size = Size::new(285.0, 180.0);
+    let size = Size::new(285.0, 200.0);
     let (_, monitor) = druid::Screen::get_mouse_position();
     let screen_rect = monitor.virtual_work_rect();
 

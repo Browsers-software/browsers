@@ -82,7 +82,7 @@ name = "Browsers"
 identifier = "software.Browsers"
 linux_mime_types = ["x-scheme-handler/http;", "x-scheme-handler/https;"]
 linux_exec_args = "%u"
-icon = ["extra/icon512x512.png"]
+icon = ["resources/icons/512x512/software.Browsers.png"]
 
 # Base image is ubuntu:20.04, see https://github.com/cross-rs/cross/blob/main/docker/Dockerfile.x86_64-unknown-linux-gnu
 # Unfortunately https://github.com/cross-rs/cross/pull/591 is not yet in stable version,
