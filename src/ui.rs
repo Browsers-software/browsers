@@ -15,7 +15,7 @@ use druid::widget::{
 };
 use druid::{
     image, Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, LayoutCtx, LensExt,
-    LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, TextAlignment, UpdateCtx,
+    LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, TextAlignment, UpdateCtx, WidgetId,
     WindowHandle, WindowLevel,
 };
 use druid::{
@@ -225,10 +225,16 @@ impl UI {
                 let color = Color::rgba(1.0, 1.0, 1.0, 0.25);
                 ctx.fill(rounded_rect, &color);
             },
-            |_ctx, _data: &UIState, _env| {},
+            |ctx, _data: &UIState, _env| {
+                if ctx.has_focus() {
+                    ctx.get_external_handle()
+                        .submit_command(SET_FOCUSED_INDEX, None, Target::Global)
+                        .ok();
+                }
+            },
         )
-        .on_click(move |_ctx, data: &mut UIState, _env| {
-            _ctx.show_context_menu(
+        .on_click(move |ctx, data: &mut UIState, _env| {
+            ctx.show_context_menu(
                 make_options_menu(show_set_as_default, data.restorable_app_profiles.clone()),
                 Point::ZERO,
             );
@@ -918,7 +924,8 @@ pub trait FocusData {
     fn has_autofocus(&self) -> bool;
 }
 
-pub const FOCUS_WIDGET_SET_FOCUS_ON_HOVER: Selector<bool> = Selector::new("focus_widget.set_focus");
+pub const FOCUS_WIDGET_SET_FOCUS_ON_HOVER: Selector<WidgetId> =
+    Selector::new("focus_widget.set_focus");
 
 struct FocusWidget<S: druid::Data + FocusData, W> {
     inner: W,
@@ -947,7 +954,11 @@ impl<S: druid::Data + FocusData, W: Widget<S>> Widget<S> for FocusWidget<S, W> {
         match event {
             // on mouse hover request focus
             Event::Command(cmd) if cmd.is(FOCUS_WIDGET_SET_FOCUS_ON_HOVER) => {
-                //info!("received FOCUS_WIDGET_SET_FOCUS");
+                let widget_id = cmd.get_unchecked(FOCUS_WIDGET_SET_FOCUS_ON_HOVER);
+                //info!(
+                //    "received FOCUS_WIDGET_SET_FOCUS to widget_id: {:?}",
+                //    widget_id
+                //);
                 ctx.request_focus();
                 ctx.request_paint();
                 ctx.set_handled();
@@ -1012,18 +1023,20 @@ impl<S: druid::Data + FocusData, W: Widget<S>> Widget<S> for FocusWidget<S, W> {
                 if *to_focused {
                     // enable scrolling once getting edge cases right
                     // (sometimes too eager to scroll top/bottom item)
-                    ctx.scroll_to_view();
+                    if !ctx.is_hot() {
+                        ctx.scroll_to_view();
+                    }
                     (self.lifecycle_fn)(ctx, data, env);
                 }
                 ctx.request_paint();
             }
             LifeCycle::HotChanged(to_hot) => {
-                if *to_hot {
+                if *to_hot && !ctx.has_focus() {
                     // when mouse starts "hovering" this item, let's also request focus,
                     // because we consider keyboard navigation and mouse hover the same here
                     let cmd = Command::new(
                         FOCUS_WIDGET_SET_FOCUS_ON_HOVER,
-                        true,
+                        ctx.widget_id(),
                         Target::Widget(ctx.widget_id()),
                     );
                     ctx.submit_command(cmd);
