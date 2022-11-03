@@ -11,8 +11,7 @@ use druid::image::imageops::FilterType;
 use druid::image::{GenericImage, ImageFormat, Rgb, Rgba};
 use druid::widget::Image;
 use serde::{Deserialize, Serialize};
-use tracing::info;
-use tracing_subscriber::fmt::MakeWriter;
+use tracing::{debug, info};
 use url::Url;
 
 #[cfg(target_os = "linux")]
@@ -208,6 +207,51 @@ impl OSAppFinder {
     }
 }
 
+const fn create_circular_mask_radius<const N: usize>() -> [[bool; N]; N] {
+    let mut mask = [[true; N]; N];
+
+    let mut x: usize = 0;
+    while x < N as usize {
+        let mut y: usize = 0;
+        while y < N as usize {
+            let w = x.abs_diff(N / 2);
+            let h = y.abs_diff(N / 2);
+            let a = w.pow(2) + h.pow(2);
+
+            let sq = ct_sqrt(a as u32, 1, a as u32);
+            let distance = sq + 1;
+
+            // if distance to center is > 16, then put transparent pixel
+            let is_visible = distance <= N as u32 / 2;
+            mask[x][y] = is_visible;
+
+            y += 1;
+        }
+        x += 1;
+    }
+
+    return mask;
+}
+
+// https://baptiste-wicht.com/posts/2014/07/compile-integer-square-roots-at-compile-time-in-cpp.html
+const fn ct_sqrt(res: u32, l: u32, r: u32) -> u32 {
+    return if l == r {
+        r
+    } else {
+        let mid = (r + l) / 2;
+
+        if mid * mid >= res {
+            0
+            // too high recursion, but don't need this branch, so just returning 0
+            //return ct_sqrt(res, l, mid);
+        } else {
+            ct_sqrt(res, mid + 1, r)
+        }
+    };
+}
+
+const CIRCULAR_MASK_32: [[bool; 32]; 32] = create_circular_mask_radius();
+
 pub fn download_profile_images(
     remote_url: &Url,
     local_icon_path_without_extension: &Path,
@@ -219,6 +263,14 @@ pub fn download_profile_images(
         let image1 = result1.unwrap();
         let image1 = image1.resize_exact(32, 32, FilterType::Nearest);
         let mut image_with_alpha = image1.to_rgba16();
+
+        for (x, row) in CIRCULAR_MASK_32.iter().enumerate() {
+            for (y, mask) in row.iter().enumerate() {
+                if !mask {
+                    image_with_alpha.put_pixel(x as u32, y as u32, Rgba([122, 0, 0, 122]));
+                }
+            }
+        }
 
         for x in 0u32..32 {
             for y in 0u32..32 {
@@ -241,11 +293,11 @@ pub fn download_profile_images(
             .save_with_format(png_file_path.as_path(), ImageFormat::Png)
             .unwrap();
 
-        info!("WROTE TO : {:?}", png_file_path.as_path());
+        debug!("WROTE TO : {:?}", png_file_path.as_path());
 
         return Ok(png_file_path);
     }
-    info!("PROFILE ICON: {}", remote_url);
+    debug!("PROFILE ICON: {}", remote_url);
 
     return Err(io::Error::new(
         ErrorKind::Other,
