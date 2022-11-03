@@ -897,18 +897,17 @@ fn create_browser(
         .padding(icon_padding)
         .lens(BrowserLens.then(UIBrowser::icon_path));
 
-    let profile_icon = Image::new(profile_img_buf.clone())
-        .interpolation_mode(InterpolationMode::Bilinear)
-        .controller(UIImageController)
-        .fix_width(16.0)
-        .fix_height(16.0)
-        .center()
-        .padding(icon_padding)
-        .lens(BrowserLens.then(UIBrowser::profile_icon_path));
-
     let item_label = Either::new(
         |(_incognito_mode, item): &(bool, UIBrowser), _env| item.supports_profiles,
         {
+            let profile_icon = Image::new(profile_img_buf.clone())
+                .interpolation_mode(InterpolationMode::Bilinear)
+                .controller(UIImageController)
+                .fix_width(12.0)
+                .fix_height(12.0)
+                .center()
+                .lens(BrowserLens.then(UIBrowser::profile_icon_path));
+
             let profile_label =
                 Label::dynamic(|(_incognito_mode, item): &(bool, UIBrowser), _env: &_| {
                     item.profile_name.clone()
@@ -918,10 +917,14 @@ fn create_browser(
                 .with_text_alignment(TextAlignment::Start)
                 .with_text_color(Color::from_hex_str("BEBEBE").unwrap());
 
+            let profile_row = Flex::row()
+                .with_child(profile_icon)
+                .with_child(profile_label);
+
             Flex::column()
                 .cross_axis_alignment(CrossAxisAlignment::Fill)
                 .with_child(create_browser_label())
-                .with_child(profile_label)
+                .with_child(profile_row)
         },
         {
             Flex::column()
@@ -933,10 +936,7 @@ fn create_browser(
         },
     );
 
-    let icon_and_label = Flex::row()
-        .with_child(image_widget)
-        .with_child(profile_icon)
-        .with_child(item_label);
+    let icon_and_label = Flex::row().with_child(image_widget).with_child(item_label);
 
     let container = Container::new(icon_and_label)
         .fix_size(192.0, ITEM_HEIGHT)

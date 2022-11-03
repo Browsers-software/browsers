@@ -2,10 +2,14 @@ use std::any::Any;
 use std::env::temp_dir;
 use std::fmt::Error;
 use std::fs::File;
-use std::io::{BufReader, BufWriter, ErrorKind, Write};
+use std::io::{BufReader, BufWriter, ErrorKind, Read, Write};
 use std::path::{Path, PathBuf};
-use std::{fs, io};
+use std::{fs, io, u32};
 
+use druid::image;
+use druid::image::imageops::FilterType;
+use druid::image::{GenericImage, ImageFormat, Rgb, Rgba};
+use druid::widget::Image;
 use serde::{Deserialize, Serialize};
 use tracing::info;
 use tracing_subscriber::fmt::MakeWriter;
@@ -210,24 +214,36 @@ pub fn download_profile_images(
 ) -> Result<PathBuf, io::Error> {
     let response = attohttpc::get(remote_url).send().unwrap();
     if response.is_success() {
-        let content_type_maybe = response.headers().get("content-type");
-        let file_extension = content_type_maybe.map_or("image/png", |content_type| {
-            let content_type = content_type_maybe.unwrap();
-            let content_type = content_type.to_str().unwrap();
-            match content_type {
-                "image/jpeg" => "jpg",
-                "image/png" => "png",
-                _ => "png",
-            }
-        });
-        let file_path = local_icon_path_without_extension
-            .to_path_buf()
-            .with_extension(file_extension);
-        let file = File::create(file_path.as_path()).unwrap();
-        response.write_to(file).expect("could not write image file");
-        info!("WROTE TO : {:?}", file_path.as_path());
+        let vec = response.bytes().unwrap();
+        let result1 = image::load_from_memory(vec.as_slice());
+        let image1 = result1.unwrap();
+        let image1 = image1.resize_exact(32, 32, FilterType::Nearest);
+        let mut image_with_alpha = image1.to_rgba16();
 
-        return Ok(file_path);
+        for x in 0u32..32 {
+            for y in 0u32..32 {
+                let w = x.abs_diff(16);
+                let h = y.abs_diff(16);
+                let a = (w.pow(2) + h.pow(2));
+                let distance = f64::sqrt(a as f64) + 1.0;
+                // if distance to center is > 16, then put transparent pixel
+                if distance > 16.0 {
+                    image_with_alpha.put_pixel(x, y, Rgba([122, 0, 0, 122]));
+                }
+            }
+        }
+
+        let png_file_path = local_icon_path_without_extension
+            .to_path_buf()
+            .with_extension("png");
+
+        image_with_alpha
+            .save_with_format(png_file_path.as_path(), ImageFormat::Png)
+            .unwrap();
+
+        info!("WROTE TO : {:?}", png_file_path.as_path());
+
+        return Ok(png_file_path);
     }
     info!("PROFILE ICON: {}", remote_url);
 
