@@ -10,6 +10,7 @@ use druid::image;
 use druid::image::imageops::FilterType;
 use druid::image::{GenericImage, ImageFormat, Rgb, Rgba};
 use druid::widget::Image;
+use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
 use url::Url;
@@ -250,7 +251,38 @@ const fn ct_sqrt(res: u32, l: u32, r: u32) -> u32 {
     };
 }
 
-const CIRCULAR_MASK_32: [[bool; 32]; 32] = create_circular_mask_radius();
+const CIRCULAR_MASK_32: [[bool; 64]; 64] = create_circular_mask_radius();
+const CIRCULAR_RADIUS: usize = 64;
+
+lazy_static! {
+    static ref CIRCULAR_MASK_32_LAZY: [[bool; CIRCULAR_RADIUS]; CIRCULAR_RADIUS] = {
+        const N: usize = CIRCULAR_RADIUS;
+
+        let mut mask = [[true; N]; N];
+
+        let mut x: usize = 0;
+        while x < N as usize {
+            let mut y: usize = 0;
+            while y < N as usize {
+                let w = x.abs_diff(N / 2);
+                let h = y.abs_diff(N / 2);
+                let a = w.pow(2) + h.pow(2);
+
+                let sq = (a as f64).sqrt() as i64;
+                let distance = sq + 1;
+
+                // if distance to center is > 16, then put transparent pixel
+                let is_visible = distance <= N as i64 / 2;
+                mask[x][y] = is_visible;
+
+                y += 1;
+            }
+            x += 1;
+        }
+
+        return mask;
+    };
+}
 
 pub fn download_profile_images(
     remote_url: &Url,
@@ -261,26 +293,18 @@ pub fn download_profile_images(
         let vec = response.bytes().unwrap();
         let result1 = image::load_from_memory(vec.as_slice());
         let image1 = result1.unwrap();
-        let image1 = image1.resize_exact(32, 32, FilterType::Nearest);
+        let image1 = image1.resize_exact(
+            CIRCULAR_RADIUS as u32,
+            CIRCULAR_RADIUS as u32,
+            FilterType::Nearest,
+        );
         let mut image_with_alpha = image1.to_rgba16();
 
-        for (x, row) in CIRCULAR_MASK_32.iter().enumerate() {
+        //for (x, row) in CIRCULAR_MASK_32.iter().enumerate() {
+        for (x, row) in CIRCULAR_MASK_32_LAZY.iter().enumerate() {
             for (y, mask) in row.iter().enumerate() {
                 if !mask {
                     image_with_alpha.put_pixel(x as u32, y as u32, Rgba([122, 0, 0, 122]));
-                }
-            }
-        }
-
-        for x in 0u32..32 {
-            for y in 0u32..32 {
-                let w = x.abs_diff(16);
-                let h = y.abs_diff(16);
-                let a = (w.pow(2) + h.pow(2));
-                let distance = f64::sqrt(a as f64) + 1.0;
-                // if distance to center is > 16, then put transparent pixel
-                if distance > 16.0 {
-                    image_with_alpha.put_pixel(x, y, Rgba([122, 0, 0, 122]));
                 }
             }
         }

@@ -127,6 +127,7 @@ dependencies = [
  "druid",
  "gio",
  "gtk",
+ "lazy_static",
  "libc",
  "naive-cityhash",
  "objc",

@@ -12,12 +12,12 @@ use druid::keyboard_types::Key;
 use druid::piet::InterpolationMode;
 use druid::widget::{
     Container, Controller, ControllerHost, CrossAxisAlignment, Either, Flex, Image, Label,
-    LineBreaking, List,
+    LineBreaking, List, ZStack,
 };
 use druid::{
     image, Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, HotKey, LayoutCtx,
     LensExt, LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, Modifiers, SysMods,
-    TextAlignment, UpdateCtx, WidgetId, WindowHandle, WindowLevel,
+    TextAlignment, UnitPoint, UpdateCtx, Vec2, WidgetId, WindowHandle, WindowLevel,
 };
 use druid::{
     AppDelegate, AppLauncher, Color, Command, Data, DelegateCtx, Env, Event, EventCtx, Handled,
@@ -897,17 +897,17 @@ fn create_browser(
         .padding(icon_padding)
         .lens(BrowserLens.then(UIBrowser::icon_path));
 
+    let profile_icon = Image::new(profile_img_buf.clone())
+        .interpolation_mode(InterpolationMode::Bilinear)
+        .controller(UIImageController)
+        .fix_width(16.0)
+        .fix_height(16.0)
+        .center()
+        .lens(BrowserLens.then(UIBrowser::profile_icon_path));
+
     let item_label = Either::new(
         |(_incognito_mode, item): &(bool, UIBrowser), _env| item.supports_profiles,
         {
-            let profile_icon = Image::new(profile_img_buf.clone())
-                .interpolation_mode(InterpolationMode::Bilinear)
-                .controller(UIImageController)
-                .fix_width(12.0)
-                .fix_height(12.0)
-                .center()
-                .lens(BrowserLens.then(UIBrowser::profile_icon_path));
-
             let profile_label =
                 Label::dynamic(|(_incognito_mode, item): &(bool, UIBrowser), _env: &_| {
                     item.profile_name.clone()
@@ -918,7 +918,7 @@ fn create_browser(
                 .with_text_color(Color::from_hex_str("BEBEBE").unwrap());
 
             let profile_row = Flex::row()
-                .with_child(profile_icon)
+                //.with_child(profile_icon)
                 .with_child(profile_label);
 
             Flex::column()
@@ -936,7 +936,15 @@ fn create_browser(
         },
     );
 
-    let icon_and_label = Flex::row().with_child(image_widget).with_child(item_label);
+    let icon_stack = ZStack::new(image_widget).with_child(
+        profile_icon,
+        Vec2::new(1.0, 1.0),
+        Vec2::new(16.0, 16.0),
+        UnitPoint::new(0.1, 0.1),
+        Vec2::ZERO,
+    );
+
+    let icon_and_label = Flex::row().with_child(icon_stack).with_child(item_label);
 
     let container = Container::new(icon_and_label)
         .fix_size(192.0, ITEM_HEIGHT)
