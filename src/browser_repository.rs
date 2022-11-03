@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 
 use url::Url;
 
+use crate::ProfileIcon::NoIcon;
 use crate::{chromium_profiles_parser, firefox_profiles_parser, paths, InstalledBrowserProfile};
 
 // Holds list of custom SupportedApp configurations
@@ -443,7 +444,11 @@ pub struct SupportedApp {
     snap_app_config_dir_absolute: PathBuf,
     restricted_domains: Vec<String>,
     find_profiles_fn: Option<
-        fn(app_config_dir_absolute: &Path, binary_path: &Path) -> Vec<InstalledBrowserProfile>,
+        fn(
+            app_config_dir_absolute: &Path,
+            binary_path: &Path,
+            app_id: &str,
+        ) -> Vec<InstalledBrowserProfile>,
     >,
     profile_args_fn: fn(profile_cli_arg_value: &str) -> Vec<String>,
     incognito_args: Vec<String>,
@@ -475,7 +480,7 @@ impl SupportedApp {
     pub fn find_profiles(&self, binary_path: &Path, is_snap: bool) -> Vec<InstalledBrowserProfile> {
         return if self.find_profiles_fn.is_some() {
             let app_config_dir_abs = self.get_app_config_dir_abs(is_snap);
-            (self.find_profiles_fn.unwrap())(app_config_dir_abs, binary_path)
+            (self.find_profiles_fn.unwrap())(app_config_dir_abs, binary_path, self.get_app_id())
         } else {
             Self::find_placeholder_profiles()
         };
@@ -488,7 +493,7 @@ impl SupportedApp {
             profile_cli_arg_value: "".to_string(),
             profile_cli_container_name: None,
             profile_name: "".to_string(),
-            profile_icon: Some("Default".to_string()),
+            profile_icon: NoIcon,
         });
 
         return browser_profiles;

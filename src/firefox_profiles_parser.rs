@@ -8,11 +8,12 @@ use naive_cityhash::cityhash64;
 use serde_json::Value;
 use tracing::{debug, info};
 
-use crate::InstalledBrowserProfile;
+use crate::{InstalledBrowserProfile, ProfileIcon};
 
 pub fn find_firefox_profiles(
     firefox_profiles_dir: &Path,
     binary_path: &Path,
+    app_id: &str,
 ) -> Vec<InstalledBrowserProfile> {
     let binary_dir = binary_path.parent().and_then(|p| p.to_str()).unwrap_or("");
     // binary_dir is the path where binary is (without trailing slash)
@@ -162,7 +163,7 @@ pub fn find_firefox_profiles(
             profile_cli_arg_value: profile_name.to_string(),
             profile_cli_container_name: None,
             profile_name: profile_name.to_string(),
-            profile_icon: Some(profile_name.to_string()),
+            profile_icon: ProfileIcon::NoIcon,
         });
 
         if !container_names.is_empty() {
@@ -171,7 +172,7 @@ pub fn find_firefox_profiles(
                     profile_cli_arg_value: profile_name.to_string(),
                     profile_cli_container_name: Some(container_name.to_string()),
                     profile_name: profile_name.to_string() + " " + container_name.as_str(),
-                    profile_icon: Some(profile_name.to_string()),
+                    profile_icon: ProfileIcon::NoIcon,
                 })
             }
         }

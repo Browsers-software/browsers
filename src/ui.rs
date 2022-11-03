@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::mpsc::Sender;
 use std::sync::Arc;
 
+use clap::builder::Str;
 use druid::commands::QUIT_APP;
 use druid::image::DynamicImage;
 use druid::keyboard_types::Key;
@@ -24,7 +25,8 @@ use druid::{
     Widget, WidgetExt, WindowDesc, WindowId,
 };
 use image::codecs::png;
-use tracing::{debug, info, Instrument};
+use image::io::Reader as ImageReader;
+use tracing::{debug, info, warn, Instrument};
 
 use crate::{paths, CommonBrowserProfile, MessageToMain};
 
@@ -62,6 +64,9 @@ impl UI {
                     .then(|| p.get_profile_name().to_string()),
                 supports_incognito: p.get_browser_common().supports_incognito(),
                 icon_path: p.get_browser_icon_path().to_string(),
+                profile_icon_path: p
+                    .get_profile_icon_path()
+                    .map_or("".to_string(), |a| a.to_string()),
                 unique_id: p.get_unique_id(),
                 unique_app_id: p.get_unique_app_id(),
             })
@@ -251,7 +256,7 @@ impl UI {
             .with_flex_spacer(1.0)
             .with_child(options_button);
 
-        let browsers_list = List::new(move || create_browser(ImageBuf::empty()))
+        let browsers_list = List::new(move || create_browser(ImageBuf::empty(), ImageBuf::empty()))
             .with_spacing(0.0)
             .lens((UIState::incognito_mode, UIState::browsers))
             .scroll();
@@ -311,6 +316,7 @@ pub struct UIBrowser {
     supports_incognito: bool,
 
     icon_path: String,
+    profile_icon_path: String,
     unique_id: String,
     unique_app_id: String,
 }
@@ -756,18 +762,16 @@ pub struct UIImageController;
 
 impl UIImageController {
     fn get_image_buf(&self, icon_path: &str) -> Result<ImageBuf, Error> {
+        if icon_path.is_empty() {
+            return Ok(ImageBuf::empty());
+        }
+
         let path1 = Path::new(icon_path);
 
-        File::open(path1).map(|file| {
-            let reader = BufReader::with_capacity(10 * 8 * 1024, file);
-
-            let png_decoder = png::PngDecoder::new(reader).unwrap();
-            let result = DynamicImage::from_decoder(png_decoder);
-
-            let image1 = result.unwrap();
-            let buf = ImageBuf::from_dynamic_image(image1);
-            return buf;
-        })
+        let result = ImageReader::open(path1)?.decode();
+        let image1 = result.unwrap();
+        let buf = ImageBuf::from_dynamic_image(image1);
+        return Ok(buf);
     }
 }
 
@@ -872,7 +876,10 @@ fn create_browser_label() -> Label<(bool, UIBrowser)> {
     browser_label
 }
 
-fn create_browser(buf: ImageBuf) -> impl Widget<(bool, UIBrowser)> {
+fn create_browser(
+    app_icon_buf: ImageBuf,
+    profile_img_buf: ImageBuf,
+) -> impl Widget<(bool, UIBrowser)> {
     let icon_size = get_icon_size();
     let icon_padding = get_icon_padding();
 
@@ -881,7 +888,7 @@ fn create_browser(buf: ImageBuf) -> impl Widget<(bool, UIBrowser)> {
         panic!("icon_size + icon_padding > ITEM_HEIGHT");
     }
 
-    let image_widget = Image::new(buf)
+    let image_widget = Image::new(app_icon_buf)
         .interpolation_mode(InterpolationMode::Bilinear)
         .controller(UIImageController)
         .fix_width(icon_size)
@@ -889,6 +896,15 @@ fn create_browser(buf: ImageBuf) -> impl Widget<(bool, UIBrowser)> {
         .center()
         .padding(icon_padding)
         .lens(BrowserLens.then(UIBrowser::icon_path));
+
+    let profile_icon = Image::new(profile_img_buf.clone())
+        .interpolation_mode(InterpolationMode::Bilinear)
+        .controller(UIImageController)
+        .fix_width(16.0)
+        .fix_height(16.0)
+        .center()
+        .padding(icon_padding)
+        .lens(BrowserLens.then(UIBrowser::profile_icon_path));
 
     let item_label = Either::new(
         |(_incognito_mode, item): &(bool, UIBrowser), _env| item.supports_profiles,
@@ -917,7 +933,10 @@ fn create_browser(buf: ImageBuf) -> impl Widget<(bool, UIBrowser)> {
         },
     );
 
-    let icon_and_label = Flex::row().with_child(image_widget).with_child(item_label);
+    let icon_and_label = Flex::row()
+        .with_child(image_widget)
+        .with_child(profile_icon)
+        .with_child(item_label);
 
     let container = Container::new(icon_and_label)
         .fix_size(192.0, ITEM_HEIGHT)

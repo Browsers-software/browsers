@@ -151,7 +151,7 @@ pub struct CommonBrowserProfile {
     profile_cli_arg_value: String,
     profile_cli_container_name: Option<String>,
     profile_name: String,
-    profile_icon: Option<String>,
+    profile_icon: ProfileIcon,
     app: Arc<BrowserCommon>,
 }
 
@@ -206,6 +206,15 @@ impl CommonBrowserProfile {
         return self.get_browser_common().get_browser_icon_path();
     }
 
+    fn get_profile_icon_path(&self) -> Option<&str> {
+        return match self.profile_icon {
+            ProfileIcon::NoIcon => None,
+            ProfileIcon::Remote { .. } => None,
+            ProfileIcon::Local { ref path } => Some(path.as_str()),
+            ProfileIcon::Name { .. } => None,
+        };
+    }
+
     fn get_profile_name(&self) -> &str {
         return self.profile_name.as_str();
     }
@@ -247,7 +256,16 @@ pub struct InstalledBrowserProfile {
     profile_cli_arg_value: String,
     profile_cli_container_name: Option<String>,
     profile_name: String,
-    profile_icon: Option<String>,
+    profile_icon: ProfileIcon,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(tag = "type")]
+pub enum ProfileIcon {
+    NoIcon,
+    Remote { url: String },
+    Local { path: String },
+    Name { name: String },
 }
 
 #[derive(Serialize, Deserialize, Debug)]

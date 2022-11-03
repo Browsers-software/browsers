@@ -1,15 +1,18 @@
+use std::fs;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
 
 use serde_json::{Map, Value};
 use tracing::{debug, info};
+use url::Url;
 
-use crate::InstalledBrowserProfile;
+use crate::{paths, utils, InstalledBrowserProfile, ProfileIcon};
 
 pub fn find_chromium_profiles(
     chromium_user_dir: &Path,
     _binary_path: &Path,
+    app_id: &str,
 ) -> Vec<InstalledBrowserProfile> {
     let mut browser_profiles: Vec<InstalledBrowserProfile> = Vec::new();
 
@@ -26,12 +29,40 @@ pub fn find_chromium_profiles(
     for profile in profiles {
         let profile_name = profile.name;
         let profile_avatar_url = profile.image_url;
+        // TODO: check if remote url or internal name
+        let mut profile_icon = profile_avatar_url.map_or(ProfileIcon::NoIcon, |image_url| {
+            ProfileIcon::Remote { url: image_url }
+        });
+
+        if let ProfileIcon::Remote { url } = &profile_icon {
+            let cache_root_dir = paths::get_cache_root_dir();
+            let profiles_icons_root_dir = cache_root_dir.join("icons").join("profiles");
+            fs::create_dir_all(profiles_icons_root_dir.as_path()).unwrap();
+            let profiles_icons_root = profiles_icons_root_dir.join(app_id);
+            fs::create_dir_all(profiles_icons_root.as_path()).unwrap();
+            let profile_icon_path_without_extension =
+                profiles_icons_root.join(profile_name.to_string());
+
+            let remote_url = Url::parse(url).unwrap();
+            let result = utils::download_profile_images(
+                &remote_url,
+                profile_icon_path_without_extension.as_path(),
+            );
+
+            if result.is_ok() {
+                let path = result.unwrap();
+                profile_icon = ProfileIcon::Local {
+                    path: path.to_str().unwrap().to_string(),
+                };
+            }
+        }
+
         let profile_dir_name = profile.profile_dir_name;
         browser_profiles.push(InstalledBrowserProfile {
             profile_cli_arg_value: profile_dir_name.to_string(),
             profile_cli_container_name: None,
             profile_name: profile_name,
-            profile_icon: profile_avatar_url,
+            profile_icon: profile_icon,
         })
     }
 

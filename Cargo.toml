@@ -30,10 +30,10 @@ serde = { version = "1.0", features = ["derive"] }
 #druid = { git = "https://github.com/linebender/druid.git", features = ["svg", "image"] }
 
 # for local development
-#druid = { path = "../druid/druid", features = ["png", "image"] }
+#druid = { path = "../druid/druid", features = ["png", "jpeg", "image"] }
 
-druid = { git = "https://github.com/browsers-software/druid.git", branch = "browsers-with-scrollfix", features = ["png", "image"] }
-#druid = { git = "https://github.com/browsers-software/druid.git", branch = "browsers", features = ["png", "image"] }
+druid = { git = "https://github.com/browsers-software/druid.git", branch = "browsers-with-scrollfix", features = ["png", "jpeg", "image"] }
+#druid = { git = "https://github.com/browsers-software/druid.git", branch = "browsers", features = ["png", "jpeg", "image"] }
 
 # parse urls
 url = "2.2.2"
@@ -44,6 +44,9 @@ configparser = "3.0.0"
 # Hash Firefox path with cityhash64, to map it to
 # locked installation in profiles.ini
 naive-cityhash = "0.2.0"
+
+# For making HTTP requests, e.g downloading browser profile images
+attohttpc = "0.23.1"
 
 # macOS Core Foundation bindings
 # small selection of Core Foundation libs I happen to need

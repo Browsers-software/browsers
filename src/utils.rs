@@ -1,16 +1,24 @@
-use std::fs;
+use std::any::Any;
+use std::env::temp_dir;
+use std::fmt::Error;
 use std::fs::File;
-use std::io::BufReader;
+use std::io::{BufReader, BufWriter, ErrorKind, Write};
 use std::path::{Path, PathBuf};
+use std::{fs, io};
 
 use serde::{Deserialize, Serialize};
 use tracing::info;
+use tracing_subscriber::fmt::MakeWriter;
+use url::Url;
 
 #[cfg(target_os = "linux")]
 use crate::linux_utils;
 #[cfg(target_os = "macos")]
 use crate::macos_utils;
-use crate::{paths, InstalledBrowser, SupportedAppRepository};
+use crate::macos_utils::get_this_app_cache_root_dir;
+use crate::{
+    paths, InstalledBrowser, InstalledBrowserProfile, ProfileIcon, SupportedAppRepository,
+};
 
 #[cfg(target_os = "macos")]
 pub fn set_as_default_web_browser() -> bool {
@@ -184,7 +192,7 @@ impl OSAppFinder {
             let reader = BufReader::new(file);
 
             let a: Result<Vec<InstalledBrowser>, _> = serde_json::from_reader(reader);
-            let installed_browsers_cached = a.unwrap();
+            let installed_browsers_cached = a.unwrap_or_default();
             return installed_browsers_cached;
         } else {
             let installed_browsers = self.get_installed_browsers();
@@ -194,4 +202,37 @@ impl OSAppFinder {
             return installed_browsers;
         }
     }
+}
+
+pub fn download_profile_images(
+    remote_url: &Url,
+    local_icon_path_without_extension: &Path,
+) -> Result<PathBuf, io::Error> {
+    let response = attohttpc::get(remote_url).send().unwrap();
+    if response.is_success() {
+        let content_type_maybe = response.headers().get("content-type");
+        let file_extension = content_type_maybe.map_or("image/png", |content_type| {
+            let content_type = content_type_maybe.unwrap();
+            let content_type = content_type.to_str().unwrap();
+            match content_type {
+                "image/jpeg" => "jpg",
+                "image/png" => "png",
+                _ => "png",
+            }
+        });
+        let file_path = local_icon_path_without_extension
+            .to_path_buf()
+            .with_extension(file_extension);
+        let file = File::create(file_path.as_path()).unwrap();
+        response.write_to(file).expect("could not write image file");
+        info!("WROTE TO : {:?}", file_path.as_path());
+
+        return Ok(file_path);
+    }
+    info!("PROFILE ICON: {}", remote_url);
+
+    return Err(io::Error::new(
+        ErrorKind::Other,
+        "could not save profile image",
+    ));
 }
