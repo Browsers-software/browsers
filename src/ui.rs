@@ -14,9 +14,9 @@ use druid::widget::{
     LineBreaking, List,
 };
 use druid::{
-    image, Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, LayoutCtx, LensExt,
-    LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, TextAlignment, UpdateCtx, WidgetId,
-    WindowHandle, WindowLevel,
+    image, Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, HotKey, LayoutCtx,
+    LensExt, LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, Modifiers, SysMods,
+    TextAlignment, UpdateCtx, WidgetId, WindowHandle, WindowLevel,
 };
 use druid::{
     AppDelegate, AppLauncher, Color, Command, Data, DelegateCtx, Env, Event, EventCtx, Handled,
@@ -189,7 +189,11 @@ impl UI {
             .with_text_color(Color::from_hex_str("808080").unwrap())
             .with_line_break_mode(LineBreaking::Clip)
             .fix_width(175.0)
-            .on_click(move |_ctx, data: &mut UIState, _env| copy_to_clipboard(data.url.clone()));
+            .on_click(move |_ctx, data: &mut UIState, _env| {
+                _ctx.get_external_handle()
+                    .submit_command(COPY_LINK_TO_CLIPBOARD, {}, Target::Global)
+                    .ok();
+            });
 
         const OPTIONS_LABEL_SIZE: f64 = 18.0;
 
@@ -337,6 +341,8 @@ pub const OPEN_LINK_IN_BROWSER: Selector<usize> = Selector::new("browsers.open_l
 pub const OPEN_LINK_IN_BROWSER_COMPLETED: Selector<String> =
     Selector::new("browsers.open_link_completed");
 
+pub const COPY_LINK_TO_CLIPBOARD: Selector<()> = Selector::new("browsers.copy_link");
+
 pub const REFRESH: Selector<usize> = Selector::new("browsers.refresh");
 
 pub const NEW_BROWSERS_RECEIVED: Selector<Vec<UIBrowser>> =
@@ -395,7 +401,42 @@ impl AppDelegate<UIState> for UIDelegate {
                 .unwrap();
         }
 
+        // Cmd+C on macOS, Ctrl+C on windows/linux/OpenBSD
+        /*
+        let copy_hotkey = HotKey::new(SysMods::Cmd, "c");
+
         match event {
+            Event::KeyDown(keyEvent) => {
+                copy_hotkey.matches(keyEvent)
+
+                debug!("Enter caught in delegate");
+                if let Some(focused_index) = data.focused_index {
+                    ctx.get_external_handle()
+                        .submit_command(OPEN_LINK_IN_BROWSER, focused_index, Target::Global)
+                        .ok();
+                }
+            }
+        }*/
+
+        // Cmd+C on macOS, Ctrl+C on windows/linux/OpenBSD
+        #[cfg(target_os = "macos")]
+        let copy_key_mod = Modifiers::META;
+
+        #[cfg(not(target_os = "macos"))]
+        let copy_key_mod = Modifiers::CONTROL;
+
+        match event {
+            Event::KeyDown(KeyEvent {
+                key: KbKey::Character(ref key),
+                mods: ref mods,
+                ..
+            }) if key == "c" && mods == &copy_key_mod => {
+                debug!("Cmd/Ctrl+C caught in delegate");
+                ctx.get_external_handle()
+                    .submit_command(COPY_LINK_TO_CLIPBOARD, {}, Target::Global)
+                    .ok();
+            }
+
             Event::KeyDown(KeyEvent {
                 key: KbKey::Enter, ..
             }) => {
@@ -464,6 +505,9 @@ impl AppDelegate<UIState> for UIDelegate {
         } else if cmd.is(SET_FOCUSED_INDEX) {
             let profile_index = cmd.get_unchecked(SET_FOCUSED_INDEX);
             data.focused_index = profile_index.clone();
+            Handled::Yes
+        } else if cmd.is(COPY_LINK_TO_CLIPBOARD) {
+            copy_to_clipboard(data.url.as_str());
             Handled::Yes
         } else if cmd.is(OPEN_LINK_IN_BROWSER) {
             let profile_index = cmd.get_unchecked(OPEN_LINK_IN_BROWSER);
@@ -1156,7 +1200,7 @@ fn make_context_menu(browser: &UIBrowser) -> Menu<UIState> {
     menu
 }
 
-fn copy_to_clipboard(url: String) {
+fn copy_to_clipboard(url: &str) {
     let mut clipboard = Application::global().clipboard();
     clipboard.put_string(url);
 }
