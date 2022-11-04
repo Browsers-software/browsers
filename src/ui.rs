@@ -930,9 +930,6 @@ fn create_browser(
             Flex::column()
                 .cross_axis_alignment(CrossAxisAlignment::Fill)
                 .with_child(create_browser_label())
-                // for some odd reason omitting this child will steal focus away
-                // from some items, very confusing :/
-                .with_child(Label::new("").with_text_size(1.0))
         },
     );
 
