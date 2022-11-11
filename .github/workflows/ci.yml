@@ -54,9 +54,11 @@ jobs:
         # cargo install does check if dependency already exists,
         # but there's some conflict with github cache about it, so checking manually
         run: cargo install --list --target-dir ./target/cross | grep cross || cargo install --force cross --git https://github.com/cross-rs/cross --target-dir ./target/cross
-      - name: Test x86_64 and aarch64 binaries
+      - name: Test x86_64 binary
         run: |
           CROSS_BUILD_OPTS="--builder ${{ steps.buildx.outputs.name }} --cache-from type=gha,scope=x86_64 --cache-to type=gha,scope=x86_64,mode=max" cross build --target x86_64-unknown-linux-gnu --release
+      - name: Test aarch64 binaries
+        run: |
           CROSS_BUILD_OPTS="--builder ${{ steps.buildx.outputs.name }} --cache-from type=gha,scope=aarch64 --cache-to type=gha,scope=aarch64,mode=max" cross build --target aarch64-unknown-linux-gnu --release
       - name: Build binaries and package
         run: |
