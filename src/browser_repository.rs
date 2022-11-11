@@ -493,7 +493,7 @@ impl SupportedApp {
             profile_cli_arg_value: "".to_string(),
             profile_cli_container_name: None,
             profile_name: "".to_string(),
-            profile_icon: NoIcon,
+            profile_icon: None,
         });
 
         return browser_profiles;

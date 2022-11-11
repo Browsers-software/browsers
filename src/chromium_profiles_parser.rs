@@ -28,41 +28,34 @@ pub fn find_chromium_profiles(
     let profiles = info_cache_map.parse_chrome_local_state_profiles();
     for profile in profiles {
         let profile_name = profile.name;
-        let profile_avatar_url = profile.image_url;
-        // TODO: check if remote url or internal name
-        let mut profile_icon = profile_avatar_url.map_or(ProfileIcon::NoIcon, |image_url| {
-            ProfileIcon::Remote { url: image_url }
-        });
 
-        if let ProfileIcon::Remote { url } = &profile_icon {
-            let cache_root_dir = paths::get_cache_root_dir();
-            let profiles_icons_root_dir = cache_root_dir.join("icons").join("profiles");
-            fs::create_dir_all(profiles_icons_root_dir.as_path()).unwrap();
-            let profiles_icons_root = profiles_icons_root_dir.join(app_id);
-            fs::create_dir_all(profiles_icons_root.as_path()).unwrap();
-            let profile_icon_path_without_extension =
-                profiles_icons_root.join(profile_name.to_string());
+        let profile_icon_path = profile
+            .image_url
+            .map(|url| {
+                let cache_root_dir = paths::get_cache_root_dir();
+                let profiles_icons_root_dir = cache_root_dir.join("icons").join("profiles");
+                fs::create_dir_all(profiles_icons_root_dir.as_path()).unwrap();
+                let profiles_icons_root = profiles_icons_root_dir.join(app_id);
+                fs::create_dir_all(profiles_icons_root.as_path()).unwrap();
+                let profile_icon_path_without_extension =
+                    profiles_icons_root.join(profile_name.to_string());
 
-            let remote_url = Url::parse(url).unwrap();
-            let result = utils::download_profile_images(
-                &remote_url,
-                profile_icon_path_without_extension.as_path(),
-            );
+                let remote_url = Url::parse(url.as_str()).unwrap();
+                let result = utils::download_profile_images(
+                    &remote_url,
+                    profile_icon_path_without_extension.as_path(),
+                );
 
-            if result.is_ok() {
-                let path = result.unwrap();
-                profile_icon = ProfileIcon::Local {
-                    path: path.to_str().unwrap().to_string(),
-                };
-            }
-        }
+                return result.ok().map(|path| path.to_str().unwrap().to_string());
+            })
+            .flatten();
 
         let profile_dir_name = profile.profile_dir_name;
         browser_profiles.push(InstalledBrowserProfile {
             profile_cli_arg_value: profile_dir_name.to_string(),
             profile_cli_container_name: None,
             profile_name: profile_name,
-            profile_icon: profile_icon,
+            profile_icon: profile_icon_path,
         })
     }
 

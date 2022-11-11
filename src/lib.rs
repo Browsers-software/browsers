@@ -154,7 +154,7 @@ pub struct CommonBrowserProfile {
     profile_cli_arg_value: String,
     profile_cli_container_name: Option<String>,
     profile_name: String,
-    profile_icon: ProfileIcon,
+    profile_icon: Option<String>,
     app: Arc<BrowserCommon>,
 }
 
@@ -166,7 +166,13 @@ impl CommonBrowserProfile {
                 .profile_cli_container_name
                 .clone(),
             profile_name: installed_browser_profile.profile_name.to_string(),
-            profile_icon: installed_browser_profile.profile_icon.clone(),
+            profile_icon: installed_browser_profile
+                .profile_icon
+                .as_ref()
+                // TODO: remove this filter once old profiles json cache is old enough
+                // TODO: remove when supporting Windows
+                .filter(|path| path.starts_with("/"))
+                .map(|path| path.clone()),
             app: app,
         }
     }
@@ -209,13 +215,8 @@ impl CommonBrowserProfile {
         return self.get_browser_common().get_browser_icon_path();
     }
 
-    fn get_profile_icon_path(&self) -> Option<&str> {
-        return match self.profile_icon {
-            ProfileIcon::NoIcon => None,
-            ProfileIcon::Remote { .. } => None,
-            ProfileIcon::Local { ref path } => Some(path.as_str()),
-            ProfileIcon::Name { .. } => None,
-        };
+    fn get_profile_icon_path(&self) -> Option<&String> {
+        return self.profile_icon.as_ref();
     }
 
     fn get_profile_name(&self) -> &str {
@@ -259,7 +260,7 @@ pub struct InstalledBrowserProfile {
     profile_cli_arg_value: String,
     profile_cli_container_name: Option<String>,
     profile_name: String,
-    profile_icon: ProfileIcon,
+    profile_icon: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
