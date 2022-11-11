@@ -19,7 +19,6 @@ use url::Url;
 use crate::linux_utils;
 #[cfg(target_os = "macos")]
 use crate::macos_utils;
-use crate::macos_utils::get_this_app_cache_root_dir;
 use crate::{
     paths, InstalledBrowser, InstalledBrowserProfile, ProfileIcon, SupportedAppRepository,
 };
