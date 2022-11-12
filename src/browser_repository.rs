@@ -47,6 +47,12 @@ impl SupportedAppRepository {
     fn generate_app_id_to_supported_app(&mut self) {
         self.start()
             .add_chromium_based_app(
+                "company.thebrowser.Browser",
+                "TODOTODOTODO",
+                "Arc/User Data",
+                "TODOTODOTODO",
+            )
+            .add_chromium_based_app(
                 "com.google.Chrome",
                 "google-chrome.desktop",
                 "Google/Chrome",
