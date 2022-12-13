@@ -32,7 +32,7 @@ serde = { version = "1.0", features = ["derive"] }
 # for local development
 #druid = { path = "../druid/druid", features = ["png", "jpeg", "image"] }
 
-druid = { git = "https://github.com/browsers-software/druid.git", branch = "browsers-with-scrollfix", features = ["png", "jpeg", "image"] }
+druid = { git = "https://github.com/browsers-software/druid.git", branch = "browsers", features = ["png", "jpeg", "image"] }
 #druid = { git = "https://github.com/browsers-software/druid.git", branch = "browsers", features = ["png", "jpeg", "image"] }
 
 # parse urls
@@ -63,12 +63,10 @@ objc = "0.2.7"
 xdg-mime = "^0.3"
 
 # to find default registered icons
-# with glib 1.15.x there is an error for icon_theme.lookup_by_gicon,
-# maybe it'll work if gtk can also be updated
-glib = { version = "0.14.8", package = "gio" }
+glib = { version = "0.16.6", package = "gio" }
 
-# to find icon theme and icon; 0.14.0 because druid would conflict with newer
-gtk = { version = "0.14.0" }
+# to find icon theme and icon; (should be same version of gtk as druid is using)
+gtk = { version = "0.16.2" }
 
 
 #[profile.dev]

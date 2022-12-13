@@ -7,7 +7,6 @@ use std::sync::Arc;
 
 use clap::builder::Str;
 use druid::commands::QUIT_APP;
-use druid::image::DynamicImage;
 use druid::keyboard_types::Key;
 use druid::piet::InterpolationMode;
 use druid::widget::{
@@ -24,7 +23,6 @@ use druid::{
     ImageBuf, KbKey, KeyEvent, Lens, PaintCtx, Point, RenderContext, Selector, Size, Target,
     Widget, WidgetExt, WindowDesc, WindowId,
 };
-use image::codecs::png;
 use image::io::Reader as ImageReader;
 use tracing::{debug, info, warn, Instrument};
 

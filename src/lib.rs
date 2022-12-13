@@ -1,9 +1,5 @@
-#[macro_use]
-extern crate lazy_static;
-
 use std::borrow::Borrow;
 use std::fmt::Debug;
-use std::path::PathBuf;
 use std::process::Command;
 use std::str::FromStr;
 use std::sync::{mpsc, Arc};
