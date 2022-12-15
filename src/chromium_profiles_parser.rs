@@ -7,7 +7,7 @@ use serde_json::{Map, Value};
 use tracing::{debug, info};
 use url::Url;
 
-use crate::{paths, utils, InstalledBrowserProfile, ProfileIcon};
+use crate::{paths, utils, InstalledBrowserProfile};
 
 pub fn find_chromium_profiles(
     chromium_user_dir: &Path,

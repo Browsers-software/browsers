@@ -1,5 +1,5 @@
 use std::cmp;
-use std::fs::File;
+
 use std::io::{BufReader, Error};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::Sender;

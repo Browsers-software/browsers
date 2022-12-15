@@ -1,7 +1,7 @@
 FROM ghcr.io/cross-rs/x86_64-unknown-linux-gnu:main
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install  \
+    && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install \
     libpango-1.0-0 \
     libpango1.0-dev \
     libgtk-3-dev \

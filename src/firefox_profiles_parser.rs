@@ -8,12 +8,12 @@ use naive_cityhash::cityhash64;
 use serde_json::Value;
 use tracing::{debug, info};
 
-use crate::{InstalledBrowserProfile, ProfileIcon};
+use crate::InstalledBrowserProfile;
 
 pub fn find_firefox_profiles(
     firefox_profiles_dir: &Path,
     binary_path: &Path,
-    app_id: &str,
+    _app_id: &str,
 ) -> Vec<InstalledBrowserProfile> {
     let binary_dir = binary_path.parent().and_then(|p| p.to_str()).unwrap_or("");
     // binary_dir is the path where binary is (without trailing slash)
