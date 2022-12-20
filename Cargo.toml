@@ -45,7 +45,7 @@ configparser = "3.0.0"
 naive-cityhash = "0.2.0"
 
 # For making HTTP requests, e.g downloading browser profile images
-attohttpc = "0.23.1"
+attohttpc = "0.24.0"
 
 # To create lazy static variables
 lazy_static = "1.4.0"
