@@ -863,18 +863,17 @@ const fn get_icon_padding() -> f64 {
 /* Filters browsers based on url */
 struct FilteredBrowsersLens;
 
-impl Lens<(String, Arc<Vec<UIBrowser>>), Arc<Vec<UIBrowser>>> for FilteredBrowsersLens {
-    fn with<R, F: FnOnce(&Arc<Vec<UIBrowser>>) -> R>(
-        &self,
-        data: &(String, Arc<Vec<UIBrowser>>),
-        f: F,
-    ) -> R {
+impl FilteredBrowsersLens {
+    // gets browsers relevant only for current url
+    fn get_filtered_browsers(data: &(String, Arc<Vec<UIBrowser>>)) -> Vec<UIBrowser> {
         let url_str = data.0.clone();
         let url_result = Url::parse(url_str.as_str());
-        let url = url_result.unwrap(); // TODO: err check
-        let url_domain = url.domain().unwrap().to_string();
+        let domain_maybe = url_result
+            .ok()
+            .map(|url| url.domain().map(|d| d.to_string()))
+            .flatten();
 
-        let mut filtered: Vec<UIBrowser> = data
+        let filtered: Vec<UIBrowser> = data
             .1
             .iter()
             .cloned()
@@ -883,10 +882,25 @@ impl Lens<(String, Arc<Vec<UIBrowser>>), Arc<Vec<UIBrowser>>> for FilteredBrowse
                     return true;
                 }
 
-                return b.restricted_domains.contains(&url_domain);
+                return if domain_maybe.is_none() {
+                    false
+                } else {
+                    let domain = domain_maybe.as_ref().unwrap();
+                    b.restricted_domains.contains(domain)
+                };
             })
             .collect();
 
+        return filtered;
+    }
+}
+impl Lens<(String, Arc<Vec<UIBrowser>>), Arc<Vec<UIBrowser>>> for FilteredBrowsersLens {
+    fn with<R, F: FnOnce(&Arc<Vec<UIBrowser>>) -> R>(
+        &self,
+        data: &(String, Arc<Vec<UIBrowser>>),
+        f: F,
+    ) -> R {
+        let filtered = Self::get_filtered_browsers(data);
         let arc_filtered = Arc::new(filtered);
         f(&arc_filtered)
     }
@@ -896,20 +910,7 @@ impl Lens<(String, Arc<Vec<UIBrowser>>), Arc<Vec<UIBrowser>>> for FilteredBrowse
         data: &mut (String, Arc<Vec<UIBrowser>>),
         f: F,
     ) -> R {
-        let url_str = data.0.clone();
-        let url_result = Url::parse(url_str.as_str());
-        let url = url_result.unwrap(); // TODO: err check
-        let url_domain = url.domain().unwrap().to_string();
-
-        let mut filtered: Vec<UIBrowser> = data
-            .1
-            .iter()
-            .cloned()
-            .filter(|b| {
-                return b.restricted_domains.contains(&url_domain);
-            })
-            .collect();
-
+        let filtered = Self::get_filtered_browsers(data);
         let mut arc_filtered = Arc::new(filtered);
         f(&mut arc_filtered) // &mut data
     }
