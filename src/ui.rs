@@ -1,5 +1,4 @@
 use std::cmp;
-
 use std::io::{BufReader, Error};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::Sender;
@@ -8,15 +7,15 @@ use std::sync::Arc;
 use clap::builder::Str;
 use druid::commands::QUIT_APP;
 use druid::keyboard_types::Key;
-use druid::piet::InterpolationMode;
+use druid::piet::{InterpolationMode, TextStorage};
 use druid::widget::{
     Container, Controller, ControllerHost, CrossAxisAlignment, Either, Flex, Image, Label,
-    LineBreaking, List, ZStack,
+    LensWrap, LineBreaking, List, ZStack,
 };
 use druid::{
-    image, Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, HotKey, LayoutCtx,
-    LensExt, LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, Modifiers, SysMods,
-    TextAlignment, UnitPoint, UpdateCtx, Vec2, WidgetId, WindowHandle, WindowLevel,
+    image, lens, Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, HotKey,
+    LayoutCtx, LensExt, LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, Modifiers,
+    SysMods, TextAlignment, UnitPoint, UpdateCtx, Vec2, WidgetId, WindowHandle, WindowLevel,
 };
 use druid::{
     AppDelegate, AppLauncher, Color, Command, Data, DelegateCtx, Env, Event, EventCtx, Handled,
@@ -25,6 +24,7 @@ use druid::{
 };
 use image::io::Reader as ImageReader;
 use tracing::{debug, info, warn, Instrument};
+use url::Url;
 
 use crate::{paths, CommonBrowserProfile, MessageToMain};
 
@@ -254,9 +254,24 @@ impl UI {
             .with_flex_spacer(1.0)
             .with_child(options_button);
 
+        //let x2 = (UIState::incognito_mode, UIState::browsers);
+        //let lens = lens!(Arc<Vec<UIBrowser>>, x2);
+        //let then1 = lens.map(|a| a.1, |x, y| *x = y);
+
+        //let lens = lens!((bool, f64), 1);
+
+        //let then = lens.map(|x| x / 2.0, |x, y| *x = y * 2.0);
+        //let x1 = then.get(&(true, 2.0));
+        //assert_eq!(x1, 1.0);
+
+        //LensWrap::new(self, then1);
+
         let browsers_list = List::new(move || create_browser(ImageBuf::empty(), ImageBuf::empty()))
             .with_spacing(0.0)
-            .lens((UIState::incognito_mode, UIState::browsers))
+            .lens((
+                UIState::incognito_mode,
+                (UIState::url, UIState::browsers).then(FilteredBrowsersLens),
+            ))
             .scroll();
 
         let browsers_height = visible_browsers_count * ITEM_HEIGHT;
@@ -842,6 +857,64 @@ const fn get_icon_padding() -> f64 {
         4.0
     } else {
         0.0
+    }
+}
+
+/* Filters browsers based on url */
+struct FilteredBrowsersLens;
+
+impl Lens<(String, Arc<Vec<UIBrowser>>), Arc<Vec<UIBrowser>>> for FilteredBrowsersLens {
+    fn with<R, F: FnOnce(&Arc<Vec<UIBrowser>>) -> R>(
+        &self,
+        data: &(String, Arc<Vec<UIBrowser>>),
+        f: F,
+    ) -> R {
+        let url_str = data.0.clone();
+        let url_result = Url::parse(url_str.as_str());
+        let url = url_result.unwrap(); // TODO: err check
+        let url_domain = url.domain().unwrap().to_string();
+
+        let mut filtered: Vec<UIBrowser> = data
+            .1
+            .iter()
+            .cloned()
+            .filter(|b| {
+                if b.restricted_domains.is_empty() {
+                    return true;
+                }
+
+                return b.restricted_domains.contains(&url_domain);
+            })
+            .collect();
+
+        // show special apps first
+        filtered.sort_by_key(|b| b.restricted_domains.is_empty());
+
+        let arc_filtered = Arc::new(filtered);
+        f(&arc_filtered)
+    }
+
+    fn with_mut<R, F: FnOnce(&mut Arc<Vec<UIBrowser>>) -> R>(
+        &self,
+        data: &mut (String, Arc<Vec<UIBrowser>>),
+        f: F,
+    ) -> R {
+        let url_str = data.0.clone();
+        let url_result = Url::parse(url_str.as_str());
+        let url = url_result.unwrap(); // TODO: err check
+        let url_domain = url.domain().unwrap().to_string();
+
+        let mut filtered: Vec<UIBrowser> = data
+            .1
+            .iter()
+            .cloned()
+            .filter(|b| {
+                return b.restricted_domains.contains(&url_domain);
+            })
+            .collect();
+
+        let mut arc_filtered = Arc::new(filtered);
+        f(&mut arc_filtered) // &mut data
     }
 }
 
