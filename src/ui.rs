@@ -887,9 +887,6 @@ impl Lens<(String, Arc<Vec<UIBrowser>>), Arc<Vec<UIBrowser>>> for FilteredBrowse
             })
             .collect();
 
-        // show special apps first
-        filtered.sort_by_key(|b| b.restricted_domains.is_empty());
-
         let arc_filtered = Arc::new(filtered);
         f(&arc_filtered)
     }

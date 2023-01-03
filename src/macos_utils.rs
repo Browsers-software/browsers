@@ -268,8 +268,7 @@ impl OsHelper {
         let icons_root_dir = cache_root_dir.join("icons");
         fs::create_dir_all(icons_root_dir.as_path()).unwrap();
 
-        let mut bundle_ids = find_bundle_ids_for_browsers();
-
+        let mut bundle_ids: Vec<String> = Vec::new();
         let notion_bundle_id = "notion.id";
         if get_bundle_ids_for_url_scheme("notion").contains(notion_bundle_id) {
             bundle_ids.push(notion_bundle_id.to_string());
@@ -284,6 +283,9 @@ impl OsHelper {
         if get_bundle_ids_for_url_scheme("zoommtg").contains(zoom_bundle_id) {
             bundle_ids.push(zoom_bundle_id.to_string());
         }*/
+
+        let mut browser_bundle_ids = find_bundle_ids_for_browsers();
+        bundle_ids.append(&mut browser_bundle_ids);
 
         for bundle_id in bundle_ids.iter() {
             let browser = self.to_installed_browser(bundle_id, icons_root_dir.as_path());
