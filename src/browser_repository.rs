@@ -454,11 +454,20 @@ impl SupportedAppRepository {
             app_config_dir_absolute: PathBuf::new(),
             snap_app_config_dir_absolute: PathBuf::new(),
             find_profiles_fn: None,
-            restricted_domains: vec!["zoom.us".to_string()],
+            restricted_domains: vec![
+                "zoom.us".to_string(),
+                "eu01web.zoom.us".to_string(),
+                "us02web.zoom.us".to_string(),
+                "us03web.zoom.us".to_string(),
+                "us04web.zoom.us".to_string(),
+                "us05web.zoom.us".to_string(),
+                "us06web.zoom.us".to_string(),
+                "us07web.zoom.us".to_string(),
+            ],
             profile_args_fn: |_profile_cli_arg_value| vec![],
             incognito_args: vec![],
             url_transform_fn: |profile_cli_container_name, url| url.to_string(),
-            url_as_first_arg: true,
+            url_as_first_arg: false,
         }
     }
 }
