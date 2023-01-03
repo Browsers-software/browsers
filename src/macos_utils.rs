@@ -269,6 +269,12 @@ impl OsHelper {
         fs::create_dir_all(icons_root_dir.as_path()).unwrap();
 
         let mut bundle_ids: Vec<String> = Vec::new();
+
+        let linear_bundle_id = "com.linear";
+        if get_bundle_ids_for_url_scheme("linear").contains(linear_bundle_id) {
+            bundle_ids.push(linear_bundle_id.to_string());
+        }
+
         let notion_bundle_id = "notion.id";
         if get_bundle_ids_for_url_scheme("notion").contains(notion_bundle_id) {
             bundle_ids.push(notion_bundle_id.to_string());

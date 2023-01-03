@@ -230,6 +230,7 @@ impl SupportedAppRepository {
                 "Waterfox",
                 "TODOTODOTODO",
             )
+            .add(Self::linear_app())
             .add(Self::notion_app())
             .add(Self::spotify_app())
             .add(Self::zoom_app());
@@ -405,23 +406,39 @@ impl SupportedAppRepository {
         }
     }
 
+    fn generic_custom_app(app_id: AppIdentifier, restricted_domains: Vec<String>) -> SupportedApp {
+        SupportedApp {
+            app_id: app_id,
+            app_config_dir_absolute: PathBuf::new(),
+            snap_app_config_dir_absolute: PathBuf::new(),
+            find_profiles_fn: None,
+            restricted_domains: restricted_domains,
+            profile_args_fn: |_profile_cli_arg_value| vec![],
+            incognito_args: vec![],
+            url_transform_fn: |profile_cli_container_name, url| url.to_string(),
+            url_as_first_arg: false,
+        }
+    }
+
+    fn linear_app() -> SupportedApp {
+        let app_id = AppIdentifier {
+            mac_bundle_id: "com.linear".to_string(),
+            linux_desktop_id: "NOLINUXAPPEXISTS.desktop".to_string(),
+        };
+
+        Self::generic_custom_app(app_id, vec!["linear.app".to_string()])
+    }
+
     fn notion_app() -> SupportedApp {
         let app_id = AppIdentifier {
             mac_bundle_id: "notion.id".to_string(),
             linux_desktop_id: "NOLINUXAPPEXISTS.desktop".to_string(),
         };
 
-        SupportedApp {
-            app_id: app_id,
-            app_config_dir_absolute: PathBuf::new(),
-            snap_app_config_dir_absolute: PathBuf::new(),
-            find_profiles_fn: None,
-            restricted_domains: vec!["notion.so".to_string(), "www.notion.so".to_string()],
-            profile_args_fn: |_profile_cli_arg_value| vec![],
-            incognito_args: vec![],
-            url_transform_fn: |profile_cli_container_name, url| url.to_string(),
-            url_as_first_arg: false,
-        }
+        Self::generic_custom_app(
+            app_id,
+            vec!["notion.so".to_string(), "www.notion.so".to_string()],
+        )
     }
 
     fn spotify_app() -> SupportedApp {
@@ -449,12 +466,9 @@ impl SupportedAppRepository {
             linux_desktop_id: "Zoom.desktop".to_string(),
         };
 
-        SupportedApp {
-            app_id: app_id,
-            app_config_dir_absolute: PathBuf::new(),
-            snap_app_config_dir_absolute: PathBuf::new(),
-            find_profiles_fn: None,
-            restricted_domains: vec![
+        Self::generic_custom_app(
+            app_id,
+            vec![
                 "zoom.us".to_string(),
                 "eu01web.zoom.us".to_string(),
                 "us02web.zoom.us".to_string(),
@@ -464,11 +478,7 @@ impl SupportedAppRepository {
                 "us06web.zoom.us".to_string(),
                 "us07web.zoom.us".to_string(),
             ],
-            profile_args_fn: |_profile_cli_arg_value| vec![],
-            incognito_args: vec![],
-            url_transform_fn: |profile_cli_container_name, url| url.to_string(),
-            url_as_first_arg: false,
-        }
+        )
     }
 }
 
