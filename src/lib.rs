@@ -7,7 +7,7 @@ use std::{env, thread};
 
 use druid::Target;
 use serde::{Deserialize, Serialize};
-use tracing::{info, warn};
+use tracing::{debug, info, warn};
 use url::Url;
 
 use ui::UI;
@@ -130,7 +130,7 @@ impl BrowserCommon {
                 arguments.args(incognito_args);
             }
 
-            info!("Launching: {:?}", cmd);
+            debug!("Launching: {:?}", cmd);
             return cmd;
         } else if cfg!(target_os = "linux") {
             let mut cmd = Command::new(self.executable_path.to_string());
@@ -301,16 +301,16 @@ fn generate_all_browser_profiles(
     let mut visible_browser_profiles: Vec<CommonBrowserProfile> = Vec::new();
     let mut hidden_browser_profiles: Vec<CommonBrowserProfile> = Vec::new();
     //let support_dir = macos_get_application_support_dir();
-    info!("Apps");
+    debug!("Apps");
     for installed_browser in installed_browsers {
-        info!("App: {:?}", installed_browser.bundle);
-        info!("  Path: {:?}", installed_browser.executable_path);
+        debug!("App: {:?}", installed_browser.bundle);
+        debug!("  Path: {:?}", installed_browser.executable_path);
         let app = GenericApp::new(&installed_browser, app_finder.get_app_repository());
 
         for p in app.get_profiles() {
             let app_id = p.get_unique_app_id();
             if hidden_apps.contains(&app_id) {
-                info!(
+                debug!(
                     "Skipping Profile: {:?} because whole app is hidden",
                     p.get_profile_name()
                 );
@@ -321,14 +321,14 @@ fn generate_all_browser_profiles(
             let profile_unique_id = p.get_unique_id();
 
             if hidden_profiles.contains(&profile_unique_id) {
-                info!(
+                debug!(
                     "Skipping Profile: {:?} because the specific profile is hidden",
                     p.get_profile_name()
                 );
                 hidden_browser_profiles.push(p.clone());
                 continue;
             }
-            info!("Profile: {:?}", profile_unique_id.as_str());
+            debug!("Profile: {:?}", profile_unique_id.as_str());
             visible_browser_profiles.push(p.clone());
         }
     }
@@ -502,8 +502,8 @@ pub fn basically_main() {
                 MessageToMain::LinkOpenedFromBundle(from_bundle_id, url) => {
                     // TODO: do something once we have rules to
                     //       prioritize/default browsers based on source app and/or url
-                    info!("source_bundle_id: {}", from_bundle_id.clone());
-                    info!("url: {}", url);
+                    debug!("source_bundle_id: {}", from_bundle_id.clone());
+                    debug!("url: {}", url);
                     let opening_rule_maybe = get_rule_for_source_app_and_url(
                         &opening_rules,
                         &url,
