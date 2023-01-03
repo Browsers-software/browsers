@@ -271,7 +271,12 @@ impl OsHelper {
         let icons_root_dir = cache_root_dir.join("icons");
         fs::create_dir_all(icons_root_dir.as_path()).unwrap();
 
-        let bundle_ids = find_bundle_ids_for_browsers();
+        let mut bundle_ids = find_bundle_ids_for_browsers();
+
+        let notion_bundle_id = "notion.id";
+        if get_bundle_ids_for_url_scheme("notion").contains(notion_bundle_id) {
+            bundle_ids.push(notion_bundle_id.to_string());
+        }
 
         /*let spotify_bundle_id = "com.spotify.client";
         if get_bundle_ids_for_url_scheme("spotify").contains(spotify_bundle_id) {

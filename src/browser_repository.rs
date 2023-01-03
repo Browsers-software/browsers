@@ -230,6 +230,7 @@ impl SupportedAppRepository {
                 "Waterfox",
                 "TODOTODOTODO",
             )
+            .add(Self::notion_app())
             .add(Self::spotify_app())
             .add(Self::zoom_app());
     }
@@ -397,6 +398,25 @@ impl SupportedAppRepository {
             snap_app_config_dir_absolute: PathBuf::new(),
             find_profiles_fn: None,
             restricted_domains: vec![],
+            profile_args_fn: |_profile_cli_arg_value| vec![],
+            incognito_args: vec![],
+            url_transform_fn: |profile_cli_container_name, url| url.to_string(),
+            url_as_first_arg: false,
+        }
+    }
+
+    fn notion_app() -> SupportedApp {
+        let app_id = AppIdentifier {
+            mac_bundle_id: "notion.id".to_string(),
+            linux_desktop_id: "NOLINUXAPPEXISTS.desktop".to_string(),
+        };
+
+        SupportedApp {
+            app_id: app_id,
+            app_config_dir_absolute: PathBuf::new(),
+            snap_app_config_dir_absolute: PathBuf::new(),
+            find_profiles_fn: None,
+            restricted_domains: vec!["https://notion.so".to_string(), "https://www.notion.so".to_string()],
             profile_args_fn: |_profile_cli_arg_value| vec![],
             incognito_args: vec![],
             url_transform_fn: |profile_cli_container_name, url| url.to_string(),
