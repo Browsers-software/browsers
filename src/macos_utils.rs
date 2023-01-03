@@ -1,6 +1,5 @@
 use std::collections::HashSet;
 use std::ffi::{CStr, OsString};
-
 use std::os::unix::ffi::OsStringExt;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -11,14 +10,12 @@ use cocoa_foundation::foundation::{NSAutoreleasePool, NSPoint, NSRect, NSSize, N
 use core_foundation::base::TCFType;
 use core_foundation::string::CFString;
 use core_services::CFStringRef;
-
 use objc::runtime::Object;
 use objc::runtime::YES;
 use objc::{class, msg_send, sel, sel_impl};
 use tracing::debug;
 
 use crate::browser_repository::SupportedAppRepository;
-
 use crate::InstalledBrowser;
 
 const APP_DIR_NAME: &'static str = "software.Browsers";
@@ -278,12 +275,12 @@ impl OsHelper {
             bundle_ids.push(notion_bundle_id.to_string());
         }
 
-        /*let spotify_bundle_id = "com.spotify.client";
+        let spotify_bundle_id = "com.spotify.client";
         if get_bundle_ids_for_url_scheme("spotify").contains(spotify_bundle_id) {
             bundle_ids.push(spotify_bundle_id.to_string());
         }
 
-        let zoom_bundle_id = "us.zoom.xos";
+        /*let zoom_bundle_id = "us.zoom.xos";
         if get_bundle_ids_for_url_scheme("zoommtg").contains(zoom_bundle_id) {
             bundle_ids.push(zoom_bundle_id.to_string());
         }*/

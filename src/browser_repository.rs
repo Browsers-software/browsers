@@ -439,7 +439,7 @@ impl SupportedAppRepository {
             profile_args_fn: |_profile_cli_arg_value| vec![],
             incognito_args: vec![],
             url_transform_fn: convert_spotify_uri,
-            url_as_first_arg: true,
+            url_as_first_arg: false,
         }
     }
 
