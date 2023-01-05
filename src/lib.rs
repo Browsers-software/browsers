@@ -13,6 +13,7 @@ use url::Url;
 use ui::UI;
 
 use crate::browser_repository::{SupportedApp, SupportedAppRepository};
+use crate::ui::MoveTo;
 use crate::utils::OSAppFinder;
 
 mod ui;
@@ -631,7 +632,7 @@ pub fn basically_main() {
                             .ok();
                     }
                 }
-                MessageToMain::MoveAppProfile(unique_id, to_higher) => {
+                MessageToMain::MoveAppProfile(unique_id, move_to) => {
                     let visible_profile_index_maybe = visible_browser_profiles
                         .iter()
                         .position(|p| p.get_unique_id() == unique_id);
@@ -642,34 +643,47 @@ pub fn basically_main() {
                     }
                     let visible_profile_index = visible_profile_index_maybe.unwrap();
 
-                    if to_higher {
-                        if visible_profile_index == 0 {
-                            info!(
-                                "Not moving profile {} higher as it's already first",
-                                unique_id
-                            );
-                            continue;
+                    match move_to {
+                        MoveTo::UP | MoveTo::TOP => {
+                            if visible_profile_index == 0 {
+                                info!(
+                                    "Not moving profile {} higher as it's already first",
+                                    unique_id
+                                );
+                                continue;
+                            }
+                            info!("Moving profile {} higher", unique_id);
                         }
-                        info!("Moving profile {} higher", unique_id);
-                    } else {
-                        if visible_profile_index == visible_browser_profiles.len() - 1 {
-                            info!(
-                                "Not moving profile {} lower as it's already last",
-                                unique_id
-                            );
-                            continue;
+                        MoveTo::DOWN | MoveTo::BOTTOM => {
+                            if visible_profile_index == visible_browser_profiles.len() - 1 {
+                                info!(
+                                    "Not moving profile {} lower as it's already last",
+                                    unique_id
+                                );
+                                continue;
+                            }
+                            info!("Moving profile {} lower", unique_id);
                         }
-                        info!("Moving profile {} lower", unique_id);
                     }
 
                     // 1. update visible_browser_profiles
-                    if to_higher {
-                        visible_browser_profiles
-                            [visible_profile_index - 1..visible_profile_index + 1]
-                            .rotate_left(1);
-                    } else {
-                        visible_browser_profiles[visible_profile_index..visible_profile_index + 2]
-                            .rotate_right(1);
+                    match move_to {
+                        MoveTo::UP => {
+                            visible_browser_profiles
+                                [visible_profile_index - 1..visible_profile_index + 1]
+                                .rotate_left(1);
+                        }
+                        MoveTo::DOWN => {
+                            visible_browser_profiles
+                                [visible_profile_index..visible_profile_index + 2]
+                                .rotate_right(1);
+                        }
+                        MoveTo::TOP => {
+                            visible_browser_profiles[0..visible_profile_index + 1].rotate_right(1);
+                        }
+                        MoveTo::BOTTOM => {
+                            visible_browser_profiles[visible_profile_index..].rotate_left(1);
+                        }
                     }
 
                     // 2. send visible_browser_profiles to ui
@@ -707,5 +721,5 @@ pub enum MessageToMain {
     HideAppProfile(String),
     HideAllProfiles(String),
     RestoreAppProfile(String),
-    MoveAppProfile(String, bool),
+    MoveAppProfile(String, MoveTo),
 }

@@ -384,8 +384,15 @@ pub const HIDE_ALL_PROFILES: Selector<String> = Selector::new("browsers.hide_all
 pub const RESTORE_HIDDEN_PROFILE: Selector<String> =
     Selector::new("browsers.restore_hidden_profile");
 
-pub const MOVE_PROFILE: Selector<(String, bool)> = Selector::new("browsers.move_profile");
+pub const MOVE_PROFILE: Selector<(String, MoveTo)> = Selector::new("browsers.move_profile");
 
+#[derive(Clone, Copy, Debug)]
+pub enum MoveTo {
+    UP,
+    DOWN,
+    TOP,
+    BOTTOM,
+}
 pub const SHOW_ABOUT_DIALOG: Selector<()> = Selector::new("browsers.show_about_dialog");
 
 pub struct UIDelegate {
@@ -585,10 +592,10 @@ impl AppDelegate<UIState> for UIDelegate {
                 .ok();
             Handled::Yes
         } else if cmd.is(MOVE_PROFILE) {
-            let (unique_id, to_higher) = cmd.get_unchecked(MOVE_PROFILE);
+            let (unique_id, move_to) = cmd.get_unchecked(MOVE_PROFILE);
             let unique_id = unique_id.clone();
             self.main_sender
-                .send(MessageToMain::MoveAppProfile(unique_id, to_higher.clone()))
+                .send(MessageToMain::MoveAppProfile(unique_id, move_to.clone()))
                 .ok();
             Handled::Yes
         } else if cmd.is(SHOW_ABOUT_DIALOG) {
@@ -1239,9 +1246,22 @@ fn make_context_menu(browser: &UIBrowser) -> Menu<UIState> {
 
     if !browser.has_priority_ordering() {
         let is_visible = browser.browser_profile_index > 0;
-
         let item_name = browser.get_full_name();
 
+        let move_profile_to_top_label = LocalizedString::new("move-profile-to-top")
+            .with_arg("item-name", move |_, _| item_name.clone().into());
+
+        let this_id = id.clone();
+        menu = menu.entry(
+            MenuItem::new(move_profile_to_top_label)
+                .on_activate(move |ctx, _data: &mut UIState, _env| {
+                    let command = MOVE_PROFILE.with((this_id.clone(), MoveTo::TOP));
+                    ctx.submit_command(command);
+                })
+                .enabled_if(move |_, _| is_visible),
+        );
+
+        let item_name = browser.get_full_name();
         let move_profile_higher_label = LocalizedString::new("move-profile-higher")
             .with_arg("item-name", move |_, _| item_name.clone().into());
 
@@ -1249,7 +1269,7 @@ fn make_context_menu(browser: &UIBrowser) -> Menu<UIState> {
         menu = menu.entry(
             MenuItem::new(move_profile_higher_label)
                 .on_activate(move |ctx, _data: &mut UIState, _env| {
-                    let command = MOVE_PROFILE.with((this_id.clone(), true));
+                    let command = MOVE_PROFILE.with((this_id.clone(), MoveTo::UP));
                     ctx.submit_command(command);
                 })
                 .enabled_if(move |_, _| is_visible),
@@ -1264,7 +1284,20 @@ fn make_context_menu(browser: &UIBrowser) -> Menu<UIState> {
         menu = menu.entry(
             MenuItem::new(move_profile_lower_label)
                 .on_activate(move |ctx, _data: &mut UIState, _env| {
-                    let command = MOVE_PROFILE.with((this_id.clone(), false));
+                    let command = MOVE_PROFILE.with((this_id.clone(), MoveTo::DOWN));
+                    ctx.submit_command(command);
+                })
+                .enabled_if(move |_, _| is_visible),
+        );
+
+        let this_id = id.clone();
+        let item_name = browser.get_full_name();
+        let move_profile_bottom_label = LocalizedString::new("move-profile-bottom")
+            .with_arg("item-name", move |_, _| item_name.to_string().into());
+        menu = menu.entry(
+            MenuItem::new(move_profile_bottom_label)
+                .on_activate(move |ctx, _data: &mut UIState, _env| {
+                    let command = MOVE_PROFILE.with((this_id.clone(), MoveTo::BOTTOM));
                     ctx.submit_command(command);
                 })
                 .enabled_if(move |_, _| is_visible),
