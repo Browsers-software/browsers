@@ -855,7 +855,7 @@ const fn get_icon_size() -> f64 {
     if cfg!(target_os = "macos") {
         32.0
     } else if cfg!(target_os = "linux") {
-        32.0
+        24.0
     } else {
         32.0
     }
@@ -865,7 +865,7 @@ const fn get_icon_padding() -> f64 {
     if cfg!(target_os = "macos") {
         0.0
     } else if cfg!(target_os = "linux") {
-        4.0
+        0.0
     } else {
         0.0
     }
@@ -966,7 +966,7 @@ fn create_browser(
     let icon_size = get_icon_size();
     let icon_padding = get_icon_padding();
 
-    if icon_size + icon_padding > ITEM_HEIGHT {
+    if icon_size + icon_padding * 2.0 > ITEM_HEIGHT {
         // ideally this could be compile time check
         panic!("icon_size + icon_padding > ITEM_HEIGHT");
     }
