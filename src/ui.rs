@@ -335,6 +335,10 @@ pub struct UIBrowser {
 }
 
 impl UIBrowser {
+    pub fn has_priority_ordering(&self) -> bool {
+        return !self.restricted_domains.is_empty();
+    }
+
     /// Returns app name + optionally profile name if app supports multiple profiles
     pub fn get_full_name(&self) -> String {
         let mut full_name = self.browser_name.to_string();
@@ -873,7 +877,7 @@ impl FilteredBrowsersLens {
             .map(|url| url.domain().map(|d| d.to_string()))
             .flatten();
 
-        let filtered: Vec<UIBrowser> = data
+        let mut filtered: Vec<UIBrowser> = data
             .1
             .iter()
             .cloned()
@@ -890,6 +894,9 @@ impl FilteredBrowsersLens {
                 };
             })
             .collect();
+
+        // always show special apps first
+        filtered.sort_by_key(|b| !b.has_priority_ordering());
 
         return filtered;
     }
@@ -1230,38 +1237,39 @@ fn make_context_menu(browser: &UIBrowser) -> Menu<UIState> {
     let id = browser.unique_id.clone();
     let app_name = browser.browser_name.to_string();
 
-    let is_visible = browser.browser_profile_index > 0;
+    if !browser.has_priority_ordering() {
+        let is_visible = browser.browser_profile_index > 0;
 
-    let item_name = browser.get_full_name();
+        let item_name = browser.get_full_name();
 
-    let move_profile_higher_label = LocalizedString::new("move-profile-higher")
-        .with_arg("item-name", move |_, _| item_name.clone().into());
+        let move_profile_higher_label = LocalizedString::new("move-profile-higher")
+            .with_arg("item-name", move |_, _| item_name.clone().into());
 
-    let this_id = id.clone();
-    menu = menu.entry(
-        MenuItem::new(move_profile_higher_label)
-            .on_activate(move |ctx, _data: &mut UIState, _env| {
-                let command = MOVE_PROFILE.with((this_id.clone(), true));
-                ctx.submit_command(command);
-            })
-            .enabled_if(move |_, _| is_visible),
-    );
+        let this_id = id.clone();
+        menu = menu.entry(
+            MenuItem::new(move_profile_higher_label)
+                .on_activate(move |ctx, _data: &mut UIState, _env| {
+                    let command = MOVE_PROFILE.with((this_id.clone(), true));
+                    ctx.submit_command(command);
+                })
+                .enabled_if(move |_, _| is_visible),
+        );
 
-    let is_visible = !browser.is_last;
-    let item_name = browser.get_full_name();
+        let is_visible = !browser.is_last;
+        let item_name = browser.get_full_name();
+        let move_profile_lower_label = LocalizedString::new("move-profile-lower")
+            .with_arg("item-name", move |_, _| item_name.to_string().into());
 
-    let move_profile_lower_label = LocalizedString::new("move-profile-lower")
-        .with_arg("item-name", move |_, _| item_name.to_string().into());
-
-    let this_id = id.clone();
-    menu = menu.entry(
-        MenuItem::new(move_profile_lower_label)
-            .on_activate(move |ctx, _data: &mut UIState, _env| {
-                let command = MOVE_PROFILE.with((this_id.clone(), false));
-                ctx.submit_command(command);
-            })
-            .enabled_if(move |_, _| is_visible),
-    );
+        let this_id = id.clone();
+        menu = menu.entry(
+            MenuItem::new(move_profile_lower_label)
+                .on_activate(move |ctx, _data: &mut UIState, _env| {
+                    let command = MOVE_PROFILE.with((this_id.clone(), false));
+                    ctx.submit_command(command);
+                })
+                .enabled_if(move |_, _| is_visible),
+        );
+    }
 
     let item_name = browser.get_full_name();
 
