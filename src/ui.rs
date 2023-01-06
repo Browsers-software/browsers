@@ -879,7 +879,7 @@ impl FilteredBrowsersLens {
         let url_result = Url::parse(url_str.as_str());
         let domain_maybe = url_result
             .ok()
-            .map(|url| url.domain().map(|d| d.to_string()))
+            .map(|url| url.host_str().map(|d| d.to_string()))
             .flatten();
 
         let mut filtered: Vec<UIBrowser> = data

@@ -639,7 +639,7 @@ fn convert_spotify_uri(_: Option<&String>, url: &str) -> String {
     }
 
     let url1 = result.unwrap();
-    //let domain_maybe = url1.domain();
+    //let host_maybe = url1.host_str();
     // verify it's "open.spotify.com" ?
     //let x = url1.path();
 

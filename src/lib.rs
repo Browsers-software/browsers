@@ -360,7 +360,7 @@ fn get_rule_for_source_app_and_url<'a>(
         return None;
     }
     let given_url = url_result.unwrap();
-    let given_url_domain = given_url.domain().unwrap();
+    let given_url_host_maybe = given_url.host_str();
 
     for r in opening_rules {
         let mut source_app_match = false;
@@ -371,8 +371,12 @@ fn get_rule_for_source_app_and_url<'a>(
                 continue;
             }
             let url_rule = url_rule_result.unwrap();
-            let domains_match = url_rule.domain().unwrap() == given_url_domain;
-            domains_match
+
+            if let Some(given_url_host) = given_url_host_maybe {
+                url_rule.host_str().unwrap() == given_url_host
+            } else {
+                false
+            }
         } else {
             true
         };
