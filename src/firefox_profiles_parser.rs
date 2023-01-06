@@ -215,19 +215,17 @@ fn containers_json_map(containers_json_file_path: &Path) -> Vec<String> {
         let is_public = identity["public"].as_bool().unwrap();
         if is_public {
             let l10n_id_maybe = identity["l10nID"].as_str();
-            let mut name = "Not Determined";
-
-            if let Some(l10n_id) = l10n_id_maybe {
-                name = match l10n_id {
+            let name = if let Some(l10n_id) = l10n_id_maybe {
+                match l10n_id {
                     "userContextPersonal.label" => "Personal",
                     "userContextWork.label" => "Work",
                     "userContextBanking.label" => "Banking",
                     "userContextShopping.label" => "Shopping",
                     _ => "Unknown",
-                };
+                }
             } else {
-                name = identity["name"].as_str().unwrap();
-            }
+                identity["name"].as_str().unwrap()
+            };
             container_names.push(name.to_string());
         }
     }

@@ -3,7 +3,6 @@ use std::path::{Path, PathBuf};
 
 use url::Url;
 
-use crate::ProfileIcon::NoIcon;
 use crate::{chromium_profiles_parser, firefox_profiles_parser, paths, InstalledBrowserProfile};
 
 // Holds list of custom SupportedApp configurations
@@ -364,7 +363,7 @@ impl SupportedAppRepository {
                 vec![format!("--profile-directory={}", profile_cli_arg_value)]
             },
             incognito_args: vec!["-incognito".to_string()],
-            url_transform_fn: |profile_cli_container_name, url| url.to_string(),
+            url_transform_fn: |_, url| url.to_string(),
             url_as_first_arg: true,
         }
     }

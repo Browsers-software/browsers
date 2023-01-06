@@ -363,9 +363,8 @@ fn get_rule_for_source_app_and_url<'a>(
     let given_url_domain = given_url.domain().unwrap();
 
     for r in opening_rules {
-        let mut url_match = false;
         let mut source_app_match = false;
-        if let Some(ref url_pattern) = r.url_pattern {
+        let url_match = if let Some(ref url_pattern) = r.url_pattern {
             let url_pattern_rule = url_pattern.clone();
             let url_rule_result = Url::from_str(url_pattern_rule.as_str());
             if url_rule_result.is_err() {
@@ -373,10 +372,10 @@ fn get_rule_for_source_app_and_url<'a>(
             }
             let url_rule = url_rule_result.unwrap();
             let domains_match = url_rule.domain().unwrap() == given_url_domain;
-            url_match = domains_match;
+            domains_match
         } else {
-            url_match = true
-        }
+            true
+        };
 
         if let Some(ref source_app) = r.source_app {
             let source_app_rule = source_app.clone();
@@ -431,7 +430,7 @@ pub fn basically_main() {
     let show_gui = !args.contains(&"--no-gui".to_string());
     let force_reload = args.contains(&"--reload".to_string());
 
-    let app_finder = utils::OSAppFinder::new();
+    let app_finder = OSAppFinder::new();
 
     let is_default = utils::set_as_default_web_browser();
     let show_set_as_default = !is_default;
@@ -477,7 +476,7 @@ pub fn basically_main() {
             match message {
                 MessageToMain::Refresh => {
                     info!("refresh called");
-                    let (opening_rules, visible_browser_profiles, hidden_browser_profiles) =
+                    let (_, visible_browser_profiles, _) =
                         generate_all_browser_profiles(&app_finder, true);
 
                     let ui_browsers = UI::real_to_ui_browsers(&visible_browser_profiles);

@@ -1,5 +1,4 @@
 use std::path::PathBuf;
-use std::str::FromStr;
 
 #[cfg(target_os = "linux")]
 use crate::linux_utils;

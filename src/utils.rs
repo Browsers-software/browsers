@@ -1,15 +1,11 @@
-use std::any::Any;
-use std::env::temp_dir;
-use std::fmt::Error;
 use std::fs::File;
-use std::io::{BufReader, BufWriter, ErrorKind, Read, Write};
+use std::io::{BufReader, ErrorKind};
 use std::path::{Path, PathBuf};
 use std::{fs, io, u32};
 
 use druid::image;
 use druid::image::imageops::FilterType;
-use druid::image::{GenericImage, ImageFormat, Rgb, Rgba};
-use druid::widget::Image;
+use druid::image::{ImageFormat, Rgba};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
@@ -19,9 +15,7 @@ use url::Url;
 use crate::linux_utils;
 #[cfg(target_os = "macos")]
 use crate::macos_utils;
-use crate::{
-    paths, InstalledBrowser, InstalledBrowserProfile, ProfileIcon, SupportedAppRepository,
-};
+use crate::{paths, InstalledBrowser, SupportedAppRepository};
 
 #[cfg(target_os = "macos")]
 pub fn set_as_default_web_browser() -> bool {
@@ -211,7 +205,7 @@ impl OSAppFinder {
     }
 }
 
-const fn create_circular_mask_radius<const N: usize>() -> [[bool; N]; N] {
+/*const fn create_circular_mask_radius<const N: usize>() -> [[bool; N]; N] {
     let mut mask = [[true; N]; N];
 
     let mut x: usize = 0;
@@ -235,10 +229,10 @@ const fn create_circular_mask_radius<const N: usize>() -> [[bool; N]; N] {
     }
 
     return mask;
-}
+}*/
 
 // https://baptiste-wicht.com/posts/2014/07/compile-integer-square-roots-at-compile-time-in-cpp.html
-const fn ct_sqrt(res: u32, l: u32, r: u32) -> u32 {
+/*const fn ct_sqrt(res: u32, l: u32, r: u32) -> u32 {
     return if l == r {
         r
     } else {
@@ -252,9 +246,9 @@ const fn ct_sqrt(res: u32, l: u32, r: u32) -> u32 {
             ct_sqrt(res, mid + 1, r)
         }
     };
-}
+}*/
 
-const CIRCULAR_MASK_32: [[bool; 64]; 64] = create_circular_mask_radius();
+//const CIRCULAR_MASK_32: [[bool; 64]; 64] = create_circular_mask_radius();
 const CIRCULAR_RADIUS: usize = 64;
 
 lazy_static! {

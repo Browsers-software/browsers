@@ -1,21 +1,20 @@
 use std::cmp;
-use std::io::{BufReader, Error};
+use std::io::Error;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::Sender;
 use std::sync::Arc;
 
-use clap::builder::Str;
 use druid::commands::QUIT_APP;
 use druid::keyboard_types::Key;
-use druid::piet::{InterpolationMode, TextStorage};
+use druid::piet::InterpolationMode;
 use druid::widget::{
     Container, Controller, ControllerHost, CrossAxisAlignment, Either, Flex, Image, Label,
-    LensWrap, LineBreaking, List, ZStack,
+    LineBreaking, List, ZStack,
 };
 use druid::{
-    image, lens, Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, HotKey,
-    LayoutCtx, LensExt, LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, Modifiers,
-    SysMods, TextAlignment, UnitPoint, UpdateCtx, Vec2, WidgetId, WindowHandle, WindowLevel,
+    image, Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, LayoutCtx, LensExt,
+    LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, Modifiers, TextAlignment, UnitPoint,
+    UpdateCtx, Vec2, WidgetId, WindowHandle, WindowLevel,
 };
 use druid::{
     AppDelegate, AppLauncher, Color, Command, Data, DelegateCtx, Env, Event, EventCtx, Handled,
@@ -23,7 +22,7 @@ use druid::{
     Widget, WidgetExt, WindowDesc, WindowId,
 };
 use image::io::Reader as ImageReader;
-use tracing::{debug, info, warn, Instrument};
+use tracing::{debug, info};
 use url::Url;
 
 use crate::{paths, CommonBrowserProfile, MessageToMain};
@@ -192,7 +191,7 @@ impl UI {
             .with_text_color(Color::from_hex_str("808080").unwrap())
             .with_line_break_mode(LineBreaking::Clip)
             .fix_width(175.0)
-            .on_click(move |_ctx, data: &mut UIState, _env| {
+            .on_click(move |_ctx, _: &mut UIState, _env| {
                 _ctx.get_external_handle()
                     .submit_command(COPY_LINK_TO_CLIPBOARD, {}, Target::Global)
                     .ok();
@@ -1105,7 +1104,7 @@ impl<S: druid::Data + FocusData, W: Widget<S>> Widget<S> for FocusWidget<S, W> {
         match event {
             // on mouse hover request focus
             Event::Command(cmd) if cmd.is(FOCUS_WIDGET_SET_FOCUS_ON_HOVER) => {
-                let widget_id = cmd.get_unchecked(FOCUS_WIDGET_SET_FOCUS_ON_HOVER);
+                //let widget_id = cmd.get_unchecked(FOCUS_WIDGET_SET_FOCUS_ON_HOVER);
                 //info!(
                 //    "received FOCUS_WIDGET_SET_FOCUS to widget_id: {:?}",
                 //    widget_id
