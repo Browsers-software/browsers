@@ -9,7 +9,7 @@ use cocoa_foundation::base::{id, nil};
 use cocoa_foundation::foundation::{NSAutoreleasePool, NSPoint, NSRect, NSSize, NSString, NSURL};
 use core_foundation::base::TCFType;
 use core_foundation::string::CFString;
-use core_services::CFStringRef;
+use core_services::{CFArray, CFStringRef};
 use objc::runtime::Object;
 use objc::runtime::YES;
 use objc::{class, msg_send, sel, sel_impl};
@@ -172,8 +172,7 @@ pub fn unsandboxed_home_dir() -> Option<PathBuf> {
 /// get macOS standard directory, supports sandboxing
 pub fn macos_get_directory(directory: u64) -> PathBuf {
     let results = unsafe { NSSearchPathForDirectoriesInDomains(directory, 1, 1) };
-    let results =
-        unsafe { core_services::CFArray::<core_services::CFString>::wrap_under_get_rule(results) };
+    let results = unsafe { CFArray::<CFString>::wrap_under_get_rule(results) };
 
     let option = results.get(0);
     if option.is_none() {
@@ -196,14 +195,12 @@ extern "C" {
 
 #[link(name = "Foundation", kind = "framework")]
 extern "C" {
-    pub fn LSCopyAllHandlersForURLScheme(
-        in_url_scheme: core_services::CFStringRef,
-    ) -> core_services::CFArrayRef;
+    pub fn LSCopyAllHandlersForURLScheme(in_url_scheme: CFStringRef) -> core_services::CFArrayRef;
 }
 
 extern "C" {
-    pub static kCFBundleNameKey: core_services::CFStringRef;
-    pub static kCFBundleExecutableKey: core_services::CFStringRef;
+    pub static kCFBundleNameKey: CFStringRef;
+    pub static kCFBundleExecutableKey: CFStringRef;
 }
 
 fn get_app_name(bundle_path: id) -> String {
@@ -261,8 +258,8 @@ impl OsHelper {
         return &self.app_repository;
     }
 
-    pub fn get_installed_browsers(&self) -> Vec<crate::InstalledBrowser> {
-        let mut browsers: Vec<crate::InstalledBrowser> = Vec::new();
+    pub fn get_installed_browsers(&self) -> Vec<InstalledBrowser> {
+        let mut browsers: Vec<InstalledBrowser> = Vec::new();
 
         let cache_root_dir = get_this_app_cache_root_dir();
         let icons_root_dir = cache_root_dir.join("icons");
@@ -314,7 +311,7 @@ impl OsHelper {
         let icon_path_str = full_stored_icon_path.display().to_string();
         create_icon_for_app(bundle_url, icon_path_str.as_str());
 
-        let browser = crate::InstalledBrowser {
+        let browser = InstalledBrowser {
             executable_path: executable_path.to_str().unwrap().to_string(),
             display_name: display_name.to_string(),
             bundle: supported_app.get_app_id().to_string(),
@@ -386,7 +383,7 @@ pub fn find_bundle_ids_for_browsers() -> Vec<String> {
 pub fn bundle_ids_for_content_type() -> HashSet<String> {
     // kUTTypeHTML
     // not present for Firefox (ff uses deprecated CFBundleTypeExtensions)
-    let content_type = core_services::CFString::new("public.html");
+    let content_type = CFString::new("public.html");
     //let in_content_type = cfs.as_concrete_TypeRef();
     let role = core_services::kLSRolesAll;
 
@@ -399,7 +396,7 @@ pub fn bundle_ids_for_content_type() -> HashSet<String> {
             return HashSet::new();
         }
 
-        let handlers_content_type: core_services::CFArray<core_services::CFString> =
+        let handlers_content_type: CFArray<CFString> =
             core_services::TCFType::wrap_under_create_rule(handlers_content_type);
 
         let bundles_content_type = handlers_content_type
@@ -428,7 +425,7 @@ pub fn get_bundle_ids_for_url_scheme(scheme: &str) -> Vec<String> {
             return Vec::new();
         }
 
-        let handlers_https: core_services::CFArray<core_services::CFString> =
+        let handlers_https: CFArray<CFString> =
             core_services::TCFType::wrap_under_create_rule(handlers_https);
 
         let mut vec = handlers_https
@@ -455,13 +452,13 @@ pub fn set_default_web_browser() -> bool {
     }
 
     let bundle_id = "software.Browsers";
-    let bundle_id = core_services::CFString::new(bundle_id);
+    let bundle_id = CFString::new(bundle_id);
     let bundle_id_ref = bundle_id.as_concrete_TypeRef();
 
-    let https_scheme = core_services::CFString::new("https");
+    let https_scheme = CFString::new("https");
     let https_scheme_ref = https_scheme.as_concrete_TypeRef();
 
-    let http_scheme = core_services::CFString::new("http");
+    let http_scheme = CFString::new("http");
     let http_scheme_ref = http_scheme.as_concrete_TypeRef();
 
     unsafe {
@@ -475,10 +472,10 @@ pub fn set_default_web_browser() -> bool {
 pub fn is_default_web_browser() -> bool {
     let bundle_id = "software.Browsers";
 
-    let https_scheme = core_services::CFString::new("https");
+    let https_scheme = CFString::new("https");
     let https_scheme_ref = https_scheme.as_concrete_TypeRef();
 
-    let http_scheme = core_services::CFString::new("http");
+    let http_scheme = CFString::new("http");
     let http_scheme_ref = http_scheme.as_concrete_TypeRef();
 
     let https_bundle = unsafe { LSCopyDefaultHandlerForURLScheme(https_scheme_ref) };
