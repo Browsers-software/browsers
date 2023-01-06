@@ -44,12 +44,21 @@ pub struct UI {
 
 impl UI {
     pub fn real_to_ui_browsers(all_browser_profiles: &[CommonBrowserProfile]) -> Vec<UIBrowser> {
+        // TODO: this is a bit ugly; we keep profiles with has_priority_ordering() always on top
+        //       and everything else comes after; it might make sense to keep them in two separate
+        //       vectors (or slices)
+        let first_orderable_item_index_maybe = all_browser_profiles
+            .iter()
+            .position(|b| !b.has_priority_ordering());
+        let first_orderable_item_index = first_orderable_item_index_maybe.unwrap();
+
         let profiles_count = all_browser_profiles.len();
         return all_browser_profiles
             .iter()
             .enumerate()
             .map(|(i, p)| UIBrowser {
                 browser_profile_index: i,
+                is_first: i == first_orderable_item_index,
                 is_last: i == profiles_count - 1,
                 restricted_domains: Arc::new(p.get_restricted_domains().clone()),
                 browser_name: p.get_browser_name().to_string(),
@@ -319,6 +328,7 @@ impl FocusData for (bool, UIBrowser) {
 #[derive(Clone, Data, Lens)]
 pub struct UIBrowser {
     browser_profile_index: usize,
+    is_first: bool,
     is_last: bool,
     restricted_domains: Arc<Vec<String>>,
     browser_name: String,
@@ -1243,7 +1253,7 @@ fn make_context_menu(browser: &UIBrowser) -> Menu<UIState> {
     let app_name = browser.browser_name.to_string();
 
     if !browser.has_priority_ordering() {
-        let is_visible = browser.browser_profile_index > 0;
+        let is_visible = !browser.is_first;
         let item_name = browser.get_full_name();
 
         let move_profile_to_top_label = LocalizedString::new("move-profile-to-top")

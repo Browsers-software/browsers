@@ -13,7 +13,7 @@ use url::Url;
 use ui::UI;
 
 use crate::browser_repository::{SupportedApp, SupportedAppRepository};
-use crate::ui::MoveTo;
+use crate::ui::{MoveTo, UIBrowser};
 use crate::utils::OSAppFinder;
 
 mod ui;
@@ -196,6 +196,10 @@ impl CommonBrowserProfile {
         return self.app.borrow();
     }
 
+    pub fn has_priority_ordering(&self) -> bool {
+        return !self.get_restricted_domains().is_empty();
+    }
+
     fn get_restricted_domains(&self) -> &Vec<String> {
         return self
             .get_browser_common()
@@ -342,6 +346,9 @@ fn generate_all_browser_profiles(
         // return the explicit order, or else max order (preserves natural ordering)
         return order_maybe.unwrap_or(unordered_index);
     });
+
+    // always show special apps first
+    visible_browser_profiles.sort_by_key(|b| !b.has_priority_ordering());
 
     return (
         opening_rules,
@@ -613,6 +620,9 @@ pub fn basically_main() {
                         let hidden_profile = hidden_browser_profiles.remove(hidden_profile_index);
                         visible_browser_profiles.push(hidden_profile);
 
+                        // always show special apps first
+                        visible_browser_profiles.sort_by_key(|b| !b.has_priority_ordering());
+
                         let ui_browsers = UI::real_to_ui_browsers(&visible_browser_profiles);
                         ui_event_sink
                             .submit_command(ui::NEW_BROWSERS_RECEIVED, ui_browsers, Target::Global)
@@ -662,9 +672,24 @@ fn move_app_profile(
     }
     let visible_profile_index = visible_profile_index_maybe.unwrap();
 
+    // TODO: this is a bit ugly; we keep profiles with has_priority_ordering() always on top
+    //       and everything else comes after; it might make sense to keep them in two separate
+    //       vectors (or slices)
+    let first_orderable_item_index_maybe = visible_browser_profiles
+        .iter()
+        .position(|b| !b.has_priority_ordering());
+
+    let first_orderable_item_index = match first_orderable_item_index_maybe {
+        Some(first_orderable_item_index) => first_orderable_item_index,
+        None => {
+            warn!("Could not find orderable profiles");
+            return;
+        }
+    };
+
     match move_to {
         MoveTo::UP | MoveTo::TOP => {
-            if visible_profile_index == 0 {
+            if visible_profile_index <= first_orderable_item_index {
                 info!(
                     "Not moving profile {} higher as it's already first",
                     unique_id
@@ -696,7 +721,8 @@ fn move_app_profile(
                 .rotate_right(1);
         }
         MoveTo::TOP => {
-            visible_browser_profiles[0..visible_profile_index + 1].rotate_right(1);
+            visible_browser_profiles[first_orderable_item_index..visible_profile_index + 1]
+                .rotate_right(1);
         }
         MoveTo::BOTTOM => {
             visible_browser_profiles[visible_profile_index..].rotate_left(1);
@@ -712,6 +738,7 @@ fn move_app_profile(
     // 3. update config file
     let profile_ids_sorted: Vec<String> = visible_browser_profiles
         .iter()
+        .filter(|b| b.get_restricted_domains().is_empty())
         .map(|p| p.get_unique_id().clone())
         .collect();
 
