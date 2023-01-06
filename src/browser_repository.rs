@@ -211,7 +211,12 @@ impl SupportedAppRepository {
                 "Firefox",
                 ".mozilla/firefox",
             )
-            .add_firefox_based_app("org.mozilla.floorp", "TODOTODOTODO", "Floorp", "")
+            .add_firefox_based_app(
+                "org.mozilla.floorp",
+                "TODOTODOTODO",
+                "Floorp",
+                "TODOTODOTODO",
+            )
             .add_firefox_based_app(
                 "org.torproject.torbrowser",
                 "TODOTODOTODO",
@@ -626,7 +631,7 @@ impl AppConfigDir {
     }
 }
 
-fn convert_spotify_uri(profile_cli_container_name: Option<&String>, url: &str) -> String {
+fn convert_spotify_uri(_: Option<&String>, url: &str) -> String {
     let unknown = "spotify:track:2QFvsZEjbketrpCgCNC9Zp".to_string();
 
     let result = Url::parse(url);
@@ -653,19 +658,4 @@ fn convert_spotify_uri(profile_cli_container_name: Option<&String>, url: &str) -
         .map(|(resource_type, resource_id)| format!("spotify:{}:{}", resource_type, resource_id));
 
     return uri_maybe.unwrap_or_else(|| unknown);
-
-    //var data=document.URL.match(/[\/\&](track|playlist|album|artist|show|episode)\/([^\&\#\/\?]+)/i);
-    //console.log("This is a "+data[1]+" with id:"+data[2]+"\nAttempting to redirect");
-    //window.location.replace('spotify:'+data[1]+':'+data[2]);
-
-    // TODO: translate https://open.spotify.com/track/2QFvsZEjbketrpCgCNC9Zp?si=4dc7c9cdc3b84286
-    //       to spotify arg
-
-    //let path = Path::new(url);
-    //let path = "https://open.spotify.com/track/2QFvsZEjbketrpCgCNC9Zp?si=4dc7c9cdc3b84286";
-
-    //info!(path);
-
-    // 1: "track"
-    // 2: "2QFvsZEjbketrpCgCNC9Zp"
 }
