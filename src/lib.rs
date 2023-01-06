@@ -5,7 +5,7 @@ use std::str::FromStr;
 use std::sync::{mpsc, Arc};
 use std::{env, thread};
 
-use druid::Target;
+use druid::{ExtEventSink, Target};
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info, warn};
 use url::Url;
@@ -628,76 +628,13 @@ pub fn basically_main() {
                             .ok();
                     }
                 }
-                MessageToMain::MoveAppProfile(unique_id, move_to) => {
-                    let visible_profile_index_maybe = visible_browser_profiles
-                        .iter()
-                        .position(|p| p.get_unique_id() == unique_id);
-
-                    if visible_profile_index_maybe.is_none() {
-                        warn!("Could not find visible profile for id {}", unique_id);
-                        continue;
-                    }
-                    let visible_profile_index = visible_profile_index_maybe.unwrap();
-
-                    match move_to {
-                        MoveTo::UP | MoveTo::TOP => {
-                            if visible_profile_index == 0 {
-                                info!(
-                                    "Not moving profile {} higher as it's already first",
-                                    unique_id
-                                );
-                                continue;
-                            }
-                            info!("Moving profile {} higher", unique_id);
-                        }
-                        MoveTo::DOWN | MoveTo::BOTTOM => {
-                            if visible_profile_index == visible_browser_profiles.len() - 1 {
-                                info!(
-                                    "Not moving profile {} lower as it's already last",
-                                    unique_id
-                                );
-                                continue;
-                            }
-                            info!("Moving profile {} lower", unique_id);
-                        }
-                    }
-
-                    // 1. update visible_browser_profiles
-                    match move_to {
-                        MoveTo::UP => {
-                            visible_browser_profiles
-                                [visible_profile_index - 1..visible_profile_index + 1]
-                                .rotate_left(1);
-                        }
-                        MoveTo::DOWN => {
-                            visible_browser_profiles
-                                [visible_profile_index..visible_profile_index + 2]
-                                .rotate_right(1);
-                        }
-                        MoveTo::TOP => {
-                            visible_browser_profiles[0..visible_profile_index + 1].rotate_right(1);
-                        }
-                        MoveTo::BOTTOM => {
-                            visible_browser_profiles[visible_profile_index..].rotate_left(1);
-                        }
-                    }
-
-                    // 2. send visible_browser_profiles to ui
-                    let ui_browsers = UI::real_to_ui_browsers(&visible_browser_profiles);
-                    ui_event_sink
-                        .submit_command(ui::NEW_BROWSERS_RECEIVED, ui_browsers, Target::Global)
-                        .ok();
-
-                    // 3. update config file
-                    let profile_ids_sorted: Vec<String> = visible_browser_profiles
-                        .iter()
-                        .map(|p| p.get_unique_id().clone())
-                        .collect();
-
-                    let mut config = app_finder.get_installed_browsers_config();
-                    config.set_profile_order(&profile_ids_sorted);
-                    app_finder.save_installed_browsers_config(&config);
-                }
+                MessageToMain::MoveAppProfile(unique_id, move_to) => move_app_profile(
+                    &app_finder,
+                    &mut visible_browser_profiles,
+                    unique_id,
+                    move_to,
+                    &ui_event_sink,
+                ),
             }
         }
         info!("Exiting waiting thread");
@@ -706,6 +643,81 @@ pub fn basically_main() {
     if show_gui {
         launcher.launch(initial_ui_state).expect("error");
     }
+}
+
+fn move_app_profile(
+    app_finder: &OSAppFinder,
+    visible_browser_profiles: &mut Vec<CommonBrowserProfile>,
+    unique_id: String,
+    move_to: MoveTo,
+    ui_event_sink: &ExtEventSink,
+) {
+    let visible_profile_index_maybe = visible_browser_profiles
+        .iter()
+        .position(|p| p.get_unique_id() == unique_id);
+
+    if visible_profile_index_maybe.is_none() {
+        warn!("Could not find visible profile for id {}", unique_id);
+        return;
+    }
+    let visible_profile_index = visible_profile_index_maybe.unwrap();
+
+    match move_to {
+        MoveTo::UP | MoveTo::TOP => {
+            if visible_profile_index == 0 {
+                info!(
+                    "Not moving profile {} higher as it's already first",
+                    unique_id
+                );
+                return;
+            }
+            info!("Moving profile {} higher", unique_id);
+        }
+        MoveTo::DOWN | MoveTo::BOTTOM => {
+            if visible_profile_index == visible_browser_profiles.len() - 1 {
+                info!(
+                    "Not moving profile {} lower as it's already last",
+                    unique_id
+                );
+                return;
+            }
+            info!("Moving profile {} lower", unique_id);
+        }
+    }
+
+    // 1. update visible_browser_profiles
+    match move_to {
+        MoveTo::UP => {
+            visible_browser_profiles[visible_profile_index - 1..visible_profile_index + 1]
+                .rotate_left(1);
+        }
+        MoveTo::DOWN => {
+            visible_browser_profiles[visible_profile_index..visible_profile_index + 2]
+                .rotate_right(1);
+        }
+        MoveTo::TOP => {
+            visible_browser_profiles[0..visible_profile_index + 1].rotate_right(1);
+        }
+        MoveTo::BOTTOM => {
+            visible_browser_profiles[visible_profile_index..].rotate_left(1);
+        }
+    }
+
+    // 2. send visible_browser_profiles to ui
+    let ui_browsers = UI::real_to_ui_browsers(&visible_browser_profiles);
+    ui_event_sink
+        .submit_command(ui::NEW_BROWSERS_RECEIVED, ui_browsers, Target::Global)
+        .ok();
+
+    // 3. update config file
+    let profile_ids_sorted: Vec<String> = visible_browser_profiles
+        .iter()
+        .map(|p| p.get_unique_id().clone())
+        .collect();
+
+    let mut config = app_finder.get_installed_browsers_config();
+    config.set_profile_order(&profile_ids_sorted);
+    app_finder.save_installed_browsers_config(&config);
 }
 
 #[derive(Debug)]
