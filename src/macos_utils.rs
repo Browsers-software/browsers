@@ -258,20 +258,17 @@ impl OsHelper {
         return &self.app_repository;
     }
 
-    pub fn get_installed_browsers(&self) -> Vec<InstalledBrowser> {
+    pub fn get_installed_browsers(&self, schemes: Vec<String>) -> Vec<InstalledBrowser> {
         let mut browsers: Vec<InstalledBrowser> = Vec::new();
 
         let cache_root_dir = get_this_app_cache_root_dir();
         let icons_root_dir = cache_root_dir.join("icons");
         fs::create_dir_all(icons_root_dir.as_path()).unwrap();
 
-        let mut bundle_ids: Vec<String> = Vec::new();
-        bundle_ids.extend(find_bundle_ids_for_url_scheme("linear"));
-        bundle_ids.extend(find_bundle_ids_for_url_scheme("notion"));
-        bundle_ids.extend(find_bundle_ids_for_url_scheme("spotify"));
-        bundle_ids.extend(find_bundle_ids_for_url_scheme("telegram"));
-        bundle_ids.extend(find_bundle_ids_for_url_scheme("zoommtg"));
-        bundle_ids.extend(find_bundle_ids_for_url_scheme("https"));
+        let bundle_ids: Vec<String> = schemes
+            .iter()
+            .flat_map(|scheme| find_bundle_ids_for_url_scheme(scheme))
+            .collect();
 
         for bundle_id in bundle_ids.iter() {
             let browser_maybe = self.to_installed_browser(bundle_id, icons_root_dir.as_path());

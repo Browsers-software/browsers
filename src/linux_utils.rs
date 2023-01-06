@@ -34,12 +34,13 @@ impl OsHelper {
         return &self.app_repository;
     }
 
-    pub fn get_installed_browsers(&self) -> Vec<InstalledBrowser> {
+    pub fn get_installed_browsers(&self, schemes: &[&str]) -> Vec<InstalledBrowser> {
         let mut browsers: Vec<InstalledBrowser> = Vec::new();
 
-        let mut app_infos: Vec<String> = Vec::new();
-        app_infos.extend(AppInfo::all_for_type("x-scheme-handler/tg"));
-        app_infos.extend(AppInfo::all_for_type("x-scheme-handler/https"));
+        let app_infos: Vec<String> = schemes
+            .iter()
+            .flat_map(|scheme| AppInfo::all_for_type("x-scheme-handler/" + scheme))
+            .collect();
 
         for app_info in app_infos {
             let browser_maybe = self.to_installed_browser(app_info);

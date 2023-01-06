@@ -126,7 +126,12 @@ impl OSAppFinder {
     }
 
     pub fn get_installed_browsers(&self) -> Vec<InstalledBrowser> {
-        return self.inner.get_installed_browsers();
+        let schemes = vec![
+            "linear", "notion", "spotify", "tg", // telegram
+            "zoommtg", "https",
+        ];
+        let schemes_vec = schemes.iter().map(|a| a.to_string()).collect();
+        return self.inner.get_installed_browsers(schemes_vec);
     }
 
     pub(crate) fn get_app_repository(&self) -> &SupportedAppRepository {
