@@ -13,7 +13,7 @@ use core_services::CFStringRef;
 use objc::runtime::Object;
 use objc::runtime::YES;
 use objc::{class, msg_send, sel, sel_impl};
-use tracing::debug;
+use tracing::{debug, info};
 
 use crate::browser_repository::SupportedAppRepository;
 use crate::InstalledBrowser;
@@ -269,39 +269,18 @@ impl OsHelper {
         fs::create_dir_all(icons_root_dir.as_path()).unwrap();
 
         let mut bundle_ids: Vec<String> = Vec::new();
-
-        let linear_bundle_id = "com.linear";
-        if get_bundle_ids_for_url_scheme("linear").contains(linear_bundle_id) {
-            bundle_ids.push(linear_bundle_id.to_string());
-        }
-
-        let notion_bundle_id = "notion.id";
-        if get_bundle_ids_for_url_scheme("notion").contains(notion_bundle_id) {
-            bundle_ids.push(notion_bundle_id.to_string());
-        }
-
-        let spotify_bundle_id = "com.spotify.client";
-        if get_bundle_ids_for_url_scheme("spotify").contains(spotify_bundle_id) {
-            bundle_ids.push(spotify_bundle_id.to_string());
-        }
-
-        let telegram_bundle_id = "ru.keepcoder.Telegram";
-        if get_bundle_ids_for_url_scheme("telegram").contains(telegram_bundle_id) {
-            bundle_ids.push(telegram_bundle_id.to_string());
-        }
-
-        let zoom_bundle_id = "us.zoom.xos";
-        if get_bundle_ids_for_url_scheme("zoommtg").contains(zoom_bundle_id) {
-            bundle_ids.push(zoom_bundle_id.to_string());
-        }
-
-        let mut browser_bundle_ids = find_bundle_ids_for_browsers();
-        bundle_ids.append(&mut browser_bundle_ids);
+        bundle_ids.extend(find_bundle_ids_for_url_scheme("linear"));
+        bundle_ids.extend(find_bundle_ids_for_url_scheme("notion"));
+        bundle_ids.extend(find_bundle_ids_for_url_scheme("spotify"));
+        bundle_ids.extend(find_bundle_ids_for_url_scheme("telegram"));
+        bundle_ids.extend(find_bundle_ids_for_url_scheme("zoommtg"));
+        bundle_ids.extend(find_bundle_ids_for_browsers());
 
         for bundle_id in bundle_ids.iter() {
-            let browser = self.to_installed_browser(bundle_id, icons_root_dir.as_path());
-            if browser.is_some() {
-                browsers.push(browser.unwrap());
+            let browser_maybe = self.to_installed_browser(bundle_id, icons_root_dir.as_path());
+            if let Some(browser) = browser_maybe {
+                info!("Added app: {:?}", browser);
+                browsers.push(browser);
             }
         }
 
@@ -432,14 +411,21 @@ pub fn bundle_ids_for_content_type() -> HashSet<String> {
     }
 }
 
+pub fn find_bundle_ids_for_url_scheme(scheme: &str) -> Vec<String> {
+    let bundle_ids = get_bundle_ids_for_url_scheme(scheme);
+    let mut vec = bundle_ids.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+    vec.sort();
+    return vec;
+}
+
 // check schemes from an apps Info.plist CFBundleUrlTypes.CFBundleURLSchemes
-pub fn get_bundle_ids_for_url_scheme(scheme: &str) -> HashSet<String> {
-    unsafe {
+pub fn get_bundle_ids_for_url_scheme(scheme: &str) -> Vec<String> {
+    let app_ids: HashSet<String> = unsafe {
         // https scheme has some apps which are not browsers, e.g iterm2, Folx
         let handlers_https =
             LSCopyAllHandlersForURLScheme(CFString::new(scheme).as_concrete_TypeRef());
         if handlers_https.is_null() {
-            return HashSet::new();
+            return Vec::new();
         }
 
         let handlers_https: core_services::CFArray<core_services::CFString> =
@@ -456,8 +442,10 @@ pub fn get_bundle_ids_for_url_scheme(scheme: &str) -> HashSet<String> {
             .iter()
             .map(|h| String::from(h.to_string()))
             .collect::<HashSet<_>>();
-        return bundles_https;
+        bundles_https
     };
+
+    Vec::from_iter(app_ids)
 }
 
 // returns true if it was already default web browser (then nothing was done)
