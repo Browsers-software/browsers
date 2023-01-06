@@ -2,7 +2,6 @@ use std::collections::HashSet;
 use std::ffi::{CStr, OsString};
 use std::os::unix::ffi::OsStringExt;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
 use std::{fs, mem, ptr};
 
 use cocoa_foundation::base::{id, nil};
@@ -330,7 +329,7 @@ pub fn get_this_app_bundle_dir() -> PathBuf {
 fn get_bundle_path(bundle_id: &str) -> PathBuf {
     let bundle_url = get_bundle_url(bundle_id);
     let bundle_path = from_nsstring(bundle_url);
-    return PathBuf::from_str(bundle_path.as_str()).unwrap();
+    return PathBuf::from(bundle_path.as_str());
 }
 
 pub fn get_this_app_cache_root_dir() -> PathBuf {

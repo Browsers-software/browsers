@@ -86,5 +86,5 @@ pub fn get_resources_basedir() -> PathBuf {
 #[cfg(target_os = "linux")]
 pub fn get_resources_basedir() -> PathBuf {
     let basedir = "./resources".to_string();
-    return PathBuf::from_str(basedir.as_str()).unwrap();
+    PathBuf::from(basedir.as_str())
 }
