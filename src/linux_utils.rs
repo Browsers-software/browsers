@@ -37,13 +37,13 @@ impl OsHelper {
     pub fn get_installed_browsers(&self) -> Vec<crate::InstalledBrowser> {
         let mut browsers: Vec<crate::InstalledBrowser> = Vec::new();
 
-        /*let app_infos = AppInfo::all_for_type("x-scheme-handler/spotify");
+        let app_infos = AppInfo::all_for_type("x-scheme-handler/tg");
         for app_info in app_infos {
-            let browser_maybe = parser.parse_app_info(app_info);
+            let browser_maybe = self.to_installed_browser(app_info);
             if browser_maybe.is_some() {
                 browsers.push(browser_maybe.unwrap());
             }
-        }*/
+        }
 
         let app_infos = AppInfo::all_for_type("x-scheme-handler/https");
         for app_info in app_infos {

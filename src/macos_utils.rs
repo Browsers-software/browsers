@@ -285,6 +285,11 @@ impl OsHelper {
             bundle_ids.push(spotify_bundle_id.to_string());
         }
 
+        let telegram_bundle_id = "ru.keepcoder.Telegram";
+        if get_bundle_ids_for_url_scheme("telegram").contains(telegram_bundle_id) {
+            bundle_ids.push(telegram_bundle_id.to_string());
+        }
+
         let zoom_bundle_id = "us.zoom.xos";
         if get_bundle_ids_for_url_scheme("zoommtg").contains(zoom_bundle_id) {
             bundle_ids.push(zoom_bundle_id.to_string());

@@ -33,8 +33,8 @@ impl SupportedAppRepository {
             .get(app_id_str)
             .map(|app| app.to_owned())
             .unwrap_or_else(|| {
-                let app_id = AppIdentifier::new_for_os(app_id_str.to_string());
-                SupportedAppRepository::generic_app(app_id)
+                let app_id = AppIdentifier::new_for_os(app_id_str);
+                Self::generic_app(app_id, vec![])
             });
     }
 
@@ -233,6 +233,7 @@ impl SupportedAppRepository {
             .add(Self::linear_app())
             .add(Self::notion_app())
             .add(Self::spotify_app())
+            .add(Self::telegram_app())
             .add(Self::zoom_app());
     }
 
@@ -392,21 +393,15 @@ impl SupportedAppRepository {
         }
     }
 
-    pub fn generic_app(app_id: AppIdentifier) -> SupportedApp {
-        SupportedApp {
-            app_id: app_id,
-            app_config_dir_absolute: PathBuf::new(),
-            snap_app_config_dir_absolute: PathBuf::new(),
-            find_profiles_fn: None,
-            restricted_domains: vec![],
-            profile_args_fn: |_profile_cli_arg_value| vec![],
-            incognito_args: vec![],
-            url_transform_fn: |profile_cli_container_name, url| url.to_string(),
-            url_as_first_arg: false,
-        }
+    fn generic_app(app_id: AppIdentifier, restricted_domains: Vec<String>) -> SupportedApp {
+        Self::generic_app_with_url(app_id, restricted_domains, |_, url| url.to_string())
     }
 
-    fn generic_custom_app(app_id: AppIdentifier, restricted_domains: Vec<String>) -> SupportedApp {
+    fn generic_app_with_url(
+        app_id: AppIdentifier,
+        restricted_domains: Vec<String>,
+        url_transform_fn: fn(profile_cli_container_name: Option<&String>, url: &str) -> String,
+    ) -> SupportedApp {
         SupportedApp {
             app_id: app_id,
             app_config_dir_absolute: PathBuf::new(),
@@ -415,49 +410,43 @@ impl SupportedAppRepository {
             restricted_domains: restricted_domains,
             profile_args_fn: |_profile_cli_arg_value| vec![],
             incognito_args: vec![],
-            url_transform_fn: |profile_cli_container_name, url| url.to_string(),
+            url_transform_fn: url_transform_fn,
             url_as_first_arg: false,
         }
     }
 
     fn linear_app() -> SupportedApp {
-        let app_id = AppIdentifier {
-            mac_bundle_id: "com.linear".to_string(),
-            linux_desktop_id: "NOLINUXAPPEXISTS.desktop".to_string(),
-        };
+        let app_id = AppIdentifier::new("com.linear", "NOLINUXAPPEXISTS.desktop");
 
-        Self::generic_custom_app(app_id, vec!["linear.app".to_string()])
+        Self::generic_app(app_id, vec!["linear.app".to_string()])
     }
 
     fn notion_app() -> SupportedApp {
-        let app_id = AppIdentifier {
-            mac_bundle_id: "notion.id".to_string(),
-            linux_desktop_id: "NOLINUXAPPEXISTS.desktop".to_string(),
-        };
+        let app_id = AppIdentifier::new("notion.id", "NOLINUXAPPEXISTS.desktop");
 
-        Self::generic_custom_app(
+        Self::generic_app(
             app_id,
             vec!["notion.so".to_string(), "www.notion.so".to_string()],
         )
     }
 
     fn spotify_app() -> SupportedApp {
+        let app_id = AppIdentifier::new("com.spotify.client", "spotify_spotify.desktop");
+
+        Self::generic_app_with_url(
+            app_id,
+            vec!["open.spotify.com".to_string()],
+            convert_spotify_uri,
+        )
+    }
+
+    fn telegram_app() -> SupportedApp {
         let app_id = AppIdentifier {
-            mac_bundle_id: "com.spotify.client".to_string(),
-            linux_desktop_id: "spotify_spotify.desktop".to_string(),
+            mac_bundle_id: "ru.keepcoder.Telegram".to_string(),
+            linux_desktop_id: "telegram-desktop_telegram-desktop.desktop".to_string(),
         };
 
-        SupportedApp {
-            app_id: app_id,
-            app_config_dir_absolute: PathBuf::new(),
-            snap_app_config_dir_absolute: PathBuf::new(),
-            find_profiles_fn: None,
-            restricted_domains: vec!["open.spotify.com".to_string()],
-            profile_args_fn: |_profile_cli_arg_value| vec![],
-            incognito_args: vec![],
-            url_transform_fn: convert_spotify_uri,
-            url_as_first_arg: false,
-        }
+        Self::generic_app(app_id, vec!["t.me".to_string()])
     }
 
     fn zoom_app() -> SupportedApp {
@@ -466,7 +455,7 @@ impl SupportedAppRepository {
             linux_desktop_id: "Zoom.desktop".to_string(),
         };
 
-        Self::generic_custom_app(
+        Self::generic_app(
             app_id,
             vec![
                 "zoom.us".to_string(),
@@ -580,14 +569,14 @@ pub struct AppIdentifier {
 }
 
 impl AppIdentifier {
-    fn new(mac_bundle_id: String, linux_desktop_id: String) -> Self {
+    fn new(mac_bundle_id: &str, linux_desktop_id: &str) -> Self {
         Self {
-            mac_bundle_id: mac_bundle_id,
-            linux_desktop_id: linux_desktop_id,
+            mac_bundle_id: mac_bundle_id.to_string(),
+            linux_desktop_id: linux_desktop_id.to_string(),
         }
     }
 
-    pub fn new_for_os(app_id: String) -> Self {
+    pub fn new_for_os(app_id: &str) -> Self {
         #[cfg(target_os = "macos")]
         return Self::new_mac(app_id);
 
@@ -595,17 +584,17 @@ impl AppIdentifier {
         return Self::new_linux(app_id);
     }
 
-    pub fn new_mac(mac_bundle_id: String) -> Self {
+    pub fn new_mac(mac_bundle_id: &str) -> Self {
         Self {
-            mac_bundle_id: mac_bundle_id,
+            mac_bundle_id: mac_bundle_id.to_string(),
             linux_desktop_id: "".to_string(),
         }
     }
 
-    fn new_linux(linux_desktop_id: String) -> Self {
+    fn new_linux(linux_desktop_id: &str) -> Self {
         Self {
             mac_bundle_id: "".to_string(),
-            linux_desktop_id: linux_desktop_id,
+            linux_desktop_id: linux_desktop_id.to_string(),
         }
     }
 
