@@ -1290,7 +1290,7 @@ fn make_context_menu(browser: &UIBrowser) -> Menu<UIState> {
 
         let this_id = id.clone();
         let item_name = browser.get_full_name();
-        let move_profile_bottom_label = LocalizedString::new("move-profile-bottom")
+        let move_profile_bottom_label = LocalizedString::new("move-profile-to-bottom")
             .with_arg("item-name", move |_, _| item_name.to_string().into());
         menu = menu.entry(
             MenuItem::new(move_profile_bottom_label)
