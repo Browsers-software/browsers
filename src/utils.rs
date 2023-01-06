@@ -63,8 +63,7 @@ impl Config {
             .hidden_profiles
             .iter()
             .position(|unique_id| unique_id == profile_id);
-        if hidden_profile_index_maybe.is_some() {
-            let hidden_profile_index = hidden_profile_index_maybe.unwrap();
+        if let Some(hidden_profile_index) = hidden_profile_index_maybe {
             self.hidden_profiles.remove(hidden_profile_index);
         }
     }
@@ -74,7 +73,7 @@ impl Config {
             .hidden_profiles
             .iter()
             .position(|unique_id| unique_id == profile_id);
-        if hidden_profile_index_maybe.is_some() {
+        if let Some(_) = hidden_profile_index_maybe {
             // already exists, do nothing
             //let hidden_profile_index = hidden_profile_index_maybe.unwrap();
             //self.hidden_profiles.remove(hidden_profile_index);

@@ -380,8 +380,7 @@ impl SupportedAppRepository {
             },
             incognito_args: vec!["-private".to_string()],
             url_transform_fn: |container_name_maybe, url| {
-                return if container_name_maybe.is_some() {
-                    let container_name = container_name_maybe.unwrap();
+                return if let Some(container_name) = container_name_maybe {
                     let fake_url = "ext+container:name=".to_string() + container_name;
                     let full_url = fake_url + "&url=" + url.clone();
                     full_url.to_string()
@@ -512,9 +511,9 @@ impl SupportedApp {
     }
 
     pub fn find_profiles(&self, binary_path: &Path, is_snap: bool) -> Vec<InstalledBrowserProfile> {
-        return if self.find_profiles_fn.is_some() {
+        return if let Some(find_profiles_fn) = self.find_profiles_fn {
             let app_config_dir_abs = self.get_app_config_dir_abs(is_snap);
-            (self.find_profiles_fn.unwrap())(app_config_dir_abs, binary_path, self.get_app_id())
+            find_profiles_fn(app_config_dir_abs, binary_path, self.get_app_id())
         } else {
             Self::find_placeholder_profiles()
         };

@@ -179,9 +179,8 @@ impl CommonBrowserProfile {
         let app_id = self.get_unique_app_id();
         let app_and_profile = app_id + "#" + self.profile_cli_arg_value.as_str();
 
-        if self.profile_cli_container_name.is_some() {
-            let container_name = self.profile_cli_container_name.as_ref().unwrap();
-            return app_and_profile + "#" + container_name.as_str();
+        if let Some(ref profile_cli_container_name) = self.profile_cli_container_name {
+            return app_and_profile + "#" + profile_cli_container_name.as_str();
         }
 
         return app_and_profile;
@@ -366,8 +365,8 @@ fn get_rule_for_source_app_and_url<'a>(
     for r in opening_rules {
         let mut url_match = false;
         let mut source_app_match = false;
-        if r.url_pattern.is_some() {
-            let url_pattern_rule = r.url_pattern.as_ref().unwrap().clone();
+        if let Some(ref url_pattern) = r.url_pattern {
+            let url_pattern_rule = url_pattern.clone();
             let url_rule_result = Url::from_str(url_pattern_rule.as_str());
             if url_rule_result.is_err() {
                 continue;
@@ -379,10 +378,10 @@ fn get_rule_for_source_app_and_url<'a>(
             url_match = true
         }
 
-        if r.source_app.is_some() {
-            let source_app_rule = r.source_app.as_ref().unwrap().clone();
-            if source_app_maybe.is_some() {
-                let source_app = source_app_maybe.as_ref().unwrap().clone();
+        if let Some(ref source_app) = r.source_app {
+            let source_app_rule = source_app.clone();
+            if let Some(ref source_app) = source_app_maybe {
+                let source_app = source_app.clone();
                 source_app_match = source_app_rule == source_app;
             }
         } else {
@@ -425,8 +424,8 @@ pub fn basically_main() {
 
     let mut url = "".to_string();
     let url_input_maybe = args.iter().find(|i| i.starts_with("http"));
-    if url_input_maybe.is_some() {
-        url = url_input_maybe.unwrap().to_string();
+    if let Some(url_input) = url_input_maybe {
+        url = url_input.to_string();
     }
 
     let show_gui = !args.contains(&"--no-gui".to_string());
@@ -443,8 +442,7 @@ pub fn basically_main() {
     // TODO: url should not be considered here in case of macos
     //       and only the one in LinkOpenedFromBundle should be considered
     let opening_rule_maybe = get_rule_for_source_app_and_url(&opening_rules, &url, None);
-    if opening_rule_maybe.is_some() {
-        let opening_rule = opening_rule_maybe.unwrap();
+    if let Some(opening_rule) = opening_rule_maybe {
         let profile_id = opening_rule.profile.clone();
 
         let profile_maybe = get_browser_profile_by_id(
@@ -452,8 +450,7 @@ pub fn basically_main() {
             hidden_browser_profiles.as_slice(),
             profile_id.as_str(),
         );
-        if profile_maybe.is_some() {
-            let profile = profile_maybe.unwrap();
+        if let Some(profile) = profile_maybe {
             profile.open_link(url.as_str(), false);
             return;
         }
@@ -510,8 +507,7 @@ pub fn basically_main() {
                         &url,
                         Some(from_bundle_id.clone()),
                     );
-                    if opening_rule_maybe.is_some() {
-                        let opening_rule = opening_rule_maybe.unwrap();
+                    if let Some(opening_rule) = opening_rule_maybe {
                         let profile_id = opening_rule.profile.clone();
 
                         let profile_maybe = get_browser_profile_by_id(
@@ -519,8 +515,7 @@ pub fn basically_main() {
                             hidden_browser_profiles.as_slice(),
                             profile_id.as_str(),
                         );
-                        if profile_maybe.is_some() {
-                            let profile = profile_maybe.unwrap();
+                        if let Some(profile) = profile_maybe {
                             profile.open_link(url.as_str(), false);
                             ui_event_sink
                                 .submit_command(
@@ -580,8 +575,7 @@ pub fn basically_main() {
                     let visible_profile_index_maybe = visible_browser_profiles
                         .iter()
                         .position(|p| p.get_unique_id() == unique_id);
-                    if visible_profile_index_maybe.is_some() {
-                        let visible_profile_index = visible_profile_index_maybe.unwrap();
+                    if let Some(visible_profile_index) = visible_profile_index_maybe {
                         let visible_profile =
                             visible_browser_profiles.remove(visible_profile_index);
                         hidden_browser_profiles.push(visible_profile);
@@ -612,8 +606,7 @@ pub fn basically_main() {
                     let hidden_profile_index_maybe = hidden_browser_profiles
                         .iter()
                         .position(|p| p.get_unique_id() == unique_id);
-                    if hidden_profile_index_maybe.is_some() {
-                        let hidden_profile_index = hidden_profile_index_maybe.unwrap();
+                    if let Some(hidden_profile_index) = hidden_profile_index_maybe {
                         let hidden_profile = hidden_browser_profiles.remove(hidden_profile_index);
                         visible_browser_profiles.push(hidden_profile);
 

@@ -40,16 +40,16 @@ impl OsHelper {
         let app_infos = AppInfo::all_for_type("x-scheme-handler/tg");
         for app_info in app_infos {
             let browser_maybe = self.to_installed_browser(app_info);
-            if browser_maybe.is_some() {
-                browsers.push(browser_maybe.unwrap());
+            if let Some(browser) = browser_maybe {
+                browsers.push(browser);
             }
         }
 
         let app_infos = AppInfo::all_for_type("x-scheme-handler/https");
         for app_info in app_infos {
             let browser_maybe = self.to_installed_browser(app_info);
-            if browser_maybe.is_some() {
-                browsers.push(browser_maybe.unwrap());
+            if let Some(browser) = browser_maybe {
+                browsers.push(browser);
             }
         }
 

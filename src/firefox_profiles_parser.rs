@@ -103,8 +103,7 @@ pub fn find_firefox_profiles(
             .to_string();
 
         let profile_hash_maybe = locked_profile_path_and_hash.get(profile_path.as_str());
-        if profile_hash_maybe.is_some() {
-            let profile_hash = profile_hash_maybe.unwrap();
+        if let Some(profile_hash) = profile_hash_maybe {
             // if this profile has some other hash than current firefox, then skip the profile
             if profile_hash.to_string() != install_dir_hash {
                 continue;
@@ -218,8 +217,7 @@ fn containers_json_map(containers_json_file_path: &Path) -> Vec<String> {
             let l10n_id_maybe = identity["l10nID"].as_str();
             let mut name = "Not Determined";
 
-            if l10n_id_maybe.is_some() {
-                let l10n_id = l10n_id_maybe.unwrap();
+            if let Some(l10n_id) = l10n_id_maybe {
                 name = match l10n_id {
                     "userContextPersonal.label" => "Personal",
                     "userContextWork.label" => "Work",
