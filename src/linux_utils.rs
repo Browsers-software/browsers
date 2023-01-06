@@ -34,8 +34,8 @@ impl OsHelper {
         return &self.app_repository;
     }
 
-    pub fn get_installed_browsers(&self) -> Vec<crate::InstalledBrowser> {
-        let mut browsers: Vec<crate::InstalledBrowser> = Vec::new();
+    pub fn get_installed_browsers(&self) -> Vec<InstalledBrowser> {
+        let mut browsers: Vec<InstalledBrowser> = Vec::new();
 
         let app_infos = AppInfo::all_for_type("x-scheme-handler/tg");
         for app_info in app_infos {
@@ -151,7 +151,7 @@ impl OsHelper {
 
         let profiles = supported_app.find_profiles(executable_path.clone(), is_snap);
 
-        let browser = crate::InstalledBrowser {
+        let browser = InstalledBrowser {
             executable_path: executable_path.to_str().unwrap().to_string(),
             display_name: display_name.to_string(),
             bundle: supported_app.get_app_id().to_string(),
