@@ -656,10 +656,9 @@ fn show_about_dialog(ctx: &mut DelegateCtx) {
     let version_row: Label<UIState> =
         Label::new(format!("Version {}", VERSION)).with_text_size(10.0);
 
-    let copyright_row: Label<UIState> = Label::new(
-        "Copyright © 2022 Browsers.software team. \nVisit us at https://browsers.software.",
-    )
-    .with_text_size(10.0);
+    let copyright_row: Label<UIState> =
+        Label::new("© 2022-2023 Browsers.software team. \nVisit us at https://browsers.software.")
+            .with_text_size(10.0);
 
     // .join("") adds trailing "/", indicating for the user that it's a directory
     let config_root_dir = paths::get_config_root_dir().join("");
