@@ -271,7 +271,7 @@ impl OsHelper {
         bundle_ids.extend(find_bundle_ids_for_url_scheme("spotify"));
         bundle_ids.extend(find_bundle_ids_for_url_scheme("telegram"));
         bundle_ids.extend(find_bundle_ids_for_url_scheme("zoommtg"));
-        bundle_ids.extend(find_bundle_ids_for_browsers());
+        bundle_ids.extend(find_bundle_ids_for_url_scheme("https"));
 
         for bundle_id in bundle_ids.iter() {
             let browser_maybe = self.to_installed_browser(bundle_id, icons_root_dir.as_path());
@@ -365,7 +365,7 @@ pub fn get_this_app_config_root_dir() -> PathBuf {
     return get_this_app_support_dir();
 }
 
-pub fn find_bundle_ids_for_browsers() -> Vec<String> {
+/*pub fn find_bundle_ids_for_browsers() -> Vec<String> {
     let bundle_ids_for_https = get_bundle_ids_for_url_scheme("https");
 
     let c = bundle_ids_for_https;
@@ -406,7 +406,7 @@ pub fn bundle_ids_for_content_type() -> HashSet<String> {
 
         return bundles_content_type;
     }
-}
+}*/
 
 pub fn find_bundle_ids_for_url_scheme(scheme: &str) -> Vec<String> {
     let bundle_ids = get_bundle_ids_for_url_scheme(scheme);
