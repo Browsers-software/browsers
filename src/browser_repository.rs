@@ -26,14 +26,18 @@ impl SupportedAppRepository {
         return repository;
     }
 
-    pub fn get_or_generate(&self, app_id_str: &str) -> SupportedApp {
+    pub fn get_or_generate(
+        &self,
+        app_id_str: &str,
+        restricted_domains: &Vec<String>,
+    ) -> SupportedApp {
         return self
             .supported_apps
             .get(app_id_str)
             .map(|app| app.to_owned())
             .unwrap_or_else(|| {
                 let app_id = AppIdentifier::new_for_os(app_id_str);
-                Self::generic_app(app_id, vec![])
+                Self::generic_app(app_id, restricted_domains.clone())
             });
     }
 

@@ -40,7 +40,10 @@ pub struct GenericApp {
 
 impl GenericApp {
     fn new(installed_browser: &InstalledBrowser, app_repository: &SupportedAppRepository) -> Self {
-        let supported_app = app_repository.get_or_generate(installed_browser.bundle.as_str());
+        let supported_app = app_repository.get_or_generate(
+            installed_browser.bundle.as_str(),
+            &installed_browser.restricted_domains,
+        );
         let app = BrowserCommon {
             supported_app: supported_app,
             executable_path: installed_browser.executable_path.to_string(),

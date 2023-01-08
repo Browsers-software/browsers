@@ -131,7 +131,9 @@ impl OsHelper {
             return None;
         }
 
-        let supported_app = self.app_repository.get_or_generate(id.as_str());
+        let supported_app = self
+            .app_repository
+            .get_or_generate(id.as_str(), &restricted_domains);
 
         let string1 = app_info.display_name();
         let display_name = string1.as_str();

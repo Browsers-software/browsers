@@ -304,7 +304,9 @@ impl OsHelper {
             return None;
         }
 
-        let supported_app = self.app_repository.get_or_generate(bundle_id);
+        let supported_app = self
+            .app_repository
+            .get_or_generate(bundle_id, &restricted_domains);
         let icon_filename = bundle_id.to_string() + ".png";
         let full_stored_icon_path = icons_root_dir.join(icon_filename);
 
