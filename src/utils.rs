@@ -121,10 +121,35 @@ impl OSAppFinder {
 
     pub fn get_installed_browsers(&self) -> Vec<InstalledBrowser> {
         let schemes = vec![
-            "linear", "notion", "spotify", "tg", // telegram
-            "zoommtg", "https",
+            ("linear", vec!["linear.app"]),
+            ("notion", vec!["notion.so", "www.notion.so"]),
+            ("spotify", vec!["open.spotify.com"]),
+            ("tg", vec!["t.me"]), // telegram
+            (
+                "zoommtg",
+                vec![
+                    "zoom.us",
+                    "eu01web.zoom.us",
+                    "us02web.zoom.us",
+                    "us03web.zoom.us",
+                    "us04web.zoom.us",
+                    "us05web.zoom.us",
+                    "us06web.zoom.us",
+                    "us07web.zoom.us",
+                ],
+            ),
+            ("https", vec![]),
         ];
-        let schemes_vec = schemes.iter().map(|a| a.to_string()).collect();
+        let schemes_vec: Vec<(String, Vec<String>)> = schemes
+            .iter()
+            .map(|(scheme, domains)| {
+                (
+                    scheme.to_string(),
+                    domains.iter().map(|d| d.to_string()).collect(),
+                )
+            })
+            .collect();
+
         return self.inner.get_installed_browsers(schemes_vec);
     }
 

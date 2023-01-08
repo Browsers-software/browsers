@@ -34,16 +34,31 @@ impl OsHelper {
         return &self.app_repository;
     }
 
-    pub fn get_installed_browsers(&self, schemes: Vec<String>) -> Vec<InstalledBrowser> {
+    pub fn get_installed_browsers(
+        &self,
+        schemes: Vec<(String, Vec<String>)>,
+    ) -> Vec<InstalledBrowser> {
         let mut browsers: Vec<InstalledBrowser> = Vec::new();
 
-        let app_infos: Vec<AppInfo> = schemes
+        let app_infos: Vec<(AppInfo, Vec<String>)> = schemes
             .iter()
-            .flat_map(|scheme| AppInfo::all_for_type(format!("x-scheme-handler/{scheme}").as_str()))
+            .map(|(scheme, domains)| {
+                (
+                    AppInfo::all_for_type(format!("x-scheme-handler/{scheme}").as_str()),
+                    domains,
+                )
+            })
+            .flat_map(|(app_infos, domains)| {
+                let app_info_and_domains: Vec<(AppInfo, Vec<String>)> = app_infos
+                    .iter()
+                    .map(|app_info| (app_info.clone(), domains.clone()))
+                    .collect();
+                app_info_and_domains
+            })
             .collect();
 
         for app_info in app_infos {
-            let browser_maybe = self.to_installed_browser(app_info);
+            let browser_maybe = self.to_installed_browser(app_info, domains);
             if let Some(browser) = browser_maybe {
                 browsers.push(browser);
             }
@@ -52,7 +67,11 @@ impl OsHelper {
         return browsers;
     }
 
-    fn to_installed_browser(&self, app_info: AppInfo) -> Option<InstalledBrowser> {
+    fn to_installed_browser(
+        &self,
+        app_info: AppInfo,
+        restricted_domains: Vec<String>,
+    ) -> Option<InstalledBrowser> {
         let option = app_info.commandline();
         // uses %u or %U, see https://specifications.freedesktop.org/desktop-entry-spec/latest/ar01s07.html
         // need to use command(), because executable() is not fine, as snap apps just have "env" there
@@ -156,6 +175,7 @@ impl OsHelper {
                 .to_string(),
             icon_path: icon_path_str.clone(),
             profiles: profiles,
+            restricted_domains: restricted_domains,
         };
         return Some(browser);
     }

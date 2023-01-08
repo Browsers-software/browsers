@@ -253,6 +253,9 @@ pub struct InstalledBrowser {
     icon_path: String,
 
     profiles: Vec<InstalledBrowserProfile>,
+
+    #[serde(default)]
+    restricted_domains: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

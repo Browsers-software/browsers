@@ -257,20 +257,33 @@ impl OsHelper {
         return &self.app_repository;
     }
 
-    pub fn get_installed_browsers(&self, schemes: Vec<String>) -> Vec<InstalledBrowser> {
+    pub fn get_installed_browsers(
+        &self,
+        schemes: Vec<(String, Vec<String>)>,
+    ) -> Vec<InstalledBrowser> {
         let mut browsers: Vec<InstalledBrowser> = Vec::new();
 
         let cache_root_dir = get_this_app_cache_root_dir();
         let icons_root_dir = cache_root_dir.join("icons");
         fs::create_dir_all(icons_root_dir.as_path()).unwrap();
 
-        let bundle_ids: Vec<String> = schemes
+        // to for each bundle id copy the domain
+        let bundle_ids_and_domains: Vec<(String, Vec<String>)> = schemes
             .iter()
-            .flat_map(|scheme| find_bundle_ids_for_url_scheme(scheme))
+            .map(|(scheme, domains)| (find_bundle_ids_for_url_scheme(scheme), domains))
+            .flat_map(|(bundle_ids, domains)| {
+                let bundle_id_and_domains: Vec<(String, Vec<String>)> = bundle_ids
+                    .iter()
+                    .map(|bundle_id| (bundle_id.clone(), domains.clone()))
+                    .collect();
+
+                bundle_id_and_domains
+            })
             .collect();
 
-        for bundle_id in bundle_ids.iter() {
-            let browser_maybe = self.to_installed_browser(bundle_id, icons_root_dir.as_path());
+        for (bundle_id, domains) in bundle_ids_and_domains {
+            let browser_maybe =
+                self.to_installed_browser(bundle_id.as_str(), icons_root_dir.as_path(), domains);
             if let Some(browser) = browser_maybe {
                 info!("Added app: {:?}", browser);
                 browsers.push(browser);
@@ -284,6 +297,7 @@ impl OsHelper {
         &self,
         bundle_id: &str,
         icons_root_dir: &Path,
+        restricted_domains: Vec<String>,
     ) -> Option<InstalledBrowser> {
         if bundle_id == "software.Browsers" {
             // this is us, skip
@@ -314,6 +328,7 @@ impl OsHelper {
             user_dir: supported_app.get_app_config_dir_absolute(false).to_string(),
             icon_path: icon_path_str.clone(),
             profiles: supported_app.find_profiles(executable_path.as_path(), false),
+            restricted_domains: restricted_domains,
         };
 
         return Some(browser);
