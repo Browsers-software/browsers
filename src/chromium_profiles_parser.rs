@@ -40,13 +40,16 @@ pub fn find_chromium_profiles(
                 let profile_icon_path_without_extension =
                     profiles_icons_root.join(profile_name.to_string());
 
-                let remote_url = Url::parse(url.as_str()).unwrap();
-                let result = utils::download_profile_images(
-                    &remote_url,
-                    profile_icon_path_without_extension.as_path(),
-                );
-
-                return result.ok().map(|path| path.to_str().unwrap().to_string());
+                return Url::parse(url.as_str())
+                    .ok()
+                    .and_then(|remote_url| {
+                        utils::download_profile_images(
+                            &remote_url,
+                            profile_icon_path_without_extension.as_path(),
+                        )
+                        .ok()
+                    })
+                    .map(|path| path.to_str().unwrap().to_string());
             })
             .flatten();
 
