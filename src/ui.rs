@@ -44,13 +44,17 @@ pub struct UI {
 
 impl UI {
     pub fn real_to_ui_browsers(all_browser_profiles: &[CommonBrowserProfile]) -> Vec<UIBrowser> {
+        if all_browser_profiles.is_empty() {
+            return vec![];
+        }
+
         // TODO: this is a bit ugly; we keep profiles with has_priority_ordering() always on top
         //       and everything else comes after; it might make sense to keep them in two separate
         //       vectors (or slices)
         let first_orderable_item_index_maybe = all_browser_profiles
             .iter()
             .position(|b| !b.has_priority_ordering());
-        let first_orderable_item_index = first_orderable_item_index_maybe.unwrap();
+        let first_orderable_item_index = first_orderable_item_index_maybe.unwrap_or(0);
 
         let profiles_count = all_browser_profiles.len();
         return all_browser_profiles
