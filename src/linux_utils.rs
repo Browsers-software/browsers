@@ -57,7 +57,7 @@ impl OsHelper {
             })
             .collect();
 
-        for app_info in app_infos {
+        for (app_info, domains) in app_infos {
             let browser_maybe = self.to_installed_browser(app_info, domains);
             if let Some(browser) = browser_maybe {
                 browsers.push(browser);
