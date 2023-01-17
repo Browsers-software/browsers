@@ -121,6 +121,7 @@ impl OSAppFinder {
 
     pub fn get_installed_browsers(&self) -> Vec<InstalledBrowser> {
         let schemes = vec![
+            ("figma", vec!["figma.com", "www.figma.com"]),
             ("linear", vec!["linear.app"]),
             ("notion", vec!["notion.so", "www.notion.so"]),
             ("spotify", vec!["open.spotify.com"]),
