@@ -32,7 +32,7 @@ serde = { version = "1.0", features = ["derive"] }
 # for local development
 #druid = { path = "../druid/druid", features = ["png", "jpeg", "image"] }
 
-druid = { git = "https://github.com/browsers-software/druid.git", branch = "browsers", features = ["png", "jpeg", "image"] }
+druid = { git = "https://github.com/browsers-software/druid.git", branch = "browsers-2", features = ["png", "jpeg", "image"] }
 
 # parse urls
 url = "2.2.2"
