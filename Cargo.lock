@@ -483,7 +483,7 @@ dependencies = [
 [[package]]
 name = "druid"
 version = "0.8.2"
-source = "git+https://github.com/browsers-software/druid.git?branch=browsers#3853c071cffdf787d86c68871360c99d5c7aea77"
+source = "git+https://github.com/browsers-software/druid.git?branch=browsers#93c64b56b99e815de9d5b47b349fb5a50f641bd3"
 dependencies = [
  "console_error_panic_hook",
  "druid-derive",
@@ -504,7 +504,7 @@ dependencies = [
 [[package]]
 name = "druid-derive"
 version = "0.5.0"
-source = "git+https://github.com/browsers-software/druid.git?branch=browsers#3853c071cffdf787d86c68871360c99d5c7aea77"
+source = "git+https://github.com/browsers-software/druid.git?branch=browsers#93c64b56b99e815de9d5b47b349fb5a50f641bd3"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -514,7 +514,7 @@ dependencies = [
 [[package]]
 name = "druid-shell"
 version = "0.8.0"
-source = "git+https://github.com/browsers-software/druid.git?branch=browsers#3853c071cffdf787d86c68871360c99d5c7aea77"
+source = "git+https://github.com/browsers-software/druid.git?branch=browsers#93c64b56b99e815de9d5b47b349fb5a50f641bd3"
 dependencies = [
  "anyhow",
  "bitflags",

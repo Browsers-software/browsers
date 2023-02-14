@@ -1,10 +1,11 @@
+use std::any::Any;
 use std::cmp;
 use std::io::Error;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::Sender;
 use std::sync::Arc;
 
-use druid::commands::QUIT_APP;
+use druid::commands::{CONFIGURE_WINDOW, CONFIGURE_WINDOW_POSITION, QUIT_APP, SHOW_WINDOW};
 use druid::keyboard_types::Key;
 use druid::piet::InterpolationMode;
 use druid::widget::{
@@ -13,8 +14,9 @@ use druid::widget::{
 };
 use druid::{
     image, Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, LayoutCtx, LensExt,
-    LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, Modifiers, TextAlignment, UnitPoint,
-    UpdateCtx, Vec2, WidgetId, WindowHandle, WindowLevel,
+    LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, Modifiers, SingleUse, TextAlignment,
+    UnitPoint, UpdateCtx, Vec2, WidgetId, WindowConfig, WindowHandle, WindowLevel,
+    WindowSizePolicy,
 };
 use druid::{
     AppDelegate, AppLauncher, Color, Command, Data, DelegateCtx, Env, Event, EventCtx, Handled,
@@ -101,80 +103,25 @@ impl UI {
         }
     }
 
-    pub fn create_app_launcher(self) -> AppLauncher<UIState> {
+    pub fn create_app_launcher(mut self) -> AppLauncher<UIState> {
         let basedir = self.localizations_basedir.to_str().unwrap().to_string();
         let main_window = self.create_window();
+        let main_window_id = main_window.id.clone();
         return AppLauncher::with_window(main_window)
             .delegate(UIDelegate {
                 main_sender: self.main_sender.clone(),
-                windows: Vec::new(),
+                windows: vec![main_window_id],
+                main_window_id: main_window_id,
             })
             .localization_resources(vec!["builtin.ftl".to_string()], basedir);
     }
 
-    fn calculate_window_position(window_size: Size) -> Point {
-        let (mouse_position, monitor) = druid::Screen::get_mouse_position();
-        let screen_rect = monitor
-            .virtual_work_rect()
-            // add some spacing around screen
-            .inflate(-5f64, -5f64);
-
-        let mut x = mouse_position.x;
-        let mut y = mouse_position.y;
-
-        let window_width = window_size.width;
-        let window_height = window_size.height;
-
-        // if x is less than starting point, start from min starting rect
-        if x < screen_rect.x0 {
-            x = screen_rect.x0;
-        }
-
-        // if it doesn't fit, put it as far as it does fit
-        if x + window_width > screen_rect.x1 {
-            x = screen_rect.x1 - window_width;
-        }
-
-        // if y is less than starting point, start from min starting rect
-        if y < screen_rect.y0 {
-            y = screen_rect.y0;
-        }
-
-        if y + window_height > screen_rect.y1 {
-            y = screen_rect.y1 - window_height;
-        }
-
-        //let primary_monitor_rect = Self::get_active_monitor_rect();
-
-        // top left corner in a y-down space and with non-negative width and height
-        //let origin = primary_monitor_rect.origin();
-
-        // size of the rectangle
-        //let display_size = primary_monitor_rect.size();
-
-        //let x = origin.x + (display_size.width - window_size.width) / 2.0;
-        //let y = origin.y + (display_size.height - window_size.height) / 2.0;
-        return Point::new(x, y);
-    }
-
     pub fn create_window(&self) -> WindowDesc<UIState> {
         let browsers_total = self.ui_browsers.len();
-        // max 15 items
-        let item_count = cmp::min(6, browsers_total);
-        // but at least 1 item in case of errors (or window size is too small)
-        let item_count = cmp::max(1, item_count);
-
-        let browsers_count_f64 = item_count as f64;
-        //let window_width = browsers_count_f64 * (64.0 + 6.0) + PADDING_X * 2.0;
-        let item_width = 32.0 + 160.0;
-        let border_width = 1.0;
-        let window_width = item_width + PADDING_X * 2.0 + 2.0 * border_width;
-        let window_height = browsers_count_f64 * ITEM_HEIGHT + 5.0 + 12.0 + PADDING_Y * 2.0;
-
-        let window_size = Size::new(window_width, window_height);
-        let window_position = Self::calculate_window_position(window_size);
-
-        let main_window = WindowDesc::new(self.ui_builder(browsers_count_f64))
+        let item_count = calculate_visible_browser_count(browsers_total);
+        let window_size = calculate_window_size(item_count);
+        let window_position = calculate_window_position(window_size);
+        let main_window = WindowDesc::new(self.ui_builder(item_count as f64))
             .show_titlebar(false)
             .transparent(true)
             .resizable(false)
@@ -410,6 +357,7 @@ pub const SHOW_ABOUT_DIALOG: Selector<()> = Selector::new("browsers.show_about_d
 
 pub struct UIDelegate {
     main_sender: Sender<MessageToMain>,
+    main_window_id: WindowId,
     windows: Vec<WindowId>,
 }
 
@@ -538,6 +486,20 @@ impl AppDelegate<UIState> for UIDelegate {
         } else if cmd.is(URL_OPENED) {
             let url_open_info = cmd.get_unchecked(URL_OPENED);
             data.url = url_open_info.url.clone();
+
+            let browsers_total = data.browsers.len();
+            let item_count = calculate_visible_browser_count(browsers_total);
+            let window_size = calculate_window_size(item_count);
+            let window_position = calculate_window_position(window_size);
+
+            let sink = ctx.get_external_handle();
+            sink.submit_command(
+                CONFIGURE_WINDOW_POSITION,
+                window_position,
+                Target::Window(self.main_window_id),
+            )
+            .unwrap();
+
             self.main_sender
                 .send(MessageToMain::LinkOpenedFromBundle(
                     url_open_info.source_bundle_id.clone(),
@@ -729,6 +691,72 @@ fn show_about_dialog(ctx: &mut DelegateCtx) {
         .resizable(false)
         .set_position(window_position);
     ctx.new_window(new_win);
+}
+
+fn calculate_visible_browser_count(browsers_total: usize) -> usize {
+    // max 15 items
+    let item_count = cmp::min(6, browsers_total);
+    // but at least 1 item in case of errors (or window size is too small)
+    let item_count = cmp::max(1, item_count);
+
+    item_count
+}
+
+fn calculate_window_size(item_count: usize) -> Size {
+    let browsers_count_f64 = item_count as f64;
+    //let window_width = browsers_count_f64 * (64.0 + 6.0) + PADDING_X * 2.0;
+    let item_width = 32.0 + 160.0;
+    let border_width = 1.0;
+    let window_width = item_width + PADDING_X * 2.0 + 2.0 * border_width;
+    let window_height = browsers_count_f64 * ITEM_HEIGHT + 5.0 + 12.0 + PADDING_Y * 2.0;
+
+    let window_size = Size::new(window_width, window_height);
+    window_size
+}
+
+fn calculate_window_position(window_size: Size) -> Point {
+    let (mouse_position, monitor) = druid::Screen::get_mouse_position();
+    let screen_rect = monitor
+        .virtual_work_rect()
+        // add some spacing around screen
+        .inflate(-5f64, -5f64);
+
+    let mut x = mouse_position.x;
+    let mut y = mouse_position.y;
+
+    let window_width = window_size.width;
+    let window_height = window_size.height;
+
+    // if x is less than starting point, start from min starting rect
+    if x < screen_rect.x0 {
+        x = screen_rect.x0;
+    }
+
+    // if it doesn't fit, put it as far as it does fit
+    if x + window_width > screen_rect.x1 {
+        x = screen_rect.x1 - window_width;
+    }
+
+    // if y is less than starting point, start from min starting rect
+    if y < screen_rect.y0 {
+        y = screen_rect.y0;
+    }
+
+    if y + window_height > screen_rect.y1 {
+        y = screen_rect.y1 - window_height;
+    }
+
+    //let primary_monitor_rect = Self::get_active_monitor_rect();
+
+    // top left corner in a y-down space and with non-negative width and height
+    //let origin = primary_monitor_rect.origin();
+
+    // size of the rectangle
+    //let display_size = primary_monitor_rect.size();
+
+    //let x = origin.x + (display_size.width - window_size.width) / 2.0;
+    //let y = origin.y + (display_size.height - window_size.height) / 2.0;
+    return Point::new(x, y);
 }
 
 fn make_hidden_apps_menu(hidden_profiles: Arc<Vec<UIBrowser>>) -> Menu<UIState> {
