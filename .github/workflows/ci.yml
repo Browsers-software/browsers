@@ -70,7 +70,7 @@ jobs:
           name: browsers_linux.tar.gz
           path: target/universal-unknown-linux-gnu/release/browsers_linux.tar.gz
   build-macos:
-    environment: PROD
+    environment: PROD_2028
     runs-on: macos-12
     steps:
       - name: Check out repository code
