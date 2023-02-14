@@ -128,7 +128,7 @@ impl UI {
             //.window_size_policy(WindowSizePolicy::Content)
             .window_size(window_size)
             .set_position(window_position)
-            .title("Browsers v0.1.0");
+            .title("Browsers v".to_owned() + env!("CARGO_PKG_VERSION"));
 
         return main_window;
     }
