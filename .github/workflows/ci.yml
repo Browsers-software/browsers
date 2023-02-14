@@ -75,6 +75,12 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
+      - name: Download apple-codesign cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            cargo-target-apple-codesign/
+          key: macos-apple-codesign-1
       - name: Download cache
         uses: actions/cache@v3
         with:
@@ -88,7 +94,7 @@ jobs:
             target/
           key: macos-${{ hashFiles('**/Cargo.lock') }}
       - name: Install apple-codesign
-        run: cargo install apple-codesign --target-dir ./target/apple-codesign
+        run: cargo install apple-codesign --target-dir ./cargo-target-apple-codesign
       - name: Add Rust targets
         run: |
           rustup target add x86_64-apple-darwin
