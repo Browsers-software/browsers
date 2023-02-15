@@ -5,3 +5,4 @@
 !extra/macos/dmg/dmg_source/.DS_Store
 .env
 /.fleet
+RELEASE_NOTES.md

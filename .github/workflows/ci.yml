@@ -1,6 +1,6 @@
 name: CI
 run-name: CI Build
-on: [push]
+on: [ push ]
 jobs:
   build-linux:
     runs-on: ubuntu-latest
@@ -121,9 +121,16 @@ jobs:
           name: Browsers.dmg
           path: target/universal-apple-darwin/release/Browsers.dmg
   release:
-    needs: [build-linux, build-macos]
+    needs: [ build-linux, build-macos ]
     runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
     steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Generate Changelog
+        # Search from CHANGELOG.md for the changelog of the version (tag name)
+        run: ./tools/extract_release_notes.sh ${{ github.ref_name }} < CHANGELOG.md > ${{ github.workspace }}-RELEASE_NOTES.md
+        shell: bash
       - name: Download release artifacts
         uses: actions/download-artifact@v3
       - name: Verify files exist
@@ -135,6 +142,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
+          body_path: ${{ github.workspace }}-RELEASE_NOTES.md
           fail_on_unmatched_files: true
           files: |
             browsers_linux.tar.gz/browsers_linux.tar.gz
