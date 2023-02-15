@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use std::sync::mpsc::Sender;
 use std::sync::Arc;
 
-use druid::commands::{CONFIGURE_WINDOW_POSITION, QUIT_APP};
+use druid::commands::{CONFIGURE_WINDOW_POSITION, QUIT_APP, SHOW_WINDOW};
 use druid::keyboard_types::Key;
 use druid::piet::InterpolationMode;
 use druid::widget::{
@@ -490,6 +490,7 @@ impl AppDelegate<UIState> for UIDelegate {
             let window_size = calculate_window_size(item_count);
             let window_position = calculate_window_position(window_size);
 
+            // Immediately update window position (so it appears where user clicked).
             let sink = ctx.get_external_handle();
             sink.submit_command(
                 CONFIGURE_WINDOW_POSITION,
@@ -497,6 +498,10 @@ impl AppDelegate<UIState> for UIDelegate {
                 Target::Window(self.main_window_id),
             )
             .unwrap();
+
+            // After current event has been handled, bring the window to the front, and give it focus.
+            // Normally not needed, but if About menu was opened, then window would not have appeared
+            ctx.submit_command(SHOW_WINDOW.to(Target::Window(self.main_window_id)));
 
             self.main_sender
                 .send(MessageToMain::LinkOpenedFromBundle(

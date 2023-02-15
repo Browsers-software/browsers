@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Show dialog when clicking a link when About dialog is also open
+
 ## [0.2.0] - 2023-02-14
 
 ### Fixed
