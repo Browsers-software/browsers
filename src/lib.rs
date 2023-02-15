@@ -13,7 +13,7 @@ use url::Url;
 use ui::UI;
 
 use crate::browser_repository::{SupportedApp, SupportedAppRepository};
-use crate::ui::{MoveTo, UIBrowser};
+use crate::ui::MoveTo;
 use crate::utils::OSAppFinder;
 
 mod ui;
@@ -745,7 +745,7 @@ fn move_app_profile(
     let profile_ids_sorted: Vec<String> = visible_browser_profiles
         .iter()
         .filter(|b| b.get_restricted_domains().is_empty())
-        .map(|p| p.get_unique_id().clone())
+        .map(|p| p.get_unique_id())
         .collect();
 
     let mut config = app_finder.get_installed_browsers_config();

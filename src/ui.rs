@@ -1,11 +1,10 @@
-use std::any::Any;
 use std::cmp;
 use std::io::Error;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::Sender;
 use std::sync::Arc;
 
-use druid::commands::{CONFIGURE_WINDOW, CONFIGURE_WINDOW_POSITION, QUIT_APP, SHOW_WINDOW};
+use druid::commands::{CONFIGURE_WINDOW_POSITION, QUIT_APP};
 use druid::keyboard_types::Key;
 use druid::piet::InterpolationMode;
 use druid::widget::{
@@ -14,9 +13,8 @@ use druid::widget::{
 };
 use druid::{
     image, Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, LayoutCtx, LensExt,
-    LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, Modifiers, SingleUse, TextAlignment,
-    UnitPoint, UpdateCtx, Vec2, WidgetId, WindowConfig, WindowHandle, WindowLevel,
-    WindowSizePolicy,
+    LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, Modifiers, TextAlignment, UnitPoint,
+    UpdateCtx, Vec2, WidgetId, WindowHandle, WindowLevel,
 };
 use druid::{
     AppDelegate, AppLauncher, Color, Command, Data, DelegateCtx, Env, Event, EventCtx, Handled,
@@ -103,7 +101,7 @@ impl UI {
         }
     }
 
-    pub fn create_app_launcher(mut self) -> AppLauncher<UIState> {
+    pub fn create_app_launcher(self) -> AppLauncher<UIState> {
         let basedir = self.localizations_basedir.to_str().unwrap().to_string();
         let main_window = self.create_window();
         let main_window_id = main_window.id.clone();
@@ -419,7 +417,7 @@ impl AppDelegate<UIState> for UIDelegate {
         match event {
             Event::KeyDown(KeyEvent {
                 key: KbKey::Character(ref key),
-                mods: ref mods,
+                ref mods,
                 ..
             }) if key == "c" && mods == &copy_key_mod => {
                 debug!("Cmd/Ctrl+C caught in delegate");
