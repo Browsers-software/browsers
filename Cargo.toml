@@ -18,7 +18,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["fmt", "std", "time", "local-time"] }
 tracing-appender = "0.2"
 
-rolling-file = "0.1.0"
+rolling-file = "0.2.0"
 
 libc = "0.2"
 dirs = "4.0"

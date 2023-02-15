@@ -1662,9 +1662,9 @@ dependencies = [
 
 [[package]]
 name = "rolling-file"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39b254e89bc1c1343b896ca8cf99753097fca0d0d5c49ca58d876de52c754ef1"
+checksum = "8395b4f860856b740f20a296ea2cd4d823e81a2658cf05ef61be22916026a906"
 dependencies = [
  "chrono",
 ]
