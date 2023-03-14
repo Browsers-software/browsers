@@ -67,7 +67,7 @@ jobs:
       - name: Upload release artifact
         uses: actions/upload-artifact@v3
         with:
-          name: browsers_linux.tar.gz
+          name: browsers-linux-artifacts
           path: target/universal-unknown-linux-gnu/release/browsers_linux.tar.gz
   build-macos:
     environment: PROD_2028
@@ -115,11 +115,13 @@ jobs:
           echo "1. P12_FILE=$P12_FILE"
           ./build-mac.sh
         shell: bash
-      - name: Upload .dmg artifact
+      - name: Upload mac artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: Browsers.dmg
-          path: target/universal-apple-darwin/release/Browsers.dmg
+          name: browsers-mac-artifacts
+          path: |
+            target/universal-apple-darwin/release/Browsers.dmg
+            target/universal-apple-darwin/release/browsers_mac.tar.gz
   release:
     needs: [ build-linux, build-macos ]
     runs-on: ubuntu-latest
@@ -133,10 +135,10 @@ jobs:
         shell: bash
       - name: Download release artifacts
         uses: actions/download-artifact@v3
-      - name: Verify files exist
+      - name: Verify directories exist
         run: |
-          [ -e "browsers_linux.tar.gz" ]
-          [ -e "Browsers.dmg" ]
+          [ -e "browsers-linux-artifacts" ]
+          [ -e "browsers-mac-artifacts" ]
         shell: bash
       - name: Release
         uses: softprops/action-gh-release@v1
@@ -145,5 +147,6 @@ jobs:
           body_path: ${{ github.workspace }}-RELEASE_NOTES.md
           fail_on_unmatched_files: true
           files: |
-            browsers_linux.tar.gz/browsers_linux.tar.gz
-            Browsers.dmg/Browsers.dmg
+            browsers-linux-artifacts/browsers_linux.tar.gz
+            browsers-mac-artifacts/Browsers.dmg
+            browsers-mac-artifacts/browsers_mac.tar.gz
