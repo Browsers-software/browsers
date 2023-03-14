@@ -7,14 +7,14 @@ build_binary() {
   # Set minimum macOS version to support older OS versions
   export MACOSX_DEPLOYMENT_TARGET=10.7
 
-  # Build ARM64 binary
-  cargo build --target aarch64-apple-darwin --release
-
-  # Build x86_64 binary
-  cargo build --target x86_64-apple-darwin --release
-
   # Clean universal binary and app bundle
   rm -rf target/universal-apple-darwin/release/
+
+  # Build ARM64 binary (also re-creates target/universal-apple-darwin/release/Browsers.app/Contents/Info.plist)
+  cargo build --target aarch64-apple-darwin --release
+
+  # Build x86_64 binary (also re-creates target/universal-apple-darwin/release/Browsers.app/Contents/Info.plist)
+  cargo build --target x86_64-apple-darwin --release
 
   # Build universal binary
   mkdir -p target/universal-apple-darwin/release/
@@ -38,7 +38,7 @@ build_app_bundle() {
   cp target/universal-apple-darwin/release/Browsers target/universal-apple-darwin/release/Browsers.app/Contents/MacOS/Browsers
 }
 
-sign() {
+sign_app_bundle() {
   # Sign with hardened runtime (hardened runtime is required for notarization)
   rcodesign sign \
     --p12-file "$P12_FILE" \
@@ -47,7 +47,7 @@ sign() {
     "./target/universal-apple-darwin/release/Browsers.app"
 }
 
-notarize() {
+notarize_app_bundle() {
   rcodesign notary-submit \
     --api-key-path "$NOTARY_API_KEY_JSON_FILE" \
     --staple \
@@ -61,8 +61,20 @@ build_dmg() {
   cd ../../../
 }
 
+# This is a good format for auto-updating
+make_tar_gz() {
+  rm -f ./target/universal-apple-darwin/release/browsers_mac.tar.gz
+
+  tar -zcf ./target/universal-apple-darwin/release/browsers_mac.tar.gz \
+    -C ./target/universal-apple-darwin/release \
+    ./Browsers.app
+}
+
+make_tar_gz
+
 build_binary
 build_app_bundle
-sign
-notarize
+sign_app_bundle
+notarize_app_bundle
 build_dmg
+make_tar_gz
