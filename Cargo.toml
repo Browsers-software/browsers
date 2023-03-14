@@ -7,6 +7,7 @@ description = "Browsers"
 homepage = "https://browsers.software/"
 repository = "https://github.com/Browsers-software/browsers"
 license = "MIT OR Apache-2.0"
+build = "build.rs"
 
 [dependencies]
 
@@ -32,6 +33,7 @@ serde = { version = "1.0", features = ["derive"] }
 # for local development
 #druid = { path = "../druid/druid", features = ["png", "jpeg", "image"] }
 
+# jpeg is required to process downloaded Chrome profile images
 druid = { git = "https://github.com/browsers-software/druid.git", branch = "browsers", features = ["png", "jpeg", "image"] }
 
 # parse urls

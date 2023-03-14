@@ -67,11 +67,13 @@
         <key>CFBundlePackageType</key>
         <string>APPL</string>
 
+        <!-- Actual version is taken from Cargo.toml and set via build.rs -->
         <key>CFBundleShortVersionString</key>
-        <string>0.0.1</string>
+        <string>$CFBundleShortVersion$</string>
 
+        <!-- Actual version is taken from Cargo.toml and set via build.rs -->
         <key>CFBundleVersion</key>
-        <string>20</string>
+        <string>$CFBundleVersion$</string>
 
         <key>LSMinimumSystemVersion</key>
         <string>10.7.0</string>
