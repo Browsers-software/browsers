@@ -68,7 +68,9 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: browsers-linux-artifacts
-          path: target/universal-unknown-linux-gnu/release/browsers_linux.tar.gz
+          path: |
+            target/universal-unknown-linux-gnu/release/browsers_linux.tar.gz
+            target/universal-unknown-linux-gnu/release/browsers_linux.tar.xz
   build-macos:
     environment: PROD_2028
     runs-on: macos-12
@@ -122,6 +124,7 @@ jobs:
           path: |
             target/universal-apple-darwin/release/Browsers.dmg
             target/universal-apple-darwin/release/browsers_mac.tar.gz
+            target/universal-apple-darwin/release/browsers_mac.tar.xz
   release:
     needs: [ build-linux, build-macos ]
     runs-on: ubuntu-latest
@@ -148,5 +151,7 @@ jobs:
           fail_on_unmatched_files: true
           files: |
             browsers-linux-artifacts/browsers_linux.tar.gz
+            browsers-linux-artifacts/browsers_linux.tar.xz
             browsers-mac-artifacts/Browsers.dmg
             browsers-mac-artifacts/browsers_mac.tar.gz
+            browsers-mac-artifacts/browsers_mac.tar.xz
