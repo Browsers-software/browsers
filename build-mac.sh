@@ -4,7 +4,9 @@
 set -e
 
 # Load in some secrets
-source .env || true
+if test -f .env; then
+  source .env
+fi
 
 target_dir='target/universal-apple-darwin/release'
 
