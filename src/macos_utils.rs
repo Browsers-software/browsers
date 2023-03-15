@@ -6,9 +6,10 @@ use std::{fs, mem, ptr};
 
 use cocoa_foundation::base::{id, nil};
 use cocoa_foundation::foundation::{NSAutoreleasePool, NSPoint, NSRect, NSSize, NSString, NSURL};
+use core_foundation::array::{CFArray, CFArrayRef};
 use core_foundation::base::TCFType;
 use core_foundation::string::CFString;
-use core_services::{CFArray, CFStringRef};
+use core_foundation::string::CFStringRef;
 use objc::runtime::Object;
 use objc::runtime::YES;
 use objc::{class, msg_send, sel, sel_impl};
@@ -189,12 +190,12 @@ extern "C" {
         directory: u64,
         domain_mask: u64,
         expand_tilde: i8,
-    ) -> core_services::CFArrayRef;
+    ) -> CFArrayRef;
 }
 
 #[link(name = "Foundation", kind = "framework")]
 extern "C" {
-    pub fn LSCopyAllHandlersForURLScheme(in_url_scheme: CFStringRef) -> core_services::CFArrayRef;
+    pub fn LSCopyAllHandlersForURLScheme(in_url_scheme: CFStringRef) -> CFArrayRef;
 }
 
 extern "C" {
@@ -438,8 +439,7 @@ pub fn get_bundle_ids_for_url_scheme(scheme: &str) -> Vec<String> {
             return Vec::new();
         }
 
-        let handlers_https: CFArray<CFString> =
-            core_services::TCFType::wrap_under_create_rule(handlers_https);
+        let handlers_https: CFArray<CFString> = TCFType::wrap_under_create_rule(handlers_https);
 
         let mut vec = handlers_https
             .iter()

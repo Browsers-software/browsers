@@ -105,7 +105,6 @@ dependencies = [
  "cocoa-foundation",
  "configparser",
  "core-foundation",
- "core-services",
  "dirs",
  "druid",
  "gio",
@@ -333,15 +332,6 @@ dependencies = [
  "core-foundation",
  "foreign-types",
  "libc",
-]
-
-[[package]]
-name = "core-services"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51b344b958cae90858bf6086f49599ecc5ec8698eacad0ea155509ba11fab347"
-dependencies = [
- "core-foundation",
 ]
 
 [[package]]
