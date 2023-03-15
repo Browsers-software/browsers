@@ -26,6 +26,9 @@ mod browser_repository;
 #[cfg(target_os = "macos")]
 mod macos_utils;
 
+#[cfg(target_os = "macos")]
+mod macos;
+
 #[cfg(target_os = "linux")]
 mod linux_utils;
 

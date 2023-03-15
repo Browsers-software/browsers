@@ -16,7 +16,7 @@ use objc::{class, msg_send, sel, sel_impl};
 use tracing::{debug, info};
 
 use crate::browser_repository::SupportedAppRepository;
-use crate::InstalledBrowser;
+use crate::{macos, InstalledBrowser};
 
 const APP_DIR_NAME: &'static str = "software.Browsers";
 const APP_BUNDLE_ID: &'static str = "software.Browsers";
@@ -131,42 +131,8 @@ pub fn macos_get_application_support_dir_path() -> PathBuf {
 /// get macOS application support directory, ignores sandboxing
 /// e.g $HOME/Library/Application Support
 pub fn macos_get_unsandboxed_application_support_dir() -> PathBuf {
-    let home_dir = unsandboxed_home_dir().unwrap();
+    let home_dir = macos::mac_paths::unsandboxed_home_dir().unwrap();
     return home_dir.join("Library").join("Application Support");
-}
-
-// https://stackoverflow.com/questions/10952225/is-there-any-way-to-give-my-sandboxed-mac-app-read-only-access-to-files-in-lib
-pub fn unsandboxed_home_dir() -> Option<PathBuf> {
-    let os_string_maybe = unsafe { fallback() };
-    return os_string_maybe.map(|os_string| PathBuf::from(os_string));
-
-    unsafe fn fallback() -> Option<OsString> {
-        let amt = match libc::sysconf(libc::_SC_GETPW_R_SIZE_MAX) {
-            n if n < 0 => 512 as usize,
-            n => n as usize,
-        };
-        let mut buf = Vec::with_capacity(amt);
-        let mut passwd: libc::passwd = mem::zeroed();
-        let mut result = ptr::null_mut();
-        match libc::getpwuid_r(
-            libc::getuid(),
-            &mut passwd,
-            buf.as_mut_ptr(),
-            buf.capacity(),
-            &mut result,
-        ) {
-            0 if !result.is_null() => {
-                let ptr = passwd.pw_dir as *const _;
-                let bytes = CStr::from_ptr(ptr).to_bytes();
-                if bytes.is_empty() {
-                    None
-                } else {
-                    Some(OsStringExt::from_vec(bytes.to_vec()))
-                }
-            }
-            _ => None,
-        }
-    }
 }
 
 /// get macOS standard directory, supports sandboxing
