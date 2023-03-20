@@ -87,5 +87,13 @@
 
         <key>NSHumanReadableCopyright</key>
         <string>© 2022-2023 Browsers.software.</string>
+
+        <!-- For appcast / Sparkle Updater-->
+        <key>SUPublicEDKey</key>
+        <!-- base64 of the public key-->
+        <string>
+            dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25pZnkgcHVibGljIGtleQpSV1EvSWEvakV2
+            SCtsMUtZWmpjS2Z6dVRqaWlwT3dBeFRHLzY0NGxnY0kzeFNsN3ZQemdXRGMxTQo=
+        </string>
     </dict>
 </plist>

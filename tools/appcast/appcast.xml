@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>Browsers</title>
+        <link>https://browsers.software/</link>
+        <description>Updates for Browsers</description>
+        <language>en</language>
+        <item>
+            <title>Version 0.2.1</title>
+            <description>Version description.</description>
+            <pubDate>10 Mar 2023 15:00:00 Z</pubDate>
+            <link>https://github.com/Browsers-software/browsers/releases/tag/0.2.1</link>
+            <sparkle:version>0.2.1</sparkle:version>
+            <sparkle:releaseNotesLink>
+                https://github.com/Browsers-software/browsers/releases/tag/0.2.1
+            </sparkle:releaseNotesLink>
+            <enclosure url="https://github.com/Browsers-software/browsers/releases/download/0.2.2/browsers_mac.tar.gz"
+                       sparkle:edSignature="7cLALFUHSwvEJWSkV8aMreoBe4fhRa4FncC5NoThKxwThL6FDR7hTiPJh1fo2uagnPogisnQsgFgq6mGkt2RBw=="
+                       sparkle:os="macos"
+                       length="1623481"
+                       type="application/octet-stream"/>
+
+            <enclosure url="https://github.com/Browsers-software/browsers/releases/download/0.2.2/browsers_linux.tar.gz"
+                       sparkle:edSignature="7cLALFUHSwvEJWSkV8aMreoBe4fhRa4FncC5NoThKxwThL6FDR7hTiPJh1fo2uagnPogisnQsgFgq6mGkt2RBw=="
+                       sparkle:os="linux"
+                       length="1623481"
+                       type="application/octet-stream"/>
+        </item>
+    </channel>
+</rss>
