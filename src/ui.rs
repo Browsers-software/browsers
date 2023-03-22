@@ -1,5 +1,5 @@
 use std::cmp;
-use std::io::Error;
+use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::Sender;
 use std::sync::Arc;
@@ -828,16 +828,15 @@ fn make_options_menu(
 pub struct UIImageController;
 
 impl UIImageController {
-    fn get_image_buf(&self, icon_path: &str) -> Result<ImageBuf, Error> {
+    fn get_image_buf(&self, icon_path: &str) -> Result<ImageBuf, Box<dyn Error>> {
         if icon_path.is_empty() {
             return Ok(ImageBuf::empty());
         }
 
         let path1 = Path::new(icon_path);
 
-        let result = ImageReader::open(path1)?.decode();
-        let image1 = result.unwrap();
-        let buf = ImageBuf::from_dynamic_image(image1);
+        let dynamic_image = ImageReader::open(path1)?.decode()?;
+        let buf = ImageBuf::from_dynamic_image(dynamic_image);
         return Ok(buf);
     }
 }
