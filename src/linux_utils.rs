@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 use glib::prelude::AppInfoExt;
 use glib::AppInfo;
 use gtk::prelude::*;
-use gtk::{IconLookupFlags, IconTheme};
+use gtk::{gio, IconLookupFlags, IconTheme};
 
 use crate::{InstalledBrowser, SupportedAppRepository};
 
@@ -140,31 +140,10 @@ impl OsHelper {
         let _string = app_info.to_string();
         //println!("app_info: {}", id);
 
-        let icon_maybe = app_info.icon();
-
-        let icon = icon_maybe.unwrap();
-        //let icon_str = IconExt::to_string(&icon);
-        //let icon_gstr = icon_str.unwrap();
-        //let string2 = icon_gstr.to_string();
-
-        let icon_theme = Arc::clone(&self.icon_theme);
-        let icon_theme2 = icon_theme.lock().unwrap();
-
-        let icon_info = icon_theme2
-            .lookup_by_gicon(&icon, 48, IconLookupFlags::USE_BUILTIN)
-            .unwrap();
-
-        // to support scaled resolutions
-        //let icon_info = icon_theme.lookup_by_gicon_for_scale(&icon, 128, 1,IconLookupFlags::USE_BUILTIN).unwrap();
-
-        // or load_icon() to get PixBuf
-        let icon_filepath = icon_info.filename().unwrap();
-
-        let icon_path_str = icon_filepath.as_path().to_str().unwrap().to_string();
-        println!("icon: {}", icon_path_str);
-
-        // https://lazka.github.io/pgi-docs/Gio-2.0/interfaces/Icon.html#Gio.Icon.to_string
-        // either file path or themed icon name
+        let icon_path_str = app_info
+            .icon()
+            .map(|icon| find_icon_path(&self.icon_theme, &icon))
+            .unwrap_or(String::from("unknown_icon"));
 
         let profiles = supported_app.find_profiles(executable_path.clone(), is_snap);
 
@@ -181,6 +160,34 @@ impl OsHelper {
         };
         return Some(browser);
     }
+}
+
+fn find_icon_path(icon_theme: &Arc<Mutex<IconTheme>>, icon: &impl IsA<gio::Icon>) -> String {
+    // icon.to_string() returns either file path or icon name in theme
+    // so not using that
+    // https://lazka.github.io/pgi-docs/Gio-2.0/interfaces/Icon.html#Gio.Icon.to_string
+    //let icon_str = IconExt::to_string(&icon);
+    //let icon_gstr = icon_str.unwrap();
+    //let string2 = icon_gstr.to_string();
+
+    let icon_theme = Arc::clone(&icon_theme);
+    let icon_theme2 = icon_theme.lock().unwrap();
+
+    let icon_info = icon_theme2
+        .lookup_by_gicon(icon, 48, IconLookupFlags::USE_BUILTIN)
+        .unwrap();
+
+    // to support scaled resolutions
+    //let icon_info = icon_theme.lookup_by_gicon_for_scale(&icon, 128, 1,IconLookupFlags::USE_BUILTIN).unwrap();
+
+    // or load_icon() to get PixBuf
+    let icon_filepath = icon_info.filename().unwrap();
+
+    let icon_path_str = icon_filepath.as_path().to_str().unwrap().to_string();
+
+    // either file path or themed icon name
+    println!("icon: {}", icon_path_str);
+    return icon_path_str;
 }
 
 // $HOME/.local/share/software.Browsers
