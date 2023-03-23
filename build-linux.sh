@@ -44,6 +44,10 @@ build() {
 
 make_archives() {
   rm -f "./${target_dir:?}/browsers_linux.tar.gz"
+  rm -f "./${target_dir:?}/browsers_linux.tar.gz.sig"
+
+  rm -f "./${target_dir:?}/browsers_linux.tar.xz"
+  rm -f "./${target_dir:?}/browsers_linux.tar.xz.sig"
 
   local filelist=(
     './x86_64/browsers'
@@ -62,9 +66,15 @@ make_archives() {
     -C "./$target_dir" \
     "${filelist[@]}"
 
+  # creates browsers_linux.tar.gz.sig
+  signify -S -s "$APPCAST_SECRET_KEY_FILE" -m "./$target_dir/browsers_linux.tar.gz"
+
   tar -Jcf "./$target_dir/browsers_linux.tar.xz" \
     -C "./$target_dir" \
     "${filelist[@]}"
+
+  # creates browsers_linux.tar.xz.sig
+  signify -S -s "$APPCAST_SECRET_KEY_FILE" -m "./$target_dir/browsers_linux.tar.xz"
 }
 
 build
