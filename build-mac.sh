@@ -71,16 +71,26 @@ build_dmg() {
 # This is a good format for auto-updating
 make_archives() {
   rm -f "./${target_dir:?}/browsers_mac.tar.gz"
+  rm -f "./${target_dir:?}/browsers_mac.tar.gz.sig"
+
+  rm -f "./${target_dir:?}/browsers_mac.tar.xz"
+  rm -f "./${target_dir:?}/browsers_mac.tar.xz.sig"
 
   # .tar.gz
   tar -zcf "./$target_dir/browsers_mac.tar.gz" \
     -C "./$target_dir" \
     ./Browsers.app
 
+  # creates browsers_mac.tar.gz.sig
+  signify -S -s "$APPCAST_SECRET_KEY_FILE" -m "./$target_dir/browsers_mac.tar.gz"
+
   # .tar.xz
   tar -Jcf "./$target_dir/browsers_mac.tar.xz" \
     -C "./$target_dir" \
     ./Browsers.app
+
+  # creates browsers_mac.tar.xz.sig
+  signify -S -s "$APPCAST_SECRET_KEY_FILE" -m "./$target_dir/browsers_mac.tar.xz"
 }
 
 build_binary
