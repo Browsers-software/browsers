@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3]
+
 ### Fixed
 
 - Don't crash if a browser doesn't have an icon #12
@@ -33,7 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial Release
 
-[unreleased]: https://github.com/Browsers-software/browsers/compare/0.2.2...HEAD
+[unreleased]: https://github.com/Browsers-software/browsers/compare/0.2.3...HEAD
+[0.2.3]: https://github.com/Browsers-software/browsers/releases/tag/0.2.3
 [0.2.2]: https://github.com/Browsers-software/browsers/releases/tag/0.2.2
 [0.2.1]: https://github.com/Browsers-software/browsers/releases/tag/0.2.1
 [0.2.0]: https://github.com/Browsers-software/browsers/releases/tag/0.2.0
