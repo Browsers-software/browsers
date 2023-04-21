@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Recognize Chromium and Firefox ESR in Raspberry Pi OS
+
 ## [0.2.3]
 
 ### Fixed
