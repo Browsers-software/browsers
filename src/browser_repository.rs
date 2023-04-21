@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 
 use url::Url;
 
-use crate::{chromium_profiles_parser, firefox_profiles_parser, paths, InstalledBrowserProfile};
+use crate::{chromium_profiles_parser, firefox_profiles_parser, InstalledBrowserProfile, paths};
 
 // Holds list of custom SupportedApp configurations
 // All other apps will be the "default" supported app implementation
@@ -79,11 +79,13 @@ impl SupportedAppRepository {
                 "Google/Chrome Canary",
                 "google-chrome-canary",
             )
-            .add_chromium_based_app_with_snap(
-                "org.chromium.Chromium",
-                "chromium_chromium.desktop",
-                "chromium",
+            .add_chromium_based_mac(
+                vec!["org.chromium.Chromium"],
                 "Chromium",
+            )
+            .add_chromium_based_linux(
+                vec!["chromium_chromium.desktop", "chromium-browser.desktop"],
+                "chromium",
                 "chromium",
             )
             .add_chromium_based_app(
@@ -146,11 +148,13 @@ impl SupportedAppRepository {
                 "Microsoft Edge Canary",
                 "TODOTODOTODO",
             )
-            .add_chromium_based_app_with_snap(
-                "com.brave.Browser",
-                "brave-browser.desktop",
-                "brave",
+            .add_chromium_based_mac(
+                vec!["com.brave.Browser"],
                 "BraveSoftware/Brave-Browser",
+            )
+            .add_chromium_based_linux(
+                vec!["brave-browser.desktop"],
+                "brave",
                 "BraveSoftware/Brave-Browser",
             )
             .add_chromium_based_app(
@@ -195,11 +199,13 @@ impl SupportedAppRepository {
                 "Iridium",
                 "TODOTODOTODO",
             )
-            .add_firefox_based_app_with_snap(
-                "org.mozilla.firefox",
-                "firefox_firefox.desktop",
-                "firefox",
+            .add_firefox_based_mac(
+                vec!["org.mozilla.firefox"],
                 "Firefox",
+            )
+            .add_firefox_based_linux(
+                vec!["firefox_firefox.desktop", "firefox-esr.desktop"],
+                "firefox",
                 ".mozilla/firefox",
             )
             .add_firefox_based_app(
@@ -252,23 +258,6 @@ impl SupportedAppRepository {
         mac_config_dir_relative: &str,
         linux_config_dir_relative: &str,
     ) -> &mut SupportedAppRepository {
-        return self.add_firefox_based_app_with_snap(
-            mac_bundle_id,
-            linux_desktop_id,
-            "",
-            mac_config_dir_relative,
-            linux_config_dir_relative,
-        );
-    }
-
-    fn add_firefox_based_app_with_snap(
-        &mut self,
-        mac_bundle_id: &str,
-        linux_desktop_id: &str,
-        linux_snap_id: &str,
-        mac_config_dir_relative: &str,
-        linux_config_dir_relative: &str,
-    ) -> &mut SupportedAppRepository {
         let app_id = AppIdentifier {
             mac_bundle_id: mac_bundle_id.to_string(),
             linux_desktop_id: linux_desktop_id.to_string(),
@@ -280,7 +269,7 @@ impl SupportedAppRepository {
         };
 
         let snap_app_config_dir_absolute =
-            self.snap_config_dir_absolute_path(linux_snap_id, linux_config_dir_relative);
+            self.snap_config_dir_absolute_path("", linux_config_dir_relative);
 
         let app = Self::firefox_based_app(
             app_id,
@@ -288,6 +277,56 @@ impl SupportedAppRepository {
             snap_app_config_dir_absolute,
         );
         return self.add(app);
+    }
+
+    fn add_firefox_based_mac(
+        &mut self,
+        mac_bundle_ids: Vec<&str>,
+        mac_config_dir_relative: &str,
+    ) -> &mut SupportedAppRepository {
+        let app_config_dir = AppConfigDir::new_mac(
+            self.firefox_user_dir_base.clone(),
+            PathBuf::from(mac_config_dir_relative),
+        );
+
+        for mac_bundle_id in mac_bundle_ids {
+            let app_id = AppIdentifier::new_mac(mac_bundle_id);
+            let app = Self::firefox_based_app(
+                app_id,
+                app_config_dir.config_dir_absolute(),
+                PathBuf::from(""),
+            );
+            self.add(app);
+        }
+
+        return self;
+    }
+
+    fn add_firefox_based_linux(
+        &mut self,
+        linux_desktop_ids: Vec<&str>,
+        linux_snap_id: &str,
+        linux_config_dir_relative: &str,
+    ) -> &mut SupportedAppRepository {
+        let app_config_dir = AppConfigDir::new_linux(
+            self.firefox_user_dir_base.clone(),
+            PathBuf::from(linux_config_dir_relative),
+        );
+
+        let snap_app_config_dir_absolute =
+            self.snap_config_dir_absolute_path(linux_snap_id, linux_config_dir_relative);
+
+        for linux_desktop_id in linux_desktop_ids {
+            let app_id = AppIdentifier::new_linux(linux_desktop_id);
+            let app = Self::firefox_based_app(
+                app_id,
+                app_config_dir.config_dir_absolute(),
+                snap_app_config_dir_absolute.clone(),
+            );
+            self.add(app);
+        }
+
+        return self;
     }
 
     fn start(&mut self) -> &mut SupportedAppRepository {
@@ -298,23 +337,6 @@ impl SupportedAppRepository {
         &mut self,
         mac_bundle_id: &str,
         linux_desktop_id: &str,
-        mac_config_dir_relative: &str,
-        linux_config_dir_relative: &str,
-    ) -> &mut SupportedAppRepository {
-        return self.add_chromium_based_app_with_snap(
-            mac_bundle_id,
-            linux_desktop_id,
-            "",
-            mac_config_dir_relative,
-            linux_config_dir_relative,
-        );
-    }
-
-    fn add_chromium_based_app_with_snap(
-        &mut self,
-        mac_bundle_id: &str,
-        linux_desktop_id: &str,
-        linux_snap_id: &str,
         mac_config_dir_relative: &str,
         linux_config_dir_relative: &str,
     ) -> &mut SupportedAppRepository {
@@ -329,7 +351,7 @@ impl SupportedAppRepository {
         };
 
         let snap_app_config_dir_absolute =
-            self.snap_config_dir_absolute_path(linux_snap_id, linux_config_dir_relative);
+            self.snap_config_dir_absolute_path("", linux_config_dir_relative);
 
         let app = Self::chromium_based_app(
             app_id,
@@ -337,6 +359,56 @@ impl SupportedAppRepository {
             snap_app_config_dir_absolute,
         );
         return self.add(app);
+    }
+
+    fn add_chromium_based_mac(
+        &mut self,
+        mac_bundle_ids: Vec<&str>,
+        mac_config_dir_relative: &str,
+    ) -> &mut SupportedAppRepository {
+        let app_config_dir = AppConfigDir::new_mac(
+            self.chromium_user_dir_base.clone(),
+            PathBuf::from(mac_config_dir_relative),
+        );
+
+        for mac_bundle_id in mac_bundle_ids {
+            let app_id = AppIdentifier::new_mac(mac_bundle_id);
+            let app = Self::chromium_based_app(
+                app_id,
+                app_config_dir.config_dir_absolute(),
+                PathBuf::from(""),
+            );
+            self.add(app);
+        }
+
+        return self;
+    }
+
+    fn add_chromium_based_linux(
+        &mut self,
+        linux_desktop_ids: Vec<&str>,
+        linux_snap_id: &str,
+        linux_config_dir_relative: &str,
+    ) -> &mut SupportedAppRepository {
+        let app_config_dir = AppConfigDir::new_linux(
+            self.chromium_user_dir_base.clone(),
+            PathBuf::from(linux_config_dir_relative),
+        );
+
+        let snap_app_config_dir_absolute =
+            self.snap_config_dir_absolute_path(linux_snap_id, linux_config_dir_relative);
+
+        for linux_desktop_id in linux_desktop_ids {
+            let app_id = AppIdentifier::new_linux(linux_desktop_id);
+            let app = Self::chromium_based_app(
+                app_id,
+                app_config_dir.config_dir_absolute(),
+                snap_app_config_dir_absolute.clone(),
+            );
+            self.add(app);
+        }
+
+        return self;
     }
 
     fn snap_config_dir_absolute_path(
@@ -621,6 +693,22 @@ struct AppConfigDir {
 }
 
 impl AppConfigDir {
+    pub fn new_mac(root_path: PathBuf, mac_config_dir_relative: PathBuf) -> Self {
+        Self {
+            root_path: root_path,
+            mac_config_dir_relative: mac_config_dir_relative,
+            linux_config_dir_relative: PathBuf::from(""),
+        }
+    }
+
+    pub fn new_linux(root_path: PathBuf, linux_config_dir_relative: PathBuf) -> Self {
+        Self {
+            root_path: root_path,
+            mac_config_dir_relative: PathBuf::from(""),
+            linux_config_dir_relative: linux_config_dir_relative,
+        }
+    }
+
     fn config_dir_relative(&self) -> &Path {
         #[cfg(target_os = "macos")]
         return self.mac_config_dir_relative.as_path();
