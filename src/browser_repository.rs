@@ -195,7 +195,11 @@ impl SupportedAppRepository {
                 "Firefox",
             )
             .add_firefox_based_linux(
-                vec!["firefox_firefox.desktop", "firefox-esr.desktop"],
+                vec![
+                    "firefox.desktop",
+                    "firefox_firefox.desktop",
+                    "firefox-esr.desktop",
+                ],
                 "firefox",
                 ".mozilla/firefox",
             )
