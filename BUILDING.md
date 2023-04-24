@@ -6,7 +6,16 @@
     ./build-mac.sh
 
 # Build Linux binary
-    
+
+## Setup (e.g Ubuntu)
+    sudo apt install libpango-1.0-0 libpango1.0-dev libgtk-3-dev
+
+## Build Natively
+
+    cargo build
+
+## Or build via docker image
+
     cd cross
     ./build-cross-images.sh
     cd..
