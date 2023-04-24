@@ -12,16 +12,16 @@ target_dir='target/universal-apple-darwin/release'
 
 build_binary() {
   # Set minimum macOS version to support older OS versions
-  export MACOSX_DEPLOYMENT_TARGET=10.7
+  export MACOSX_DEPLOYMENT_TARGET=10.8
 
   # Clean universal binary and app bundle
   rm -rf "${target_dir:?}/"
 
-  # Build ARM64 binary (also re-creates target/universal-apple-darwin/release/Browsers.app/Contents/Info.plist)
-  cargo build --target aarch64-apple-darwin --release
-
   # Build x86_64 binary (also re-creates target/universal-apple-darwin/release/Browsers.app/Contents/Info.plist)
   cargo build --target x86_64-apple-darwin --release
+
+  # Build ARM64 binary (also re-creates target/universal-apple-darwin/release/Browsers.app/Contents/Info.plist)
+  cargo build --target aarch64-apple-darwin --release
 
   # Build universal binary
   mkdir -p "$target_dir/"
@@ -37,8 +37,9 @@ build_app_bundle() {
   mkdir -p "$target_dir/Browsers.app/Contents/Resources/icons"
   mkdir -p "$target_dir/Browsers.app/Contents/Resources/icons/512x512"
   # FYI: extra/macos/Info.plist is copied
-  #      to target/universal-apple-darwin/release/Browsers.app/Contents/Info.plist
+  #      to target/universal-apple-darwin/meta/Info.plist
   #      by build.rs (because it also sets version from Cargo.toml)
+  cp target/universal-apple-darwin/meta/Info.plist target/universal-apple-darwin/release/Browsers.app/Contents/Info.plist
   cp extra/macos/icons/Browsers.icns "$target_dir/Browsers.app/Contents/Resources/Browsers.icns"
   cp resources/icons/512x512/software.Browsers.png "$target_dir/Browsers.app/Contents/Resources/icons/512x512/software.Browsers.png"
   cp resources/i18n/en-US/builtin.ftl "$target_dir/Browsers.app/Contents/Resources/i18n/en-US/builtin.ftl"

@@ -107,11 +107,18 @@ jobs:
         run: |
           rustup target add x86_64-apple-darwin
           rustup target add aarch64-apple-darwin
+      - name: Test x86_64 binary
+        run: |
+          export MACOSX_DEPLOYMENT_TARGET=10.8
+          cargo build --target x86_64-apple-darwin --release
+        shell: bash
+      - name: Test aarch64 binaries
+        run: |
+          export MACOSX_DEPLOYMENT_TARGET=10.8
+          cargo build --target aarch64-apple-darwin --release
+        shell: bash
       - name: Build Universal Binary
         run: |
-          export MACOSX_DEPLOYMENT_TARGET=10.7
-          cargo build --target aarch64-apple-darwin --release
-          cargo build --target x86_64-apple-darwin --release
           rm -rf target/universal-apple-darwin/release/
           mkdir -p target/universal-apple-darwin/release/
           lipo -create -output target/universal-apple-darwin/release/Browsers target/x86_64-apple-darwin/release/browsers target/aarch64-apple-darwin/release/browsers
