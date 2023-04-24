@@ -14,9 +14,7 @@ fn main() {
     let target_info_plist_dir_path: PathBuf = Path::new(ROOT_DIR)
         .join("target")
         .join("universal-apple-darwin")
-        .join("release")
-        .join("Browsers.app")
-        .join("Contents");
+        .join("meta");
 
     let target_info_plist_path: PathBuf = target_info_plist_dir_path.join("Info.plist");
 
