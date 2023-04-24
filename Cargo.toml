@@ -47,7 +47,7 @@ configparser = "3.0.0"
 naive-cityhash = "0.2.0"
 
 # For making HTTP requests, e.g downloading browser profile images
-attohttpc = { version = "0.24.0", features = ["tls-rustls-native-roots"] }
+attohttpc = { version = "0.25.0", features = ["tls-rustls-native-roots"] }
 
 # To create lazy static variables
 lazy_static = "1.4.0"
