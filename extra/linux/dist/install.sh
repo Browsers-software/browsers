@@ -2,8 +2,8 @@
 
 INSTALL_DIR="$HOME/.local/bin"
 if [ ! -d "$INSTALL_DIR" ]; then
-    echo "$INSTALL_DIR does not exist. Please install manually"
-    exit 1
+    mkdir -p "$INSTALL_DIR"
+    echo "$INSTALL_DIR did not exist. We created it for you. If you have any issues make sure that the dir is in PATH."
 fi
 
 THIS_DIR="$(dirname "$0")"
