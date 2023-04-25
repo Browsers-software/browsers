@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Recognize firefox.desktop (e.g KDE Neon) and firefox-esr.desktop (e.g Raspberry Pi OS) as Firefox
 - Recognize chromium-browser.desktop (e.g Raspberry Pi OS) as Chrome
+- Bump minimum macOS version from 10.7 (OS X Lion) to 10.8 (OS X Mountain Lion)
 
 ## [0.2.3]
 
