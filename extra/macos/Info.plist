@@ -76,7 +76,7 @@
         <string>$CFBundleVersion$</string>
 
         <key>LSMinimumSystemVersion</key>
-        <string>10.8.0</string>
+        <string>10.7.0</string>
 
         <key>LSUIElement</key>
         <string>1</string>
