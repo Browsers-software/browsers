@@ -7,11 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4]
+
 ### Fixed
 
 - Recognize firefox.desktop (e.g KDE Neon) and firefox-esr.desktop (e.g Raspberry Pi OS) as Firefox
 - Recognize chromium-browser.desktop (e.g Raspberry Pi OS) as Chrome
-- Bump minimum macOS version from 10.7 (OS X Lion) to 10.8 (OS X Mountain Lion)
+- Remove openssl system dependency (ssl is used to verify https when fetching profile images)
 
 ## [0.2.3]
 
@@ -41,7 +43,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial Release
 
-[unreleased]: https://github.com/Browsers-software/browsers/compare/0.2.3...HEAD
+[unreleased]: https://github.com/Browsers-software/browsers/compare/0.2.4...HEAD
+[0.2.4]: https://github.com/Browsers-software/browsers/releases/tag/0.2.4
 [0.2.3]: https://github.com/Browsers-software/browsers/releases/tag/0.2.3
 [0.2.2]: https://github.com/Browsers-software/browsers/releases/tag/0.2.2
 [0.2.1]: https://github.com/Browsers-software/browsers/releases/tag/0.2.1
