@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.4]
+## [0.2.5] - 2023-04-25
+
+### Fixed
+
+- Improve installation in Linux (auto-creates ~/.local/bin/ directory)
+- Don't crash if Firefox is detected, but profiles.ini is missing
+
+## [0.2.4] - 2023-04-25
 
 ### Fixed
 
@@ -15,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Recognize chromium-browser.desktop (e.g Raspberry Pi OS) as Chrome
 - Remove openssl system dependency (ssl is used to verify https when fetching profile images)
 
-## [0.2.3]
+## [0.2.3] - 2023-03-29
 
 ### Fixed
 
@@ -43,7 +50,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial Release
 
-[unreleased]: https://github.com/Browsers-software/browsers/compare/0.2.4...HEAD
+[unreleased]: https://github.com/Browsers-software/browsers/compare/0.2.5...HEAD
+[0.2.5]: https://github.com/Browsers-software/browsers/releases/tag/0.2.5
 [0.2.4]: https://github.com/Browsers-software/browsers/releases/tag/0.2.4
 [0.2.3]: https://github.com/Browsers-software/browsers/releases/tag/0.2.3
 [0.2.2]: https://github.com/Browsers-software/browsers/releases/tag/0.2.2
