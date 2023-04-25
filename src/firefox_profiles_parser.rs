@@ -23,7 +23,20 @@ pub fn find_firefox_profiles(
     let mut browser_profiles: Vec<InstalledBrowserProfile> = Vec::new();
 
     let profiles_ini_path = firefox_profiles_dir.join("profiles.ini");
-    debug!("profiles_ini_path: {:?}", profiles_ini_path);
+    debug!(
+        "profiles_ini_path: {:?}",
+        profiles_ini_path
+    );
+
+    // When user has installed Firefox, but never ran it, then the profiles.ini does not yet exist
+    if !profiles_ini_path.exists() {
+        info!(
+            "Skipping Firefox, because profiles.ini does not exist at '{}'",
+            profiles_ini_path.display()
+        );
+
+        return browser_profiles;
+    }
 
     let mut ini_default = IniDefault::default();
     ini_default.case_sensitive = true;
