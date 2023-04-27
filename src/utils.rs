@@ -161,7 +161,7 @@ impl OSAppFinder {
     pub(crate) fn save_installed_browsers_config(&self, config: &Config) {
         let config_root_dir = paths::get_config_root_dir();
         fs::create_dir_all(config_root_dir.as_path()).unwrap();
-        let config_json_path = self.get_config_json_path(config_root_dir.as_path());
+        let config_json_path = paths::get_config_json_path();
         let buffer = File::create(config_json_path).unwrap();
         serde_json::to_writer_pretty(buffer, config).unwrap();
     }
@@ -169,7 +169,7 @@ impl OSAppFinder {
     pub(crate) fn get_installed_browsers_config(&self) -> Config {
         let config_root_dir = paths::get_config_root_dir();
         fs::create_dir_all(config_root_dir.as_path()).unwrap();
-        let config_json_path = self.get_config_json_path(config_root_dir.as_path());
+        let config_json_path = paths::get_config_json_path();
         info!("Config: {}", config_json_path.display());
 
         if config_json_path.exists() {
@@ -197,11 +197,6 @@ impl OSAppFinder {
             serde_json::to_writer_pretty(buffer, &config).unwrap();
             return config;
         }
-    }
-
-    // create_dirs: creates directories if missing
-    fn get_config_json_path(&self, config_root_dir: &Path) -> PathBuf {
-        return config_root_dir.join("config.json");
     }
 
     pub(crate) fn get_installed_browsers_cached(

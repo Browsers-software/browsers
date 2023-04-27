@@ -207,12 +207,9 @@ fn find_icon_path(icon_theme: &Arc<Mutex<IconTheme>>, icon: &impl IsA<gio::Icon>
     return icon_path_str;
 }
 
-// $HOME/.local/share/software.Browsers
+// $HOME/.config/software.Browsers
 pub fn get_this_app_config_root_dir() -> PathBuf {
-    // TODO: change from .local/share/software.Browsers
-    //       to .config/software.Browsers (/config.json) ?
-    // return get_this_app_xdg_config_dir();
-    return get_this_app_xdg_data_dir();
+    return get_this_app_xdg_config_dir();
 }
 
 // $HOME/.local/share/software.Browsers
