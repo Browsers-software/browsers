@@ -30,7 +30,7 @@ build() {
   cp "target/aarch64-unknown-linux-gnu/release/browsers" "$target_dir/aarch64/browsers"
 
   cp "extra/linux/dist/install.sh" "$target_dir/install.sh"
-  cp "extra/linux/dist/software.Browsers.template.desktop" "$target_dir/software.Browsers.desktop"
+  cp "extra/linux/dist/software.Browsers.template.desktop" "$target_dir/software.Browsers.template.desktop"
 
   cp "resources/icons/16x16/software.Browsers.png" "$target_dir/icons/16x16/software.Browsers.png"
   cp "resources/icons/32x32/software.Browsers.png" "$target_dir/icons/32x32/software.Browsers.png"
