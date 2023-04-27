@@ -16,15 +16,20 @@ if [ ! -f "$SRC_BINARY_PATH" ]; then
     echo "$SRC_BINARY_PATH does not exist. Please install manually"
     exit 1
 fi
+TARGET_BINARY_PATH="$INSTALL_DIR/browsers"
 
-SOURCE_DESKTOP_FILE_PATH="$THIS_DIR/software.Browsers.desktop"
-if [ ! -f "$SOURCE_DESKTOP_FILE_PATH" ]; then
-    echo "$SOURCE_DESKTOP_FILE_PATH does not exist. Please install manually"
+TEMPLATE_DESKTOP_FILE_PATH="$THIS_DIR/software.Browsers.template.desktop"
+if [ ! -f "$TEMPLATE_DESKTOP_FILE_PATH" ]; then
+    echo "$TEMPLATE_DESKTOP_FILE_PATH does not exist. Please install manually"
     exit 1
 fi
 
+SOURCE_DESKTOP_FILE_PATH="$THIS_DIR/software.Browsers.desktop"
+
+sed "s|€ExecCommand€|browsers %u|g" "$TEMPLATE_DESKTOP_FILE_PATH" > "$SOURCE_DESKTOP_FILE_PATH"
+
 # Copy binary to $HOME/.local/bin
-cp "$SRC_BINARY_PATH" "$INSTALL_DIR/browsers"
+cp "$SRC_BINARY_PATH" "$TARGET_BINARY_PATH"
 
 # Installs to /.local/share/icons/hicolor/512x512/apps/software.Browsers.png
 xdg-icon-resource install --novendor --size 16 icons/16x16/software.Browsers.png

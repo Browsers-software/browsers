@@ -58,7 +58,7 @@ make_archives() {
     './icons/128x128/software.Browsers.png'
     './icons/256x256/software.Browsers.png'
     './icons/512x512/software.Browsers.png'
-    './software.Browsers.desktop'
+    './software.Browsers.template.desktop'
     './install.sh'
   )
 
