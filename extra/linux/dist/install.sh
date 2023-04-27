@@ -3,7 +3,7 @@
 INSTALL_DIR="$HOME/.local/bin"
 if [ ! -d "$INSTALL_DIR" ]; then
     mkdir -p "$INSTALL_DIR"
-    echo "$INSTALL_DIR did not exist. We created it for you. If you have any issues make sure that the dir is in PATH."
+    echo "$INSTALL_DIR did not exist. We created it for you."
 fi
 
 THIS_DIR="$(dirname "$0")"
@@ -26,7 +26,7 @@ fi
 
 SOURCE_DESKTOP_FILE_PATH="$THIS_DIR/software.Browsers.desktop"
 
-sed "s|€ExecCommand€|browsers %u|g" "$TEMPLATE_DESKTOP_FILE_PATH" > "$SOURCE_DESKTOP_FILE_PATH"
+sed "s|€ExecCommand€|$TARGET_BINARY_PATH %u|g" "$TEMPLATE_DESKTOP_FILE_PATH" > "$SOURCE_DESKTOP_FILE_PATH"
 
 # Copy binary to $HOME/.local/bin
 cp "$SRC_BINARY_PATH" "$TARGET_BINARY_PATH"
@@ -49,3 +49,6 @@ desktop-file-install --dir="$TARGET_DESKTOP_DIR_PATH" --rebuild-mime-info-cache 
 
 # Refresh desktop database
 update-desktop-database "$TARGET_DESKTOP_DIR_PATH"
+
+echo "Browsers has been installed. Enjoy!"
+echo "Please report any issues at https://github.com/Browsers-software/browsers/issues"
