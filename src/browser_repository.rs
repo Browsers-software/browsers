@@ -99,7 +99,11 @@ impl SupportedAppRepository {
                 "Chromium",
             )
             .add_chromium_based_linux(
-                vec!["chromium_chromium.desktop", "chromium-browser.desktop"],
+                vec![
+                    "chromium.desktop",
+                    "chromium_chromium.desktop",
+                    "chromium-browser.desktop",
+                ],
                 "chromium",
                 "chromium",
             )
