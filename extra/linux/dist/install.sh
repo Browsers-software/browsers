@@ -1,12 +1,66 @@
 #!/bin/sh
 
+# exit when any command fails
+set -e
+
+THIS_DIR="$(dirname "$0")"
+
 INSTALL_DIR="$HOME/.local/bin"
 if [ ! -d "$INSTALL_DIR" ]; then
     mkdir -p "$INSTALL_DIR"
     echo "$INSTALL_DIR did not exist. We created it for you."
 fi
 
-THIS_DIR="$(dirname "$0")"
+# Use XDG_DATA_HOME or default to $HOME/.local/share if it's missing
+XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+if [ ! -d "$XDG_DATA_HOME" ]; then
+    mkdir -p "$XDG_DATA_HOME"
+    echo "$XDG_DATA_HOME did not exist. We created it for you."
+fi
+
+# Holds config file and translations
+CONFIG_DIR="$XDG_DATA_HOME/software.Browsers"
+if [ ! -d "$CONFIG_DIR" ]; then
+    mkdir -p "$CONFIG_DIR"
+    echo "$CONFIG_DIR did not exist. We created it for you."
+fi
+
+RESOURCES_DIR="$CONFIG_DIR/resources"
+if [ ! -d "$RESOURCES_DIR" ]; then
+    mkdir -p "$RESOURCES_DIR"
+    echo "$RESOURCES_DIR did not exist. We created it for you."
+fi
+
+ICONS_DIR="$RESOURCES_DIR/icons"
+if [ ! -d "$ICONS_DIR" ]; then
+    mkdir -p "$ICONS_DIR"
+    echo "$ICONS_DIR did not exist. We created it for you."
+fi
+
+# We store the icon also here, which is shown in About dialog
+ICONS_512_DIR="$ICONS_DIR/512x512"
+if [ ! -d "$ICONS_512_DIR" ]; then
+    mkdir -p "$ICONS_512_DIR"
+    echo "$ICONS_512_DIR did not exist. We created it for you."
+fi
+
+SRC_ICONS_PATH="$THIS_DIR/icons"
+cp "$SRC_ICONS_PATH/512x512/software.Browsers.png" "$ICONS_DIR/512x512/software.Browsers.png"
+
+I18N_DIR="$RESOURCES_DIR/i18n"
+if [ ! -d "$I18N_DIR" ]; then
+    mkdir -p "$I18N_DIR"
+    echo "$I18N_DIR did not exist. We created it for you."
+fi
+
+I18N_EN_US_DIR="$I18N_DIR/en-US"
+if [ ! -d "$I18N_EN_US_DIR" ]; then
+    mkdir -p "$I18N_EN_US_DIR"
+    echo "$I18N_EN_US_DIR did not exist. We created it for you."
+fi
+
+SRC_I18N_PATH="$THIS_DIR/i18n"
+cp "$SRC_I18N_PATH/en-US/builtin.ftl" "$I18N_DIR/en-US/builtin.ftl"
 
 # armv7l, (arm64 on macos), aarch64, x86_64
 ARCH="$(uname -m)"
@@ -39,8 +93,6 @@ xdg-icon-resource install --novendor --size 128 icons/128x128/software.Browsers.
 xdg-icon-resource install --novendor --size 256 icons/256x256/software.Browsers.png
 xdg-icon-resource install --novendor --size 512 icons/512x512/software.Browsers.png
 
-# Use XDG_DATA_HOME or default to $HOME/.local/share if it's missing
-XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 # $HOME/.local/share/applications
 TARGET_DESKTOP_DIR_PATH="$XDG_DATA_HOME/applications"
 

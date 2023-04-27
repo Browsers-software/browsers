@@ -51,7 +51,12 @@ impl OsHelper {
             .flat_map(|(app_infos, domains)| {
                 let app_info_and_domains: Vec<(AppInfo, Vec<String>)> = app_infos
                     .iter()
-                    .map(|app_info| (app_info.clone(), domains.clone()))
+                    .map(|app_info| {
+                        (
+                            app_info.clone(),
+                            domains.clone(),
+                        )
+                    })
                     .collect();
                 app_info_and_domains
             })
@@ -78,7 +83,11 @@ impl OsHelper {
         let command_with_field_codes = option.unwrap();
         let command_str = command_with_field_codes.to_str().unwrap();
         let command_str = str::replace(command_str, " %u", "");
-        let mut command_str = str::replace(command_str.as_str(), " %U", "");
+        let mut command_str = str::replace(
+            command_str.as_str(),
+            " %U",
+            "",
+        );
 
         // handle snap packages in a very naive way; TODO: VERY FRAGILE
 
@@ -131,9 +140,10 @@ impl OsHelper {
             return None;
         }
 
-        let supported_app = self
-            .app_repository
-            .get_or_generate(id.as_str(), &restricted_domains);
+        let supported_app = self.app_repository.get_or_generate(
+            id.as_str(),
+            &restricted_domains,
+        );
 
         let string1 = app_info.display_name();
         let display_name = string1.as_str();
@@ -145,7 +155,10 @@ impl OsHelper {
             .map(|icon| find_icon_path(&self.icon_theme, &icon))
             .unwrap_or(String::from("unknown_icon"));
 
-        let profiles = supported_app.find_profiles(executable_path.clone(), is_snap);
+        let profiles = supported_app.find_profiles(
+            executable_path.clone(),
+            is_snap,
+        );
 
         let browser = InstalledBrowser {
             executable_path: executable_path.to_str().unwrap().to_string(),
@@ -174,7 +187,11 @@ fn find_icon_path(icon_theme: &Arc<Mutex<IconTheme>>, icon: &impl IsA<gio::Icon>
     let icon_theme2 = icon_theme.lock().unwrap();
 
     let icon_info = icon_theme2
-        .lookup_by_gicon(icon, 48, IconLookupFlags::USE_BUILTIN)
+        .lookup_by_gicon(
+            icon,
+            48,
+            IconLookupFlags::USE_BUILTIN,
+        )
         .unwrap();
 
     // to support scaled resolutions
@@ -192,12 +209,26 @@ fn find_icon_path(icon_theme: &Arc<Mutex<IconTheme>>, icon: &impl IsA<gio::Icon>
 
 // $HOME/.local/share/software.Browsers
 pub fn get_this_app_config_root_dir() -> PathBuf {
+    // TODO: change from .local/share/software.Browsers
+    //       to .config/software.Browsers (/config.json) ?
+    // return get_this_app_xdg_config_dir();
     return get_this_app_xdg_data_dir();
 }
 
 // $HOME/.local/share/software.Browsers
+pub fn get_this_app_data_dir() -> PathBuf {
+    return get_this_app_xdg_data_dir();
+}
+
+// $HOME/.config/software.Browsers
+fn get_this_app_xdg_config_dir() -> PathBuf {
+    // $XDG_CONFIG_HOME or $HOME/.config
+    return dirs::config_dir().unwrap().join(XDG_NAME);
+}
+
+// $HOME/.local/share/software.Browsers
 fn get_this_app_xdg_data_dir() -> PathBuf {
-    // $XDG_STATE_HOME or $HOME/.local/state
+    // $XDG_DATA_HOME or $HOME/.local/share
     return dirs::data_dir().unwrap().join(XDG_NAME);
 }
 

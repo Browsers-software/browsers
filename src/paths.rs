@@ -82,9 +82,9 @@ pub fn get_resources_basedir() -> PathBuf {
     return app_bundle_dir.join("Contents").join("Resources");
 }
 
-// TODO: find the best path for resources of a linux app
+// $HOME/.local/share/software.Browsers/resources
 #[cfg(target_os = "linux")]
 pub fn get_resources_basedir() -> PathBuf {
-    let basedir = "./resources".to_string();
-    PathBuf::from(basedir.as_str())
+    let app_config_root_dir = linux_utils::get_this_app_data_dir();
+    return app_config_root_dir.join("resources");
 }
