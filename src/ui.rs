@@ -649,20 +649,25 @@ fn show_about_dialog(ctx: &mut DelegateCtx) {
     let logs_root_dir = paths::get_logs_root_dir().join("");
     let logs_root_dir = logs_root_dir.as_path().to_str().unwrap().to_string();
 
+    let resources_root_dir = paths::get_resources_basedir().join("");
+    let resources_root_dir = resources_root_dir.as_path().to_str().unwrap().to_string();
+
     let paths_row = Flex::row()
         .with_child(
             Flex::column()
                 .cross_axis_alignment(CrossAxisAlignment::End)
                 .with_child(Label::new("Config").with_text_size(8.0))
                 .with_child(Label::new("Cache").with_text_size(8.0))
-                .with_child(Label::new("Logs").with_text_size(8.0)),
+                .with_child(Label::new("Logs").with_text_size(8.0))
+                .with_child(Label::new("Resources").with_text_size(8.0)),
         )
         .with_child(
             Flex::column()
                 .cross_axis_alignment(CrossAxisAlignment::Start)
                 .with_child(Label::new(config_root_dir).with_text_size(8.0))
                 .with_child(Label::new(cache_root_dir).with_text_size(8.0))
-                .with_child(Label::new(logs_root_dir).with_text_size(8.0)),
+                .with_child(Label::new(logs_root_dir).with_text_size(8.0))
+                .with_child(Label::new(resources_root_dir).with_text_size(8.0)),
         );
 
     let col = Flex::column()
@@ -679,7 +684,7 @@ fn show_about_dialog(ctx: &mut DelegateCtx) {
         .with_flex_spacer(1.0)
         .background(Color::from_hex_str("1b2020").unwrap());
 
-    let size = Size::new(285.0, 200.0);
+    let size = Size::new(340.0, 220.0);
     let (_, monitor) = druid::Screen::get_mouse_position();
     let screen_rect = monitor.virtual_work_rect();
 
