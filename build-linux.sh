@@ -59,6 +59,7 @@ make_archives() {
     './icons/256x256/software.Browsers.png'
     './icons/512x512/software.Browsers.png'
     './software.Browsers.template.desktop'
+    './i18n/en-US/builtin.ftl'
     './install.sh'
   )
 
