@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.7] - 2023-04-28
+
+### Fixed
+
+- Linux: Use the full binary path in software.Browsers.desktop, because many distros don't have $HOME/.local/bin in PATH
+- Linux: Include icon in About dialog and translations
+- Linux: Move config file from $HOME/.local/share/software.Browsers/config.json to
+  $HOME/.config/software.Browsers/config.json
+
 ## [0.2.6] - 2023-04-27
 
 ### Fixed
@@ -56,7 +65,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial Release
 
-[unreleased]: https://github.com/Browsers-software/browsers/compare/0.2.6...HEAD
+[unreleased]: https://github.com/Browsers-software/browsers/compare/0.2.7...HEAD
+[0.2.7]: https://github.com/Browsers-software/browsers/releases/tag/0.2.7
 [0.2.6]: https://github.com/Browsers-software/browsers/releases/tag/0.2.6
 [0.2.5]: https://github.com/Browsers-software/browsers/releases/tag/0.2.5
 [0.2.4]: https://github.com/Browsers-software/browsers/releases/tag/0.2.4
