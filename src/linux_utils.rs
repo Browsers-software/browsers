@@ -1,6 +1,8 @@
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
+use tracing::info;
+
 use glib::prelude::AppInfoExt;
 use glib::AppInfo;
 use gtk::prelude::*;
@@ -40,6 +42,10 @@ impl OsHelper {
     ) -> Vec<InstalledBrowser> {
         let mut browsers: Vec<InstalledBrowser> = Vec::new();
 
+        let cache_root_dir = get_this_app_cache_root_dir();
+        let icons_root_dir = cache_root_dir.join("icons");
+        fs::create_dir_all(icons_root_dir.as_path()).unwrap();
+
         let app_infos: Vec<(AppInfo, Vec<String>)> = schemes
             .iter()
             .map(|(scheme, domains)| {
@@ -51,19 +57,15 @@ impl OsHelper {
             .flat_map(|(app_infos, domains)| {
                 let app_info_and_domains: Vec<(AppInfo, Vec<String>)> = app_infos
                     .iter()
-                    .map(|app_info| {
-                        (
-                            app_info.clone(),
-                            domains.clone(),
-                        )
-                    })
+                    .map(|app_info| (app_info.clone(), domains.clone()))
                     .collect();
                 app_info_and_domains
             })
             .collect();
 
         for (app_info, domains) in app_infos {
-            let browser_maybe = self.to_installed_browser(app_info, domains);
+            let browser_maybe =
+                self.to_installed_browser(app_info, icons_root_dir.as_path(), domains);
             if let Some(browser) = browser_maybe {
                 browsers.push(browser);
             }
@@ -75,6 +77,7 @@ impl OsHelper {
     fn to_installed_browser(
         &self,
         app_info: AppInfo,
+        icons_root_dir: &Path,
         restricted_domains: Vec<String>,
     ) -> Option<InstalledBrowser> {
         let option = app_info.commandline();
@@ -83,11 +86,7 @@ impl OsHelper {
         let command_with_field_codes = option.unwrap();
         let command_str = command_with_field_codes.to_str().unwrap();
         let command_str = str::replace(command_str, " %u", "");
-        let mut command_str = str::replace(
-            command_str.as_str(),
-            " %U",
-            "",
-        );
+        let mut command_str = str::replace(command_str.as_str(), " %U", "");
 
         // handle snap packages in a very naive way; TODO: VERY FRAGILE
 
@@ -140,25 +139,25 @@ impl OsHelper {
             return None;
         }
 
-        let supported_app = self.app_repository.get_or_generate(
-            id.as_str(),
-            &restricted_domains,
-        );
+        let supported_app = self
+            .app_repository
+            .get_or_generate(id.as_str(), &restricted_domains);
+
+        let icon_filename = bundle_id.to_string() + ".png";
+        let full_stored_icon_path = icons_root_dir.join(icon_filename);
 
         let string1 = app_info.display_name();
         let display_name = string1.as_str();
         let _string = app_info.to_string();
         //println!("app_info: {}", id);
 
-        let icon_path_str = app_info
-            .icon()
-            .map(|icon| find_icon_path(&self.icon_theme, &icon))
-            .unwrap_or(String::from("unknown_icon"));
+        let icon_path_str = full_stored_icon_path.display().to_string();
 
-        let profiles = supported_app.find_profiles(
-            executable_path.clone(),
-            is_snap,
-        );
+        if let Some(icon) = app_info.icon() {
+            create_icon_for_app(&self.icon_theme, &icon, icon_path_str.as_str())
+        }
+
+        let profiles = supported_app.find_profiles(executable_path.clone(), is_snap);
 
         let browser = InstalledBrowser {
             executable_path: executable_path.to_str().unwrap().to_string(),
@@ -175,7 +174,11 @@ impl OsHelper {
     }
 }
 
-fn find_icon_path(icon_theme: &Arc<Mutex<IconTheme>>, icon: &impl IsA<gio::Icon>) -> String {
+fn create_icon_for_app(
+    icon_theme: &Arc<Mutex<IconTheme>>,
+    icon: &impl IsA<gio::Icon>,
+    to_icon_path: &str,
+) {
     // icon.to_string() returns either file path or icon name in theme
     // so not using that
     // https://lazka.github.io/pgi-docs/Gio-2.0/interfaces/Icon.html#Gio.Icon.to_string
@@ -187,24 +190,31 @@ fn find_icon_path(icon_theme: &Arc<Mutex<IconTheme>>, icon: &impl IsA<gio::Icon>
     let icon_theme2 = icon_theme.lock().unwrap();
 
     let icon_info = icon_theme2
-        .lookup_by_gicon(
-            icon,
-            48,
-            IconLookupFlags::USE_BUILTIN,
-        )
+        .lookup_by_gicon(icon, 48, IconLookupFlags::USE_BUILTIN)
         .unwrap();
 
     // to support scaled resolutions
     //let icon_info = icon_theme.lookup_by_gicon_for_scale(&icon, 128, 1,IconLookupFlags::USE_BUILTIN).unwrap();
 
     // or load_icon() to get PixBuf
-    let icon_filepath = icon_info.filename().unwrap();
+    let original_icon_filepath = icon_info.filename().unwrap();
+    let original_icon_path_str = original_icon_filepath
+        .as_path()
+        .to_str()
+        .unwrap()
+        .to_string();
 
-    let icon_path_str = icon_filepath.as_path().to_str().unwrap().to_string();
+    let icon_pixbuf_result = icon_info.load_icon();
+    if icon_pixbuf_result.is_err() {
+        return;
+    }
+    let pixbuf = icon_pixbuf_result.unwrap();
+    let result = pixbuf.savev(to_icon_path, "png", vec![]);
+    if result.is_err() {
+        return;
+    }
 
-    // either file path or themed icon name
-    println!("icon: {}", icon_path_str);
-    return icon_path_str;
+    info!("icon: from {} to {}", original_icon_path_str, to_icon_path);
 }
 
 // $HOME/.config/software.Browsers

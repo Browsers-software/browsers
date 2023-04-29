@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Linux: Convert .svg icons and cache all used icons as png.
+
 ## [0.2.7] - 2023-04-28
 
 ### Fixed
