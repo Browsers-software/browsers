@@ -14,9 +14,6 @@ build_binary() {
   # Set minimum macOS version to support older OS versions
   export MACOSX_DEPLOYMENT_TARGET=10.7
 
-  # Workaround issue where wrong toolkit is picked up
-  export CXXFLAGS=-stdlib=libc++
-
   # Clean universal binary and app bundle
   rm -rf "${target_dir:?}/"
 

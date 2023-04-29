@@ -110,13 +110,11 @@ jobs:
       - name: Test x86_64 binary
         run: |
           export MACOSX_DEPLOYMENT_TARGET=10.7
-          export CXXFLAGS=-stdlib=libc++
           cargo build --target x86_64-apple-darwin --release
         shell: bash
       - name: Test aarch64 binaries
         run: |
           export MACOSX_DEPLOYMENT_TARGET=10.7
-          export CXXFLAGS=-stdlib=libc++
           cargo build --target aarch64-apple-darwin --release
         shell: bash
       - name: Build Universal Binary
