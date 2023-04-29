@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.8] - 2023-04-30
+
 ### Fixed
 
 - Linux: Convert .svg icons and cache all used icons as png.
@@ -69,7 +71,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial Release
 
-[unreleased]: https://github.com/Browsers-software/browsers/compare/0.2.7...HEAD
+[unreleased]: https://github.com/Browsers-software/browsers/compare/0.2.8...HEAD
+[0.2.8]: https://github.com/Browsers-software/browsers/releases/tag/0.2.8
 [0.2.7]: https://github.com/Browsers-software/browsers/releases/tag/0.2.7
 [0.2.6]: https://github.com/Browsers-software/browsers/releases/tag/0.2.6
 [0.2.5]: https://github.com/Browsers-software/browsers/releases/tag/0.2.5
