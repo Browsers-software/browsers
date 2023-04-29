@@ -21,7 +21,7 @@ tracing-appender = "0.2"
 
 rolling-file = "0.2.0"
 
-dirs = "4.0"
+dirs = "5.0.0"
 
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
