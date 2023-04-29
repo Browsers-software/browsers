@@ -1,12 +1,12 @@
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
-
-use tracing::info;
 
 use glib::prelude::AppInfoExt;
 use glib::AppInfo;
 use gtk::prelude::*;
 use gtk::{gio, IconLookupFlags, IconTheme};
+use tracing::info;
 
 use crate::{InstalledBrowser, SupportedAppRepository};
 
@@ -143,7 +143,7 @@ impl OsHelper {
             .app_repository
             .get_or_generate(id.as_str(), &restricted_domains);
 
-        let icon_filename = bundle_id.to_string() + ".png";
+        let icon_filename = id.to_string() + ".png";
         let full_stored_icon_path = icons_root_dir.join(icon_filename);
 
         let string1 = app_info.display_name();
@@ -209,7 +209,7 @@ fn create_icon_for_app(
         return;
     }
     let pixbuf = icon_pixbuf_result.unwrap();
-    let result = pixbuf.savev(to_icon_path, "png", vec![]);
+    let result = pixbuf.savev(to_icon_path, "png", &[]);
     if result.is_err() {
         return;
     }
