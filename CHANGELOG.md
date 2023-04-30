@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.9] - 2023-05-01
+
+### Fixed
+
+- Run only single instance of Browsers.
+
 ## [0.2.8] - 2023-04-30
 
 ### Fixed
@@ -71,7 +77,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial Release
 
-[unreleased]: https://github.com/Browsers-software/browsers/compare/0.2.8...HEAD
+[unreleased]: https://github.com/Browsers-software/browsers/compare/0.2.9...HEAD
+[0.2.9]: https://github.com/Browsers-software/browsers/releases/tag/0.2.9
 [0.2.8]: https://github.com/Browsers-software/browsers/releases/tag/0.2.8
 [0.2.7]: https://github.com/Browsers-software/browsers/releases/tag/0.2.7
 [0.2.6]: https://github.com/Browsers-software/browsers/releases/tag/0.2.6

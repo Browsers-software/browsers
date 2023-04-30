@@ -2,10 +2,11 @@ use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::process::Command;
 use std::str::FromStr;
+use std::sync::mpsc::{Receiver, Sender};
 use std::sync::{mpsc, Arc};
 use std::{env, thread};
 
-use druid::{ExtEventSink, Target};
+use druid::{ExtEventSink, Target, UrlOpenInfo};
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info, warn};
 use url::Url;
@@ -31,6 +32,8 @@ mod macos;
 
 #[cfg(target_os = "linux")]
 mod linux_utils;
+
+pub mod communicate;
 
 mod chromium_profiles_parser;
 mod firefox_profiles_parser;
@@ -368,7 +371,7 @@ fn generate_all_browser_profiles(
 
 fn get_rule_for_source_app_and_url<'a>(
     opening_rules: &'a Vec<OpeningRule>,
-    url: &String,
+    url: &str,
     source_app_maybe: Option<String>,
 ) -> Option<&'a OpeningRule> {
     let url_result = Url::from_str(url);
@@ -437,19 +440,13 @@ fn get_browser_profile_by_id<'a>(
     return None;
 }
 
-pub fn basically_main() {
-    let args: Vec<String> = env::args().collect();
-    //info!("{:?}", args);
-
-    let mut url = "".to_string();
-    let url_input_maybe = args.iter().find(|i| i.starts_with("http"));
-    if let Some(url_input) = url_input_maybe {
-        url = url_input.to_string();
-    }
-
-    let show_gui = !args.contains(&"--no-gui".to_string());
-    let force_reload = args.contains(&"--reload".to_string());
-
+pub fn basically_main(
+    url: &str,
+    show_gui: bool,
+    force_reload: bool,
+    main_sender: Sender<MessageToMain>,
+    main_receiver: Receiver<MessageToMain>,
+) {
     let app_finder = OSAppFinder::new();
 
     let is_default = utils::set_as_default_web_browser();
@@ -460,7 +457,7 @@ pub fn basically_main() {
 
     // TODO: url should not be considered here in case of macos
     //       and only the one in LinkOpenedFromBundle should be considered
-    let opening_rule_maybe = get_rule_for_source_app_and_url(&opening_rules, &url, None);
+    let opening_rule_maybe = get_rule_for_source_app_and_url(&opening_rules, url, None);
     if let Some(opening_rule) = opening_rule_maybe {
         let profile_id = opening_rule.profile.clone();
 
@@ -470,19 +467,17 @@ pub fn basically_main() {
             profile_id.as_str(),
         );
         if let Some(profile) = profile_maybe {
-            profile.open_link(url.as_str(), false);
+            profile.open_link(url, false);
             return;
         }
     }
 
     let localizations_basedir = paths::get_localizations_basedir();
 
-    let (main_sender, main_receiver) = mpsc::channel::<MessageToMain>();
-
     let ui2 = UI::new(
         localizations_basedir,
-        main_sender,
-        url.as_str(),
+        main_sender.clone(),
+        url,
         UI::real_to_ui_browsers(visible_browser_profiles.as_slice()),
         UI::real_to_ui_browsers(hidden_browser_profiles.as_slice()),
         show_set_as_default,
@@ -516,6 +511,15 @@ pub fn basically_main() {
                         )
                         .ok();
                 }
+                MessageToMain::UrlOpenRequest(from_bundle_id, url) => {
+                    let url_open_info = UrlOpenInfo {
+                        url: url,
+                        source_bundle_id: from_bundle_id,
+                    };
+                    ui_event_sink
+                        .submit_command(ui::URL_OPENED, url_open_info, Target::Global)
+                        .ok();
+                }
                 MessageToMain::LinkOpenedFromBundle(from_bundle_id, url) => {
                     // TODO: do something once we have rules to
                     //       prioritize/default browsers based on source app and/or url
@@ -523,7 +527,7 @@ pub fn basically_main() {
                     debug!("url: {}", url);
                     let opening_rule_maybe = get_rule_for_source_app_and_url(
                         &opening_rules,
-                        &url,
+                        url.as_str(),
                         Some(from_bundle_id.clone()),
                     );
                     if let Some(opening_rule) = opening_rule_maybe {
@@ -760,6 +764,7 @@ fn move_app_profile(
 pub enum MessageToMain {
     Refresh,
     OpenLink(usize, bool, String),
+    UrlOpenRequest(String, String), // almost as LinkOpenedFromBundle, but triggers ui, not from ui
     LinkOpenedFromBundle(String, String),
     SetBrowsersAsDefaultBrowser,
     HideAppProfile(String),

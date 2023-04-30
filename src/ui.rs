@@ -492,16 +492,13 @@ impl AppDelegate<UIState> for UIDelegate {
 
             // Immediately update window position (so it appears where user clicked).
             let sink = ctx.get_external_handle();
-            sink.submit_command(
-                CONFIGURE_WINDOW_POSITION,
-                window_position,
-                Target::Window(self.main_window_id),
-            )
-            .unwrap();
+            let target_window = Target::Window(self.main_window_id);
+            sink.submit_command(CONFIGURE_WINDOW_POSITION, window_position, target_window)
+                .unwrap();
 
             // After current event has been handled, bring the window to the front, and give it focus.
             // Normally not needed, but if About menu was opened, then window would not have appeared
-            ctx.submit_command(SHOW_WINDOW.to(Target::Window(self.main_window_id)));
+            ctx.submit_command(SHOW_WINDOW.to(target_window));
 
             self.main_sender
                 .send(MessageToMain::LinkOpenedFromBundle(
