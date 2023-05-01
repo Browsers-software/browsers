@@ -316,6 +316,12 @@ fn get_bundle_path(bundle_id: &str) -> PathBuf {
     return PathBuf::from(bundle_path.as_str());
 }
 
+// ~/Library/Caches/software.Browsers/runtime/
+pub fn get_this_app_runtime_dir() -> PathBuf {
+    return get_this_app_cache_root_dir().join("runtime");
+}
+
+// ~/Library/Caches/software.Browsers/
 pub fn get_this_app_cache_root_dir() -> PathBuf {
     let cache_dir_root = macos_get_caches_dir();
     return cache_dir_root.join(APP_DIR_NAME);
