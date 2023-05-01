@@ -201,7 +201,7 @@ dependencies = [
 
 [[package]]
 name = "browsers"
-version = "0.2.8"
+version = "0.2.9"
 dependencies = [
  "attohttpc",
  "clap",
