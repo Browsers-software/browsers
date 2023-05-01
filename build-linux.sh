@@ -25,12 +25,14 @@ build() {
   mkdir -p "$target_dir/icons/512x512"
   mkdir -p "$target_dir/i18n"
   mkdir -p "$target_dir/i18n/en-US"
+  mkdir -p "$target_dir/xfce4/helpers"
 
   cp "target/x86_64-unknown-linux-gnu/release/browsers" "$target_dir/x86_64/browsers"
   cp "target/aarch64-unknown-linux-gnu/release/browsers" "$target_dir/aarch64/browsers"
 
   cp "extra/linux/dist/install.sh" "$target_dir/install.sh"
   cp "extra/linux/dist/software.Browsers.template.desktop" "$target_dir/software.Browsers.template.desktop"
+  cp "extra/linux/dist/xfce4/helpers/software.Browsers.template.desktop" "$target_dir/xfce4/helpers/software.Browsers.template.desktop"
 
   cp "resources/icons/16x16/software.Browsers.png" "$target_dir/icons/16x16/software.Browsers.png"
   cp "resources/icons/32x32/software.Browsers.png" "$target_dir/icons/32x32/software.Browsers.png"
@@ -59,6 +61,7 @@ make_archives() {
     './icons/256x256/software.Browsers.png'
     './icons/512x512/software.Browsers.png'
     './software.Browsers.template.desktop'
+    './xfce4/helpers/software.Browsers.template.desktop'
     './i18n/en-US/builtin.ftl'
     './install.sh'
   )

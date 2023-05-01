@@ -82,6 +82,24 @@ SOURCE_DESKTOP_FILE_PATH="$THIS_DIR/software.Browsers.desktop"
 
 sed "s|€ExecCommand€|$TARGET_BINARY_PATH %u|g" "$TEMPLATE_DESKTOP_FILE_PATH" > "$SOURCE_DESKTOP_FILE_PATH"
 
+TEMPLATE_XFCE4_DESKTOP_FILE_PATH="$THIS_DIR/xfce4/helpers/software.Browsers.template.desktop"
+SOURCE_XFCE4_DESKTOP_FILE_PATH="$THIS_DIR/xfce4/helpers/software.Browsers.desktop"
+
+sed "s|€XFCEBinaries€|browsers;$TARGET_BINARY_PATH;|g" "$TEMPLATE_XFCE4_DESKTOP_FILE_PATH" > "$SOURCE_XFCE4_DESKTOP_FILE_PATH"
+
+# ~/.local/share/xfce4/helpers
+TARGET_XFCE4_HELPERS_DIR="$XDG_DATA_HOME/xfce4/helpers"
+if [ ! -f "$TARGET_XFCE4_HELPERS_DIR" ]; then
+    mkdir -p "$TARGET_XFCE4_HELPERS_DIR"
+    echo "$TARGET_XFCE4_HELPERS_DIR did not exist. We created it for you."
+fi
+
+TARGET_XFCE4_DESKTOP_FILE_PATH="$TARGET_XFCE4_HELPERS_DIR/software.Browsers.desktop"
+
+# XFCE4 .desktop file adds Browsers as an option in Default Browsers select list
+# ~/.local/share/xfce4/helpers/software.Browsers.desktop
+cp "$SOURCE_XFCE4_DESKTOP_FILE_PATH" "$TARGET_XFCE4_DESKTOP_FILE_PATH"
+
 # Copy binary to $HOME/.local/bin
 cp "$SRC_BINARY_PATH" "$TARGET_BINARY_PATH"
 
