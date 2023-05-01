@@ -92,3 +92,13 @@ pub fn get_resources_basedir() -> PathBuf {
     let app_config_root_dir = linux_utils::get_this_app_data_dir();
     return app_config_root_dir.join("resources");
 }
+
+#[cfg(target_os = "linux")]
+pub fn get_runtime_dir() -> PathBuf {
+    return linux_utils::get_this_app_runtime_dir();
+}
+
+#[cfg(target_os = "macos")]
+pub fn get_runtime_dir() -> PathBuf {
+    return macos_utils::get_this_app_runtime_dir();
+}

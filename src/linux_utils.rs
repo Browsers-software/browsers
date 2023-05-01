@@ -2,11 +2,13 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
+use dirs::home_dir;
+use tracing::info;
+
 use glib::prelude::AppInfoExt;
 use glib::AppInfo;
 use gtk::prelude::*;
 use gtk::{gio, IconLookupFlags, IconTheme};
-use tracing::info;
 
 use crate::{InstalledBrowser, SupportedAppRepository};
 
@@ -225,6 +227,17 @@ pub fn get_this_app_config_root_dir() -> PathBuf {
 // $HOME/.local/share/software.Browsers
 pub fn get_this_app_data_dir() -> PathBuf {
     return get_this_app_xdg_data_dir();
+}
+
+// /run/user/1001/software.Browsers/
+pub fn get_this_app_runtime_dir() -> PathBuf {
+    // Either $XDG_RUNTIME_DIR (/run/user/1001/)
+    // or $XDG_CACHE_HOME
+    // or $HOME/.cache
+    dirs::runtime_dir()
+        .or_else(|| dirs::cache_dir())
+        .unwrap()
+        .join(XDG_NAME)
 }
 
 // $HOME/.config/software.Browsers
