@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Icon=software.Browsers
+Name=Browsers
+Type=X-XFCE-Helper
+StartupNotify=false
+NoDisplay=true
+Encoding=UTF-8
+X-XFCE-Binaries=€XFCEBinaries€
+X-XFCE-Category=WebBrowser
+X-XFCE-Commands=%B;
+X-XFCE-CommandsWithParameter=%B "%s";
