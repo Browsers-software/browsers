@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Run only single instance of Browsers.
+- Run only single instance of Browsers. Fixes #15
 
 ## [0.2.8] - 2023-04-30
 
