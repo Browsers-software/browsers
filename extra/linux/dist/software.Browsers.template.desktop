@@ -2,6 +2,7 @@
 Type=Application
 Terminal=false
 Name=Browsers
+Comment=Open the right browser at the right time
 Icon=software.Browsers
 Categories=Network;WebBrowser;
 MimeType=x-scheme-handler/http;x-scheme-handler/https;
