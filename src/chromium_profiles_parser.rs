@@ -144,13 +144,10 @@ impl ChromeProfileAttributesEntry {
             None
         };
 
-        let image_url_maybe = self.get_last_downloaded_gaia_picture_url_with_size();
-
         return ChromeProfilePreferences {
             profile_dir_name: self.profile_dir.to_string(),
             name: best_name.to_string(),
             local_image_file_name: image_file_name_maybe,
-            image_url: image_url_maybe,
         };
     }
 
@@ -308,5 +305,4 @@ pub struct ChromeProfilePreferences {
     pub profile_dir_name: String,
     pub name: String,
     pub local_image_file_name: Option<String>,
-    pub image_url: Option<String>,
 }
