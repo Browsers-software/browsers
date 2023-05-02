@@ -1,6 +1,6 @@
 use std::fs;
 use std::fs::File;
-use std::io::BufReader;
+use std::io::{BufReader, Read};
 use std::path::Path;
 
 use serde_json::{Map, Value};
@@ -29,27 +29,36 @@ pub fn find_chromium_profiles(
     for profile in profiles {
         let profile_name = profile.name;
 
-        let profile_icon_path = profile
-            .image_url
-            .map(|url| {
-                let cache_root_dir = paths::get_cache_root_dir();
-                let profiles_icons_root_dir = cache_root_dir.join("icons").join("profiles");
-                fs::create_dir_all(profiles_icons_root_dir.as_path()).unwrap();
-                let profiles_icons_root = profiles_icons_root_dir.join(app_id);
-                fs::create_dir_all(profiles_icons_root.as_path()).unwrap();
-                let profile_icon_path_without_extension =
-                    profiles_icons_root.join(profile_name.to_string());
+        let profile_dir = chromium_user_dir.join(profile.profile_dir_name.as_str());
 
-                return Url::parse(url.as_str())
-                    .ok()
-                    .and_then(|remote_url| {
-                        utils::download_profile_images(
-                            &remote_url,
-                            profile_icon_path_without_extension.as_path(),
-                        )
-                        .ok()
-                    })
-                    .map(|path| path.to_str().unwrap().to_string());
+        let cache_root_dir = paths::get_cache_root_dir();
+        let profiles_icons_root_dir = cache_root_dir.join("icons").join("profiles");
+        fs::create_dir_all(profiles_icons_root_dir.as_path()).unwrap();
+        let profiles_icons_root = profiles_icons_root_dir.join(app_id);
+        fs::create_dir_all(profiles_icons_root.as_path()).unwrap();
+
+        let profile_icon_path = profile
+            .local_image_file_name
+            .map(|image_file_name| {
+                let image_file_path = profile_dir.join(image_file_name);
+                if image_file_path.exists() {
+                    let png_file = File::open(image_file_path.as_path()).unwrap();
+                    let mut png_file_reader = BufReader::new(png_file);
+                    let mut buffer = Vec::new();
+                    // Read file into vector
+                    let result = png_file_reader.read_to_end(&mut buffer);
+                    if result.is_err() {
+                        return None;
+                    }
+
+                    let to_filename = profile_name.to_string() + ".png";
+                    let png_file_path = profiles_icons_root.join(to_filename);
+                    utils::save_as_circular(buffer, png_file_path.as_path());
+
+                    Some(png_file_path.to_str().unwrap().to_string())
+                } else {
+                    None
+                }
             })
             .flatten();
 
@@ -127,13 +136,31 @@ impl ChromeProfileAttributesEntry {
         all_entries: &Vec<ChromeProfileAttributesEntry>,
     ) -> ChromeProfilePreferences {
         let best_name = self.get_name(all_entries);
+
+        let is_using_gaia_picture = self.is_using_gaia_picture();
+        let image_file_name_maybe = if is_using_gaia_picture {
+            self.get_gaia_picture_file_name()
+        } else {
+            None
+        };
+
         let image_url_maybe = self.get_last_downloaded_gaia_picture_url_with_size();
 
         return ChromeProfilePreferences {
             profile_dir_name: self.profile_dir.to_string(),
             name: best_name.to_string(),
+            local_image_file_name: image_file_name_maybe,
             image_url: image_url_maybe,
         };
+    }
+
+    fn is_using_gaia_picture(&self) -> bool {
+        if self.use_gaia_picture() {
+            return true;
+        }
+        // Prefer the GAIA avatar over a non-customized avatar.
+        // TODO: chrome also actually checks if file really exists
+        return self.is_using_default_avatar() && self.get_gaia_picture_file_name().is_some();
     }
 
     // chrome/browser/profiles/profile_attributes_entry.cc#ProfileAttributesEntry::GetName()
@@ -248,8 +275,24 @@ impl ChromeProfileAttributesEntry {
             .unwrap_or(false)
     }
 
+    fn is_using_default_avatar(&self) -> bool {
+        self.profile["is_using_default_avatar"]
+            .as_bool()
+            .unwrap_or(false)
+    }
+
+    fn use_gaia_picture(&self) -> bool {
+        self.profile["use_gaia_picture"].as_bool().unwrap_or(false)
+    }
+
     fn get_last_downloaded_gaia_picture_url_with_size(&self) -> Option<String> {
         self.profile["last_downloaded_gaia_picture_url_with_size"]
+            .as_str()
+            .map(|a| a.to_string())
+    }
+
+    fn get_gaia_picture_file_name(&self) -> Option<String> {
+        self.profile["gaia_picture_file_name"]
             .as_str()
             .map(|a| a.to_string())
     }
@@ -264,5 +307,6 @@ enum ChromeNameForm {
 pub struct ChromeProfilePreferences {
     pub profile_dir_name: String,
     pub name: String,
+    pub local_image_file_name: Option<String>,
     pub image_url: Option<String>,
 }
