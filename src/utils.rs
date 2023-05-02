@@ -302,47 +302,31 @@ lazy_static! {
     };
 }
 
-pub fn download_profile_images(
-    remote_url: &Url,
-    local_icon_path_without_extension: &Path,
-) -> Result<PathBuf, io::Error> {
-    let response = attohttpc::get(remote_url).send().unwrap();
-    if response.is_success() {
-        let vec = response.bytes().unwrap();
-        let result1 = image::load_from_memory(vec.as_slice());
-        let image1 = result1.unwrap();
-        let image1 = image1.resize_exact(
-            CIRCULAR_RADIUS as u32,
-            CIRCULAR_RADIUS as u32,
-            FilterType::Nearest,
-        );
-        let mut image_with_alpha = image1.to_rgba16();
+pub fn save_as_circular(image_bytes: Vec<u8>, to_image_path: &Path) {
+    let vec = image_bytes;
+    let result1 = image::load_from_memory(vec.as_slice());
+    let image1 = result1.unwrap();
+    let image1 = image1.resize_exact(
+        CIRCULAR_RADIUS as u32,
+        CIRCULAR_RADIUS as u32,
+        FilterType::Nearest,
+    );
+    let mut image_with_alpha = image1.to_rgba16();
 
-        //for (x, row) in CIRCULAR_MASK_32.iter().enumerate() {
-        for (x, row) in CIRCULAR_MASK_32_LAZY.iter().enumerate() {
-            for (y, mask) in row.iter().enumerate() {
-                if !mask {
-                    image_with_alpha.put_pixel(x as u32, y as u32, Rgba([122, 0, 0, 122]));
-                }
+    //for (x, row) in CIRCULAR_MASK_32.iter().enumerate() {
+    for (x, row) in CIRCULAR_MASK_32_LAZY.iter().enumerate() {
+        for (y, mask) in row.iter().enumerate() {
+            if !mask {
+                image_with_alpha.put_pixel(x as u32, y as u32, Rgba([122, 0, 0, 122]));
             }
         }
-
-        let png_file_path = local_icon_path_without_extension
-            .to_path_buf()
-            .with_extension("png");
-
-        image_with_alpha
-            .save_with_format(png_file_path.as_path(), ImageFormat::Png)
-            .unwrap();
-
-        debug!("WROTE TO : {:?}", png_file_path.as_path());
-
-        return Ok(png_file_path);
     }
-    debug!("PROFILE ICON: {}", remote_url);
 
-    return Err(io::Error::new(
-        ErrorKind::Other,
-        "could not save profile image",
-    ));
+    let png_file_path = to_image_path.to_path_buf();
+
+    image_with_alpha
+        .save_with_format(png_file_path.as_path(), ImageFormat::Png)
+        .unwrap();
+
+    debug!("WROTE TO : {:?}", png_file_path.as_path());
 }
