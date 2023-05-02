@@ -1,8 +1,9 @@
 use std::fs;
 use std::fs::File;
 use std::io::{BufReader, Read};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
+use druid::piet::TextStorage;
 use serde_json::{Map, Value};
 use tracing::{debug, info};
 use url::Url;
@@ -38,9 +39,9 @@ pub fn find_chromium_profiles(
         fs::create_dir_all(profiles_icons_root.as_path()).unwrap();
 
         let profile_icon_path = profile
-            .local_image_file_name
-            .map(|image_file_name| {
-                let image_file_path = profile_dir.join(image_file_name);
+            .avatar_file_path_relative_to_config
+            .map(|image_file_path_from_config| {
+                let image_file_path = chromium_user_dir.join(image_file_path_from_config);
                 if image_file_path.exists() {
                     let png_file = File::open(image_file_path.as_path()).unwrap();
                     let mut png_file_reader = BufReader::new(png_file);
@@ -137,17 +138,35 @@ impl ChromeProfileAttributesEntry {
     ) -> ChromeProfilePreferences {
         let best_name = self.get_name(all_entries);
 
-        let is_using_gaia_picture = self.is_using_gaia_picture();
-        let image_file_name_maybe = if is_using_gaia_picture {
-            self.get_gaia_picture_file_name()
-        } else {
-            None
-        };
+        let profile_avatar_file_path = self.find_avatar_file_path();
+
+        profile_avatar_file_path.clone().map(|a| {
+            let x1 = a.to_str().unwrap();
+            let x = info!("{}", x1);
+        });
 
         return ChromeProfilePreferences {
             profile_dir_name: self.profile_dir.to_string(),
             name: best_name.to_string(),
-            local_image_file_name: image_file_name_maybe,
+            avatar_file_path_relative_to_config: profile_avatar_file_path,
+        };
+    }
+
+    // avatar file path relative to chrome config dir
+    fn find_avatar_file_path(&self) -> Option<PathBuf> {
+        let is_using_gaia_picture = self.is_using_gaia_picture();
+        let image_file_name_maybe = if is_using_gaia_picture {
+            self.get_gaia_picture_file_name()
+                .map(|filename| PathBuf::from(self.profile_dir.clone()).join(filename))
+        } else {
+            None
+        };
+
+        return if image_file_name_maybe.is_none() {
+            self.get_builtin_avatar_filename()
+                .map(|filename| PathBuf::from("Avatars").join(filename.as_str()))
+        } else {
+            image_file_name_maybe
         };
     }
 
@@ -293,7 +312,110 @@ impl ChromeProfileAttributesEntry {
             .as_str()
             .map(|a| a.to_string())
     }
+
+    fn get_builtin_avatar_filename(&self) -> Option<String> {
+        let index_maybe = self.get_avatar_icon_index();
+        if index_maybe.is_none() {
+            return None;
+        }
+        let index = index_maybe.unwrap();
+        return if index == 26 {
+            // no image exists
+            None
+        } else {
+            let avatar_filename = BUILTIN_AVATARS.get(index);
+            let option = avatar_filename.map(|(a, b)| b.to_string());
+            option
+        };
+    }
+
+    fn get_avatar_icon_index(&self) -> Option<usize> {
+        let prefix = "chrome://theme/IDR_PROFILE_AVATAR_";
+        let prefix_len = prefix.len();
+
+        let option = self.get_avatar_icon();
+        if option.is_none() {
+            return None;
+        }
+        let icon_ref = option.unwrap();
+        let x1 = icon_ref.as_str();
+        let index_str = &x1[prefix_len..];
+        let index = index_str.parse::<usize>().unwrap();
+        Some(index)
+    }
+
+    // "chrome://theme/IDR_PROFILE_AVATAR_26" is the default
+    // "chrome://theme/IDR_PROFILE_AVATAR_34"
+    fn get_avatar_icon(&self) -> Option<String> {
+        self.profile["avatar_icon"].as_str().map(|a| a.to_string())
+    }
+
+    // "default_avatar_fill_color": -15189734,
+    // "profile_highlight_color": -15189734,
 }
+
+// This avatar does not exist on the server, the high res copy is in the build.
+const K_NO_HIGH_RES_AVATAR: &str = "NothingToDownload";
+
+const BUILTIN_AVATARS: [(i32, &str); 56] = [
+    (0, "avatar_generic.png"),
+    (1, "avatar_generic_aqua.png"),
+    (2, "avatar_generic_blue.png"),
+    (3, "avatar_generic_green.png"),
+    (4, "avatar_generic_orange.png"),
+    (5, "avatar_generic_purple.png"),
+    (6, "avatar_generic_red.png"),
+    (7, "avatar_generic_yellow.png"),
+    (8, "avatar_secret_agent.png"),
+    (9, "avatar_superhero.png"),
+    (10, "avatar_volley_ball.png"),
+    (11, "avatar_businessman.png"),
+    (12, "avatar_ninja.png"),
+    (13, "avatar_alien.png"),
+    (14, "avatar_smiley.png"),
+    (15, "avatar_flower.png"),
+    (16, "avatar_pizza.png"),
+    (17, "avatar_soccer.png"),
+    (18, "avatar_burger.png"),
+    (19, "avatar_cat.png"),
+    (20, "avatar_cupcake.png"),
+    (21, "avatar_dog.png"),
+    (22, "avatar_horse.png"),
+    (23, "avatar_margarita.png"),
+    (24, "avatar_note.png"),
+    (25, "avatar_sun_cloud.png"),
+    (26, K_NO_HIGH_RES_AVATAR),
+    // Modern avatar icons:
+    (27, "avatar_origami_cat.png"),
+    (28, "avatar_origami_corgi.png"),
+    (29, "avatar_origami_dragon.png"),
+    (30, "avatar_origami_elephant.png"),
+    (31, "avatar_origami_fox.png"),
+    (32, "avatar_origami_monkey.png"),
+    (33, "avatar_origami_panda.png"),
+    (34, "avatar_origami_penguin.png"),
+    (35, "avatar_origami_pinkbutterfly.png"),
+    (36, "avatar_origami_rabbit.png"),
+    (37, "avatar_origami_unicorn.png"),
+    (38, "avatar_illustration_basketball.png"),
+    (39, "avatar_illustration_bike.png"),
+    (40, "avatar_illustration_bird.png"),
+    (41, "avatar_illustration_cheese.png"),
+    (42, "avatar_illustration_football.png"),
+    (43, "avatar_illustration_ramen.png"),
+    (44, "avatar_illustration_sunglasses.png"),
+    (45, "avatar_illustration_sushi.png"),
+    (46, "avatar_illustration_tamagotchi.png"),
+    (47, "avatar_illustration_vinyl.png"),
+    (48, "avatar_abstract_avocado.png"),
+    (49, "avatar_abstract_cappuccino.png"),
+    (50, "avatar_abstract_icecream.png"),
+    (51, "avatar_abstract_icewater.png"),
+    (52, "avatar_abstract_melon.png"),
+    (53, "avatar_abstract_onigiri.png"),
+    (54, "avatar_abstract_pizza.png"),
+    (55, "avatar_abstract_sandwich.png"),
+];
 
 enum ChromeNameForm {
     GaiaName,
@@ -304,5 +426,5 @@ enum ChromeNameForm {
 pub struct ChromeProfilePreferences {
     pub profile_dir_name: String,
     pub name: String,
-    pub local_image_file_name: Option<String>,
+    pub avatar_file_path_relative_to_config: Option<PathBuf>,
 }
