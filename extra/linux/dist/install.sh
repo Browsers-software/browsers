@@ -44,8 +44,8 @@ if [ ! -d "$ICONS_512_DIR" ]; then
     echo "$ICONS_512_DIR did not exist. We created it for you."
 fi
 
-SRC_ICONS_PATH="$THIS_DIR/icons"
-cp "$SRC_ICONS_PATH/512x512/software.Browsers.png" "$ICONS_DIR/512x512/software.Browsers.png"
+SRC_ICONS_DIR="$THIS_DIR/icons"
+cp "$SRC_ICONS_DIR/512x512/software.Browsers.png" "$ICONS_DIR/512x512/software.Browsers.png"
 
 I18N_DIR="$RESOURCES_DIR/i18n"
 if [ ! -d "$I18N_DIR" ]; then
@@ -59,8 +59,8 @@ if [ ! -d "$I18N_EN_US_DIR" ]; then
     echo "$I18N_EN_US_DIR did not exist. We created it for you."
 fi
 
-SRC_I18N_PATH="$THIS_DIR/i18n"
-cp "$SRC_I18N_PATH/en-US/builtin.ftl" "$I18N_DIR/en-US/builtin.ftl"
+SRC_I18N_DIR="$THIS_DIR/i18n"
+cp "$SRC_I18N_DIR/en-US/builtin.ftl" "$I18N_DIR/en-US/builtin.ftl"
 
 # armv7l, (arm64 on macos), aarch64, x86_64
 ARCH="$(uname -m)"
@@ -83,13 +83,18 @@ SOURCE_DESKTOP_FILE_PATH="$THIS_DIR/software.Browsers.desktop"
 sed "s|€ExecCommand€|$TARGET_BINARY_PATH %u|g" "$TEMPLATE_DESKTOP_FILE_PATH" > "$SOURCE_DESKTOP_FILE_PATH"
 
 TEMPLATE_XFCE4_DESKTOP_FILE_PATH="$THIS_DIR/xfce4/helpers/software.Browsers.template.desktop"
+if [ ! -f "$TEMPLATE_XFCE4_DESKTOP_FILE_PATH" ]; then
+    echo "$TEMPLATE_XFCE4_DESKTOP_FILE_PATH does not exist. Please install manually"
+    exit 1
+fi
+
 SOURCE_XFCE4_DESKTOP_FILE_PATH="$THIS_DIR/xfce4/helpers/software.Browsers.desktop"
 
 sed "s|€XFCEBinaries€|browsers;$TARGET_BINARY_PATH;|g" "$TEMPLATE_XFCE4_DESKTOP_FILE_PATH" > "$SOURCE_XFCE4_DESKTOP_FILE_PATH"
 
 # ~/.local/share/xfce4/helpers
 TARGET_XFCE4_HELPERS_DIR="$XDG_DATA_HOME/xfce4/helpers"
-if [ ! -f "$TARGET_XFCE4_HELPERS_DIR" ]; then
+if [ ! -d "$TARGET_XFCE4_HELPERS_DIR" ]; then
     mkdir -p "$TARGET_XFCE4_HELPERS_DIR"
     echo "$TARGET_XFCE4_HELPERS_DIR did not exist. We created it for you."
 fi
