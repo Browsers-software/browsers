@@ -333,15 +333,16 @@ impl ChromeProfileAttributesEntry {
         let prefix = "chrome://theme/IDR_PROFILE_AVATAR_";
         let prefix_len = prefix.len();
 
-        let option = self.get_avatar_icon();
-        if option.is_none() {
+        let avatar_icon_maybe = self.get_avatar_icon();
+        if avatar_icon_maybe.is_none() {
             return None;
         }
-        let icon_ref = option.unwrap();
-        let x1 = icon_ref.as_str();
-        let index_str = &x1[prefix_len..];
-        let index = index_str.parse::<usize>().unwrap();
-        Some(index)
+        let avatar_icon = avatar_icon_maybe.unwrap();
+        let avatar_icon_str = avatar_icon.as_str();
+        info!("Avatar icon: {}", avatar_icon_str);
+        let index_str = &avatar_icon_str[prefix_len..];
+        let index_result = index_str.parse::<usize>();
+        return index_result.ok();
     }
 
     // "chrome://theme/IDR_PROFILE_AVATAR_26" is the default
