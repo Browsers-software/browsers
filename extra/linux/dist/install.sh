@@ -18,17 +18,25 @@ if [ ! -d "$XDG_DATA_HOME" ]; then
     echo "$XDG_DATA_HOME did not exist. We created it for you."
 fi
 
-# Holds config file and translations
-CONFIG_DIR="$XDG_DATA_HOME/software.Browsers"
-if [ ! -d "$CONFIG_DIR" ]; then
-    mkdir -p "$CONFIG_DIR"
-    echo "$CONFIG_DIR did not exist. We created it for you."
+# Holds binary, icon, translations
+DATA_DIR="$XDG_DATA_HOME/software.Browsers"
+if [ ! -d "$DATA_DIR" ]; then
+    mkdir -p "$DATA_DIR"
+    echo "$DATA_DIR did not exist. We created it for you."
 fi
 
-RESOURCES_DIR="$CONFIG_DIR/resources"
+RESOURCES_DIR="$DATA_DIR/resources"
 if [ ! -d "$RESOURCES_DIR" ]; then
     mkdir -p "$RESOURCES_DIR"
     echo "$RESOURCES_DIR did not exist. We created it for you."
+fi
+
+# Where we store the real binary, which will be symlinked from .local/bin
+# Useful for in-place upgrades
+TARGET_BINARY_DIR="$DATA_DIR/bin"
+if [ ! -d "$TARGET_BINARY_DIR" ]; then
+    mkdir -p "$TARGET_BINARY_DIR"
+    echo "$TARGET_BINARY_DIR did not exist. We created it for you."
 fi
 
 ICONS_DIR="$RESOURCES_DIR/icons"
@@ -70,7 +78,6 @@ if [ ! -f "$SRC_BINARY_PATH" ]; then
     echo "$SRC_BINARY_PATH does not exist. Please install manually"
     exit 1
 fi
-TARGET_BINARY_PATH="$INSTALL_DIR/browsers"
 
 TEMPLATE_DESKTOP_FILE_PATH="$THIS_DIR/software.Browsers.template.desktop"
 if [ ! -f "$TEMPLATE_DESKTOP_FILE_PATH" ]; then
@@ -105,8 +112,13 @@ TARGET_XFCE4_DESKTOP_FILE_PATH="$TARGET_XFCE4_HELPERS_DIR/software.Browsers.desk
 # ~/.local/share/xfce4/helpers/software.Browsers.desktop
 cp "$SOURCE_XFCE4_DESKTOP_FILE_PATH" "$TARGET_XFCE4_DESKTOP_FILE_PATH"
 
-# Copy binary to $HOME/.local/bin
+# $HOME/.local/share/software.Browsers/bin/browsers
+TARGET_BINARY_PATH="$TARGET_BINARY_DIR/browsers"
 cp "$SRC_BINARY_PATH" "$TARGET_BINARY_PATH"
+
+TARGET_INSTALL_BINARY_PATH="$INSTALL_DIR/browsers"
+# Symlink binary to $HOME/.local/bin
+ln -sf "$TARGET_BINARY_PATH" "$TARGET_INSTALL_BINARY_PATH"
 
 # Installs to /.local/share/icons/hicolor/512x512/apps/software.Browsers.png
 xdg-icon-resource install --novendor --size 16 icons/16x16/software.Browsers.png
