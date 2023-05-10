@@ -362,11 +362,7 @@ fn generate_all_browser_profiles(
     // always show special apps first
     visible_browser_profiles.sort_by_key(|b| !b.has_priority_ordering());
 
-    return (
-        opening_rules,
-        visible_browser_profiles,
-        hidden_browser_profiles,
-    );
+    return (opening_rules, visible_browser_profiles, hidden_browser_profiles);
 }
 
 fn get_rule_for_source_app_and_url<'a>(
@@ -703,20 +699,14 @@ fn move_app_profile(
     match move_to {
         MoveTo::UP | MoveTo::TOP => {
             if visible_profile_index <= first_orderable_item_index {
-                info!(
-                    "Not moving profile {} higher as it's already first",
-                    unique_id
-                );
+                info!("Not moving profile {} higher as it's already first", unique_id);
                 return;
             }
             info!("Moving profile {} higher", unique_id);
         }
         MoveTo::DOWN | MoveTo::BOTTOM => {
             if visible_profile_index == visible_browser_profiles.len() - 1 {
-                info!(
-                    "Not moving profile {} lower as it's already last",
-                    unique_id
-                );
+                info!("Not moving profile {} lower as it's already last", unique_id);
                 return;
             }
             info!("Moving profile {} lower", unique_id);

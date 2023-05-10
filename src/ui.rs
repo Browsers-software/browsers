@@ -1074,11 +1074,7 @@ fn create_browser(
         .fix_size(192.0, ITEM_HEIGHT)
         .on_click(move |_ctx, (_, data): &mut (bool, UIBrowser), _env| {
             _ctx.get_external_handle()
-                .submit_command(
-                    OPEN_LINK_IN_BROWSER,
-                    data.browser_profile_index,
-                    Target::Global,
-                )
+                .submit_command(OPEN_LINK_IN_BROWSER, data.browser_profile_index, Target::Global)
                 .ok();
         });
 
