@@ -147,17 +147,15 @@ impl OsHelper {
 
         let icon_filename = id.to_string() + ".png";
         let full_stored_icon_path = icons_root_dir.join(icon_filename);
+        let icon_path_str = full_stored_icon_path.display().to_string();
+        if let Some(icon) = app_info.icon() {
+            create_icon_for_app(&self.icon_theme, &icon, icon_path_str.as_str())
+        }
 
         let string1 = app_info.display_name();
         let display_name = string1.as_str();
         let _string = app_info.to_string();
         //println!("app_info: {}", id);
-
-        let icon_path_str = full_stored_icon_path.display().to_string();
-
-        if let Some(icon) = app_info.icon() {
-            create_icon_for_app(&self.icon_theme, &icon, icon_path_str.as_str())
-        }
 
         let profiles = supported_app.find_profiles(executable_path.clone(), is_snap);
 
