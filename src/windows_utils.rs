@@ -62,10 +62,16 @@ impl OsHelper {
                 let binary_path_str = binary_path_path.to_str().unwrap();
                 info!("path is {}", binary_path_str);
 
+                // Either Capabilities->ApplicationIcon
+                // or DefaultIcon->""
+                let default_icon_reg_key = browser_reg_key.open_subkey("DefaultIcon").unwrap();
+                // e.g `C:\Program Files (x86)\Google\Chrome\Application\chrome.exe,0`
+                let default_icon_path: String = default_icon_reg_key.get_value("").unwrap();
+
                 AppInfoHolder {
                     registry_key: browser_key_name,
                     name: browser_name.to_string(),
-                    icon_path: browser_name.to_string(),
+                    icon_path: default_icon_path.to_string(),
                     binary_path: binary_path_str.to_string(),
                 }
             })
@@ -128,6 +134,7 @@ impl OsHelper {
         let icon_filename = app_id.to_string() + ".png";
         let full_stored_icon_path = icons_root_dir.join(icon_filename);
         let icon_path_str = full_stored_icon_path.display().to_string();
+        create_icon_for_app(app_info.icon_path.as_str(), icon_path_str.as_str());
 
         let command_str = app_info.binary_path;
         let executable_path = Path::new(command_str.as_str());
@@ -145,6 +152,23 @@ impl OsHelper {
         };
         return Some(browser);
     }
+}
+
+pub fn create_icon_for_app(full_path_and_index: &str, icon_path: &str) {
+    // e.g `C:\Program Files (x86)\Google\Chrome\Application\chrome.exe,0`
+    let split: Vec<&str> = full_path_and_index.split(",").collect();
+    let path = split[0];
+    let index_str = split[1];
+    let index = index_str.parse::<i32>().unwrap();
+
+    // TODO
+    /*let hicon = ExtractIconA(
+        hInst: HINSTANCE,
+        pszExeFileName: LPCSTR,
+        nIconIndex: UINT,
+    ) -> HICON;*/
+
+    // https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-extracticona
 }
 
 // PATHS

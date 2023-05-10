@@ -204,6 +204,7 @@ dependencies = [
  "tracing-appender",
  "tracing-subscriber",
  "url",
+ "winapi",
  "winreg",
  "xdg-mime",
 ]
