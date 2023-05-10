@@ -119,6 +119,7 @@ impl SupportedAppRepository {
             )
             .add_firefox_based_windows(vec!["Mozilla Firefox"], "Mozilla/Firefox")
             .add_firefox_based_mac(vec!["org.mozilla.firefoxdeveloperedition"], "Firefox")
+            .add_firefox_based_windows(vec!["Firefox Developer Edition"], "Mozilla/Firefox")
             .add_firefox_based_mac(vec!["org.mozilla.nightly"], "Firefox")
             .add_firefox_based_mac(vec!["org.mozilla.floorp"], "Floorp")
             .add_firefox_based_mac(vec!["org.torproject.torbrowser"], "TorBrowser-Data/Browser")
@@ -136,13 +137,13 @@ impl SupportedAppRepository {
         bundle_ids: Vec<&str>,
         config_dir_relative: &str,
     ) -> &mut SupportedAppRepository {
-        let app_config_dir = AppConfigDir::new_mac(
+        let app_config_dir = AppConfigDir::new_windows(
             self.firefox_user_dir_base.clone(),
             PathBuf::from(config_dir_relative),
         );
 
         for bundle_id in bundle_ids {
-            let app_id = AppIdentifier::new_mac(bundle_id);
+            let app_id = AppIdentifier::new_windows(bundle_id);
             let app = Self::firefox_based_app(
                 app_id,
                 app_config_dir.config_dir_absolute(),
@@ -236,7 +237,7 @@ impl SupportedAppRepository {
         bundle_ids: Vec<&str>,
         config_dir_relative: &str,
     ) -> &mut SupportedAppRepository {
-        let app_config_dir = AppConfigDir::new_mac(
+        let app_config_dir = AppConfigDir::new_windows(
             self.chromium_user_dir_base.clone(),
             PathBuf::from(config_dir_relative),
         );

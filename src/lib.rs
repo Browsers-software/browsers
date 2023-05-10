@@ -151,7 +151,9 @@ impl BrowserCommon {
 
             return cmd;
         } else if cfg!(target_os = "windows") {
-            unimplemented!("windows is not supported yet");
+            let mut cmd = Command::new(self.executable_path.to_string());
+            cmd.args(profile_args).arg(app_url);
+            return cmd;
         }
 
         unimplemented!("platform is not supported yet");

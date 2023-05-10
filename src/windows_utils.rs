@@ -54,12 +54,19 @@ impl OsHelper {
 
                 let command_reg_key = browser_reg_key.open_subkey("shell\\open\\command").unwrap();
                 let binary_path: String = command_reg_key.get_value("").unwrap();
+                // remove surrounding quotes if there are any
+                let binary_path = binary_path.trim_start_matches("\"");
+                let binary_path = binary_path.trim_end_matches("\"");
+
+                let binary_path_path = Path::new(binary_path);
+                let binary_path_str = binary_path_path.to_str().unwrap();
+                info!("path is {}", binary_path_str);
 
                 AppInfoHolder {
                     registry_key: browser_key_name,
                     name: browser_name.to_string(),
                     icon_path: browser_name.to_string(),
-                    binary_path: binary_path.to_string(),
+                    binary_path: binary_path_str.to_string(),
                 }
             })
             .collect::<Vec<_>>();
@@ -106,8 +113,7 @@ impl OsHelper {
         icons_root_dir: &Path,
         restricted_domains: Vec<String>,
     ) -> Option<InstalledBrowser> {
-        let name = app_info.name;
-        let display_name = name.to_string();
+        let display_name = app_info.name.to_string();
 
         // Using the name as the unique id,
         // because registry_key can differ based on Firefox install path,
@@ -123,15 +129,13 @@ impl OsHelper {
         let full_stored_icon_path = icons_root_dir.join(icon_filename);
         let icon_path_str = full_stored_icon_path.display().to_string();
 
-        let command_str = "TODO".to_string();
+        let command_str = app_info.binary_path;
         let executable_path = Path::new(command_str.as_str());
 
-        let executable_path_path = Path::new(executable_path);
-
-        let profiles = supported_app.find_profiles(executable_path_path, false);
+        let profiles = supported_app.find_profiles(executable_path, false);
 
         let browser = InstalledBrowser {
-            executable_path: app_info.binary_path.to_string(),
+            executable_path: command_str.to_string(),
             display_name: display_name.to_string(),
             bundle: app_id.to_string(),
             user_dir: supported_app.get_app_config_dir_absolute(false).to_string(),
