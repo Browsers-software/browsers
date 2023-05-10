@@ -13,6 +13,7 @@ struct AppInfoHolder {
     registry_key: String,
     name: String,
     icon_path: String,
+    binary_path: String,
 }
 
 pub struct OsHelper {
@@ -51,10 +52,14 @@ impl OsHelper {
                     .unwrap();
                 let browser_name: String = browser_reg_key.get_value("").unwrap();
 
+                let command_reg_key = browser_reg_key.open_subkey("shell\\open\\command").unwrap();
+                let binary_path: String = command_reg_key.get_value("").unwrap();
+
                 AppInfoHolder {
                     registry_key: browser_key_name,
                     name: browser_name.to_string(),
                     icon_path: browser_name.to_string(),
+                    binary_path: binary_path.to_string(),
                 }
             })
             .collect::<Vec<_>>();
@@ -126,7 +131,7 @@ impl OsHelper {
         let profiles = supported_app.find_profiles(executable_path_path, false);
 
         let browser = InstalledBrowser {
-            executable_path: "fake".to_string(),
+            executable_path: app_info.binary_path.to_string(),
             display_name: display_name.to_string(),
             bundle: app_id.to_string(),
             user_dir: supported_app.get_app_config_dir_absolute(false).to_string(),
