@@ -681,7 +681,7 @@ fn show_about_dialog(ctx: &mut DelegateCtx) {
         .with_flex_spacer(1.0)
         .background(Color::from_hex_str("1b2020").unwrap());
 
-    let size = Size::new(340.0, 220.0);
+    let size = Size::new(340.0, 260.0);
     let (_, monitor) = druid::Screen::get_mouse_position();
     let screen_rect = monitor.virtual_work_rect();
 
