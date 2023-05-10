@@ -33,6 +33,9 @@ mod macos;
 #[cfg(target_os = "linux")]
 mod linux_utils;
 
+#[cfg(target_os = "windows")]
+mod windows_utils;
+
 pub mod communicate;
 
 mod chromium_profiles_parser;

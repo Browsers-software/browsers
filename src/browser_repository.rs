@@ -52,6 +52,7 @@ impl SupportedAppRepository {
             .add_chromium_based_mac(vec!["company.thebrowser.Browser"], "Arc/User Data")
             .add_chromium_based_mac(vec!["com.google.Chrome"], "Google/Chrome")
             .add_chromium_based_linux(vec!["google-chrome.desktop"], "", "google-chrome")
+            .add_chromium_based_windows(vec!["Google Chrome"], "Google/Chrome/User Data")
             .add_chromium_based_mac(vec!["com.google.Chrome.beta"], "Google/Chrome Beta")
             .add_chromium_based_linux(vec!["google-chrome-beta.desktop"], "", "google-chrome-beta")
             .add_chromium_based_mac(vec!["com.google.Chrome.dev"], "Google/Chrome Dev")
@@ -116,6 +117,7 @@ impl SupportedAppRepository {
                 "firefox",
                 ".mozilla/firefox",
             )
+            .add_firefox_based_windows(vec!["Mozilla Firefox"], "Mozilla/Firefox")
             .add_firefox_based_mac(vec!["org.mozilla.firefoxdeveloperedition"], "Firefox")
             .add_firefox_based_mac(vec!["org.mozilla.nightly"], "Firefox")
             .add_firefox_based_mac(vec!["org.mozilla.floorp"], "Floorp")
@@ -127,6 +129,29 @@ impl SupportedAppRepository {
             .add(Self::spotify_app())
             .add(Self::telegram_app())
             .add(Self::zoom_app());
+    }
+
+    fn add_firefox_based_windows(
+        &mut self,
+        bundle_ids: Vec<&str>,
+        config_dir_relative: &str,
+    ) -> &mut SupportedAppRepository {
+        let app_config_dir = AppConfigDir::new_mac(
+            self.firefox_user_dir_base.clone(),
+            PathBuf::from(config_dir_relative),
+        );
+
+        for bundle_id in bundle_ids {
+            let app_id = AppIdentifier::new_mac(bundle_id);
+            let app = Self::firefox_based_app(
+                app_id,
+                app_config_dir.config_dir_absolute(),
+                PathBuf::from(""),
+            );
+            self.add(app);
+        }
+
+        return self;
     }
 
     fn add_firefox_based_mac(
@@ -195,6 +220,29 @@ impl SupportedAppRepository {
 
         for mac_bundle_id in mac_bundle_ids {
             let app_id = AppIdentifier::new_mac(mac_bundle_id);
+            let app = Self::chromium_based_app(
+                app_id,
+                app_config_dir.config_dir_absolute(),
+                PathBuf::from(""),
+            );
+            self.add(app);
+        }
+
+        return self;
+    }
+
+    fn add_chromium_based_windows(
+        &mut self,
+        bundle_ids: Vec<&str>,
+        config_dir_relative: &str,
+    ) -> &mut SupportedAppRepository {
+        let app_config_dir = AppConfigDir::new_mac(
+            self.chromium_user_dir_base.clone(),
+            PathBuf::from(config_dir_relative),
+        );
+
+        for bundle_id in bundle_ids {
+            let app_id = AppIdentifier::new_windows(bundle_id);
             let app = Self::chromium_based_app(
                 app_id,
                 app_config_dir.config_dir_absolute(),
@@ -317,13 +365,13 @@ impl SupportedAppRepository {
     }
 
     fn linear_app() -> SupportedApp {
-        let app_id = AppIdentifier::new("com.linear", "NOLINUXAPPEXISTS.desktop");
+        let app_id = AppIdentifier::new("com.linear", "NOLINUXAPPEXISTS.desktop", "TODOWINDOWS");
 
         Self::generic_app(app_id, vec!["linear.app".to_string()])
     }
 
     fn notion_app() -> SupportedApp {
-        let app_id = AppIdentifier::new("notion.id", "NOLINUXAPPEXISTS.desktop");
+        let app_id = AppIdentifier::new("notion.id", "NOLINUXAPPEXISTS.desktop", "TODOWINDOWS");
 
         Self::generic_app(
             app_id,
@@ -332,7 +380,8 @@ impl SupportedAppRepository {
     }
 
     fn spotify_app() -> SupportedApp {
-        let app_id = AppIdentifier::new("com.spotify.client", "spotify_spotify.desktop");
+        let app_id =
+            AppIdentifier::new("com.spotify.client", "spotify_spotify.desktop", "TODOWINDOWS");
 
         Self::generic_app_with_url(
             app_id,
@@ -345,6 +394,7 @@ impl SupportedAppRepository {
         let app_id = AppIdentifier {
             mac_bundle_id: "ru.keepcoder.Telegram".to_string(),
             linux_desktop_id: "telegram-desktop_telegram-desktop.desktop".to_string(),
+            windows_app_id: "WINDOWSTODO".to_string(),
         };
 
         Self::generic_app(app_id, vec!["t.me".to_string()])
@@ -354,6 +404,7 @@ impl SupportedAppRepository {
         let app_id = AppIdentifier {
             mac_bundle_id: "us.zoom.xos".to_string(),
             linux_desktop_id: "Zoom.desktop".to_string(),
+            windows_app_id: "WINDOWSTODO".to_string(),
         };
 
         Self::generic_app(
@@ -467,13 +518,15 @@ impl SupportedApp {
 pub struct AppIdentifier {
     mac_bundle_id: String,
     linux_desktop_id: String,
+    windows_app_id: String,
 }
 
 impl AppIdentifier {
-    fn new(mac_bundle_id: &str, linux_desktop_id: &str) -> Self {
+    fn new(mac_bundle_id: &str, linux_desktop_id: &str, windows_app_id: &str) -> Self {
         Self {
             mac_bundle_id: mac_bundle_id.to_string(),
             linux_desktop_id: linux_desktop_id.to_string(),
+            windows_app_id: windows_app_id.to_string(),
         }
     }
 
@@ -483,12 +536,16 @@ impl AppIdentifier {
 
         #[cfg(target_os = "linux")]
         return Self::new_linux(app_id);
+
+        #[cfg(target_os = "windows")]
+        return Self::new_windows(app_id);
     }
 
     pub fn new_mac(mac_bundle_id: &str) -> Self {
         Self {
             mac_bundle_id: mac_bundle_id.to_string(),
             linux_desktop_id: "".to_string(),
+            windows_app_id: "".to_string(),
         }
     }
 
@@ -496,6 +553,15 @@ impl AppIdentifier {
         Self {
             mac_bundle_id: "".to_string(),
             linux_desktop_id: linux_desktop_id.to_string(),
+            windows_app_id: "".to_string(),
+        }
+    }
+
+    fn new_windows(windows_app_id: &str) -> Self {
+        Self {
+            mac_bundle_id: "".to_string(),
+            linux_desktop_id: "".to_string(),
+            windows_app_id: windows_app_id.to_string(),
         }
     }
 
@@ -505,6 +571,9 @@ impl AppIdentifier {
 
         #[cfg(target_os = "linux")]
         return self.linux_desktop_id.as_str();
+
+        #[cfg(target_os = "windows")]
+        return self.windows_app_id.as_str();
     }
 }
 
@@ -512,6 +581,7 @@ struct AppConfigDir {
     root_path: PathBuf,
     mac_config_dir_relative: PathBuf,
     linux_config_dir_relative: PathBuf,
+    windows_config_dir_relative: PathBuf,
 }
 
 impl AppConfigDir {
@@ -520,6 +590,7 @@ impl AppConfigDir {
             root_path: root_path,
             mac_config_dir_relative: mac_config_dir_relative,
             linux_config_dir_relative: PathBuf::from(""),
+            windows_config_dir_relative: PathBuf::from(""),
         }
     }
 
@@ -528,6 +599,16 @@ impl AppConfigDir {
             root_path: root_path,
             mac_config_dir_relative: PathBuf::from(""),
             linux_config_dir_relative: linux_config_dir_relative,
+            windows_config_dir_relative: PathBuf::from(""),
+        }
+    }
+
+    pub fn new_windows(root_path: PathBuf, windows_config_dir_relative: PathBuf) -> Self {
+        Self {
+            root_path: root_path,
+            mac_config_dir_relative: PathBuf::from(""),
+            linux_config_dir_relative: PathBuf::from(""),
+            windows_config_dir_relative: windows_config_dir_relative,
         }
     }
 
@@ -537,6 +618,9 @@ impl AppConfigDir {
 
         #[cfg(target_os = "linux")]
         return self.linux_config_dir_relative.as_path();
+
+        #[cfg(target_os = "windows")]
+        return self.windows_config_dir_relative.as_path();
     }
 
     fn config_dir_absolute(&self) -> PathBuf {

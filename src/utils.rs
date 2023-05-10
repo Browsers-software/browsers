@@ -15,6 +15,8 @@ use url::Url;
 use crate::linux_utils;
 #[cfg(target_os = "macos")]
 use crate::macos_utils;
+#[cfg(target_os = "windows")]
+use crate::windows_utils;
 use crate::{paths, InstalledBrowser, SupportedAppRepository};
 
 #[cfg(target_os = "macos")]
@@ -102,6 +104,9 @@ pub struct OSAppFinder {
 
     #[cfg(target_os = "macos")]
     inner: macos_utils::OsHelper,
+
+    #[cfg(target_os = "windows")]
+    inner: windows_utils::OsHelper,
 }
 
 impl OSAppFinder {
@@ -116,6 +121,13 @@ impl OSAppFinder {
     pub fn new() -> Self {
         Self {
             inner: macos_utils::OsHelper::new(),
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    pub fn new() -> Self {
+        Self {
+            inner: windows_utils::OsHelper::new(),
         }
     }
 

@@ -4,6 +4,8 @@ use std::path::PathBuf;
 use crate::linux_utils;
 #[cfg(target_os = "macos")]
 use crate::macos_utils;
+#[cfg(target_os = "windows")]
+use crate::windows_utils;
 
 #[cfg(target_os = "macos")]
 pub fn get_cache_root_dir() -> PathBuf {
@@ -15,6 +17,11 @@ pub fn get_cache_root_dir() -> PathBuf {
     return linux_utils::get_this_app_cache_root_dir();
 }
 
+#[cfg(target_os = "windows")]
+pub fn get_cache_root_dir() -> PathBuf {
+    return windows_utils::get_this_app_cache_root_dir();
+}
+
 #[cfg(target_os = "macos")]
 pub fn get_logs_root_dir() -> PathBuf {
     return macos_utils::get_this_app_logs_root_dir();
@@ -23,6 +30,11 @@ pub fn get_logs_root_dir() -> PathBuf {
 #[cfg(target_os = "linux")]
 pub fn get_logs_root_dir() -> PathBuf {
     return linux_utils::get_this_app_logs_root_dir();
+}
+
+#[cfg(target_os = "windows")]
+pub fn get_logs_root_dir() -> PathBuf {
+    return windows_utils::get_this_app_logs_root_dir();
 }
 
 pub fn get_config_json_path() -> PathBuf {
@@ -39,6 +51,11 @@ pub fn get_config_root_dir() -> PathBuf {
     return linux_utils::get_this_app_config_root_dir();
 }
 
+#[cfg(target_os = "windows")]
+pub fn get_config_root_dir() -> PathBuf {
+    return windows_utils::get_this_app_config_root_dir();
+}
+
 #[cfg(target_os = "macos")]
 pub fn get_chrome_user_dir_root() -> PathBuf {
     return macos_utils::macos_get_unsandboxed_application_support_dir();
@@ -47,6 +64,11 @@ pub fn get_chrome_user_dir_root() -> PathBuf {
 #[cfg(target_os = "linux")]
 pub fn get_chrome_user_dir_root() -> PathBuf {
     return linux_utils::linux_get_unsandboxed_config_dir();
+}
+
+#[cfg(target_os = "windows")]
+pub fn get_chrome_user_dir_root() -> PathBuf {
+    return windows_utils::get_unsandboxed_local_config_dir();
 }
 
 #[cfg(target_os = "macos")]
@@ -59,6 +81,11 @@ pub fn get_firefox_user_dir_root() -> PathBuf {
     return linux_utils::linux_get_unsandboxed_home_dir();
 }
 
+#[cfg(target_os = "windows")]
+pub fn get_firefox_user_dir_root() -> PathBuf {
+    return windows_utils::get_unsandboxed_roaming_config_dir();
+}
+
 #[cfg(target_os = "macos")]
 pub fn get_snap_root() -> PathBuf {
     return PathBuf::new();
@@ -67,6 +94,11 @@ pub fn get_snap_root() -> PathBuf {
 #[cfg(target_os = "linux")]
 pub fn get_snap_root() -> PathBuf {
     return linux_utils::get_snap_root_dir();
+}
+
+#[cfg(target_os = "windows")]
+pub fn get_snap_root() -> PathBuf {
+    return PathBuf::new();
 }
 
 pub fn get_app_icon_path() -> PathBuf {
@@ -93,6 +125,12 @@ pub fn get_resources_basedir() -> PathBuf {
     return app_config_root_dir.join("resources");
 }
 
+#[cfg(target_os = "windows")]
+pub fn get_resources_basedir() -> PathBuf {
+    let app_config_root_dir = windows_utils::get_this_app_data_dir();
+    return app_config_root_dir.join("resources");
+}
+
 #[cfg(target_os = "linux")]
 pub fn get_runtime_dir() -> PathBuf {
     return linux_utils::get_this_app_runtime_dir();
@@ -101,4 +139,9 @@ pub fn get_runtime_dir() -> PathBuf {
 #[cfg(target_os = "macos")]
 pub fn get_runtime_dir() -> PathBuf {
     return macos_utils::get_this_app_runtime_dir();
+}
+
+#[cfg(target_os = "windows")]
+pub fn get_runtime_dir() -> PathBuf {
+    return windows_utils::get_this_app_runtime_dir();
 }
