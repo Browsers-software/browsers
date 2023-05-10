@@ -160,13 +160,13 @@ impl UI {
         #[cfg(target_os = "macos")]
         const OPTIONS_LABEL_TEXT_SIZE: f64 = 15.0;
 
-        #[cfg(target_os = "linux")]
+        #[cfg(not(target_os = "macos"))]
         const OPTIONS_LABEL_TEXT_SIZE: f64 = 11.0;
 
         #[cfg(target_os = "macos")]
         const OPTIONS_LABEL_TEXT_PADDING_TOP: f64 = 4.0;
 
-        #[cfg(target_os = "linux")]
+        #[cfg(not(target_os = "macos"))]
         const OPTIONS_LABEL_TEXT_PADDING_TOP: f64 = 0.0;
 
         let options_label = Label::new("⋮")
