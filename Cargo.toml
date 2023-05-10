@@ -73,6 +73,8 @@ glib = { version = "0.16.6", package = "gio" }
 # to find icon theme and icon; (should be same version of gtk as druid is using)
 gtk = { version = "0.16.2" }
 
+[target.'cfg(target_os = "windows")'.dependencies]
+winreg = "0.50.0"
 
 #[profile.dev]
 #lto = true
