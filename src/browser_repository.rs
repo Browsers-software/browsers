@@ -37,67 +37,32 @@ impl SupportedAppRepository {
             .map(|app| app.to_owned())
             .unwrap_or_else(|| {
                 let app_id = AppIdentifier::new_for_os(app_id_str);
-                Self::generic_app(
-                    app_id,
-                    restricted_domains.clone(),
-                )
+                Self::generic_app(app_id, restricted_domains.clone())
             });
     }
 
     fn add(&mut self, supported_app: SupportedApp) -> &mut SupportedAppRepository {
-        self.supported_apps.insert(
-            supported_app.get_app_id().to_string(),
-            supported_app,
-        );
+        self.supported_apps
+            .insert(supported_app.get_app_id().to_string(), supported_app);
         return self;
     }
 
     fn generate_app_id_to_supported_app(&mut self) {
         self.start()
-            .add_chromium_based_mac(
-                vec!["company.thebrowser.Browser"],
-                "Arc/User Data",
-            )
-            .add_chromium_based_mac(
-                vec!["com.google.Chrome"],
-                "Google/Chrome",
-            )
-            .add_chromium_based_linux(
-                vec!["google-chrome.desktop"],
-                "",
-                "google-chrome",
-            )
-            .add_chromium_based_mac(
-                vec!["com.google.Chrome.beta"],
-                "Google/Chrome Beta",
-            )
-            .add_chromium_based_linux(
-                vec!["google-chrome-beta.desktop"],
-                "",
-                "google-chrome-beta",
-            )
-            .add_chromium_based_mac(
-                vec!["com.google.Chrome.dev"],
-                "Google/Chrome Dev",
-            )
-            .add_chromium_based_linux(
-                vec!["google-chrome-dev.desktop"],
-                "",
-                "google-chrome-dev",
-            )
-            .add_chromium_based_mac(
-                vec!["com.google.Chrome.canary"],
-                "Google/Chrome Canary",
-            )
+            .add_chromium_based_mac(vec!["company.thebrowser.Browser"], "Arc/User Data")
+            .add_chromium_based_mac(vec!["com.google.Chrome"], "Google/Chrome")
+            .add_chromium_based_linux(vec!["google-chrome.desktop"], "", "google-chrome")
+            .add_chromium_based_mac(vec!["com.google.Chrome.beta"], "Google/Chrome Beta")
+            .add_chromium_based_linux(vec!["google-chrome-beta.desktop"], "", "google-chrome-beta")
+            .add_chromium_based_mac(vec!["com.google.Chrome.dev"], "Google/Chrome Dev")
+            .add_chromium_based_linux(vec!["google-chrome-dev.desktop"], "", "google-chrome-dev")
+            .add_chromium_based_mac(vec!["com.google.Chrome.canary"], "Google/Chrome Canary")
             .add_chromium_based_linux(
                 vec!["google-chrome-canary.desktop"],
                 "",
                 "google-chrome-canary",
             )
-            .add_chromium_based_mac(
-                vec!["org.chromium.Chromium"],
-                "Chromium",
-            )
+            .add_chromium_based_mac(vec!["org.chromium.Chromium"], "Chromium")
             .add_chromium_based_linux(
                 vec![
                     "chromium.desktop",
@@ -107,55 +72,21 @@ impl SupportedAppRepository {
                 "chromium",
                 "chromium",
             )
-            .add_chromium_based_mac(
-                vec!["com.avast.browser"],
-                "AVAST Software/Browser",
-            )
-            .add_chromium_based_mac(
-                vec!["com.whisttechnologies.whist"],
-                "Whist/Whist-Browser",
-            )
-            .add_chromium_based_mac(
-                vec!["com.bookry.wavebox"],
-                "WaveboxApp",
-            )
-            .add_chromium_based_mac(
-                vec!["com.coccoc.Coccoc"],
-                "Coccoc",
-            )
-            .add_chromium_based_mac(
-                vec!["net.qihoo.360browser"],
-                "360Chrome",
-            )
+            .add_chromium_based_mac(vec!["com.avast.browser"], "AVAST Software/Browser")
+            .add_chromium_based_mac(vec!["com.whisttechnologies.whist"], "Whist/Whist-Browser")
+            .add_chromium_based_mac(vec!["com.bookry.wavebox"], "WaveboxApp")
+            .add_chromium_based_mac(vec!["com.coccoc.Coccoc"], "Coccoc")
+            .add_chromium_based_mac(vec!["net.qihoo.360browser"], "360Chrome")
             .add_chromium_based_mac(
                 vec!["ru.yandex.desktop.yandex-browser"],
                 "Yandex/YandexBrowser",
             )
-            .add_chromium_based_mac(
-                vec!["com.microsoft.edgemac"],
-                "Microsoft Edge",
-            )
-            .add_chromium_based_mac(
-                vec!["com.microsoft.edgemac.Beta"],
-                "Microsoft Edge Beta",
-            )
-            .add_chromium_based_mac(
-                vec!["com.microsoft.edgemac.Dev"],
-                "Microsoft Edge Dev",
-            )
-            .add_chromium_based_linux(
-                vec!["microsoft-edge-dev.desktop"],
-                "",
-                "microsoft-edge-dev",
-            )
-            .add_chromium_based_mac(
-                vec!["com.microsoft.edgemac.Canary"],
-                "Microsoft Edge Canary",
-            )
-            .add_chromium_based_mac(
-                vec!["com.brave.Browser"],
-                "BraveSoftware/Brave-Browser",
-            )
+            .add_chromium_based_mac(vec!["com.microsoft.edgemac"], "Microsoft Edge")
+            .add_chromium_based_mac(vec!["com.microsoft.edgemac.Beta"], "Microsoft Edge Beta")
+            .add_chromium_based_mac(vec!["com.microsoft.edgemac.Dev"], "Microsoft Edge Dev")
+            .add_chromium_based_linux(vec!["microsoft-edge-dev.desktop"], "", "microsoft-edge-dev")
+            .add_chromium_based_mac(vec!["com.microsoft.edgemac.Canary"], "Microsoft Edge Canary")
+            .add_chromium_based_mac(vec!["com.brave.Browser"], "BraveSoftware/Brave-Browser")
             .add_chromium_based_linux(
                 vec!["brave-browser.desktop"],
                 "brave",
@@ -169,35 +100,13 @@ impl SupportedAppRepository {
                 vec!["com.brave.Browser.nightly"],
                 "BraveSoftware/Brave-Browser-Nightly",
             )
-            .add_chromium_based_mac(
-                vec!["com.pushplaylabs.sidekick"],
-                "Sidekick",
-            )
-            .add_chromium_based_mac(
-                vec!["com.vivaldi.Vivaldi"],
-                "Vivaldi",
-            )
-            .add_chromium_based_linux(
-                vec!["vivaldi-stable.desktop"],
-                "",
-                "vivaldi",
-            )
-            .add_chromium_based_mac(
-                vec!["com.vivaldi.Vivaldi.snapshot"],
-                "Vivaldi Snapshot",
-            )
-            .add_chromium_based_mac(
-                vec!["com.naver.Whale"],
-                "Naver/Whale",
-            )
-            .add_chromium_based_mac(
-                vec!["de.iridiumbrowser"],
-                "Iridium",
-            )
-            .add_firefox_based_mac(
-                vec!["org.mozilla.firefox"],
-                "Firefox",
-            )
+            .add_chromium_based_mac(vec!["com.pushplaylabs.sidekick"], "Sidekick")
+            .add_chromium_based_mac(vec!["com.vivaldi.Vivaldi"], "Vivaldi")
+            .add_chromium_based_linux(vec!["vivaldi-stable.desktop"], "", "vivaldi")
+            .add_chromium_based_mac(vec!["com.vivaldi.Vivaldi.snapshot"], "Vivaldi Snapshot")
+            .add_chromium_based_mac(vec!["com.naver.Whale"], "Naver/Whale")
+            .add_chromium_based_mac(vec!["de.iridiumbrowser"], "Iridium")
+            .add_firefox_based_mac(vec!["org.mozilla.firefox"], "Firefox")
             .add_firefox_based_linux(
                 vec![
                     "firefox.desktop",
@@ -207,30 +116,12 @@ impl SupportedAppRepository {
                 "firefox",
                 ".mozilla/firefox",
             )
-            .add_firefox_based_mac(
-                vec!["org.mozilla.firefoxdeveloperedition"],
-                "Firefox",
-            )
-            .add_firefox_based_mac(
-                vec!["org.mozilla.nightly"],
-                "Firefox",
-            )
-            .add_firefox_based_mac(
-                vec!["org.mozilla.floorp"],
-                "Floorp",
-            )
-            .add_firefox_based_mac(
-                vec!["org.torproject.torbrowser"],
-                "TorBrowser-Data/Browser",
-            )
-            .add_firefox_based_mac(
-                vec!["org.mozilla.librewolf"],
-                "LibreWolf",
-            )
-            .add_firefox_based_mac(
-                vec!["net.waterfox.waterfox"],
-                "Waterfox",
-            )
+            .add_firefox_based_mac(vec!["org.mozilla.firefoxdeveloperedition"], "Firefox")
+            .add_firefox_based_mac(vec!["org.mozilla.nightly"], "Firefox")
+            .add_firefox_based_mac(vec!["org.mozilla.floorp"], "Floorp")
+            .add_firefox_based_mac(vec!["org.torproject.torbrowser"], "TorBrowser-Data/Browser")
+            .add_firefox_based_mac(vec!["org.mozilla.librewolf"], "LibreWolf")
+            .add_firefox_based_mac(vec!["net.waterfox.waterfox"], "Waterfox")
             .add(Self::linear_app())
             .add(Self::notion_app())
             .add(Self::spotify_app())
@@ -272,10 +163,8 @@ impl SupportedAppRepository {
             PathBuf::from(linux_config_dir_relative),
         );
 
-        let snap_app_config_dir_absolute = self.snap_config_dir_absolute_path(
-            linux_snap_id,
-            linux_config_dir_relative,
-        );
+        let snap_app_config_dir_absolute =
+            self.snap_config_dir_absolute_path(linux_snap_id, linux_config_dir_relative);
 
         for linux_desktop_id in linux_desktop_ids {
             let app_id = AppIdentifier::new_linux(linux_desktop_id);
@@ -328,10 +217,8 @@ impl SupportedAppRepository {
             PathBuf::from(linux_config_dir_relative),
         );
 
-        let snap_app_config_dir_absolute = self.snap_config_dir_absolute_path(
-            linux_snap_id,
-            linux_config_dir_relative,
-        );
+        let snap_app_config_dir_absolute =
+            self.snap_config_dir_absolute_path(linux_snap_id, linux_config_dir_relative);
 
         for linux_desktop_id in linux_desktop_ids {
             let app_id = AppIdentifier::new_linux(linux_desktop_id);
@@ -371,10 +258,7 @@ impl SupportedAppRepository {
             find_profiles_fn: Some(chromium_profiles_parser::find_chromium_profiles),
             restricted_domains: vec![],
             profile_args_fn: |profile_cli_arg_value| {
-                vec![format!(
-                    "--profile-directory={}",
-                    profile_cli_arg_value
-                )]
+                vec![format!("--profile-directory={}", profile_cli_arg_value)]
             },
             incognito_args: vec!["-incognito".to_string()],
             url_transform_fn: |_, url| url.to_string(),
@@ -411,11 +295,7 @@ impl SupportedAppRepository {
     }
 
     fn generic_app(app_id: AppIdentifier, restricted_domains: Vec<String>) -> SupportedApp {
-        Self::generic_app_with_url(
-            app_id,
-            restricted_domains,
-            |_, url| url.to_string(),
-        )
+        Self::generic_app_with_url(app_id, restricted_domains, |_, url| url.to_string())
     }
 
     fn generic_app_with_url(
@@ -437,22 +317,13 @@ impl SupportedAppRepository {
     }
 
     fn linear_app() -> SupportedApp {
-        let app_id = AppIdentifier::new(
-            "com.linear",
-            "NOLINUXAPPEXISTS.desktop",
-        );
+        let app_id = AppIdentifier::new("com.linear", "NOLINUXAPPEXISTS.desktop");
 
-        Self::generic_app(
-            app_id,
-            vec!["linear.app".to_string()],
-        )
+        Self::generic_app(app_id, vec!["linear.app".to_string()])
     }
 
     fn notion_app() -> SupportedApp {
-        let app_id = AppIdentifier::new(
-            "notion.id",
-            "NOLINUXAPPEXISTS.desktop",
-        );
+        let app_id = AppIdentifier::new("notion.id", "NOLINUXAPPEXISTS.desktop");
 
         Self::generic_app(
             app_id,
@@ -461,10 +332,7 @@ impl SupportedAppRepository {
     }
 
     fn spotify_app() -> SupportedApp {
-        let app_id = AppIdentifier::new(
-            "com.spotify.client",
-            "spotify_spotify.desktop",
-        );
+        let app_id = AppIdentifier::new("com.spotify.client", "spotify_spotify.desktop");
 
         Self::generic_app_with_url(
             app_id,
@@ -479,10 +347,7 @@ impl SupportedAppRepository {
             linux_desktop_id: "telegram-desktop_telegram-desktop.desktop".to_string(),
         };
 
-        Self::generic_app(
-            app_id,
-            vec!["t.me".to_string()],
-        )
+        Self::generic_app(app_id, vec!["t.me".to_string()])
     }
 
     fn zoom_app() -> SupportedApp {
@@ -550,11 +415,7 @@ impl SupportedApp {
     pub fn find_profiles(&self, binary_path: &Path, is_snap: bool) -> Vec<InstalledBrowserProfile> {
         return if let Some(find_profiles_fn) = self.find_profiles_fn {
             let app_config_dir_abs = self.get_app_config_dir_abs(is_snap);
-            find_profiles_fn(
-                app_config_dir_abs,
-                binary_path,
-                self.get_app_id(),
-            )
+            find_profiles_fn(app_config_dir_abs, binary_path, self.get_app_id())
         } else {
             Self::find_placeholder_profiles()
         };
@@ -594,10 +455,7 @@ impl SupportedApp {
         profile_cli_container_name: Option<&String>,
         url: &str,
     ) -> String {
-        return (self.url_transform_fn)(
-            profile_cli_container_name,
-            url,
-        );
+        return (self.url_transform_fn)(profile_cli_container_name, url);
     }
 
     pub fn is_url_as_first_arg(&self) -> bool {
@@ -708,14 +566,9 @@ fn convert_spotify_uri(_: Option<&String>, url: &str) -> String {
     let type_maybe = segments.get(0);
     let id_maybe = segments.get(1);
 
-    let uri_maybe = type_maybe.zip(id_maybe).map(
-        |(resource_type, resource_id)| {
-            format!(
-                "spotify:{}:{}",
-                resource_type, resource_id
-            )
-        },
-    );
+    let uri_maybe = type_maybe
+        .zip(id_maybe)
+        .map(|(resource_type, resource_id)| format!("spotify:{}:{}", resource_type, resource_id));
 
     return uri_maybe.unwrap_or_else(|| unknown);
 }
