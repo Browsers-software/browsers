@@ -119,7 +119,7 @@ impl UI {
         let item_count = calculate_visible_browser_count(browsers_total);
         let window_size = calculate_window_size(item_count);
         let window_position = calculate_window_position(window_size);
-        let main_window = WindowDesc::new(self.ui_builder(item_count as f64))
+        let main_window = WindowDesc::new(self.ui_builder(item_count as f64, window_size))
             .show_titlebar(false)
             .transparent(true)
             .resizable(false)
@@ -143,7 +143,11 @@ impl UI {
         return initial_ui_state;
     }
 
-    pub fn ui_builder(&self, visible_browsers_count: f64) -> impl Widget<UIState> {
+    pub fn ui_builder(
+        &self,
+        visible_browsers_count: f64,
+        window_size: Size,
+    ) -> impl Widget<UIState> {
         let url_label = Label::dynamic(|data: &UIState, _| ellipsize(data.url.as_str(), 28))
             .with_text_size(12.0)
             .with_text_color(Color::from_hex_str("808080").unwrap())
@@ -199,9 +203,15 @@ impl UI {
             },
         )
         .on_click(move |ctx, data: &mut UIState, _env| {
+            // Windows requires exact position relative to the window
+            let position = Point::new(
+                window_size.width - PADDING_X - OPTIONS_LABEL_SIZE / 2.0,
+                window_size.height - PADDING_Y - OPTIONS_LABEL_SIZE / 2.0,
+            );
+
             ctx.show_context_menu(
                 make_options_menu(show_set_as_default, data.restorable_app_profiles.clone()),
-                Point::ZERO,
+                position,
             );
         })
         .align_right()
