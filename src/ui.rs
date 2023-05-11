@@ -170,7 +170,8 @@ impl UI {
         const OPTIONS_LABEL_TEXT_PADDING_TOP: f64 = 0.0;
 
         let options_label = Label::new("⋮")
-            .with_text_alignment(TextAlignment::Center)
+            // with_text_alignment messes up in Windows
+            //.with_text_alignment(TextAlignment::Center)
             .with_text_size(OPTIONS_LABEL_TEXT_SIZE)
             .padding((0.0, OPTIONS_LABEL_TEXT_PADDING_TOP, 0.0, 0.0))
             .center()
