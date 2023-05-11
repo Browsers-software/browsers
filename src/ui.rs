@@ -901,7 +901,7 @@ const fn get_icon_size() -> f64 {
     } else if cfg!(target_os = "linux") {
         24.0
     } else {
-        32.0
+        24.0
     }
 }
 
