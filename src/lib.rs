@@ -180,9 +180,6 @@ impl CommonBrowserProfile {
             profile_icon: installed_browser_profile
                 .profile_icon
                 .as_ref()
-                // TODO: remove this filter once old profiles json cache is old enough
-                // TODO: remove when supporting Windows
-                .filter(|path| path.starts_with("/"))
                 .map(|path| path.clone()),
             app: app,
         }
