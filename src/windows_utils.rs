@@ -1,9 +1,28 @@
 use std::{
+    ffi::CString,
     fs,
+    mem::{self, MaybeUninit},
     path::{Path, PathBuf},
+    ptr::{self, null_mut},
 };
 
-use tracing::info;
+use druid::image::{ImageFormat, RgbaImage};
+use tracing::{info, warn};
+
+use winapi::shared::windef::*;
+use winapi::shared::winerror::*;
+use winapi::um::errhandlingapi::GetLastError;
+use winapi::um::winuser::*;
+use winapi::{
+    shared::{
+        minwindef::*,
+        ntdef::{CHAR, LPCSTR, VOID},
+    },
+    um::{
+        shellapi::{ExtractIconA, ExtractIconExA},
+        wingdi::{DeleteObject, GetBitmapBits, GetObjectW, BITMAP, BITMAPINFOHEADER},
+    },
+};
 use winreg::{enums::HKEY_LOCAL_MACHINE, RegKey};
 
 use crate::{browser_repository::SupportedAppRepository, InstalledBrowser};
@@ -157,18 +176,138 @@ impl OsHelper {
 pub fn create_icon_for_app(full_path_and_index: &str, icon_path: &str) {
     // e.g `C:\Program Files (x86)\Google\Chrome\Application\chrome.exe,0`
     let split: Vec<&str> = full_path_and_index.split(",").collect();
-    let path = split[0];
-    let index_str = split[1];
-    let index = index_str.parse::<i32>().unwrap();
+    let path = split[0].trim();
+    let index_str = split[1].trim();
+    let icon_index = index_str.parse::<i32>().unwrap();
 
-    // TODO
-    /*let hicon = ExtractIconA(
-        hInst: HINSTANCE,
-        pszExeFileName: LPCSTR,
-        nIconIndex: UINT,
-    ) -> HICON;*/
+    info!("Icon Path: '{}', index: {}", path, icon_index);
+    // We could be (todo) certain that our string doesn't have 0 bytes in the middle,
+    // so we can .expect()
+    let c_to_print = CString::new(path).expect("CString::new failed");
+    let a = c_to_print.as_ptr();
+    let ok = a.cast::<LPCSTR>();
 
-    // https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-extracticona
+    unsafe {
+        //let h_inst= "ok"; // hInst HINSTANCE
+        //let exe_file_path = "ok"; // pszExeFileName LPCSTR
+        //let icon_index = 0; // nIconIndex UINT
+        // TODO
+        // https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-extracticona
+        let hicon: HICON = ExtractIconA(0 as HINSTANCE, ok as LPCSTR, icon_index as UINT);
+
+        //let mut large: *mut HICON = HICON
+        let mut large: HICON = ptr::null_mut();
+        let array_pointer: *mut HICON = &mut large;
+
+        //array_pointer: *const libc::int32_t,
+        //array_pointer as *const i32
+
+        let ret = ExtractIconExA(
+            ok as LPCSTR,
+            icon_index as INT,
+            array_pointer,
+            null_mut(),
+            3 as UINT,
+        );
+
+        /*SHDefExtractIcon(
+            ok as LPCSTR,
+            icon_index as INT,
+            0 as UINT,
+            array_pointer,
+            null_mut(),
+            48,
+        );*/
+
+        // &mut pnt as LPPOINT
+
+        // TODO: destroy icon
+
+        let total = ret as usize;
+        info!("ret is {}", ret);
+
+        let a = *array_pointer;
+        let b = std::slice::from_raw_parts(array_pointer, total);
+        let c = b[0];
+
+        let image_buffer = convert_icon_to_image(c);
+        let result = image_buffer.save_with_format(icon_path, ImageFormat::Png);
+        if result.is_err() {
+            warn!("Could not save image to {}", icon_path);
+        }
+    }
+}
+
+// from https://users.rust-lang.org/t/how-to-convert-hicon-to-png/90975/15
+unsafe fn convert_icon_to_image(icon: HICON) -> RgbaImage {
+    let bitmap_size_i32 = i32::try_from(mem::size_of::<BITMAP>()).unwrap();
+    let biheader_size_u32 = u32::try_from(mem::size_of::<BITMAPINFOHEADER>()).unwrap();
+    let mut info = ICONINFO {
+        fIcon: 0,
+        xHotspot: 0,
+        yHotspot: 0,
+        hbmMask: std::mem::size_of::<HBITMAP>() as HBITMAP,
+        hbmColor: std::mem::size_of::<HBITMAP>() as HBITMAP,
+    };
+    GetIconInfo(icon, &mut info);
+
+    DeleteObject(info.hbmMask as *mut VOID);
+    let mut bitmap: MaybeUninit<BITMAP> = MaybeUninit::uninit();
+
+    let result = GetObjectW(
+        info.hbmColor as *mut VOID,
+        bitmap_size_i32,
+        bitmap.as_mut_ptr() as *mut VOID,
+    );
+
+    assert!(result == bitmap_size_i32);
+    let bitmap = bitmap.assume_init_ref();
+
+    info!(
+        "width_usize={}, height_usize={}",
+        bitmap.bmWidth, bitmap.bmHeight
+    );
+
+    let width_u32 = u32::try_from(bitmap.bmWidth).unwrap();
+    let height_u32 = u32::try_from(bitmap.bmHeight).unwrap();
+    let width_usize = usize::try_from(bitmap.bmWidth).unwrap();
+    let height_usize = usize::try_from(bitmap.bmHeight).unwrap();
+
+    let buf_size = width_usize
+        .checked_mul(height_usize)
+        .and_then(|size| size.checked_mul(4))
+        .unwrap();
+    let mut buf: Vec<u8> = Vec::with_capacity(buf_size);
+
+    let dc: HDC = GetDC(0 as HWND);
+    assert!(dc != (0 as HDC));
+
+    let _bitmap_info = BITMAPINFOHEADER {
+        biSize: biheader_size_u32,
+        biWidth: bitmap.bmWidth,
+        biHeight: -bitmap.bmHeight.abs(),
+        biPlanes: 1,
+        biBitCount: 32,
+        biCompression: winapi::um::wingdi::BI_RGB,
+        biSizeImage: 0,
+        biXPelsPerMeter: 0,
+        biYPelsPerMeter: 0,
+        biClrUsed: 0,
+        biClrImportant: 0,
+    };
+
+    let mut bmp: Vec<u8> = vec![0; buf_size];
+    let _mr_right = GetBitmapBits(info.hbmColor, buf_size as i32, bmp.as_mut_ptr() as LPVOID);
+    buf.set_len(bmp.capacity());
+    let result = ReleaseDC(0 as HWND, dc);
+    assert!(result == 1);
+    DeleteObject(info.hbmColor as *mut VOID);
+
+    for chunk in bmp.chunks_exact_mut(4) {
+        let [b, _, r, _] = chunk else { unreachable!() };
+        mem::swap(b, r);
+    }
+    RgbaImage::from_vec(width_u32, height_u32, bmp).unwrap()
 }
 
 // PATHS
