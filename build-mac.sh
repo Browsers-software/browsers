@@ -14,14 +14,14 @@ build_binary() {
   # Set minimum macOS version to support older OS versions
   export MACOSX_DEPLOYMENT_TARGET=10.7
 
-  # Clean universal binary and app bundle
-  rm -rf "${target_dir:?}/"
-
-  # Build x86_64 binary (also re-creates target/universal-apple-darwin/release/Browsers.app/Contents/Info.plist)
+  # Build x86_64 binary (also re-creates target/universal-apple-darwin/meta/Info.plist)
   cargo build --target x86_64-apple-darwin --release
 
-  # Build ARM64 binary (also re-creates target/universal-apple-darwin/release/Browsers.app/Contents/Info.plist)
+  # Build ARM64 binary (also re-creates target/universal-apple-darwin/meta/Info.plist)
   cargo build --target aarch64-apple-darwin --release
+
+  # Clean universal binary and app bundle
+  rm -rf "${target_dir:?}/"
 
   # Build universal binary
   mkdir -p "$target_dir/"
