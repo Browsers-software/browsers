@@ -50,7 +50,7 @@ jobs:
             ~/.cargo/.crates.toml
             ~/.cargo/.crates2.json
             target/
-          key: cross-${{ hashFiles('**/Cargo.lock') }}
+          key: linux-${{ hashFiles('**/Cargo.lock') }}
       - name: Install signify
         run: cargo install signify --target-dir ./target/signify
       - name: Install cross
@@ -149,6 +149,56 @@ jobs:
             target/universal-apple-darwin/release/browsers_mac.tar.gz.sig
             target/universal-apple-darwin/release/browsers_mac.tar.xz
             target/universal-apple-darwin/release/browsers_mac.tar.xz.sig
+  build-windows:
+    environment: PROD_2028
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Download cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
+            target/
+          key: windows-${{ hashFiles('**/Cargo.lock') }}
+      - name: Install signify
+        run: cargo install signify --target-dir ./target/signify
+      - name: Add Rust targets
+        run: |
+          rustup target add x86_64-pc-windows-msvc
+          rustup target add aarch64-pc-windows-msvc
+      - name: Test x86_64 binary
+        run: |
+          cargo build --target x86_64-pc-windows-msvc --release
+        shell: bash
+      - name: Test aarch64 binary
+        run: |
+          cargo build --target aarch64-pc-windows-msvc --release
+        shell: bash
+      - name: Build binaries and package
+        env:
+          APPCAST_SECRET_KEY_BASE64: ${{ secrets.APPCAST_SECRET_KEY_BASE64 }}
+        run: |
+          mkdir -p secrets
+          echo $APPCAST_SECRET_KEY_BASE64 | base64 --decode > secrets/appcast_seckey
+          export APPCAST_SECRET_KEY_FILE="${GITHUB_WORKSPACE}/secrets/appcast_seckey"
+          ./build-windows.sh
+        shell: bash
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: browsers-windows-artifacts
+          path: |
+            target/universal-pc-windows-msvc/release/browsers_windows.tar.gz
+            target/universal-pc-windows-msvc/release/browsers_windows.tar.gz.sig
+            target/universal-pc-windows-msvc/release/browsers_windows.tar.xz
+            target/universal-pc-windows-msvc/release/browsers_windows.tar.xz.sig
   release:
     needs: [ build-linux, build-macos ]
     runs-on: ubuntu-latest

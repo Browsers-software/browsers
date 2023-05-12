@@ -5,7 +5,7 @@ set -e
 
 target_dir='target/universal-unknown-linux-gnu/release'
 
-build() {
+build_binary() {
   cross build --target x86_64-unknown-linux-gnu --release
   cross build --target aarch64-unknown-linux-gnu --release
 
@@ -16,6 +16,12 @@ build() {
   mkdir -p "$target_dir/"
   mkdir -p "$target_dir/x86_64/"
   mkdir -p "$target_dir/aarch64/"
+
+  cp "target/x86_64-unknown-linux-gnu/release/browsers" "$target_dir/x86_64/browsers"
+  cp "target/aarch64-unknown-linux-gnu/release/browsers" "$target_dir/aarch64/browsers"
+}
+
+build_app_bundle() {
   mkdir -p "$target_dir/icons/"
   mkdir -p "$target_dir/icons/16x16"
   mkdir -p "$target_dir/icons/32x32"
@@ -25,14 +31,8 @@ build() {
   mkdir -p "$target_dir/icons/512x512"
   mkdir -p "$target_dir/i18n"
   mkdir -p "$target_dir/i18n/en-US"
+
   mkdir -p "$target_dir/xfce4/helpers"
-
-  cp "target/x86_64-unknown-linux-gnu/release/browsers" "$target_dir/x86_64/browsers"
-  cp "target/aarch64-unknown-linux-gnu/release/browsers" "$target_dir/aarch64/browsers"
-
-  cp "extra/linux/dist/install.sh" "$target_dir/install.sh"
-  cp "extra/linux/dist/software.Browsers.template.desktop" "$target_dir/software.Browsers.template.desktop"
-  cp "extra/linux/dist/xfce4/helpers/software.Browsers.template.desktop" "$target_dir/xfce4/helpers/software.Browsers.template.desktop"
 
   cp "resources/icons/16x16/software.Browsers.png" "$target_dir/icons/16x16/software.Browsers.png"
   cp "resources/icons/32x32/software.Browsers.png" "$target_dir/icons/32x32/software.Browsers.png"
@@ -40,8 +40,11 @@ build() {
   cp "resources/icons/128x128/software.Browsers.png" "$target_dir/icons/128x128/software.Browsers.png"
   cp "resources/icons/256x256/software.Browsers.png" "$target_dir/icons/256x256/software.Browsers.png"
   cp "resources/icons/512x512/software.Browsers.png" "$target_dir/icons/512x512/software.Browsers.png"
-
   cp "resources/i18n/en-US/builtin.ftl" "$target_dir/i18n/en-US/builtin.ftl"
+
+  cp "extra/linux/dist/install.sh" "$target_dir/install.sh"
+  cp "extra/linux/dist/software.Browsers.template.desktop" "$target_dir/software.Browsers.template.desktop"
+  cp "extra/linux/dist/xfce4/helpers/software.Browsers.template.desktop" "$target_dir/xfce4/helpers/software.Browsers.template.desktop"
 }
 
 make_archives() {
@@ -81,5 +84,6 @@ make_archives() {
   signify -S -s "$APPCAST_SECRET_KEY_FILE" -m "./$target_dir/browsers_linux.tar.xz"
 }
 
-build
+build_binary
+build_app_bundle
 make_archives
