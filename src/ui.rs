@@ -13,8 +13,8 @@ use druid::widget::{
 };
 use druid::{
     image, Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, LayoutCtx, LensExt,
-    LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, Modifiers, TextAlignment, UnitPoint,
-    UpdateCtx, Vec2, WidgetId, WindowHandle, WindowLevel,
+    LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, Modifiers, Monitor, TextAlignment,
+    UnitPoint, UpdateCtx, Vec2, WidgetId, WindowHandle, WindowLevel,
 };
 use druid::{
     AppDelegate, AppLauncher, Color, Command, Data, DelegateCtx, Env, Event, EventCtx, Handled,
@@ -105,11 +105,13 @@ impl UI {
         let basedir = self.localizations_basedir.to_str().unwrap().to_string();
         let main_window = self.create_window();
         let main_window_id = main_window.id.clone();
+        let (_, monitor) = druid::Screen::get_mouse_position();
         return AppLauncher::with_window(main_window)
             .delegate(UIDelegate {
                 main_sender: self.main_sender.clone(),
                 windows: vec![main_window_id],
                 main_window_id: main_window_id,
+                monitor: monitor.clone(),
             })
             .localization_resources(vec!["builtin.ftl".to_string()], basedir);
     }
@@ -368,6 +370,7 @@ pub struct UIDelegate {
     main_sender: Sender<MessageToMain>,
     main_window_id: WindowId,
     windows: Vec<WindowId>,
+    monitor: Monitor,
 }
 
 impl AppDelegate<UIState> for UIDelegate {
@@ -585,7 +588,7 @@ impl AppDelegate<UIState> for UIDelegate {
                 .ok();
             Handled::Yes
         } else if cmd.is(SHOW_ABOUT_DIALOG) {
-            show_about_dialog(ctx);
+            show_about_dialog(ctx, self.monitor.clone());
             Handled::Yes
         } else {
             //println!("cmd forwarded: {:?}", cmd);
@@ -619,7 +622,7 @@ impl AppDelegate<UIState> for UIDelegate {
     }
 }
 
-fn show_about_dialog(ctx: &mut DelegateCtx) {
+fn show_about_dialog(ctx: &mut DelegateCtx, monitor: Monitor) {
     info!("Browsers version {}", VERSION);
 
     let font = FontDescriptor::new(FontFamily::SYSTEM_UI)
@@ -693,7 +696,7 @@ fn show_about_dialog(ctx: &mut DelegateCtx) {
         .background(Color::from_hex_str("1b2020").unwrap());
 
     let size = Size::new(340.0, 260.0);
-    let (_, monitor) = druid::Screen::get_mouse_position();
+    //let (_, monitor) = druid::Screen::get_mouse_position();
     let screen_rect = monitor.virtual_work_rect();
 
     let x = screen_rect.x0 + (screen_rect.x1 - screen_rect.x0) / 2.0 - size.width / 2.0;
