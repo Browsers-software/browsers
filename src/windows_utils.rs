@@ -335,9 +335,14 @@ pub fn get_this_app_config_root_dir() -> PathBuf {
 }
 
 // For resources (e.g translations)
-// C:\Users\Alice\AppData\Local\software.Browsers\data
-pub fn get_this_app_data_dir() -> PathBuf {
-    return get_this_app_config_local_dir().join("data");
+// C:\Users\Alice\AppData\Local\Programs\software.Browsers\resources
+pub fn get_this_app_resources_dir() -> PathBuf {
+    return get_this_app_program_dir().join("resources");
+}
+
+// C:\Users\Alice\AppData\Local\Programs\software.Browsers
+fn get_this_app_program_dir() -> PathBuf {
+    return get_config_local_dir().join("Programs").join(APP_DIR_NAME);
 }
 
 // C:\Users\Alice\AppData\Local\software.Browsers

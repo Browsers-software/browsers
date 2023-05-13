@@ -222,6 +222,11 @@ pub fn get_this_app_config_root_dir() -> PathBuf {
     return get_this_app_xdg_config_dir();
 }
 
+// $HOME/.local/share/software.Browsers/resources
+pub fn get_this_app_resources_dir() -> PathBuf {
+    return get_this_app_data_dir().join("resources");
+}
+
 // $HOME/.local/share/software.Browsers
 pub fn get_this_app_data_dir() -> PathBuf {
     return get_this_app_xdg_data_dir();
