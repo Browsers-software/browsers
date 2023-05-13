@@ -121,14 +121,12 @@ pub fn get_resources_basedir() -> PathBuf {
 // $HOME/.local/share/software.Browsers/resources
 #[cfg(target_os = "linux")]
 pub fn get_resources_basedir() -> PathBuf {
-    let app_config_root_dir = linux_utils::get_this_app_data_dir();
-    return app_config_root_dir.join("resources");
+    return linux_utils::get_this_app_resources_dir();
 }
 
 #[cfg(target_os = "windows")]
 pub fn get_resources_basedir() -> PathBuf {
-    let app_config_root_dir = windows_utils::get_this_app_data_dir();
-    return app_config_root_dir.join("resources");
+    return windows_utils::get_this_app_resources_dir();
 }
 
 #[cfg(target_os = "linux")]
