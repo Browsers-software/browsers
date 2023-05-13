@@ -45,6 +45,8 @@ if not exist "%AppData%\Microsoft\Windows\Start Menu\Programs\Browsers\" (
 )
 copy "startmenu\Browsers.lnk" "%AppData%\Microsoft\Windows\Start Menu\Programs\Browsers\Browsers.lnk" 1>nul
 
+REG IMPORT install_handler.reg
+
 echo Browsers has been installed. Enjoy!
 echo Please report any issues at https://github.com/Browsers-software/browsers/issues
 
