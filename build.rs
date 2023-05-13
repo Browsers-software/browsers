@@ -3,6 +3,10 @@ use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+#[cfg(target_os = "windows")]
+extern crate winres;
+
+#[cfg(target_os = "macos")]
 fn main() {
     const VERSION: &str = env!("CARGO_PKG_VERSION");
     const ROOT_DIR: &str = env!("CARGO_MANIFEST_DIR");
@@ -34,3 +38,13 @@ fn main() {
     let mut file = File::create(target_info_plist_path.as_path()).unwrap();
     file.write_all(new_info_plist_content.as_bytes()).unwrap();
 }
+
+#[cfg(target_os = "windows")]
+fn main() {
+    let mut res = winres::WindowsResource::new();
+    res.set_icon("extra/windows/icons/browsers.ico");
+    res.compile().unwrap();
+}
+
+#[cfg(target_os = "linux")]
+fn main() {}
