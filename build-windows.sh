@@ -50,6 +50,8 @@ build_app_bundle() {
 }
 
 make_archives() {
+    rm -f "./${target_dir:?}/Browsers_windows.zip"
+
     rm -f "./${target_dir:?}/browsers_windows.tar.gz"
     rm -f "./${target_dir:?}/browsers_windows.tar.gz.sig"
 
@@ -69,6 +71,10 @@ make_archives() {
       './install.bat'
       './startmenu/Browsers.lnk'
     )
+
+  cd "./$target_dir"
+  zip "./Browsers_windows.zip" "${filelist[@]}"
+  cd -
 
   tar -zcf "./$target_dir/browsers_windows.tar.gz" \
     -C "./$target_dir" \
