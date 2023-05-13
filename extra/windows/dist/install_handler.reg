@@ -19,7 +19,7 @@ Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\Software\Classes\software.Browsers\shell\open]
 
 [HKEY_CURRENT_USER\Software\Classes\software.Browsers\shell\open\command]
-@="\"%LocalAppData%\\Programs\\software.Browsers\\browsers.exe\" %1"
+@="\"%LocalAppData%\\Programs\\software.Browsers\\browsers.exe\" \"%1\""
 
 
 [HKEY_CURRENT_USER\Software\Clients\StartMenuInternet\software.Browsers]
@@ -48,7 +48,7 @@ Windows Registry Editor Version 5.00
 "Browsers"="Software\\Clients\\StartMenuInternet\\software.Browsers\\Capabilities"
 
 [HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe]
-@="%LocalAppData%\\Programs\\software.Browsers\\browsers.exe
+@="%LocalAppData%\\Programs\\software.Browsers\\browsers.exe"
 "Path"="%LocalAppData%\\Programs\\software.Browsers"
 
 [HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe\SupportedProtocols]
