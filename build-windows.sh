@@ -35,6 +35,8 @@ build_app_bundle() {
   mkdir -p "$target_dir/i18n"
   mkdir -p "$target_dir/i18n/en-US"
 
+  mkdir -p "$target_dir/startmenu"
+
   cp "resources/icons/16x16/software.Browsers.png" "$target_dir/icons/16x16/software.Browsers.png"
   cp "resources/icons/32x32/software.Browsers.png" "$target_dir/icons/32x32/software.Browsers.png"
   cp "resources/icons/64x64/software.Browsers.png" "$target_dir/icons/64x64/software.Browsers.png"
@@ -42,6 +44,9 @@ build_app_bundle() {
   cp "resources/icons/256x256/software.Browsers.png" "$target_dir/icons/256x256/software.Browsers.png"
   cp "resources/icons/512x512/software.Browsers.png" "$target_dir/icons/512x512/software.Browsers.png"
   cp "resources/i18n/en-US/builtin.ftl" "$target_dir/i18n/en-US/builtin.ftl"
+
+  cp "extra/windows/dist/install.bat" "$target_dir/install.bat"
+  cp "extra/windows/dist/startmenu/Browsers.lnk" "$target_dir/startmenu/Browsers.lnk"
 }
 
 make_archives() {
@@ -61,6 +66,8 @@ make_archives() {
       './icons/256x256/software.Browsers.png'
       './icons/512x512/software.Browsers.png'
       './i18n/en-US/builtin.ftl'
+      './install.bat'
+      './startmenu/Browsers.lnk'
     )
 
   tar -zcf "./$target_dir/browsers_windows.tar.gz" \
