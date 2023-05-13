@@ -57,6 +57,8 @@ impl OsHelper {
         if scheme != "https" {
             return vec![];
         }
+
+        // TODO: search also from HKEY_CURRENT_USER
         let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
         let start_menu_internet = hklm
             .open_subkey("SOFTWARE\\Clients\\StartMenuInternet")
