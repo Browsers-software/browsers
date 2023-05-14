@@ -23,7 +23,10 @@ use winapi::{
         wingdi::{DeleteObject, GetBitmapBits, GetObjectW, BITMAP, BITMAPINFOHEADER},
     },
 };
-use winreg::{enums::HKEY_LOCAL_MACHINE, RegKey};
+use winreg::{
+    enums::{HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE},
+    RegKey,
+};
 
 use crate::{browser_repository::SupportedAppRepository, InstalledBrowser};
 
@@ -54,13 +57,26 @@ impl OsHelper {
     }
 
     fn find_applications_for_url_scheme(scheme: &str) -> Vec<AppInfoHolder> {
+        let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+        let mut hklm_apps = Self::find_applications_for_url_scheme_and_reg_root(scheme, hklm);
+
+        let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+        let mut hkcu_apps = Self::find_applications_for_url_scheme_and_reg_root(scheme, hkcu);
+
+        hklm_apps.append(&mut hkcu_apps);
+
+        hklm_apps
+    }
+
+    fn find_applications_for_url_scheme_and_reg_root(
+        scheme: &str,
+        root: RegKey,
+    ) -> Vec<AppInfoHolder> {
         if scheme != "https" {
             return vec![];
         }
 
-        // TODO: search also from HKEY_CURRENT_USER
-        let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
-        let start_menu_internet = hklm
+        let start_menu_internet = root
             .open_subkey("SOFTWARE\\Clients\\StartMenuInternet")
             .unwrap();
         let bundle_ids = start_menu_internet.enum_keys();
@@ -141,6 +157,11 @@ impl OsHelper {
         restricted_domains: Vec<String>,
     ) -> Option<InstalledBrowser> {
         let display_name = app_info.name.to_string();
+
+        if app_info.registry_key == "software.Browsers" {
+            // this is us, skip
+            return None;
+        }
 
         // Using the name as the unique id,
         // because registry_key can differ based on Firefox install path,
