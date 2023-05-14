@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] - 2023-05-14
+
+### Fixed
+
+- Fix opening link in Windows
+
 ## [0.3.1] - 2023-05-14
 
 ### Changed
@@ -95,7 +101,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial Release
 
-[unreleased]: https://github.com/Browsers-software/browsers/compare/0.3.1...HEAD
+[unreleased]: https://github.com/Browsers-software/browsers/compare/0.3.2...HEAD
+[0.3.0]: https://github.com/Browsers-software/browsers/releases/tag/0.3.2
 [0.3.0]: https://github.com/Browsers-software/browsers/releases/tag/0.3.1
 [0.3.0]: https://github.com/Browsers-software/browsers/releases/tag/0.3.0
 [0.2.9]: https://github.com/Browsers-software/browsers/releases/tag/0.2.9

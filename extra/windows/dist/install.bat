@@ -56,7 +56,7 @@ REG ADD "HKCU\Software\Classes\software.Browsers\Application" /v ApplicationComp
 
 REG ADD "HKCU\Software\Classes\software.Browsers\DefaultIcon" /ve /d "%LocalAppData%\Programs\software.Browsers\browsers.exe,0" /f
 
-REG ADD "HKCU\Software\Classes\software.Browsers\shell\open\command" /ve /d "\"%LocalAppData%\Programs\software.Browsers\browsers.exe\" \"%1\"" /f
+REG ADD "HKCU\Software\Classes\software.Browsers\shell\open\command" /ve /d "\"%LocalAppData%\Programs\software.Browsers\browsers.exe\" \"%%1\"" /f
 
 REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers" /ve /d "Browsers" /f
 
@@ -72,7 +72,7 @@ REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers\DefaultIcon" 
 
 REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers\shell\open\command" /ve /d "\"%LocalAppData%\Programs\software.Browsers\browsers.exe\"" /f
 
-REG ADD "HKCU\Software\RegisteredApplications" /v Browsers /t REG_SZ /d "Software\Clients\StartMenuInternet\software.Browsers\Capabilities" /f
+REG ADD "HKCU\Software\RegisteredApplications" /v software.Browsers /t REG_SZ /d "Software\Clients\StartMenuInternet\software.Browsers\Capabilities" /f
 
 REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe" /ve /d "%LocalAppData%\Programs\software.Browsers\browsers.exe" /f
 REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe" /v Path /t REG_SZ /d "%LocalAppData%\Programs\software.Browsers" /f
