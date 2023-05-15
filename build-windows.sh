@@ -46,6 +46,7 @@ build_app_bundle() {
   cp "resources/i18n/en-US/builtin.ftl" "$target_dir/i18n/en-US/builtin.ftl"
 
   cp "extra/windows/dist/install.bat" "$target_dir/install.bat"
+  cp "extra/windows/dist/announce_default.ps1" "$target_dir/announce_default.ps1"
   cp "extra/windows/dist/startmenu/Browsers.lnk" "$target_dir/startmenu/Browsers.lnk"
 }
 
@@ -69,6 +70,7 @@ make_archives() {
       './icons/512x512/software.Browsers.png'
       './i18n/en-US/builtin.ftl'
       './install.bat'
+      './announce_default.ps1'
       './startmenu/Browsers.lnk'
     )
 

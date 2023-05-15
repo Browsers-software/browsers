@@ -80,6 +80,8 @@ REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe" 
 REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe\SupportedProtocols" /v http /t REG_SZ /d "" /f 1>nul
 REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe\SupportedProtocols" /v https /t REG_SZ /d "" /f 1>nul
 
+powershell -ExecutionPolicy Bypass -File .\announce_default.ps1
+
 echo Browsers has been installed. Enjoy!
 echo Please report any issues at https://github.com/Browsers-software/browsers/issues
 
