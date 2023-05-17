@@ -40,6 +40,7 @@ pub mod communicate;
 
 mod chromium_profiles_parser;
 mod firefox_profiles_parser;
+mod url_rule;
 
 // a browser (with profiles), or Spotify, Zoom, etc
 pub struct GenericApp {
