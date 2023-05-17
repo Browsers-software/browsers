@@ -378,23 +378,15 @@ fn get_rule_for_source_app_and_url<'a>(
         return None;
     }
     let given_url = url_result.unwrap();
-    let given_url_host_maybe = given_url.host_str();
 
     for r in opening_rules {
         let mut source_app_match = false;
         let url_match = if let Some(ref url_pattern) = r.url_pattern {
-            let url_pattern_rule = url_pattern.clone();
-            let url_rule_result = Url::from_str(url_pattern_rule.as_str());
-            if url_rule_result.is_err() {
-                continue;
-            }
-            let url_rule = url_rule_result.unwrap();
+            let url_matches = url_rule::to_url_matcher(url_pattern.as_str())
+                .to_glob_matcher()
+                .url_matches(&given_url);
 
-            if let Some(given_url_host) = given_url_host_maybe {
-                url_rule.host_str().unwrap() == given_url_host
-            } else {
-                false
-            }
+            url_matches
         } else {
             true
         };
