@@ -35,7 +35,15 @@ pub struct Config {
     hidden_apps: Vec<String>,
     hidden_profiles: Vec<String>,
     profile_order: Vec<String>,
+    default_profile: Option<ProfileAndOptions>,
     rules: Vec<ConfigRule>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[serde(default)]
+pub struct ProfileAndOptions {
+    pub profile: String,
+    pub incognito: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -95,6 +103,10 @@ impl Config {
 
     pub fn get_rules(&self) -> &Vec<ConfigRule> {
         return &self.rules;
+    }
+
+    pub fn get_default_profile(&self) -> &Option<ProfileAndOptions> {
+        return &self.default_profile;
     }
 }
 
