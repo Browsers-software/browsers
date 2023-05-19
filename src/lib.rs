@@ -15,7 +15,7 @@ use ui::UI;
 
 use crate::browser_repository::{SupportedApp, SupportedAppRepository};
 use crate::ui::MoveTo;
-use crate::utils::OSAppFinder;
+use crate::utils::{OSAppFinder, ProfileAndOptions};
 
 mod ui;
 
@@ -299,6 +299,7 @@ fn generate_all_browser_profiles(
     force_reload: bool,
 ) -> (
     Vec<OpeningRule>,
+    Option<ProfileAndOptions>,
     Vec<CommonBrowserProfile>,
     Vec<CommonBrowserProfile>,
 ) {
@@ -308,6 +309,7 @@ fn generate_all_browser_profiles(
     let hidden_profiles = config.get_hidden_profiles();
 
     let config_rules = config.get_rules();
+    let default_profile = config.get_default_profile();
     let opening_rules = config_rules
         .iter()
         .map(|r| OpeningRule {
@@ -365,14 +367,20 @@ fn generate_all_browser_profiles(
     // always show special apps first
     visible_browser_profiles.sort_by_key(|b| !b.has_priority_ordering());
 
-    return (opening_rules, visible_browser_profiles, hidden_browser_profiles);
+    return (
+        opening_rules,
+        default_profile.clone(),
+        visible_browser_profiles,
+        hidden_browser_profiles,
+    );
 }
 
-fn get_rule_for_source_app_and_url<'a>(
-    opening_rules: &'a Vec<OpeningRule>,
+fn get_rule_for_source_app_and_url(
+    opening_rules: &Vec<OpeningRule>,
+    default_profile_maybe: Option<ProfileAndOptions>,
     url: &str,
     source_app_maybe: Option<String>,
-) -> Option<&'a OpeningRule> {
+) -> Option<ProfileAndOptions> {
     let url_result = Url::from_str(url);
     if url_result.is_err() {
         return None;
@@ -402,8 +410,16 @@ fn get_rule_for_source_app_and_url<'a>(
         }
 
         if url_match && source_app_match {
-            return Some(r);
+            let profile_and_options = ProfileAndOptions {
+                profile: r.profile.clone(),
+                incognito: false,
+            };
+            return Some(profile_and_options);
         }
+    }
+
+    if default_profile_maybe.is_some() {
+        return default_profile_maybe;
     }
 
     return None;
@@ -443,14 +459,17 @@ pub fn basically_main(
     let is_default = utils::set_as_default_web_browser();
     let show_set_as_default = !is_default;
 
-    let (opening_rules, mut visible_browser_profiles, mut hidden_browser_profiles) =
+    let (opening_rules, default_profile, mut visible_browser_profiles, mut hidden_browser_profiles) =
         generate_all_browser_profiles(&app_finder, force_reload);
 
     // TODO: url should not be considered here in case of macos
     //       and only the one in LinkOpenedFromBundle should be considered
-    let opening_rule_maybe = get_rule_for_source_app_and_url(&opening_rules, url, None);
-    if let Some(opening_rule) = opening_rule_maybe {
-        let profile_id = opening_rule.profile.clone();
+    let opening_profile_maybe =
+        get_rule_for_source_app_and_url(&opening_rules, default_profile.clone(), url, None);
+    if let Some(opening_profile_id) = opening_profile_maybe {
+        let profile_and_options = opening_profile_id.clone();
+        let profile_id = profile_and_options.profile;
+        let incognito = profile_and_options.incognito;
 
         let profile_maybe = get_browser_profile_by_id(
             visible_browser_profiles.as_slice(),
@@ -458,7 +477,7 @@ pub fn basically_main(
             profile_id.as_str(),
         );
         if let Some(profile) = profile_maybe {
-            profile.open_link(url, false);
+            profile.open_link(url, incognito);
             return;
         }
     }
@@ -482,7 +501,7 @@ pub fn basically_main(
             match message {
                 MessageToMain::Refresh => {
                     info!("refresh called");
-                    let (_, visible_browser_profiles, _) =
+                    let (_, _, visible_browser_profiles, _) =
                         generate_all_browser_profiles(&app_finder, true);
 
                     let ui_browsers = UI::real_to_ui_browsers(&visible_browser_profiles);
@@ -516,13 +535,16 @@ pub fn basically_main(
                     //       prioritize/default browsers based on source app and/or url
                     debug!("source_bundle_id: {}", from_bundle_id.clone());
                     debug!("url: {}", url);
-                    let opening_rule_maybe = get_rule_for_source_app_and_url(
+                    let opening_profile_id_maybe = get_rule_for_source_app_and_url(
                         &opening_rules,
+                        default_profile.clone(),
                         url.as_str(),
                         Some(from_bundle_id.clone()),
                     );
-                    if let Some(opening_rule) = opening_rule_maybe {
-                        let profile_id = opening_rule.profile.clone();
+                    if let Some(opening_profile_id) = opening_profile_id_maybe {
+                        let profile_and_options = opening_profile_id.clone();
+                        let profile_id = profile_and_options.profile;
+                        let incognito = profile_and_options.incognito;
 
                         let profile_maybe = get_browser_profile_by_id(
                             visible_browser_profiles.as_slice(),
@@ -530,7 +552,7 @@ pub fn basically_main(
                             profile_id.as_str(),
                         );
                         if let Some(profile) = profile_maybe {
-                            profile.open_link(url.as_str(), false);
+                            profile.open_link(url.as_str(), incognito);
                             ui_event_sink
                                 .submit_command(
                                     ui::OPEN_LINK_IN_BROWSER_COMPLETED,
