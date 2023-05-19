@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.4] - 2023-05-20
+
+### Changed
+
+- Wildcards in URL rules #18
+- Optional default browser #18
+
+### Fixed
+
+- Linux: Opening browsers with multiargument Exec line in .desktop file #32
+
 ## [0.3.3] - 2023-05-14
 
 ### Fixed
@@ -107,10 +118,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial Release
 
-[unreleased]: https://github.com/Browsers-software/browsers/compare/0.3.3...HEAD
-[0.3.0]: https://github.com/Browsers-software/browsers/releases/tag/0.3.3
-[0.3.0]: https://github.com/Browsers-software/browsers/releases/tag/0.3.2
-[0.3.0]: https://github.com/Browsers-software/browsers/releases/tag/0.3.1
+[unreleased]: https://github.com/Browsers-software/browsers/compare/0.3.4...HEAD
+[0.3.4]: https://github.com/Browsers-software/browsers/releases/tag/0.3.4
+[0.3.3]: https://github.com/Browsers-software/browsers/releases/tag/0.3.3
+[0.3.2]: https://github.com/Browsers-software/browsers/releases/tag/0.3.2
+[0.3.1]: https://github.com/Browsers-software/browsers/releases/tag/0.3.1
 [0.3.0]: https://github.com/Browsers-software/browsers/releases/tag/0.3.0
 [0.2.9]: https://github.com/Browsers-software/browsers/releases/tag/0.2.9
 [0.2.8]: https://github.com/Browsers-software/browsers/releases/tag/0.2.8
