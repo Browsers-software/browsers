@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use dirs::home_dir;
-use tracing::info;
+use tracing::{info, warn};
 
 use glib::prelude::AppInfoExt;
 use glib::AppInfo;
@@ -87,22 +87,20 @@ impl OsHelper {
         // need to use command(), because executable() is not fine, as snap apps just have "env" there
         let command_with_field_codes = option.unwrap();
         let command_str = command_with_field_codes.to_str().unwrap();
-        let command_str = str::replace(command_str, " %u", "");
-        let mut command_str = str::replace(command_str.as_str(), " %U", "");
 
-        // handle snap packages in a very naive way; TODO: VERY FRAGILE
+        let command_parts: Vec<String> = shell_words::split(&command_str)
+            .expect("failed to parse Exec value in the .desktop file");
 
-        // "env BAMF_DESKTOP_FILE_HINT=/var/lib/snapd/desktop/applications/firefox_firefox.desktop /snap/bin/firefox"
-        // to "/snap/bin/firefox"
-
-        if command_str.starts_with("env BAMF_DESKTOP_FILE_HINT=") {
-            let command_components: Vec<&str> = command_str.split(' ').collect();
-            let actual_cmd_maybe = command_components.get(2);
-            let actual_cmd = actual_cmd_maybe.unwrap();
-            let actual_cmd_str = actual_cmd.to_string().trim().to_string();
-            command_str = actual_cmd_str;
-            //let actual_command = command_components.get(2);
+        if command_parts.is_empty() {
+            warn!("Exec line is empty! This browser won't work");
+            return None;
         }
+
+        // check if it's snap package in a bit naive way
+        // "env BAMF_DESKTOP_FILE_HINT=/var/lib/snapd/desktop/applications/firefox_firefox.desktop /snap/bin/firefox %u"
+        let is_snap = command_parts
+            .iter()
+            .any(|part| part.starts_with("/snap/bin"));
 
         //let snap_root_path = self.snap_base.clone();
         //let snap_linux_config_dir_relative_path = PathBuf::from(snap_name)
@@ -110,17 +108,20 @@ impl OsHelper {
         //    .join(linux_config_dir_relative);
         //let config_dir_absolute = snap_root_path.join(snap_linux_config_dir_relative_path);
 
-        let is_snap = command_str.starts_with("/snap/bin/");
-        let executable_path = Path::new(command_str.as_str());
+        // we need executable path for two reasons:
+        //  - to uniquely identify apps
+        //  - to identify which Firefox profiles are allowed for firefox instance, they hash the binary path
+        let executable_path_best_guess = command_parts
+            .iter()
+            .rfind(|component| !component.starts_with("%") && !component.starts_with("-"))
+            .map(|path_perhaps| Path::new(path_perhaps.as_str()))
+            .unwrap_or(Path::new("unknown"));
 
         // TODO: get correct path for firefox snap, which one is actually used to calculate installation id in profiles.ini
         // let command_dir = executable_path.parent();
         // let binary_dir = command_dir.and_then(|p| p.to_str()).unwrap_or("").to_string();
 
         // env BAMF_DESKTOP_FILE_HINT=/var/lib/snapd/desktop/applications/firefox_firefox.desktop
-        //
-
-        // let executable_path = app_info.executable(); // wrong for snaps (env)
 
         let name = app_info.name().to_string();
         /*let icon_maybe = app_info.icon();
@@ -157,10 +158,11 @@ impl OsHelper {
         let _string = app_info.to_string();
         //println!("app_info: {}", id);
 
-        let profiles = supported_app.find_profiles(executable_path.clone(), is_snap);
+        let profiles = supported_app.find_profiles(executable_path_best_guess.clone(), is_snap);
 
         let browser = InstalledBrowser {
-            executable_path: executable_path.to_str().unwrap().to_string(),
+            command: command_parts.clone(),
+            executable_path: executable_path_best_guess.to_str().unwrap().to_string(),
             display_name: display_name.to_string(),
             bundle: supported_app.get_app_id().to_string(),
             user_dir: supported_app

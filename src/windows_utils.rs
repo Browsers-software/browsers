@@ -9,10 +9,6 @@ use std::{
 use druid::image::{ImageFormat, RgbaImage};
 use tracing::{info, warn};
 
-use winapi::shared::windef::*;
-use winapi::shared::winerror::*;
-use winapi::um::errhandlingapi::GetLastError;
-use winapi::um::winuser::*;
 use winapi::{
     shared::{
         minwindef::*,
@@ -20,9 +16,13 @@ use winapi::{
     },
     um::{
         shellapi::{ExtractIconA, ExtractIconExA},
-        wingdi::{DeleteObject, GetBitmapBits, GetObjectW, BITMAP, BITMAPINFOHEADER},
+        wingdi::{BITMAP, BITMAPINFOHEADER, DeleteObject, GetBitmapBits, GetObjectW},
     },
 };
+use winapi::shared::windef::*;
+use winapi::shared::winerror::*;
+use winapi::um::errhandlingapi::GetLastError;
+use winapi::um::winuser::*;
 use winreg::{
     enums::{HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE},
     RegKey,
@@ -183,7 +183,10 @@ impl OsHelper {
 
         let profiles = supported_app.find_profiles(executable_path, false);
 
+        let command_parts: Vec<String> = vec![command_str.to_string()];
+
         let browser = InstalledBrowser {
+            command: command_parts,
             executable_path: command_str.to_string(),
             display_name: display_name.to_string(),
             bundle: app_id.to_string(),
