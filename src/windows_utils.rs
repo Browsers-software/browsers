@@ -9,22 +9,20 @@ use std::{
 use druid::image::{ImageFormat, RgbaImage};
 use tracing::{info, warn};
 
+use winapi::shared::windef::*;
+use winapi::um::winuser::*;
 use winapi::{
     shared::{
         minwindef::*,
-        ntdef::{CHAR, LPCSTR, VOID},
+        ntdef::{LPCSTR, VOID},
     },
     um::{
         shellapi::{ExtractIconA, ExtractIconExA},
-        wingdi::{BITMAP, BITMAPINFOHEADER, DeleteObject, GetBitmapBits, GetObjectW},
+        wingdi::{DeleteObject, GetBitmapBits, GetObjectW, BITMAP, BITMAPINFOHEADER},
     },
 };
-use winapi::shared::windef::*;
-use winapi::shared::winerror::*;
-use winapi::um::errhandlingapi::GetLastError;
-use winapi::um::winuser::*;
 use winreg::{
-    enums::{HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE},
+    enums::{HKEY_CLASSES_ROOT, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE},
     RegKey,
 };
 
@@ -35,7 +33,7 @@ struct AppInfoHolder {
     registry_key: String,
     name: String,
     icon_path: String,
-    binary_path: String,
+    command: String,
 }
 
 pub struct OsHelper {
@@ -68,12 +66,64 @@ impl OsHelper {
         hklm_apps
     }
 
+    fn find_applications_for_class(scheme: &str, root: RegKey) -> Vec<AppInfoHolder> {
+        let classes = RegKey::predef(HKEY_CLASSES_ROOT);
+
+        //let classes = root.open_subkey("SOFTWARE\\Classes").unwrap();
+
+        let classes_keys = classes.enum_keys();
+        let apps = classes_keys
+            .map(|result| result.unwrap())
+            .filter(|protocol| protocol == scheme)
+            .map(|protocol| classes.open_subkey(protocol).unwrap())
+            .filter(|protocol_key| protocol_key.get_value::<String, _>("URL Protocol").is_ok())
+            .map(|protocol_key| {
+                let app_name_result = protocol_key.get_value::<String, _>("");
+
+                let default_app_name = scheme.to_string();
+                let app_name = app_name_result.unwrap_or(default_app_name);
+                //    .expect("no default value");
+                //let app_name = if !app_name.is_empty() {app_name} else {scheme.to_string()};
+                let command_reg_key = protocol_key
+                    .open_subkey("shell\\open\\command")
+                    .expect("no open command");
+
+                // "C:\Users\Browsers\AppData\Roaming\Spotify\Spotify.exe" --protocol-uri="%1"
+                let command: String = command_reg_key.get_value("").unwrap();
+
+                let icon_key = protocol_key
+                    .open_subkey("DefaultIcon")
+                    .expect("no DefaultIcon");
+                //"C:\Users\Browsers\AppData\Roaming\Spotify\Spotify.exe",0
+                let icon_path: String = icon_key.get_value("").unwrap();
+
+                //let app_name = "okei";
+                //let icon_path = "\"C:\\Users\\Browsers\\AppData\\Roaming\\Spotify\\Spotify.exe\",0";
+                //let binary_path = "\"C:\\Users\\Browsers\\AppData\\Roaming\\Spotify\\Spotify.exe\"";
+                //let command = binary_path;
+
+                let app_info = AppInfoHolder {
+                    registry_key: scheme.to_string(),
+                    name: app_name.to_string(),
+                    icon_path: icon_path.to_string(),
+                    command: command.to_string(),
+                };
+                info!("icon_path: {}", icon_path);
+
+                info!("command: {}", command);
+                app_info
+            })
+            .collect::<Vec<_>>();
+
+        apps
+    }
+
     fn find_applications_for_url_scheme_and_reg_root(
         scheme: &str,
         root: RegKey,
     ) -> Vec<AppInfoHolder> {
         if scheme != "https" {
-            return vec![];
+            return Self::find_applications_for_class(scheme, root);
         }
 
         let start_menu_internet = root
@@ -81,7 +131,7 @@ impl OsHelper {
             .unwrap();
         let bundle_ids = start_menu_internet.enum_keys();
 
-        let mut apps: Vec<AppInfoHolder> = bundle_ids
+        let apps: Vec<AppInfoHolder> = bundle_ids
             .map(|result| result.unwrap())
             .map(|browser_key_name| {
                 let browser_reg_key = start_menu_internet
@@ -92,12 +142,12 @@ impl OsHelper {
                 let command_reg_key = browser_reg_key.open_subkey("shell\\open\\command").unwrap();
                 let binary_path: String = command_reg_key.get_value("").unwrap();
                 // remove surrounding quotes if there are any
-                let binary_path = binary_path.trim_start_matches("\"");
-                let binary_path = binary_path.trim_end_matches("\"");
+                //let binary_path = binary_path.trim_start_matches("\"");
+                //let binary_path = binary_path.trim_end_matches("\"");
 
-                let binary_path_path = Path::new(binary_path);
-                let binary_path_str = binary_path_path.to_str().unwrap();
-                info!("path is {}", binary_path_str);
+                //let binary_path_path = Path::new(binary_path);
+                //let binary_path_str = binary_path_path.to_str().unwrap();
+                //info!("path is {}", binary_path_str);
 
                 // Either Capabilities->ApplicationIcon
                 // or DefaultIcon->""
@@ -109,7 +159,7 @@ impl OsHelper {
                     registry_key: browser_key_name,
                     name: browser_name.to_string(),
                     icon_path: default_icon_path.to_string(),
-                    binary_path: binary_path_str.to_string(),
+                    command: binary_path.to_string(),
                 }
             })
             .collect::<Vec<_>>();
@@ -178,16 +228,35 @@ impl OsHelper {
         let icon_path_str = full_stored_icon_path.display().to_string();
         create_icon_for_app(app_info.icon_path.as_str(), icon_path_str.as_str());
 
-        let command_str = app_info.binary_path;
-        let executable_path = Path::new(command_str.as_str());
+        // "C:\Users\Browsers\AppData\Roaming\Spotify\Spotify.exe" --protocol-uri="%1"
+        // "C:\Users\Browsers\AppData\Roaming\Spotify\Spotify.exe"
+        let command_str = app_info.command;
 
-        let profiles = supported_app.find_profiles(executable_path, false);
+        // "C:\Users\Browsers\AppData\Roaming\Spotify\Spotify.exe"
+        // --protocol-uri="%1"
+        let command_parts: Vec<String> =
+            shell_words::split(&command_str).expect("failed to parse command");
 
-        let command_parts: Vec<String> = vec![command_str.to_string()];
+        if command_parts.is_empty() {
+            warn!("Command is empty! This browser won't work");
+            return None;
+        }
+
+        // we need executable path for two reasons:
+        //  - to uniquely identify apps
+        //  - to identify which Firefox profiles are allowed for firefox instance, they hash the binary path
+        let executable_path_best_guess = command_parts
+            .iter()
+            .rfind(|component| !component.starts_with("%") && !component.starts_with("-"))
+            .map(|path_perhaps| remove_quotes(&path_perhaps))
+            .map(|path_perhaps| Path::new(path_perhaps))
+            .unwrap_or(Path::new("unknown"));
+
+        let profiles = supported_app.find_profiles(executable_path_best_guess.clone(), false);
 
         let browser = InstalledBrowser {
-            command: command_parts,
-            executable_path: command_str.to_string(),
+            command: command_parts.clone(),
+            executable_path: executable_path_best_guess.to_str().unwrap().to_string(),
             display_name: display_name.to_string(),
             bundle: app_id.to_string(),
             user_dir: supported_app.get_app_config_dir_absolute(false).to_string(),
@@ -199,10 +268,20 @@ impl OsHelper {
     }
 }
 
+fn remove_quotes(binary_path: &str) -> &str {
+    // remove surrounding quotes if there are any
+    let binary_path = binary_path.trim_start_matches("\"");
+    let binary_path = binary_path.trim_end_matches("\"");
+    return binary_path;
+}
+
 pub fn create_icon_for_app(full_path_and_index: &str, icon_path: &str) {
     // e.g `C:\Program Files (x86)\Google\Chrome\Application\chrome.exe,0`
+    //  or `"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",0`
     let split: Vec<&str> = full_path_and_index.split(",").collect();
     let path = split[0].trim();
+    let path = remove_quotes(path);
+
     let index_str = split[1].trim();
     let icon_index = index_str.parse::<i32>().unwrap();
 
