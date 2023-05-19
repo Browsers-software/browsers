@@ -292,6 +292,7 @@ pub struct OpeningRule {
     source_app: Option<String>,
     url_pattern: Option<String>,
     profile: String,
+    incognito: bool,
 }
 
 fn generate_all_browser_profiles(
@@ -316,6 +317,7 @@ fn generate_all_browser_profiles(
             source_app: r.source_app.clone(),
             url_pattern: r.url_pattern.clone(),
             profile: r.profile.clone(),
+            incognito: r.incognito.clone(),
         })
         .collect();
 
@@ -412,7 +414,7 @@ fn get_rule_for_source_app_and_url(
         if url_match && source_app_match {
             let profile_and_options = ProfileAndOptions {
                 profile: r.profile.clone(),
-                incognito: false,
+                incognito: r.incognito.clone(),
             };
             return Some(profile_and_options);
         }

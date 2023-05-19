@@ -29,7 +29,7 @@ pub fn set_as_default_web_browser() -> bool {
     return true;
 }
 
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 #[serde(default)]
 pub struct Config {
     hidden_apps: Vec<String>,
@@ -46,11 +46,13 @@ pub struct ProfileAndOptions {
     pub incognito: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[serde(default)]
 pub struct ConfigRule {
     pub source_app: Option<String>,
     pub url_pattern: Option<String>,
     pub profile: String,
+    pub incognito: bool,
 }
 
 impl Config {
