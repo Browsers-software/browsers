@@ -1,8 +1,8 @@
+use std::{fs, mem, ptr};
 use std::collections::HashSet;
 use std::ffi::{CStr, OsString};
 use std::os::unix::ffi::OsStringExt;
 use std::path::{Path, PathBuf};
-use std::{fs, mem, ptr};
 
 use cocoa_foundation::base::{id, nil};
 use cocoa_foundation::foundation::{NSAutoreleasePool, NSPoint, NSRect, NSSize, NSString, NSURL};
@@ -10,13 +10,13 @@ use core_foundation::array::{CFArray, CFArrayRef};
 use core_foundation::base::TCFType;
 use core_foundation::string::CFString;
 use core_foundation::string::CFStringRef;
+use objc::{class, msg_send, sel, sel_impl};
 use objc::runtime::Object;
 use objc::runtime::YES;
-use objc::{class, msg_send, sel, sel_impl};
 use tracing::{debug, info};
 
+use crate::{InstalledBrowser, macos};
 use crate::browser_repository::SupportedAppRepository;
-use crate::{macos, InstalledBrowser};
 
 const APP_DIR_NAME: &'static str = "software.Browsers";
 const APP_BUNDLE_ID: &'static str = "software.Browsers";
@@ -290,7 +290,10 @@ impl OsHelper {
         let icon_path_str = full_stored_icon_path.display().to_string();
         create_icon_for_app(bundle_url, icon_path_str.as_str());
 
+        let command_parts: Vec<String> = vec![executable_path.to_str().unwrap().to_string()];
+
         let browser = InstalledBrowser {
+            command: command_parts,
             executable_path: executable_path.to_str().unwrap().to_string(),
             display_name: display_name.to_string(),
             bundle: supported_app.get_app_id().to_string(),

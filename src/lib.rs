@@ -1,10 +1,10 @@
+use std::{env, thread};
 use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::process::Command;
 use std::str::FromStr;
+use std::sync::{Arc, mpsc};
 use std::sync::mpsc::{Receiver, Sender};
-use std::sync::{mpsc, Arc};
-use std::{env, thread};
 
 use druid::{ExtEventSink, Target, UrlOpenInfo};
 use serde::{Deserialize, Serialize};
@@ -56,6 +56,7 @@ impl GenericApp {
         );
         let app = BrowserCommon {
             supported_app: supported_app,
+            command: installed_browser.command.clone(),
             executable_path: installed_browser.executable_path.to_string(),
             display_name: installed_browser.display_name.to_string(),
             icon_path: installed_browser.icon_path.to_string(),
@@ -80,6 +81,7 @@ impl GenericApp {
 
 #[derive(Clone)]
 pub struct BrowserCommon {
+    command: Vec<String>,
     executable_path: String,
     display_name: String,
     icon_path: String,
@@ -87,6 +89,11 @@ pub struct BrowserCommon {
 }
 
 impl BrowserCommon {
+    // used in configuration file to uniquely identify this app
+    fn get_unique_app_id(&self) -> String {
+        return self.executable_path.to_string();
+    }
+
     fn supports_profiles(&self) -> bool {
         return self.supported_app.supports_profiles();
     }
@@ -114,6 +121,9 @@ impl BrowserCommon {
         let app_url = self
             .supported_app
             .get_transformed_url(profile_cli_container_name, url);
+
+        let (main_command, arguments) = self.command.split_at(1);
+        let main_command = main_command.first().unwrap(); // guaranteed to not be empty
 
         // TODO: support BSD - https://doc.rust-lang.org/reference/conditional-compilation.html
         if cfg!(target_os = "macos") {
@@ -147,12 +157,37 @@ impl BrowserCommon {
             debug!("Launching: {:?}", cmd);
             return cmd;
         } else if cfg!(target_os = "linux") {
-            let mut cmd = Command::new(self.executable_path.to_string());
-            cmd.args(profile_args).arg(app_url);
+            let has_url_placeholder = arguments.iter().any(|arg| arg.eq_ignore_ascii_case("%u"));
+
+            let arguments: Vec<String> = if has_url_placeholder {
+                let arguments: Vec<String> = arguments
+                    .iter()
+                    .map(|arg| {
+                        if arg.eq_ignore_ascii_case("%u") {
+                            app_url.clone()
+                        } else {
+                            arg.to_string()
+                        }
+                    })
+                    .collect();
+                arguments
+            } else {
+                arguments.to_vec()
+            };
+
+            let mut cmd = Command::new(main_command.to_string());
+
+            cmd.args(arguments);
+            cmd.args(profile_args);
+
+            // Non-browser apps don't have the placeholder
+            if !has_url_placeholder {
+                cmd.arg(app_url);
+            }
 
             return cmd;
         } else if cfg!(target_os = "windows") {
-            let mut cmd = Command::new(self.executable_path.to_string());
+            let mut cmd = Command::new(main_command.to_string());
             cmd.args(profile_args).arg(app_url);
             return cmd;
         }
@@ -200,7 +235,7 @@ impl CommonBrowserProfile {
 
     // used in configuration file to uniquely identify this app
     fn get_unique_app_id(&self) -> String {
-        let app_executable_path = (&self).get_browser_common().executable_path.to_string();
+        let app_executable_path = self.get_browser_common().get_unique_app_id();
         return app_executable_path;
     }
 
@@ -251,6 +286,21 @@ impl CommonBrowserProfile {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct InstalledBrowser {
+    // In Linux:
+    //  "env",
+    //  "MOZ_ENABLE_WAYLAND=1",
+    //  "BAMF_DESKTOP_FILE_HINT=/var/lib/snapd/desktop/applications/firefox_firefox.desktop",
+    //  "/snap/bin/firefox",
+    //  "%u"
+    //
+    //  "qutebrowser",
+    //  "--untrusted-args",
+    //  "%u"
+
+    // In Windows and mac:
+    // single item with full path of the executable
+    command: Vec<String>,
+
     // unique path of the executable
     // specially useful if multiple versions/locations of bundles exist
     executable_path: String,
