@@ -75,7 +75,7 @@ fi
 SRC_I18N_DIR="$THIS_DIR/i18n"
 cp "$SRC_I18N_DIR/en-US/builtin.ftl" "$I18N_DIR/en-US/builtin.ftl"
 
-# armv7l, (arm64 on macos), aarch64, x86_64
+# armv7l, aarch64, x86_64
 ARCH="$(uname -m)"
 
 SRC_BINARY_PATH="$THIS_DIR/$ARCH/browsers"

@@ -1,0 +1,8 @@
+FROM --platform=linux/amd64 ghcr.io/cross-rs/armv7-unknown-linux-gnueabihf:main
+
+RUN dpkg --add-architecture armhf \
+    && DEBIAN_FRONTEND=noninteractive apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install \
+    libpango-1.0-0:armhf \
+    libpango1.0-dev:armhf \
+    libgtk-3-dev:armhf

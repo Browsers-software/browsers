@@ -8,6 +8,7 @@ target_dir='target/universal-unknown-linux-gnu/release'
 build_binary() {
   cross build --target x86_64-unknown-linux-gnu --release
   cross build --target aarch64-unknown-linux-gnu --release
+  cross build --target armv7-unknown-linux-gnueabihf --release
 
   # Clean universal binary
   rm -rf "${target_dir:?}/"
@@ -16,9 +17,11 @@ build_binary() {
   mkdir -p "$target_dir/"
   mkdir -p "$target_dir/x86_64/"
   mkdir -p "$target_dir/aarch64/"
+  mkdir -p "$target_dir/armv7l/"
 
   cp "target/x86_64-unknown-linux-gnu/release/browsers" "$target_dir/x86_64/browsers"
   cp "target/aarch64-unknown-linux-gnu/release/browsers" "$target_dir/aarch64/browsers"
+  cp "target/armv7-unknown-linux-gnueabihf/release/browsers" "$target_dir/armv7l/browsers"
 }
 
 build_app_bundle() {
@@ -57,6 +60,7 @@ make_archives() {
   local filelist=(
     './x86_64/browsers'
     './aarch64/browsers'
+    './armv7l/browsers'
     './icons/16x16/software.Browsers.png'
     './icons/32x32/software.Browsers.png'
     './icons/64x64/software.Browsers.png'
