@@ -19,7 +19,11 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["fmt", "std", "time", "local-time"] }
 tracing-appender = "0.2"
 
-rolling-file = "0.2.0"
+# Official remote
+#rolling-file = "0.2.0"
+
+# Chrono-less fork, so doesn't pull in old time crate 0.1
+rolling-file = { git = "https://github.com/browsers-software/rolling-file-rs.git", branch = "browsers" }
 
 dirs = "5.0.0"
 
