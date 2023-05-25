@@ -1,23 +1,22 @@
+use std::{fs, u32};
 use std::fs::File;
-use std::io::{BufReader, ErrorKind};
-use std::path::{Path, PathBuf};
-use std::{fs, io, u32};
+use std::io::BufReader;
+use std::path::Path;
 
 use druid::image;
-use druid::image::imageops::FilterType;
 use druid::image::{ImageFormat, Rgba};
+use druid::image::imageops::FilterType;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
-use url::Url;
 
+use crate::{InstalledBrowser, paths, SupportedAppRepository};
 #[cfg(target_os = "linux")]
 use crate::linux_utils;
 #[cfg(target_os = "macos")]
 use crate::macos_utils;
 #[cfg(target_os = "windows")]
 use crate::windows_utils;
-use crate::{paths, InstalledBrowser, SupportedAppRepository};
 
 #[cfg(target_os = "macos")]
 pub fn set_as_default_web_browser() -> bool {

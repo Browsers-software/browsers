@@ -114,7 +114,7 @@ impl OsHelper {
         let executable_path_best_guess = command_parts
             .iter()
             .rfind(|component| !component.starts_with("%") && !component.starts_with("-"))
-            .map(|path_perhaps| Path::new(path_perhaps.as_str()))
+            .map(|path_perhaps| Path::new(path_perhaps))
             .unwrap_or(Path::new("unknown"));
 
         // TODO: get correct path for firefox snap, which one is actually used to calculate installation id in profiles.ini
