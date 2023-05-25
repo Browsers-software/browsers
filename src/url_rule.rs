@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use globset::{Glob, GlobBuilder, GlobMatcher};
+use globset::{GlobBuilder, GlobMatcher};
 use url::Url;
 
 /// [scheme://]hostname[/path][?query][#fragment]
