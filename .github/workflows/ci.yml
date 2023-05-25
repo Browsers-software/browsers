@@ -37,6 +37,17 @@ jobs:
           cache-from: type=gha,scope=aarch64
           cache-to: type=gha,scope=aarch64,mode=max
           load: true # load the created image into docker, so cross can find it
+      - name: Build cross builder image for armv7
+        uses: docker/build-push-action@v3
+        with:
+          context: ./cross/
+          builder: ${{ steps.buildx.outputs.name }}
+          file: cross/Dockerfile.linux_armv7
+          push: false
+          tags: browsers.software/armv7-unknown-linux-gnueabihf-gtk:local
+          cache-from: type=gha,scope=armv7
+          cache-to: type=gha,scope=armv7,mode=max
+          load: true # load the created image into docker, so cross can find it
       # even though we build inside a docker container via `cross`, then `cross` mounts
       # target/
       - name: Download cache
@@ -63,6 +74,9 @@ jobs:
       - name: Test aarch64 binaries
         run: |
           CROSS_BUILD_OPTS="--builder ${{ steps.buildx.outputs.name }} --cache-from type=gha,scope=aarch64 --cache-to type=gha,scope=aarch64,mode=max" cross build --target aarch64-unknown-linux-gnu --release
+      - name: Test armv7 binaries
+        run: |
+          CROSS_BUILD_OPTS="--builder ${{ steps.buildx.outputs.name }} --cache-from type=gha,scope=armv7 --cache-to type=gha,scope=armv7,mode=max" cross build --target armv7-unknown-linux-gnueabihf --release
       - name: Build binaries and package
         env:
           APPCAST_SECRET_KEY_BASE64: ${{ secrets.APPCAST_SECRET_KEY_BASE64 }}
