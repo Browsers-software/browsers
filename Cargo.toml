@@ -74,7 +74,7 @@ objc = "0.2.7"
 libc = "0.2"
 
 [target.'cfg(target_os = "linux")'.dependencies]
-xdg-mime = "^0.3"
+xdg-mime = "^0.3.3"
 
 # to find default registered icons
 glib = { version = "0.16.6", package = "gio" }
