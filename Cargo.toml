@@ -69,7 +69,7 @@ shell-words = "1.0.0"
 # small selection of Core Foundation libs I happen to need
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.9.2"
-cocoa-foundation = "0.1.0"
+cocoa-foundation = "0.1.1"
 objc = "0.2.7"
 libc = "0.2"
 
