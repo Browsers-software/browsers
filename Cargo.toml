@@ -25,7 +25,7 @@ tracing-appender = "0.2"
 # Chrono-less fork, so doesn't pull in old time crate 0.1
 rolling-file = { git = "https://github.com/browsers-software/rolling-file-rs.git", branch = "browsers" }
 
-dirs = "5.0.0"
+dirs = "5.0.1"
 
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
