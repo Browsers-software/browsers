@@ -110,11 +110,11 @@ impl UI {
             // add some spacing around screen
             .inflate(-5f64, -5f64);
 
-        let (visible_count, window_size) = recalculate_window_size(&self.url, &self.ui_browsers);
+        let window_size = recalculate_window_size(&self.url, &self.ui_browsers);
         let window_position =
             calculate_window_position(&mouse_position, &screen_rect, &window_size);
 
-        let main_window = WindowDesc::new(self.ui_builder(visible_count as f64, window_size))
+        let main_window = WindowDesc::new(self.ui_builder(window_size))
             .show_titlebar(false)
             .transparent(true)
             .resizable(false)
@@ -148,11 +148,7 @@ impl UI {
         return initial_ui_state;
     }
 
-    pub fn ui_builder(
-        &self,
-        visible_browsers_count: f64,
-        window_size: Size,
-    ) -> impl Widget<UIState> {
+    pub fn ui_builder(&self, window_size: Size) -> impl Widget<UIState> {
         let url_label = Label::dynamic(|data: &UIState, _| ellipsize(data.url.as_str(), 28))
             .with_text_size(12.0)
             .with_text_color(Color::from_hex_str("808080").unwrap())
@@ -222,7 +218,7 @@ impl UI {
         .align_right()
         .fix_width(OPTIONS_LABEL_SIZE);
 
-        let url_row = Flex::row()
+        let bottom_row = Flex::row()
             .with_child(url_label)
             .with_flex_spacer(1.0)
             .with_child(options_button);
@@ -247,22 +243,20 @@ impl UI {
             ))
             .scroll();
 
-        let visible_scroll_area_height = visible_scroll_area_height(visible_browsers_count);
-
-        let browsers_list = Container::new(browsers_list)
-            // viewport size is fixed, while scrollable are is full size
-            .fix_height(visible_scroll_area_height);
+        // viewport size is fixed, while scrollable are is full size
+        let browsers_list = Container::new(browsers_list).expand_height();
 
         let col = Flex::column()
-            .with_child(browsers_list)
+            .with_flex_child(browsers_list, 1.0)
             .with_spacer(5.0)
-            .with_child(url_row)
+            .with_child(bottom_row)
             .padding((PADDING_X, PADDING_Y));
 
         return Container::new(col)
             .background(Color::rgba(0.15, 0.15, 0.15, 0.9))
             .rounded(10.0)
-            .border(Color::rgba(0.5, 0.5, 0.5, 0.9), 0.5);
+            .border(Color::rgba(0.5, 0.5, 0.5, 0.9), 0.5)
+            .expand_height();
     }
 }
 
@@ -513,7 +507,7 @@ impl AppDelegate<UIState> for UIDelegate {
                 // add some spacing around screen
                 .inflate(-5f64, -5f64);
 
-            let (visible_count, window_size) = recalculate_window_size(&data.url, &data.browsers);
+            let window_size = recalculate_window_size(&data.url, &data.browsers);
             let window_position =
                 calculate_window_position(&self.mouse_position, &screen_rect, &window_size);
 
@@ -574,7 +568,7 @@ impl AppDelegate<UIState> for UIDelegate {
                 // add some spacing around screen
                 .inflate(-5f64, -5f64);
 
-            let (visible_count, window_size) = recalculate_window_size(&data.url, &data.browsers);
+            let window_size = recalculate_window_size(&data.url, &data.browsers);
             let window_position =
                 calculate_window_position(&mouse_position, &screen_rect, &window_size);
 
@@ -773,7 +767,7 @@ fn calculate_window_size(item_count: usize) -> Size {
     let border_width = 1.0;
     let window_width = item_width + PADDING_X * 2.0 + 2.0 * border_width;
     let visible_scroll_area_height = visible_scroll_area_height(browsers_count_f64);
-    let window_height = visible_scroll_area_height + 5.0 + 12.0 + PADDING_Y * 2.0;
+    let window_height = visible_scroll_area_height + 5.0 + 12.0 + PADDING_Y * 2.0 + 10.0;
 
     let window_size = Size::new(window_width, window_height);
     window_size
@@ -973,7 +967,7 @@ const fn get_icon_padding() -> f64 {
     }
 }
 
-fn recalculate_window_size(url: &str, ui_browsers: &Arc<Vec<UIBrowser>>) -> (usize, Size) {
+fn recalculate_window_size(url: &str, ui_browsers: &Arc<Vec<UIBrowser>>) -> Size {
     let filtered_browsers = get_filtered_browsers(url, &ui_browsers);
     let filtered_browsers_total = filtered_browsers.len();
     let item_count = calculate_visible_browser_count(filtered_browsers_total);
@@ -984,7 +978,7 @@ fn recalculate_window_size(url: &str, ui_browsers: &Arc<Vec<UIBrowser>>) -> (usi
         &window_size.height, item_count
     );
 
-    return (item_count, window_size);
+    return window_size;
 }
 
 fn get_filtered_browsers(url: &str, ui_browsers: &Arc<Vec<UIBrowser>>) -> Vec<UIBrowser> {
