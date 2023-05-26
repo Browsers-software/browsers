@@ -129,6 +129,7 @@ impl SupportedAppRepository {
             .add(Self::notion_app())
             .add(Self::spotify_app())
             .add(Self::telegram_app())
+            .add(Self::workflowy_app())
             .add(Self::zoom_app());
     }
 
@@ -401,6 +402,16 @@ impl SupportedAppRepository {
         Self::generic_app(app_id, vec!["t.me".to_string()])
     }
 
+    fn workflowy_app() -> SupportedApp {
+        let app_id = AppIdentifier {
+            mac_bundle_id: "com.workflowy.desktop".to_string(),
+            linux_desktop_id: "LINUXTODO".to_string(),
+            windows_app_id: "WINDOWSTODO".to_string(),
+        };
+
+        Self::generic_app_with_url(app_id, vec!["workflowy.com".to_string()], convert_workflowy_uri)
+    }
+
     fn zoom_app() -> SupportedApp {
         let app_id = AppIdentifier {
             mac_bundle_id: "us.zoom.xos".to_string(),
@@ -627,6 +638,17 @@ impl AppConfigDir {
     fn config_dir_absolute(&self) -> PathBuf {
         return self.root_path.join(self.config_dir_relative());
     }
+}
+
+fn convert_workflowy_uri(_: Option<&String>, url: &str) -> String {
+    let result = Url::parse(url);
+    if result.is_err() {
+        return "".to_string();
+    }
+    let mut url1 = result.unwrap();
+    let _ = url1.set_scheme("workflowy");
+
+    return url1.as_str().to_string();
 }
 
 fn convert_spotify_uri(_: Option<&String>, url: &str) -> String {

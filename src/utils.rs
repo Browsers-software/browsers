@@ -165,6 +165,7 @@ impl OSAppFinder {
                     "us07web.zoom.us",
                 ],
             ),
+            ("workflowy", vec!["workflowy.com"]),
             ("https", vec![]),
         ];
         let schemes_vec: Vec<(String, Vec<String>)> = schemes
