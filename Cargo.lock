@@ -1701,7 +1701,7 @@ checksum = "436b050e76ed2903236f032a59761c1eb99e1b0aead2c257922771dab1fc8c78"
 [[package]]
 name = "rolling-file"
 version = "0.2.0"
-source = "git+https://github.com/browsers-software/rolling-file-rs.git?branch=browsers#9047a79eb0861b81114691305fbdddbc91b9faa5"
+source = "git+https://github.com/browsers-software/rolling-file-rs.git?branch=browsers#1e187f7aa3af6286ef1029bc1beed0c0993a6630"
 
 [[package]]
 name = "rustc-hash"
