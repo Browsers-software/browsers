@@ -63,7 +63,7 @@ single-instance = "0.3.3"
 # to existing process via this library (and then close itself)
 interprocess = "1.2.1"
 
-shell-words = "1.0.0"
+shell-words = "1.1.0"
 
 # macOS Core Foundation bindings
 # small selection of Core Foundation libs I happen to need
