@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use druid::commands::{CONFIGURE_WINDOW_POSITION, QUIT_APP, SHOW_WINDOW};
 use druid::keyboard_types::Key;
-use druid::piet::InterpolationMode;
+use druid::piet::{InterpolationMode, TextStorage};
 use druid::widget::{
     Container, Controller, ControllerHost, CrossAxisAlignment, Either, Flex, Image, Label,
     LineBreaking, List, ZStack,
@@ -117,8 +117,11 @@ impl UI {
     }
 
     pub fn create_window(&self) -> WindowDesc<UIState> {
-        let browsers_total = self.ui_browsers.len();
-        let item_count = calculate_visible_browser_count(browsers_total);
+        let filtered_browsers = get_filtered_browsers(&self.url, &self.ui_browsers);
+        let filtered_browsers_total = filtered_browsers.len();
+        let item_count = calculate_visible_browser_count(filtered_browsers_total);
+        info!("filtered_browsers_total: {filtered_browsers_total}");
+        info!("Item count: {item_count}");
         let window_size = calculate_window_size(item_count);
         let window_position = calculate_window_position(window_size);
         let main_window = WindowDesc::new(self.ui_builder(item_count as f64, window_size))
@@ -244,11 +247,11 @@ impl UI {
             ))
             .scroll();
 
-        let browsers_height = visible_browsers_count * ITEM_HEIGHT;
+        let visible_scroll_area_height = visible_scroll_area_height(visible_browsers_count);
 
         let browsers_list = Container::new(browsers_list)
             // viewport size is fixed, while scrollable are is full size
-            .fix_height(browsers_height);
+            .fix_height(visible_scroll_area_height);
 
         let col = Flex::column()
             .with_child(browsers_list)
@@ -499,8 +502,9 @@ impl AppDelegate<UIState> for UIDelegate {
             let url_open_info = cmd.get_unchecked(URL_OPENED);
             data.url = url_open_info.url.clone();
 
-            let browsers_total = data.browsers.len();
-            let item_count = calculate_visible_browser_count(browsers_total);
+            let filtered_browsers = get_filtered_browsers(&data.url, &data.browsers);
+            let filtered_browsers_total = filtered_browsers.len();
+            let item_count = calculate_visible_browser_count(filtered_browsers_total);
             let window_size = calculate_window_size(item_count);
             let window_position = calculate_window_position(window_size);
 
@@ -713,12 +717,17 @@ fn show_about_dialog(ctx: &mut DelegateCtx, monitor: Monitor) {
 }
 
 fn calculate_visible_browser_count(browsers_total: usize) -> usize {
-    // max 15 items
+    // max 6 items without scrollbar
     let item_count = cmp::min(6, browsers_total);
     // but at least 1 item in case of errors (or window size is too small)
     let item_count = cmp::max(1, item_count);
 
     item_count
+}
+
+fn visible_scroll_area_height(browsers_count_f64: f64) -> f64 {
+    let browsers_height = browsers_count_f64 * ITEM_HEIGHT;
+    return browsers_height;
 }
 
 fn calculate_window_size(item_count: usize) -> Size {
@@ -727,7 +736,8 @@ fn calculate_window_size(item_count: usize) -> Size {
     let item_width = 32.0 + 160.0;
     let border_width = 1.0;
     let window_width = item_width + PADDING_X * 2.0 + 2.0 * border_width;
-    let window_height = browsers_count_f64 * ITEM_HEIGHT + 5.0 + 12.0 + PADDING_Y * 2.0;
+    let visible_scroll_area_height = visible_scroll_area_height(browsers_count_f64);
+    let window_height = visible_scroll_area_height + 5.0 + 12.0 + PADDING_Y * 2.0;
 
     let window_size = Size::new(window_width, window_height);
     window_size
@@ -929,41 +939,43 @@ const fn get_icon_padding() -> f64 {
     }
 }
 
+fn get_filtered_browsers(url: &str, ui_browsers: &Arc<Vec<UIBrowser>>) -> Vec<UIBrowser> {
+    let url_result = Url::parse(url);
+    let domain_maybe = url_result
+        .ok()
+        .map(|url| url.host_str().map(|d| d.to_string()))
+        .flatten();
+
+    let mut filtered: Vec<UIBrowser> = ui_browsers
+        .iter()
+        .cloned()
+        .filter(|b| {
+            if b.restricted_domains.is_empty() {
+                return true;
+            }
+
+            return if domain_maybe.is_none() {
+                false
+            } else {
+                let domain = domain_maybe.as_ref().unwrap();
+                b.restricted_domains.contains(domain)
+            };
+        })
+        .collect();
+
+    // always show special apps first
+    filtered.sort_by_key(|b| !b.has_priority_ordering());
+
+    return filtered;
+}
+
 /* Filters browsers based on url */
 struct FilteredBrowsersLens;
 
 impl FilteredBrowsersLens {
     // gets browsers relevant only for current url
     fn get_filtered_browsers(data: &(String, Arc<Vec<UIBrowser>>)) -> Vec<UIBrowser> {
-        let url_str = data.0.clone();
-        let url_result = Url::parse(url_str.as_str());
-        let domain_maybe = url_result
-            .ok()
-            .map(|url| url.host_str().map(|d| d.to_string()))
-            .flatten();
-
-        let mut filtered: Vec<UIBrowser> = data
-            .1
-            .iter()
-            .cloned()
-            .filter(|b| {
-                if b.restricted_domains.is_empty() {
-                    return true;
-                }
-
-                return if domain_maybe.is_none() {
-                    false
-                } else {
-                    let domain = domain_maybe.as_ref().unwrap();
-                    b.restricted_domains.contains(domain)
-                };
-            })
-            .collect();
-
-        // always show special apps first
-        filtered.sort_by_key(|b| !b.has_priority_ordering());
-
-        return filtered;
+        return get_filtered_browsers(&data.0, &data.1);
     }
 }
 impl Lens<(String, Arc<Vec<UIBrowser>>), Arc<Vec<UIBrowser>>> for FilteredBrowsersLens {
