@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use std::sync::mpsc::Sender;
 use std::sync::Arc;
 
-use druid::commands::{CONFIGURE_WINDOW_POSITION, QUIT_APP, SHOW_WINDOW};
+use druid::commands::{CONFIGURE_WINDOW_SIZE_AND_POSITION, QUIT_APP, SHOW_WINDOW};
 use druid::keyboard_types::Key;
 use druid::piet::{InterpolationMode, TextStorage};
 use druid::widget::{
@@ -13,8 +13,8 @@ use druid::widget::{
 };
 use druid::{
     image, Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, LayoutCtx, LensExt,
-    LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, Modifiers, Monitor, TextAlignment,
-    UnitPoint, UpdateCtx, Vec2, WidgetId, WindowHandle, WindowLevel,
+    LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, Modifiers, Monitor, Rect,
+    TextAlignment, UnitPoint, UpdateCtx, Vec2, WidgetId, WindowHandle, WindowLevel,
 };
 use druid::{
     AppDelegate, AppLauncher, Color, Command, Data, DelegateCtx, Env, Event, EventCtx, Handled,
@@ -103,28 +103,18 @@ impl UI {
 
     pub fn create_app_launcher(self) -> AppLauncher<UIState> {
         let basedir = self.localizations_basedir.to_str().unwrap().to_string();
-        let main_window = self.create_window();
-        let main_window_id = main_window.id.clone();
-        let (_, monitor) = druid::Screen::get_mouse_position();
-        return AppLauncher::with_window(main_window)
-            .delegate(UIDelegate {
-                main_sender: self.main_sender.clone(),
-                windows: vec![main_window_id],
-                main_window_id: main_window_id,
-                monitor: monitor.clone(),
-            })
-            .localization_resources(vec!["builtin.ftl".to_string()], basedir);
-    }
 
-    pub fn create_window(&self) -> WindowDesc<UIState> {
-        let filtered_browsers = get_filtered_browsers(&self.url, &self.ui_browsers);
-        let filtered_browsers_total = filtered_browsers.len();
-        let item_count = calculate_visible_browser_count(filtered_browsers_total);
-        info!("filtered_browsers_total: {filtered_browsers_total}");
-        info!("Item count: {item_count}");
-        let window_size = calculate_window_size(item_count);
-        let window_position = calculate_window_position(window_size);
-        let main_window = WindowDesc::new(self.ui_builder(item_count as f64, window_size))
+        let (mouse_position, monitor) = druid::Screen::get_mouse_position();
+        let screen_rect = monitor
+            .virtual_work_rect()
+            // add some spacing around screen
+            .inflate(-5f64, -5f64);
+
+        let (visible_count, window_size) = recalculate_window_size(&self.url, &self.ui_browsers);
+        let window_position =
+            calculate_window_position(&mouse_position, &screen_rect, &window_size);
+
+        let main_window = WindowDesc::new(self.ui_builder(visible_count as f64, window_size))
             .show_titlebar(false)
             .transparent(true)
             .resizable(false)
@@ -133,7 +123,17 @@ impl UI {
             .set_position(window_position)
             .title("Browsers v".to_owned() + env!("CARGO_PKG_VERSION"));
 
-        return main_window;
+        let main_window_id = main_window.id.clone();
+        let (_, monitor) = druid::Screen::get_mouse_position();
+        return AppLauncher::with_window(main_window)
+            .delegate(UIDelegate {
+                main_sender: self.main_sender.clone(),
+                windows: vec![main_window_id],
+                main_window_id: main_window_id,
+                mouse_position: mouse_position.clone(),
+                monitor: monitor.clone(),
+            })
+            .localization_resources(vec!["builtin.ftl".to_string()], basedir);
     }
 
     pub fn create_initial_ui_state(&self) -> UIState {
@@ -373,6 +373,7 @@ pub struct UIDelegate {
     main_sender: Sender<MessageToMain>,
     main_window_id: WindowId,
     windows: Vec<WindowId>,
+    mouse_position: Point,
     monitor: Monitor,
 }
 
@@ -502,17 +503,29 @@ impl AppDelegate<UIState> for UIDelegate {
             let url_open_info = cmd.get_unchecked(URL_OPENED);
             data.url = url_open_info.url.clone();
 
-            let filtered_browsers = get_filtered_browsers(&data.url, &data.browsers);
-            let filtered_browsers_total = filtered_browsers.len();
-            let item_count = calculate_visible_browser_count(filtered_browsers_total);
-            let window_size = calculate_window_size(item_count);
-            let window_position = calculate_window_position(window_size);
+            let (mouse_position, monitor) = druid::Screen::get_mouse_position();
+            self.mouse_position = mouse_position;
+            self.monitor = monitor;
+
+            let screen_rect = &self
+                .monitor
+                .virtual_work_rect()
+                // add some spacing around screen
+                .inflate(-5f64, -5f64);
+
+            let (visible_count, window_size) = recalculate_window_size(&data.url, &data.browsers);
+            let window_position =
+                calculate_window_position(&self.mouse_position, &screen_rect, &window_size);
 
             // Immediately update window position (so it appears where user clicked).
             let sink = ctx.get_external_handle();
             let target_window = Target::Window(self.main_window_id);
-            sink.submit_command(CONFIGURE_WINDOW_POSITION, window_position, target_window)
-                .unwrap();
+            sink.submit_command(
+                CONFIGURE_WINDOW_SIZE_AND_POSITION,
+                (window_size, window_position),
+                target_window,
+            )
+            .unwrap();
 
             // After current event has been handled, bring the window to the front, and give it focus.
             // Normally not needed, but if About menu was opened, then window would not have appeared
@@ -552,6 +565,29 @@ impl AppDelegate<UIState> for UIDelegate {
             let ui_browsers = cmd.get_unchecked(NEW_BROWSERS_RECEIVED).clone();
             // let old_v = std::mem::replace(&mut data.browsers, Arc::new(ui_browsers));
             data.browsers = Arc::new(ui_browsers);
+
+            let mouse_position = self.mouse_position;
+
+            let screen_rect = self
+                .monitor
+                .virtual_work_rect()
+                // add some spacing around screen
+                .inflate(-5f64, -5f64);
+
+            let (visible_count, window_size) = recalculate_window_size(&data.url, &data.browsers);
+            let window_position =
+                calculate_window_position(&mouse_position, &screen_rect, &window_size);
+
+            // Immediately update window position (so it appears where user clicked).
+            let sink = ctx.get_external_handle();
+            let target_window = Target::Window(self.main_window_id);
+            sink.submit_command(
+                CONFIGURE_WINDOW_SIZE_AND_POSITION,
+                (window_size, window_position),
+                target_window,
+            )
+            .unwrap();
+
             Handled::Yes
         } else if cmd.is(NEW_HIDDEN_BROWSERS_RECEIVED) {
             let restorable_app_profiles = cmd.get_unchecked(NEW_HIDDEN_BROWSERS_RECEIVED).clone();
@@ -743,13 +779,11 @@ fn calculate_window_size(item_count: usize) -> Size {
     window_size
 }
 
-fn calculate_window_position(window_size: Size) -> Point {
-    let (mouse_position, monitor) = druid::Screen::get_mouse_position();
-    let screen_rect = monitor
-        .virtual_work_rect()
-        // add some spacing around screen
-        .inflate(-5f64, -5f64);
-
+fn calculate_window_position(
+    mouse_position: &Point,
+    screen_rect: &Rect,
+    window_size: &Size,
+) -> Point {
     let mut x = mouse_position.x;
     let mut y = mouse_position.y;
 
@@ -937,6 +971,20 @@ const fn get_icon_padding() -> f64 {
     } else {
         0.0
     }
+}
+
+fn recalculate_window_size(url: &str, ui_browsers: &Arc<Vec<UIBrowser>>) -> (usize, Size) {
+    let filtered_browsers = get_filtered_browsers(url, &ui_browsers);
+    let filtered_browsers_total = filtered_browsers.len();
+    let item_count = calculate_visible_browser_count(filtered_browsers_total);
+    let window_size = calculate_window_size(item_count);
+
+    info!(
+        "New window height: {}, item count: {}",
+        &window_size.height, item_count
+    );
+
+    return (item_count, window_size);
 }
 
 fn get_filtered_browsers(url: &str, ui_browsers: &Arc<Vec<UIBrowser>>) -> Vec<UIBrowser> {
