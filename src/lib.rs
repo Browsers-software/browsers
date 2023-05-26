@@ -1,10 +1,10 @@
-use std::{env, thread};
 use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::process::Command;
 use std::str::FromStr;
-use std::sync::{Arc, mpsc};
 use std::sync::mpsc::{Receiver, Sender};
+use std::sync::{mpsc, Arc};
+use std::{env, thread};
 
 use druid::{ExtEventSink, Target, UrlOpenInfo};
 use serde::{Deserialize, Serialize};
@@ -407,6 +407,20 @@ fn generate_all_browser_profiles(
     }
 
     let profile_order = config.get_profile_order();
+    sort_browser_profiles(&mut visible_browser_profiles, profile_order);
+
+    return (
+        opening_rules,
+        default_profile.clone(),
+        visible_browser_profiles,
+        hidden_browser_profiles,
+    );
+}
+
+fn sort_browser_profiles(
+    visible_browser_profiles: &mut Vec<CommonBrowserProfile>,
+    profile_order: &Vec<String>,
+) {
     let unordered_index = profile_order.len();
 
     visible_browser_profiles.sort_by_key(|p| {
@@ -418,13 +432,6 @@ fn generate_all_browser_profiles(
 
     // always show special apps first
     visible_browser_profiles.sort_by_key(|b| !b.has_priority_ordering());
-
-    return (
-        opening_rules,
-        default_profile.clone(),
-        visible_browser_profiles,
-        hidden_browser_profiles,
-    );
 }
 
 fn get_rule_for_source_app_and_url(
