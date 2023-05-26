@@ -68,7 +68,7 @@ shell-words = "1.0.0"
 # macOS Core Foundation bindings
 # small selection of Core Foundation libs I happen to need
 [target.'cfg(target_os = "macos")'.dependencies]
-core-foundation = "0.9.2"
+core-foundation = "0.9.3"
 cocoa-foundation = "0.1.1"
 objc = "0.2.7"
 libc = "0.2"
