@@ -77,41 +77,30 @@ impl OsHelper {
             .filter(|protocol| protocol == scheme)
             .map(|protocol| classes.open_subkey(protocol).unwrap())
             .filter(|protocol_key| protocol_key.get_value::<String, _>("URL Protocol").is_ok())
-            .map(|protocol_key| {
-                let app_name_result = protocol_key.get_value::<String, _>("");
-
+            .filter_map(|protocol_key| {
                 let default_app_name = scheme.to_string();
+
+                let app_name_result = protocol_key.get_value::<String, _>("");
                 let app_name = app_name_result.unwrap_or(default_app_name);
-                //    .expect("no default value");
-                //let app_name = if !app_name.is_empty() {app_name} else {scheme.to_string()};
-                let command_reg_key = protocol_key
-                    .open_subkey("shell\\open\\command")
-                    .expect("no open command");
+
+                let Ok(command_reg_key) = protocol_key
+                    .open_subkey("shell\\open\\command") else { return None};
 
                 // "C:\Users\Browsers\AppData\Roaming\Spotify\Spotify.exe" --protocol-uri="%1"
-                let command: String = command_reg_key.get_value("").unwrap();
+                // "C:\Users\Browsers\AppData\Local\Programs\WorkFlowy\WorkFlowy.exe" "%1"
+                let Ok(command) = command_reg_key.get_value::<String, _>("") else { return None};
 
-                let icon_key = protocol_key
-                    .open_subkey("DefaultIcon")
-                    .expect("no DefaultIcon");
-                //"C:\Users\Browsers\AppData\Roaming\Spotify\Spotify.exe",0
-                let icon_path: String = icon_key.get_value("").unwrap();
+                let Ok(icon_key) = protocol_key
+                    .open_subkey("DefaultIcon") else { return None};
 
-                //let app_name = "okei";
-                //let icon_path = "\"C:\\Users\\Browsers\\AppData\\Roaming\\Spotify\\Spotify.exe\",0";
-                //let binary_path = "\"C:\\Users\\Browsers\\AppData\\Roaming\\Spotify\\Spotify.exe\"";
-                //let command = binary_path;
+                let Ok(icon_path) = icon_key.get_value::<String, _>("") else { return None };
 
-                let app_info = AppInfoHolder {
+                Some(AppInfoHolder {
                     registry_key: scheme.to_string(),
                     name: app_name.to_string(),
                     icon_path: icon_path.to_string(),
                     command: command.to_string(),
-                };
-                info!("icon_path: {}", icon_path);
-
-                info!("command: {}", command);
-                app_info
+                })
             })
             .collect::<Vec<_>>();
 
@@ -228,12 +217,16 @@ impl OsHelper {
         let icon_path_str = full_stored_icon_path.display().to_string();
         create_icon_for_app(app_info.icon_path.as_str(), icon_path_str.as_str());
 
+        // "C:\Users\Browsers\AppData\Local\Programs\WorkFlowy\WorkFlowy.exe" "%1"
         // "C:\Users\Browsers\AppData\Roaming\Spotify\Spotify.exe" --protocol-uri="%1"
         // "C:\Users\Browsers\AppData\Roaming\Spotify\Spotify.exe"
         let command_str = app_info.command;
 
         // "C:\Users\Browsers\AppData\Roaming\Spotify\Spotify.exe"
         // --protocol-uri="%1"
+
+        // "C:\Users\Browsers\AppData\Local\Programs\WorkFlowy\WorkFlowy.exe"
+        // "%1"
         let command_parts: Vec<String> =
             shell_words::split(&command_str).expect("failed to parse command");
 
@@ -247,8 +240,8 @@ impl OsHelper {
         //  - to identify which Firefox profiles are allowed for firefox instance, they hash the binary path
         let executable_path_best_guess = command_parts
             .iter()
-            .rfind(|component| !component.starts_with("%") && !component.starts_with("-"))
             .map(|path_perhaps| remove_quotes(&path_perhaps))
+            .rfind(|component| !component.starts_with("%") && !component.starts_with("-"))
             .map(|path_perhaps| Path::new(path_perhaps))
             .unwrap_or(Path::new("unknown"));
 
@@ -270,8 +263,11 @@ impl OsHelper {
 
 fn remove_quotes(binary_path: &str) -> &str {
     // remove surrounding quotes if there are any
-    let binary_path = binary_path.trim_start_matches("\"");
-    let binary_path = binary_path.trim_end_matches("\"");
+    if binary_path.starts_with("\"") && binary_path.ends_with("\"") {
+        let binary_path = binary_path.trim_start_matches("\"");
+        let binary_path = binary_path.trim_end_matches("\"");
+        return binary_path;
+    }
     return binary_path;
 }
 
