@@ -123,6 +123,8 @@ impl UI {
             //.window_size_policy(WindowSizePolicy::Content)
             .window_size_policy(WindowSizePolicy::User)
             .window_size(window_size)
+            // .with_min_size() seems to be required on LXDE/OpenBox, or window height is too tall
+            .with_min_size((window_size.width, 10.0 as f64))
             .set_position(window_position)
             .title("Browsers v".to_owned() + env!("CARGO_PKG_VERSION"));
 
@@ -747,6 +749,8 @@ fn show_about_dialog(ctx: &mut DelegateCtx, monitor: Monitor) {
         // so using space instead
         .title(" ")
         .window_size(size)
+        // with_min_size helps on LXDE
+        .with_min_size((size.width, 10.0 as f64))
         // make sure about dialog is on top of our main window
         // so using same window level
         .set_level(WindowLevel::Utility)
