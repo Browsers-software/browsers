@@ -80,7 +80,7 @@ xdg-mime = "^0.3.3"
 glib = { version = "0.16.6", package = "gio" }
 
 # to find icon theme and icon; (should be same version of gtk as druid is using)
-gtk = { version = "0.16.2" }
+gtk = { version = "0.17.1" }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winreg = "0.50.0"
