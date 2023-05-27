@@ -382,8 +382,7 @@ impl SupportedAppRepository {
     }
 
     fn spotify_app() -> SupportedApp {
-        let app_id =
-            AppIdentifier::new("com.spotify.client", "spotify_spotify.desktop", "TODOWINDOWS");
+        let app_id = AppIdentifier::new("com.spotify.client", "spotify_spotify.desktop", "spotify");
 
         Self::generic_app_with_url(
             app_id,
@@ -406,7 +405,7 @@ impl SupportedAppRepository {
         let app_id = AppIdentifier {
             mac_bundle_id: "com.workflowy.desktop".to_string(),
             linux_desktop_id: "LINUXTODO".to_string(),
-            windows_app_id: "WINDOWSTODO".to_string(),
+            windows_app_id: "URL:workflowy".to_string(),
         };
 
         Self::generic_app_with_url(app_id, vec!["workflowy.com".to_string()], convert_workflowy_uri)

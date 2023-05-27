@@ -9,11 +9,11 @@ use std::{
 use druid::image::{ImageFormat, RgbaImage};
 use tracing::{info, warn};
 
-use winapi::shared::windef::*;
-use winapi::um::winuser::*;
+use winapi::shared::windef::{HBITMAP, HDC, HICON, HWND};
+use winapi::um::winuser::{GetDC, GetIconInfo, ReleaseDC, ICONINFO};
 use winapi::{
     shared::{
-        minwindef::*,
+        minwindef::{HINSTANCE, INT, LPVOID, UINT},
         ntdef::{LPCSTR, VOID},
     },
     um::{
@@ -55,15 +55,16 @@ impl OsHelper {
     }
 
     fn find_applications_for_url_scheme(scheme: &str) -> Vec<AppInfoHolder> {
-        let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
-        let mut hklm_apps = Self::find_applications_for_url_scheme_and_reg_root(scheme, hklm);
+        return if scheme == "https" {
+            let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+            let mut hklm_apps = Self::find_applications_for_url_scheme_and_reg_root(scheme, hklm);
 
-        let hkcu = RegKey::predef(HKEY_CURRENT_USER);
-        let mut hkcu_apps = Self::find_applications_for_url_scheme_and_reg_root(scheme, hkcu);
+            let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+            let mut hkcu_apps = Self::find_applications_for_url_scheme_and_reg_root(scheme, hkcu);
 
-        hklm_apps.append(&mut hkcu_apps);
-
-        if scheme != "https" {
+            hklm_apps.append(&mut hkcu_apps);
+            hklm_apps
+        } else {
             let classes = RegKey::predef(HKEY_CLASSES_ROOT);
             //let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
             //let classes = hklm.open_subkey("SOFTWARE\\Classes").unwrap();
@@ -72,10 +73,8 @@ impl OsHelper {
             //let classes = hkcu.open_subkey("SOFTWARE\\Classes").unwrap();
 
             let mut class_apps = Self::find_applications_for_class(scheme, classes);
-            hklm_apps.append(&mut class_apps);
-        }
-
-        hklm_apps
+            class_apps
+        };
     }
 
     fn find_applications_for_class(scheme: &str, classes: RegKey) -> Vec<AppInfoHolder> {
@@ -407,7 +406,7 @@ unsafe fn convert_icon_to_image(icon: HICON) -> RgbaImage {
     let _mr_right = GetBitmapBits(info.hbmColor, buf_size as i32, bmp.as_mut_ptr() as LPVOID);
     buf.set_len(bmp.capacity());
     let result = ReleaseDC(0 as HWND, dc);
-    assert!(result == 1);
+    assert_eq!(result, 1);
     DeleteObject(info.hbmColor as *mut VOID);
 
     for chunk in bmp.chunks_exact_mut(4) {

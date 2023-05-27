@@ -86,7 +86,7 @@ gtk = { version = "0.16.2" }
 winreg = "0.50.0"
 
 # same version as druid-shell uses
-winapi = "0.3.9"
+winapi = { version = "0.3.9", features = ["ntdef"] }
 
 [target.'cfg(target_os = "windows")'.build-dependencies]
 # To embed .ico into .exe
