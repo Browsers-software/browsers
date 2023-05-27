@@ -781,7 +781,7 @@ fn calculate_window_size(item_count: usize) -> Size {
     let border_width = 1.0;
     let window_width = item_width + PADDING_X * 2.0 + 2.0 * border_width;
     let visible_scroll_area_height = visible_scroll_area_height(browsers_count_f64);
-    let window_height = visible_scroll_area_height + 5.0 + 12.0 + PADDING_Y * 2.0 + 10.0;
+    let window_height = visible_scroll_area_height + 5.0 + 12.0 + PADDING_Y * 2.0 + 6.0;
 
     let window_size = Size::new(window_width, window_height);
     window_size
