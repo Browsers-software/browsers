@@ -750,6 +750,7 @@ fn show_about_dialog(ctx: &mut DelegateCtx, monitor: Monitor) {
         // make sure about dialog is on top of our main window
         // so using same window level
         .set_level(WindowLevel::Utility)
+        .show_titlebar(true)
         .resizable(false)
         .set_position(window_position);
     ctx.new_window(new_win);
