@@ -743,7 +743,9 @@ fn show_about_dialog(ctx: &mut DelegateCtx, monitor: Monitor) {
     let window_position = Point::new(x, y);
 
     let new_win = WindowDesc::new(col)
-        .title("")
+        // OpenBox on linux changes title to "Unnamed Window" if it's empty string,
+        // so using space instead
+        .title(" ")
         .window_size(size)
         .set_level(WindowLevel::AppWindow)
         .resizable(false)
