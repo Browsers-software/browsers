@@ -127,7 +127,6 @@ impl UI {
             .title("Browsers v".to_owned() + env!("CARGO_PKG_VERSION"));
 
         let main_window_id = main_window.id.clone();
-        let (_, monitor) = druid::Screen::get_mouse_position();
         return AppLauncher::with_window(main_window)
             .delegate(UIDelegate {
                 main_sender: self.main_sender.clone(),
