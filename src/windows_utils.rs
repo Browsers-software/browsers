@@ -32,7 +32,7 @@ use crate::{browser_repository::SupportedAppRepository, InstalledBrowser};
 struct AppInfoHolder {
     registry_key: String,
     name: String,
-    icon_path: String,
+    icon_path: Option<String>,
     command: String,
 }
 
@@ -83,22 +83,21 @@ impl OsHelper {
                 let app_name_result = protocol_key.get_value::<String, _>("");
                 let app_name = app_name_result.unwrap_or(default_app_name);
 
-                let Ok(command_reg_key) = protocol_key
-                    .open_subkey("shell\\open\\command") else { return None};
-
                 // "C:\Users\Browsers\AppData\Roaming\Spotify\Spotify.exe" --protocol-uri="%1"
                 // "C:\Users\Browsers\AppData\Local\Programs\WorkFlowy\WorkFlowy.exe" "%1"
-                let Ok(command) = command_reg_key.get_value::<String, _>("") else { return None};
+                let Ok(command) = protocol_key
+                    .open_subkey("shell\\open\\command")
+                    .and_then(|command_reg_key| command_reg_key.get_value::<String, _>("")) else { return None};
 
-                let Ok(icon_key) = protocol_key
-                    .open_subkey("DefaultIcon") else { return None};
-
-                let Ok(icon_path) = icon_key.get_value::<String, _>("") else { return None };
+                let icon_path_maybe = protocol_key
+                    .open_subkey("DefaultIcon")
+                    .and_then(|icon_key| icon_key.get_value::<String, _>(""))
+                    .ok();
 
                 Some(AppInfoHolder {
                     registry_key: scheme.to_string(),
                     name: app_name.to_string(),
-                    icon_path: icon_path.to_string(),
+                    icon_path: icon_path_maybe,
                     command: command.to_string(),
                 })
             })
@@ -147,7 +146,7 @@ impl OsHelper {
                 AppInfoHolder {
                     registry_key: browser_key_name,
                     name: browser_name.to_string(),
-                    icon_path: default_icon_path.to_string(),
+                    icon_path: Some(default_icon_path.to_string()),
                     command: binary_path.to_string(),
                 }
             })
@@ -215,7 +214,10 @@ impl OsHelper {
         let icon_filename = app_id.to_string() + ".png";
         let full_stored_icon_path = icons_root_dir.join(icon_filename);
         let icon_path_str = full_stored_icon_path.display().to_string();
-        create_icon_for_app(app_info.icon_path.as_str(), icon_path_str.as_str());
+
+        app_info
+            .icon_path
+            .map(|icon_path| create_icon_for_app(icon_path.as_str(), icon_path_str.as_str()));
 
         // "C:\Users\Browsers\AppData\Local\Programs\WorkFlowy\WorkFlowy.exe" "%1"
         // "C:\Users\Browsers\AppData\Roaming\Spotify\Spotify.exe" --protocol-uri="%1"
