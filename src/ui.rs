@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use std::sync::mpsc::Sender;
 use std::sync::Arc;
 
-use druid::commands::{CONFIGURE_WINDOW_SIZE_AND_POSITION, QUIT_APP, SHOW_WINDOW};
+use druid::commands::{CONFIGURE_WINDOW_SIZE_AND_POSITION, QUIT_APP, SHOW_ALL, SHOW_WINDOW};
 use druid::keyboard_types::Key;
 use druid::piet::{InterpolationMode, TextStorage};
 use druid::widget::{
@@ -118,6 +118,7 @@ impl UI {
             .show_titlebar(false)
             .transparent(true)
             .resizable(false)
+            .set_level(WindowLevel::Utility)
             //.window_size_policy(WindowSizePolicy::Content)
             .window_size(window_size)
             .set_position(window_position)
@@ -149,10 +150,14 @@ impl UI {
     }
 
     pub fn ui_builder(&self, window_size: Size) -> impl Widget<UIState> {
+        const BOTTOM_ROW_HEIGHT: f64 = 18.0;
+
         let url_label = Label::dynamic(|data: &UIState, _| ellipsize(data.url.as_str(), 28))
             .with_text_size(12.0)
             .with_text_color(Color::from_hex_str("808080").unwrap())
             .with_line_break_mode(LineBreaking::Clip)
+            .with_text_alignment(TextAlignment::Start)
+            .fix_height(BOTTOM_ROW_HEIGHT)
             .fix_width(175.0)
             .on_click(move |_ctx, _: &mut UIState, _env| {
                 _ctx.get_external_handle()
