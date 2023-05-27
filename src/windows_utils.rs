@@ -63,14 +63,22 @@ impl OsHelper {
 
         hklm_apps.append(&mut hkcu_apps);
 
+        if scheme != "https" {
+            let classes = RegKey::predef(HKEY_CLASSES_ROOT);
+            //let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+            //let classes = hklm.open_subkey("SOFTWARE\\Classes").unwrap();
+
+            //let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+            //let classes = hkcu.open_subkey("SOFTWARE\\Classes").unwrap();
+
+            let mut class_apps = Self::find_applications_for_class(scheme, classes);
+            hklm_apps.append(&mut class_apps);
+        }
+
         hklm_apps
     }
 
-    fn find_applications_for_class(scheme: &str, root: RegKey) -> Vec<AppInfoHolder> {
-        let classes = RegKey::predef(HKEY_CLASSES_ROOT);
-
-        //let classes = root.open_subkey("SOFTWARE\\Classes").unwrap();
-
+    fn find_applications_for_class(scheme: &str, classes: RegKey) -> Vec<AppInfoHolder> {
         let classes_keys = classes.enum_keys();
         let apps = classes_keys
             .map(|result| result.unwrap())
@@ -110,10 +118,6 @@ impl OsHelper {
         scheme: &str,
         root: RegKey,
     ) -> Vec<AppInfoHolder> {
-        if scheme != "https" {
-            return Self::find_applications_for_class(scheme, root);
-        }
-
         let start_menu_internet = root
             .open_subkey("SOFTWARE\\Clients\\StartMenuInternet")
             .unwrap();
