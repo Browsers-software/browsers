@@ -698,6 +698,8 @@ pub fn basically_main(
                     config.restore_profile(unique_id.as_str());
                     app_finder.save_installed_browsers_config(&config);
 
+                    let profile_order = config.get_profile_order();
+
                     let hidden_profile_index_maybe = hidden_browser_profiles
                         .iter()
                         .position(|p| p.get_unique_id() == unique_id);
@@ -705,8 +707,7 @@ pub fn basically_main(
                         let hidden_profile = hidden_browser_profiles.remove(hidden_profile_index);
                         visible_browser_profiles.push(hidden_profile);
 
-                        // always show special apps first
-                        visible_browser_profiles.sort_by_key(|b| !b.has_priority_ordering());
+                        sort_browser_profiles(&mut visible_browser_profiles, profile_order);
 
                         let ui_browsers = UI::real_to_ui_browsers(&visible_browser_profiles);
                         ui_event_sink
