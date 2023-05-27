@@ -221,7 +221,6 @@ impl UI {
                 position,
             );
         })
-        .align_right()
         .fix_width(OPTIONS_LABEL_SIZE);
 
         let bottom_row = Flex::row()
