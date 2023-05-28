@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Linux: support armv7l (mostly 32-bit raspberry pi)
+- Windows: initial support for non-browser apps (Spotify, Linear, Zoom, etc)
+- macOS/Windows: Add support for Workflowy app
+
+### Security
+
+- Get rid of `chrono` library with outdated `time` dependency and use our own `rolling-file-rs` fork
+
+### Changed
+
+- macOS: show always on top
+
+### Fixed
+
+- Linux: fix making window visible when clicking on another link
+- Windows: fix running install.bat straight from the zip file
+- Fix order of apps when restoring a profile
+- Fix 3-dot menu button shifting/disappearing when clicking on another link
+- Linux: fix window size in LXDE (Openbox)
+
 ## [0.3.4] - 2023-05-20
 
 ### Changed
