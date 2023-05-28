@@ -987,7 +987,7 @@ fn recalculate_window_size(url: &str, ui_browsers: &Arc<Vec<UIBrowser>>) -> Size
     let item_count = calculate_visible_browser_count(filtered_browsers_total);
     let window_size = calculate_window_size(item_count);
 
-    info!(
+    debug!(
         "New window height: {}, item count: {}",
         &window_size.height, item_count
     );

@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use globset::{GlobBuilder, GlobMatcher};
+use tracing::debug;
 use url::Url;
 
 /// [scheme://]hostname[/path][?query][#fragment]
@@ -158,7 +159,7 @@ fn extract_part_matchers(full_rule: &str) -> UrlMatcher {
 pub fn to_url_matcher(rule: &str) -> UrlMatcher {
     let full_rule = transform_to_full_match(rule);
     let url_matcher = extract_part_matchers(&full_rule);
-    println!("{:?}", url_matcher);
+    debug!("parsed url matcher: {:?}", url_matcher);
     return url_matcher;
 }
 
