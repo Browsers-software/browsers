@@ -8,7 +8,6 @@ use std::{
 
 use druid::image::{ImageFormat, RgbaImage};
 use tracing::{info, warn};
-
 use winapi::shared::windef::{HBITMAP, HDC, HICON, HWND};
 use winapi::um::winuser::{GetDC, GetIconInfo, ReleaseDC, ICONINFO};
 use winapi::{
@@ -225,15 +224,16 @@ impl OsHelper {
         // "C:\Users\Browsers\AppData\Local\Programs\WorkFlowy\WorkFlowy.exe" "%1"
         // "C:\Users\Browsers\AppData\Roaming\Spotify\Spotify.exe" --protocol-uri="%1"
         // "C:\Users\Browsers\AppData\Roaming\Spotify\Spotify.exe"
-        let command_str = app_info.command;
+        // C:\Program Files\Internet Explorer\iexplore.exe
+        let mut command_str = app_info.command;
 
-        // "C:\Users\Browsers\AppData\Roaming\Spotify\Spotify.exe"
-        // --protocol-uri="%1"
-
-        // "C:\Users\Browsers\AppData\Local\Programs\WorkFlowy\WorkFlowy.exe"
-        // "%1"
-        let command_parts: Vec<String> =
-            shell_words::split(&command_str).expect("failed to parse command");
+        if !command_str.starts_with("\"") {
+            // Make sure paths with spaces work correctly, by adding quotes if there are none.
+            // Might do the wrong thing if path is not quoted, and last argument is, but let's see if that's
+            // a problem in real world
+            command_str = "\"".to_string() + command_str.as_str() + "\"";
+        }
+        let command_parts = winsplit::split(&command_str);
 
         if command_parts.is_empty() {
             warn!("Command is empty! This browser won't work");

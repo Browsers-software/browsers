@@ -63,8 +63,6 @@ single-instance = "0.3.3"
 # to existing process via this library (and then close itself)
 interprocess = "1.2.1"
 
-shell-words = "1.1.0"
-
 # macOS Core Foundation bindings
 # small selection of Core Foundation libs I happen to need
 [target.'cfg(target_os = "macos")'.dependencies]
@@ -82,11 +80,18 @@ glib = { version = "0.16.6", package = "gio" }
 # to find icon theme and icon; (should be same version of gtk as druid is using)
 gtk = { version = "0.16.2" }
 
+# Helps parsing commands that are in Exec field in .desktop files
+shell-words = "1.1.0"
+
 [target.'cfg(target_os = "windows")'.dependencies]
 winreg = "0.50.0"
 
 # same version as druid-shell uses
 winapi = { version = "0.3.9", features = ["ntdef"] }
+
+# Helps parsing commands that are in windows registry for different apps
+# Same as `shell-words` but for Windows, i.e supporting \ in paths
+winsplit = "0.1"
 
 [target.'cfg(target_os = "windows")'.build-dependencies]
 # To embed .ico into .exe
