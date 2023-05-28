@@ -37,7 +37,7 @@ pub fn check_single_instance(
 
     let single_instance = SingleInstance::new(lock_name.as_str()).unwrap();
     return if single_instance.is_single() {
-        info!("Other instance is not running");
+        info!("No other instance of Browsers was running");
         // another process is not running, so this is first
 
         if local_socket_path.exists() {
@@ -53,7 +53,7 @@ pub fn check_single_instance(
             return (true, single_instance);
         }
         let listener = listener_result.unwrap();
-        info!("Started socket listener");
+        info!("Started socket listener for new instances of Browser");
 
         // Preemptively allocate a sizeable buffer for reading at a later moment. This size should be
         // enough and should be easy to find for the allocator. Since we only have one concurrent
@@ -73,7 +73,7 @@ pub fn check_single_instance(
                 // the write buffer to be emptied by the other.
                 conn.read_line(&mut buffer).unwrap();
 
-                info!("Another instance sent arguments: {}", buffer);
+                info!("Another Browsers instance sent arguments: {}", buffer);
                 let url = buffer.clone();
                 let url_open_request =
                     MessageToMain::UrlOpenRequest("".to_string(), url.to_string());
@@ -87,7 +87,7 @@ pub fn check_single_instance(
 
         (true, single_instance)
     } else {
-        info!("Other instance is already running");
+        info!("Other Browsers instance is already running");
         // another process is running, so this is not first
         let result = LocalSocketStream::connect(local_socket_path);
         if result.is_err() {
