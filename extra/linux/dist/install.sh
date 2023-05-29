@@ -47,20 +47,13 @@ else
   # (otherwise should use /usr/bin if using package manager)
   INSTALL_DIR="/usr/local/bin"
 fi
-
-if [ ! -d "$INSTALL_DIR" ]; then
-    mkdir -p "$INSTALL_DIR"
-    echo "$INSTALL_DIR did not exist. We created it for you."
-fi
+create_dir_if_not_exists "$INSTALL_DIR"
 
 TARGET_INSTALL_BINARY_PATH="$INSTALL_DIR/browsers"
 
 # Use XDG_DATA_HOME or default to $HOME/.local/share if it's missing
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
-if [ ! -d "$XDG_DATA_HOME" ]; then
-    mkdir -p "$XDG_DATA_HOME"
-    echo "$XDG_DATA_HOME did not exist. We created it for you."
-fi
+create_dir_if_not_exists "$XDG_DATA_HOME"
 
 if [ "$IS_LOCAL_INSTALL" = true ]; then
   # ~/.local/share/software.Browsers
@@ -72,55 +65,34 @@ else
 fi
 
 # Holds binary, icon, translations
-if [ ! -d "$DATA_DIR" ]; then
-    mkdir -p "$DATA_DIR"
-    echo "$DATA_DIR did not exist. We created it for you."
-fi
+create_dir_if_not_exists "$DATA_DIR"
 
 RESOURCES_DIR="$DATA_DIR/resources"
-if [ ! -d "$RESOURCES_DIR" ]; then
-    mkdir -p "$RESOURCES_DIR"
-    echo "$RESOURCES_DIR did not exist. We created it for you."
-fi
+create_dir_if_not_exists "$RESOURCES_DIR" true
 
 # Where we store the real binary, which will be symlinked from .local/bin
 # Useful for in-place upgrades
 TARGET_BINARY_DIR="$DATA_DIR/bin"
-if [ ! -d "$TARGET_BINARY_DIR" ]; then
-    mkdir -p "$TARGET_BINARY_DIR"
-    echo "$TARGET_BINARY_DIR did not exist. We created it for you."
-fi
+create_dir_if_not_exists "$TARGET_BINARY_DIR" true
 
 # $HOME/.local/share/software.Browsers/bin/browsers
 TARGET_BINARY_PATH="$TARGET_BINARY_DIR/browsers"
 
 ICONS_DIR="$RESOURCES_DIR/icons"
-if [ ! -d "$ICONS_DIR" ]; then
-    mkdir -p "$ICONS_DIR"
-    echo "$ICONS_DIR did not exist. We created it for you."
-fi
+create_dir_if_not_exists "$ICONS_DIR" true
 
 # We store the icon also here, which is shown in About dialog
 ICONS_512_DIR="$ICONS_DIR/512x512"
-if [ ! -d "$ICONS_512_DIR" ]; then
-    mkdir -p "$ICONS_512_DIR"
-    echo "$ICONS_512_DIR did not exist. We created it for you."
-fi
+create_dir_if_not_exists "$ICONS_512_DIR" true
 
 SRC_ICONS_DIR="$THIS_DIR/icons"
 cp "$SRC_ICONS_DIR/512x512/software.Browsers.png" "$ICONS_DIR/512x512/software.Browsers.png"
 
 I18N_DIR="$RESOURCES_DIR/i18n"
-if [ ! -d "$I18N_DIR" ]; then
-    mkdir -p "$I18N_DIR"
-    echo "$I18N_DIR did not exist. We created it for you."
-fi
+create_dir_if_not_exists "$I18N_DIR" true
 
 I18N_EN_US_DIR="$I18N_DIR/en-US"
-if [ ! -d "$I18N_EN_US_DIR" ]; then
-    mkdir -p "$I18N_EN_US_DIR"
-    echo "$I18N_EN_US_DIR did not exist. We created it for you."
-fi
+create_dir_if_not_exists "$I18N_EN_US_DIR" true
 
 SRC_I18N_DIR="$THIS_DIR/i18n"
 cp "$SRC_I18N_DIR/en-US/builtin.ftl" "$I18N_DIR/en-US/builtin.ftl"
@@ -174,11 +146,7 @@ if [ "$IS_LOCAL_INSTALL" = true ]; then
 else
   TARGET_XFCE4_HELPERS_DIR="/usr/share/xfce4/helpers"
 fi
-
-if [ ! -d "$TARGET_XFCE4_HELPERS_DIR" ]; then
-    mkdir -p "$TARGET_XFCE4_HELPERS_DIR"
-    echo "$TARGET_XFCE4_HELPERS_DIR did not exist. We created it for you."
-fi
+create_dir_if_not_exists "$TARGET_XFCE4_HELPERS_DIR"
 
 TARGET_XFCE4_DESKTOP_FILE_PATH="$TARGET_XFCE4_HELPERS_DIR/software.Browsers.desktop"
 
