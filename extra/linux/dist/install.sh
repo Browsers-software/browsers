@@ -1,11 +1,53 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # exit when any command fails
 set -e
 
+create_dir_if_not_exists() {
+  local dir_path="$1"
+  local hide_notice="$2"
+
+  if [ ! -d "$dir_path" ]; then
+      mkdir -p "$dir_path"
+      if [ ! "$hide_notice" = true ]; then
+        echo "$dir_path did not exist. We created it for you."
+      fi
+  fi
+}
+
+# bool function to test if the user is root or not (POSIX only)
+# though doesn't work if there is no root, but user still has correct permissions
+is_user_root_or_sudoer() {
+  [ "$(id -u)" -eq 0 ]
+}
+
 THIS_DIR="$(dirname "$0")"
 
-INSTALL_DIR="$HOME/.local/bin"
+if [[ $* == *--system* ]]; then
+  IS_LOCAL_INSTALL=false
+
+  if ! is_user_root_or_sudoer; then
+    echo "You must run this installer with sudo when using --system flag"
+    echo "Please run again as:"
+    echo ""
+    echo "sudo ./install.sh --system"
+    echo ""
+    exit 1
+  fi
+else
+  IS_LOCAL_INSTALL=true
+fi
+
+# INSTALL_DIR will keep a symlink to real binary
+if [ "$IS_LOCAL_INSTALL" = true ]; then
+  #  ~/.local/bin
+  INSTALL_DIR="$HOME/.local/bin"
+else
+  # /usr/local/bin is for binaries not managed by package manager
+  # (otherwise should use /usr/bin if using package manager)
+  INSTALL_DIR="/usr/local/bin"
+fi
+
 if [ ! -d "$INSTALL_DIR" ]; then
     mkdir -p "$INSTALL_DIR"
     echo "$INSTALL_DIR did not exist. We created it for you."
@@ -20,8 +62,16 @@ if [ ! -d "$XDG_DATA_HOME" ]; then
     echo "$XDG_DATA_HOME did not exist. We created it for you."
 fi
 
+if [ "$IS_LOCAL_INSTALL" = true ]; then
+  # ~/.local/share/software.Browsers
+  DATA_DIR="$XDG_DATA_HOME/software.Browsers"
+else
+  # /usr/local/share is for files not managed by package manager
+  # (otherwise should use /usr/share if using package manager)
+  DATA_DIR="/usr/local/share/software.Browsers"
+fi
+
 # Holds binary, icon, translations
-DATA_DIR="$XDG_DATA_HOME/software.Browsers"
 if [ ! -d "$DATA_DIR" ]; then
     mkdir -p "$DATA_DIR"
     echo "$DATA_DIR did not exist. We created it for you."
@@ -90,7 +140,15 @@ if [ ! -f "$TEMPLATE_DESKTOP_FILE_PATH" ]; then
     exit 1
 fi
 
-SOURCE_DESKTOP_FILE_PATH="$THIS_DIR/software.Browsers.desktop"
+# Write to different paths, so that if you ran this script first with sudo
+# You can run it again without sudo (otherwise you can edit the file created by sudo)
+if [ "$IS_LOCAL_INSTALL" = true ]; then
+  create_dir_if_not_exists "$THIS_DIR/user" true
+  SOURCE_DESKTOP_FILE_PATH="$THIS_DIR/user/software.Browsers.desktop"
+else
+  create_dir_if_not_exists "$THIS_DIR/system" true
+  SOURCE_DESKTOP_FILE_PATH="$THIS_DIR/system/software.Browsers.desktop"
+fi
 
 sed "s|€ExecCommand€|$TARGET_INSTALL_BINARY_PATH %u|g" "$TEMPLATE_DESKTOP_FILE_PATH" > "$SOURCE_DESKTOP_FILE_PATH"
 
@@ -100,12 +158,23 @@ if [ ! -f "$TEMPLATE_XFCE4_DESKTOP_FILE_PATH" ]; then
     exit 1
 fi
 
-SOURCE_XFCE4_DESKTOP_FILE_PATH="$THIS_DIR/xfce4/helpers/software.Browsers.desktop"
+if [ "$IS_LOCAL_INSTALL" = true ]; then
+  create_dir_if_not_exists "$THIS_DIR/user/xfce4/helpers" true
+  SOURCE_XFCE4_DESKTOP_FILE_PATH="$THIS_DIR/user/xfce4/helpers/software.Browsers.desktop"
+else
+  create_dir_if_not_exists "$THIS_DIR/system/xfce4/helpers" true
+  SOURCE_XFCE4_DESKTOP_FILE_PATH="$THIS_DIR/system/xfce4/helpers/software.Browsers.desktop"
+fi
 
 sed "s|€XFCEBinaries€|browsers;$TARGET_INSTALL_BINARY_PATH;|g" "$TEMPLATE_XFCE4_DESKTOP_FILE_PATH" > "$SOURCE_XFCE4_DESKTOP_FILE_PATH"
 
-# ~/.local/share/xfce4/helpers
-TARGET_XFCE4_HELPERS_DIR="$XDG_DATA_HOME/xfce4/helpers"
+if [ "$IS_LOCAL_INSTALL" = true ]; then
+  # ~/.local/share/xfce4/helpers
+  TARGET_XFCE4_HELPERS_DIR="$XDG_DATA_HOME/xfce4/helpers"
+else
+  TARGET_XFCE4_HELPERS_DIR="/usr/share/xfce4/helpers"
+fi
+
 if [ ! -d "$TARGET_XFCE4_HELPERS_DIR" ]; then
     mkdir -p "$TARGET_XFCE4_HELPERS_DIR"
     echo "$TARGET_XFCE4_HELPERS_DIR did not exist. We created it for you."
@@ -123,7 +192,13 @@ cp "$SRC_BINARY_PATH" "$TARGET_BINARY_PATH"
 # Symlink binary to $HOME/.local/bin
 ln -sf "$TARGET_BINARY_PATH" "$TARGET_INSTALL_BINARY_PATH"
 
-# Installs to /.local/share/icons/hicolor/512x512/apps/software.Browsers.png
+# Installs to ~/.local/share/icons/hicolor/512x512/apps/software.Browsers.png
+#          or /usr/share/icons/hicolor/512x512/apps/software.Browsers.png
+# --mode user|system
+# The default is to use system mode when called by root and to use user mode
+# when called by a non-root user.
+# Could also consider symlinking from application directory
+# (but we don't need all those icons for the app itself)
 xdg-icon-resource install --novendor --size 16 icons/16x16/software.Browsers.png
 xdg-icon-resource install --novendor --size 32 icons/32x32/software.Browsers.png
 xdg-icon-resource install --novendor --size 64 icons/64x64/software.Browsers.png
@@ -131,10 +206,14 @@ xdg-icon-resource install --novendor --size 128 icons/128x128/software.Browsers.
 xdg-icon-resource install --novendor --size 256 icons/256x256/software.Browsers.png
 xdg-icon-resource install --novendor --size 512 icons/512x512/software.Browsers.png
 
-# $HOME/.local/share/applications
-TARGET_DESKTOP_DIR_PATH="$XDG_DATA_HOME/applications"
+if [ "$IS_LOCAL_INSTALL" = true ]; then
+  # ~/.local/share/applications
+  TARGET_DESKTOP_DIR_PATH="$XDG_DATA_HOME/applications"
+else
+  TARGET_DESKTOP_DIR_PATH="/usr/share/applications"
+fi
 
-# Copy .desktop file to $HOME/.local/share/applications/
+# Copy .desktop file to $HOME/.local/share/applications/ or /usr/share/applications
 desktop-file-install --dir="$TARGET_DESKTOP_DIR_PATH" --rebuild-mime-info-cache "$SOURCE_DESKTOP_FILE_PATH"
 
 # Refresh desktop database
