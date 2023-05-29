@@ -24,8 +24,6 @@ is_user_root_or_sudoer() {
 THIS_DIR="$(dirname "$0")"
 
 if [[ $* == *--system* ]]; then
-  IS_LOCAL_INSTALL=false
-
   if ! is_user_root_or_sudoer; then
     echo "You must run this installer with sudo when using --system flag"
     echo "Please run again as:"
@@ -34,6 +32,8 @@ if [[ $* == *--system* ]]; then
     echo ""
     exit 1
   fi
+
+  IS_LOCAL_INSTALL=false
 else
   IS_LOCAL_INSTALL=true
 fi
