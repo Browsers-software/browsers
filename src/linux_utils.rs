@@ -3,12 +3,11 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use dirs::home_dir;
-use tracing::{info, warn};
-
 use glib::prelude::AppInfoExt;
 use glib::AppInfo;
 use gtk::prelude::*;
 use gtk::{gio, IconLookupFlags, IconTheme};
+use tracing::{info, warn};
 
 use crate::{InstalledBrowser, SupportedAppRepository};
 
@@ -225,13 +224,33 @@ pub fn get_this_app_config_root_dir() -> PathBuf {
 }
 
 // $HOME/.local/share/software.Browsers/resources
+// or /usr/local/share/software.Browsers/resources
 pub fn get_this_app_resources_dir() -> PathBuf {
     return get_this_app_data_dir().join("resources");
 }
 
 // $HOME/.local/share/software.Browsers
-pub fn get_this_app_data_dir() -> PathBuf {
-    return get_this_app_xdg_data_dir();
+// $XDG_DATA_HOME/software.Browsers
+// /usr/local/share/software.Browsers
+// /usr/share/software.Browsers
+fn get_this_app_data_dir() -> PathBuf {
+    //   # ~/.local/share/software.Browsers/bin/browsers
+    //   $XDG_DATA_HOME/software.Browsers/bin/browsers
+    //   /usr/local/share/software.Browsers/bin/browsers
+    let binary_file_path =
+        fs::canonicalize(std::env::current_exe().expect("Can't find current executable"))
+            .expect("Can't canonicalize current executable path");
+
+    //   # ~/.local/share/software.Browsers/bin/
+    //   $XDG_DATA_HOME/software.Browsers/bin/
+    //   /usr/local/share/software.Browsers/bin/
+    let binary_dir_path = binary_file_path.parent().unwrap();
+
+    //   # ~/.local/share/software.Browsers/
+    //   $XDG_DATA_HOME/software.Browsers/
+    //   /usr/local/share/software.Browsers/
+    let data_dir_path = binary_dir_path.parent().unwrap();
+    return data_dir_path.to_path_buf();
 }
 
 // /run/user/1001/software.Browsers/
