@@ -93,6 +93,9 @@ winapi = { version = "0.3.9", features = ["ntdef"] }
 # Same as `shell-words` but for Windows, i.e supporting \ in paths
 winsplit = "0.1"
 
+# Replacement for fs::canonicalize, but returns normal path instead of the `\\?` prefixed path
+dunce = "1.0.4"
+
 [target.'cfg(target_os = "windows")'.build-dependencies]
 # To embed .ico into .exe
 # Requires rc.exe from the Windows SDK (or windres.exe and ar.exe from minGW64)

@@ -14,26 +14,57 @@ REM echo %ARCH%
 
 set SRC_BINARY_PATH=%ARCH%\browsers.exe
 
+
+if exist "%windir%\system32\config\systemprofile\*" (
+  set is_admin=true
+) else (
+  set is_admin=false
+)
+
+if "%~1"=="--system" (
+  if %is_admin% == false (
+    echo You must run this installer with Administrator privileges when using --system flag
+    echo Please run as administrator (no --system required then^)
+    echo.
+
+    exit /b 1
+  )
+
+  set is_local_install=false
+) else (
+  set is_local_install=true
+)
+
+if %is_admin% == true (
+  echo Because you are running this as an administrator we are going to install it to the whole system
+  echo.
+  set is_local_install=false
+)
+
 REM C:\Users\x\AppData\Local\software.Browsers\
 
-REM TODO: would be even more correct to take from registry
-set LocalProgramsDir=%LocalAppData%\Programs
-set ProgramDir=%LocalProgramsDir%\software.Browsers
+if %is_local_install% == true (
+    REM TODO: would be even more correct to take from registry
+    set LocalProgramsDir=%LocalAppData%\Programs
+    set ProgramDir=%LocalProgramsDir%\software.Browsers
+) else (
+    set ProgramDir=%ProgramFiles%\software.Browsers
+)
 
 if not exist "%ProgramDir%\" (
-  mkdir "%ProgramDir%"
+  mkdir "%ProgramDir%" || exit /b
 )
 
 copy "%SRC_BINARY_PATH%" "%ProgramDir%\browsers.exe" 1>nul
 
 if not exist "%ProgramDir%\resources\icons\512x512\" (
-  mkdir "%ProgramDir%\resources\icons\512x512"
+  mkdir "%ProgramDir%\resources\icons\512x512" || exit /b
 )
 
 copy "icons\512x512\software.Browsers.png" "%ProgramDir%\resources\icons\512x512\software.Browsers.png" 1>nul
 
 if not exist "%ProgramDir%\resources\i18n\en-US\" (
-  mkdir "%ProgramDir%\resources\i18n\en-US"
+  mkdir "%ProgramDir%\resources\i18n\en-US" || exit /b
 )
 
 copy "i18n\en-US\builtin.ftl" "%ProgramDir%\resources\i18n\en-US\builtin.ftl" 1>nul
@@ -41,7 +72,7 @@ copy "i18n\en-US\builtin.ftl" "%ProgramDir%\resources\i18n\en-US\builtin.ftl" 1>
 REM C:\Users\x\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Browsers\Browsers.lnk
 
 if not exist "%AppData%\Microsoft\Windows\Start Menu\Programs\Browsers\" (
-  mkdir "%AppData%\Microsoft\Windows\Start Menu\Programs\Browsers"
+  mkdir "%AppData%\Microsoft\Windows\Start Menu\Programs\Browsers" || exit /b
 )
 copy "startmenu\Browsers.lnk" "%AppData%\Microsoft\Windows\Start Menu\Programs\Browsers\Browsers.lnk" 1>nul
 
