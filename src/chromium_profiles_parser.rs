@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use serde_json::{Map, Value};
 use tracing::{debug, info};
 
-use crate::{InstalledBrowserProfile, paths, utils};
+use crate::{paths, utils, InstalledBrowserProfile};
 
 pub fn find_chromium_profiles(
     chromium_user_dir: &Path,
