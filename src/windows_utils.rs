@@ -442,13 +442,23 @@ pub fn get_this_app_config_root_dir() -> PathBuf {
 
 // For resources (e.g translations)
 // C:\Users\Alice\AppData\Local\Programs\software.Browsers\resources
+// %ProgramFiles%\software.Browsers\resources
 pub fn get_this_app_resources_dir() -> PathBuf {
     return get_this_app_program_dir().join("resources");
 }
 
-// C:\Users\Alice\AppData\Local\Programs\software.Browsers
+// C:\Users\Alice\AppData\Local\Programs\software.Browsers\
+// %LocalAppData%\Programs\software.Browsers\
+// %ProgramFiles%\software.Browsers\
 fn get_this_app_program_dir() -> PathBuf {
-    return get_config_local_dir().join("Programs").join(APP_DIR_NAME);
+    // %LocalAppData%\Programs\software.Browsers\browsers.exe
+    // %ProgramFiles%\software.Browsers\browsers.exe
+    let binary_file_path =
+        dunce::canonicalize(std::env::current_exe().expect("Can't find current executable"))
+            .expect("Can't canonicalize current executable path");
+
+    let binary_dir_path = binary_file_path.parent().unwrap();
+    return binary_dir_path.to_path_buf();
 }
 
 // C:\Users\Alice\AppData\Local\software.Browsers
