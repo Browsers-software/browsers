@@ -531,7 +531,7 @@ dependencies = [
 [[package]]
 name = "druid"
 version = "0.8.3"
-source = "git+https://github.com/browsers-software/druid.git?branch=browsers#999a8812397ca0e0ece7c98900921ad971b011e3"
+source = "git+https://github.com/browsers-software/druid.git?branch=browsers#836ba95bade01445e49a1f1ea13aa5d93bb1cf9e"
 dependencies = [
  "console_error_panic_hook",
  "druid-derive",
@@ -552,7 +552,7 @@ dependencies = [
 [[package]]
 name = "druid-derive"
 version = "0.5.0"
-source = "git+https://github.com/browsers-software/druid.git?branch=browsers#999a8812397ca0e0ece7c98900921ad971b011e3"
+source = "git+https://github.com/browsers-software/druid.git?branch=browsers#836ba95bade01445e49a1f1ea13aa5d93bb1cf9e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -562,7 +562,7 @@ dependencies = [
 [[package]]
 name = "druid-shell"
 version = "0.8.3"
-source = "git+https://github.com/browsers-software/druid.git?branch=browsers#999a8812397ca0e0ece7c98900921ad971b011e3"
+source = "git+https://github.com/browsers-software/druid.git?branch=browsers#836ba95bade01445e49a1f1ea13aa5d93bb1cf9e"
 dependencies = [
  "anyhow",
  "bitflags",
@@ -1415,9 +1415,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.17.1"
+version = "1.17.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7e5500299e16ebb147ae15a00a942af264cf3688f47923b8fc2cd5858f23ad3"
+checksum = "9670a07f94779e00908f3e686eab508878ebb390ba6e604d3a284c00e8d0487b"
 
 [[package]]
 name = "option-ext"
