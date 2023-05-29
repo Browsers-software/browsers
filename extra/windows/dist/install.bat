@@ -2,6 +2,9 @@
 
 echo Starting Installation
 
+REM .bat location with trailing \
+set THIS_DIR=%~dp0
+
 REM Sets ARCH to ARM64 or AMD64
 for /f "tokens=3" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v PROCESSOR_ARCHITECTURE ^| findstr /ri "REG_SZ"') do set ARCH_WIN=%%a
 
@@ -12,7 +15,7 @@ if "%ARCH_WIN%" == "AMD64" (set ARCH=x86_64)
 
 REM echo %ARCH%
 
-set SRC_BINARY_PATH=%ARCH%\browsers.exe
+set SRC_BINARY_PATH=%THIS_DIR%%ARCH%\browsers.exe
 
 
 if exist "%windir%\system32\config\systemprofile\*" (
@@ -61,20 +64,20 @@ if not exist "%ProgramDir%\resources\icons\512x512\" (
   mkdir "%ProgramDir%\resources\icons\512x512" || exit /b
 )
 
-copy "icons\512x512\software.Browsers.png" "%ProgramDir%\resources\icons\512x512\software.Browsers.png" 1>nul
+copy "%THIS_DIR%icons\512x512\software.Browsers.png" "%ProgramDir%\resources\icons\512x512\software.Browsers.png" 1>nul
 
 if not exist "%ProgramDir%\resources\i18n\en-US\" (
   mkdir "%ProgramDir%\resources\i18n\en-US" || exit /b
 )
 
-copy "i18n\en-US\builtin.ftl" "%ProgramDir%\resources\i18n\en-US\builtin.ftl" 1>nul
+copy "%THIS_DIR%i18n\en-US\builtin.ftl" "%ProgramDir%\resources\i18n\en-US\builtin.ftl" 1>nul
 
 REM C:\Users\x\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Browsers\Browsers.lnk
 
 if not exist "%AppData%\Microsoft\Windows\Start Menu\Programs\Browsers\" (
   mkdir "%AppData%\Microsoft\Windows\Start Menu\Programs\Browsers" || exit /b
 )
-copy "startmenu\Browsers.lnk" "%AppData%\Microsoft\Windows\Start Menu\Programs\Browsers\Browsers.lnk" 1>nul
+copy "%THIS_DIR%startmenu\Browsers.lnk" "%AppData%\Microsoft\Windows\Start Menu\Programs\Browsers\Browsers.lnk" 1>nul
 
 REG ADD "HKCU\Software\Classes\software.Browsers" /ve /d "Browsers HTML Document" /f 1>nul
 REG ADD "HKCU\Software\Classes\software.Browsers" /v AppUserModelId /t REG_SZ /d "software.Browsers" /f 1>nul
@@ -111,7 +114,7 @@ REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe" 
 REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe\SupportedProtocols" /v http /t REG_SZ /d "" /f 1>nul
 REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe\SupportedProtocols" /v https /t REG_SZ /d "" /f 1>nul
 
-powershell -ExecutionPolicy Bypass -File %~dp0announce_default.ps1
+powershell -ExecutionPolicy Bypass -File %THIS_DIR%announce_default.ps1
 
 echo Browsers has been installed. Enjoy!
 echo Please report any issues at https://github.com/Browsers-software/browsers/issues
