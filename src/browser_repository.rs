@@ -477,7 +477,11 @@ impl SupportedApp {
     pub fn find_profiles(&self, binary_path: &Path, is_snap: bool) -> Vec<InstalledBrowserProfile> {
         return if let Some(find_profiles_fn) = self.find_profiles_fn {
             let app_config_dir_abs = self.get_app_config_dir_abs(is_snap);
-            find_profiles_fn(app_config_dir_abs, binary_path, self.get_app_id())
+            let mut browser_profiles: Vec<InstalledBrowserProfile> =
+                find_profiles_fn(app_config_dir_abs, binary_path, self.get_app_id());
+
+            browser_profiles.sort_by_key(|p| p.profile_name.clone());
+            browser_profiles
         } else {
             Self::find_placeholder_profiles()
         };
