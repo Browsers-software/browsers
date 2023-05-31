@@ -199,14 +199,17 @@ jobs:
         run: |
           cargo build --target aarch64-pc-windows-msvc --release
         shell: bash
-      - name: Build binaries and package
-        env:
-          APPCAST_SECRET_KEY_BASE64: ${{ secrets.APPCAST_SECRET_KEY_BASE64 }}
+      - name: Install tools
         run: |
           curl https://raw.githubusercontent.com/Browsers-software/ci-utils/main/zip/bzip2.dll -o bzip2.dll
           curl https://raw.githubusercontent.com/Browsers-software/ci-utils/main/zip/zip.exe -o zip.exe
           cp bzip2.dll "C:\Program Files\Git\mingw64\bin"
           cp zip.exe "C:\Program Files\Git\mingw64\bin"
+        shell: bash
+      - name: Build binaries and package
+        env:
+          APPCAST_SECRET_KEY_BASE64: ${{ secrets.APPCAST_SECRET_KEY_BASE64 }}
+        run: |
           mkdir -p secrets
           echo $APPCAST_SECRET_KEY_BASE64 | base64 --decode > secrets/appcast_seckey
           export APPCAST_SECRET_KEY_FILE="${GITHUB_WORKSPACE}/secrets/appcast_seckey"
@@ -219,8 +222,10 @@ jobs:
           path: |
             target/universal-pc-windows-msvc/release/Browsers_windows.zip
             target/universal-pc-windows-msvc/release/browsers_windows.tar.gz
+            target/universal-pc-windows-msvc/release/browsers_windows.tar.gz.sha256
             target/universal-pc-windows-msvc/release/browsers_windows.tar.gz.sig
             target/universal-pc-windows-msvc/release/browsers_windows.tar.xz
+            target/universal-pc-windows-msvc/release/browsers_windows.tar.xz.sha256
             target/universal-pc-windows-msvc/release/browsers_windows.tar.xz.sig
   release:
     needs: [ build-linux, build-macos, build-windows ]
@@ -263,6 +268,8 @@ jobs:
             browsers-mac-artifacts/browsers_mac.tar.xz.sig
             browsers-windows-artifacts/Browsers_windows.zip
             browsers-windows-artifacts/browsers_windows.tar.gz
+            browsers-windows-artifacts/browsers_windows.tar.gz.sha256
             browsers-windows-artifacts/browsers_windows.tar.gz.sig
             browsers-windows-artifacts/browsers_windows.tar.xz
+            browsers-windows-artifacts/browsers_windows.tar.xz.sha256
             browsers-windows-artifacts/browsers_windows.tar.xz.sig
