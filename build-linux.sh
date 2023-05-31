@@ -52,9 +52,11 @@ build_app_bundle() {
 
 make_archives() {
   rm -f "./${target_dir:?}/browsers_linux.tar.gz"
+  rm -f "./${target_dir:?}/browsers_linux.tar.gz.sha256"
   rm -f "./${target_dir:?}/browsers_linux.tar.gz.sig"
 
   rm -f "./${target_dir:?}/browsers_linux.tar.xz"
+  rm -f "./${target_dir:?}/browsers_linux.tar.xz.sha256"
   rm -f "./${target_dir:?}/browsers_linux.tar.xz.sig"
 
   local filelist=(
@@ -77,15 +79,24 @@ make_archives() {
     -C "./$target_dir" \
     "${filelist[@]}"
 
-  # creates browsers_linux.tar.gz.sig
-  signify -S -s "$APPCAST_SECRET_KEY_FILE" -m "./$target_dir/browsers_linux.tar.gz"
+  create_signatures "$target_dir" "browsers_linux.tar.gz"
 
   tar -Jcf "./$target_dir/browsers_linux.tar.xz" \
     -C "./$target_dir" \
     "${filelist[@]}"
 
-  # creates browsers_linux.tar.xz.sig
-  signify -S -s "$APPCAST_SECRET_KEY_FILE" -m "./$target_dir/browsers_linux.tar.xz"
+  create_signatures "$target_dir" "browsers_linux.tar.xz"
+}
+
+create_signatures() {
+  local target_dir="$1"
+  local file_name="$2"
+
+  # creates $filename.sha256
+  shasum --algorithm 256 "./$target_dir/$file_name" | cut -f1 -d' ' > "./$target_dir/$file_name.sha256"
+
+  # creates $filename.sig
+  signify -S -s "$APPCAST_SECRET_KEY_FILE" -m "./$target_dir/$file_name"
 }
 
 build_binary

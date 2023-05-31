@@ -92,8 +92,10 @@ jobs:
           name: browsers-linux-artifacts
           path: |
             target/universal-unknown-linux-gnu/release/browsers_linux.tar.gz
+            target/universal-unknown-linux-gnu/release/browsers_linux.tar.gz.sha256
             target/universal-unknown-linux-gnu/release/browsers_linux.tar.gz.sig
             target/universal-unknown-linux-gnu/release/browsers_linux.tar.xz
+            target/universal-unknown-linux-gnu/release/browsers_linux.tar.xz.sha256
             target/universal-unknown-linux-gnu/release/browsers_linux.tar.xz.sig
   build-macos:
     environment: PROD_2028
@@ -247,8 +249,10 @@ jobs:
           fail_on_unmatched_files: true
           files: |
             browsers-linux-artifacts/browsers_linux.tar.gz
+            browsers-linux-artifacts/browsers_linux.tar.gz.sha256
             browsers-linux-artifacts/browsers_linux.tar.gz.sig
             browsers-linux-artifacts/browsers_linux.tar.xz
+            browsers-linux-artifacts/browsers_linux.tar.xz.sha256
             browsers-linux-artifacts/browsers_linux.tar.xz.sig
             browsers-mac-artifacts/Browsers.dmg
             browsers-mac-artifacts/browsers_mac.tar.gz
