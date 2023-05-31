@@ -160,8 +160,10 @@ jobs:
           path: |
             target/universal-apple-darwin/release/Browsers.dmg
             target/universal-apple-darwin/release/browsers_mac.tar.gz
+            target/universal-apple-darwin/release/browsers_mac.tar.gz.sha256
             target/universal-apple-darwin/release/browsers_mac.tar.gz.sig
             target/universal-apple-darwin/release/browsers_mac.tar.xz
+            target/universal-apple-darwin/release/browsers_mac.tar.xz.sha256
             target/universal-apple-darwin/release/browsers_mac.tar.xz.sig
   build-windows:
     environment: PROD_2028
@@ -250,8 +252,10 @@ jobs:
             browsers-linux-artifacts/browsers_linux.tar.xz.sig
             browsers-mac-artifacts/Browsers.dmg
             browsers-mac-artifacts/browsers_mac.tar.gz
+            browsers-mac-artifacts/browsers_mac.tar.gz.sha256
             browsers-mac-artifacts/browsers_mac.tar.gz.sig
             browsers-mac-artifacts/browsers_mac.tar.xz
+            browsers-mac-artifacts/browsers_mac.tar.xz.sha256
             browsers-mac-artifacts/browsers_mac.tar.xz.sig
             browsers-windows-artifacts/Browsers_windows.zip
             browsers-windows-artifacts/browsers_windows.tar.gz
