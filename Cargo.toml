@@ -1,6 +1,6 @@
 [package]
 name = "browsers"
-version = "0.3.5"
+version = "0.3.6"
 authors = ["Madis Liias <madisliias@gmail.com>"]
 edition = "2021"
 description = "Browsers"

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.6]
+
+### Added
+
+- Allow installing under system path in Linux (/usr/local/bin/) and Windows (%ProgramFiles%)
+
+### Fixed:
+
+- Make UI a big higher. Might need to reduce it only in Windows, as Windows seems to fit more
+- Stable ordering of profiles when refreshing
+
 ## [0.3.5]
 
 ### Added
@@ -142,7 +153,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial Release
 
-[unreleased]: https://github.com/Browsers-software/browsers/compare/0.3.5...HEAD
+[unreleased]: https://github.com/Browsers-software/browsers/compare/0.3.6...HEAD
+[0.3.6]: https://github.com/Browsers-software/browsers/releases/tag/0.3.6
 [0.3.5]: https://github.com/Browsers-software/browsers/releases/tag/0.3.5
 [0.3.4]: https://github.com/Browsers-software/browsers/releases/tag/0.3.4
 [0.3.3]: https://github.com/Browsers-software/browsers/releases/tag/0.3.3
