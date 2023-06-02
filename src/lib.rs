@@ -1,10 +1,10 @@
+use std::{env, thread};
 use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::process::Command;
 use std::str::FromStr;
+use std::sync::{Arc, mpsc};
 use std::sync::mpsc::{Receiver, Sender};
-use std::sync::{mpsc, Arc};
-use std::{env, thread};
 
 use druid::{ExtEventSink, Target, UrlOpenInfo};
 use serde::{Deserialize, Serialize};
@@ -15,6 +15,7 @@ use ui::UI;
 
 use crate::browser_repository::{SupportedApp, SupportedAppRepository};
 use crate::ui::MoveTo;
+use crate::url_rule::UrlGlobMatcher;
 use crate::utils::{OSAppFinder, ProfileAndOptions};
 
 mod ui;
@@ -244,14 +245,14 @@ impl CommonBrowserProfile {
     }
 
     pub fn has_priority_ordering(&self) -> bool {
-        return !self.get_restricted_domains().is_empty();
+        return !self.get_restricted_hostname_matchers().is_empty();
     }
 
-    fn get_restricted_domains(&self) -> &Vec<String> {
+    fn get_restricted_hostname_matchers(&self) -> &Vec<UrlGlobMatcher> {
         return self
             .get_browser_common()
             .supported_app
-            .get_restricted_domains();
+            .get_restricted_hostname_matchers();
     }
 
     fn get_browser_name(&self) -> &str {
@@ -818,7 +819,7 @@ fn move_app_profile(
     // 3. update config file
     let profile_ids_sorted: Vec<String> = visible_browser_profiles
         .iter()
-        .filter(|b| b.get_restricted_domains().is_empty())
+        .filter(|b| !b.has_priority_ordering())
         .map(|p| p.get_unique_id())
         .collect();
 
