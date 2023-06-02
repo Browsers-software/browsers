@@ -235,22 +235,22 @@ impl OsHelper {
         fs::create_dir_all(icons_root_dir.as_path()).unwrap();
 
         // to for each bundle id copy the domain
-        let bundle_ids_and_domains: Vec<(String, Vec<String>)> = schemes
+        let bundle_ids_and_domain_patterns: Vec<(String, Vec<String>)> = schemes
             .iter()
-            .map(|(scheme, domains)| (find_bundle_ids_for_url_scheme(scheme), domains))
-            .flat_map(|(bundle_ids, domains)| {
+            .map(|(scheme, domain_patterns)| (find_bundle_ids_for_url_scheme(scheme), domain_patterns))
+            .flat_map(|(bundle_ids, domain_patterns)| {
                 let bundle_id_and_domains: Vec<(String, Vec<String>)> = bundle_ids
                     .iter()
-                    .map(|bundle_id| (bundle_id.clone(), domains.clone()))
+                    .map(|bundle_id| (bundle_id.clone(), domain_patterns.clone()))
                     .collect();
 
                 bundle_id_and_domains
             })
             .collect();
 
-        for (bundle_id, domains) in bundle_ids_and_domains {
+        for (bundle_id, domain_patterns) in bundle_ids_and_domain_patterns {
             let browser_maybe =
-                self.to_installed_browser(bundle_id.as_str(), icons_root_dir.as_path(), domains);
+                self.to_installed_browser(bundle_id.as_str(), icons_root_dir.as_path(), domain_patterns);
             if let Some(browser) = browser_maybe {
                 info!("Added app: {:?}", browser);
                 browsers.push(browser);
@@ -264,7 +264,7 @@ impl OsHelper {
         &self,
         bundle_id: &str,
         icons_root_dir: &Path,
-        restricted_domains: Vec<String>,
+        restricted_domain_patterns: Vec<String>,
     ) -> Option<InstalledBrowser> {
         if bundle_id == "software.Browsers" {
             // this is us, skip
@@ -273,7 +273,7 @@ impl OsHelper {
 
         let supported_app = self
             .app_repository
-            .get_or_generate(bundle_id, &restricted_domains);
+            .get_or_generate(bundle_id, &restricted_domain_patterns);
         let icon_filename = bundle_id.to_string() + ".png";
         let full_stored_icon_path = icons_root_dir.join(icon_filename);
 
@@ -300,7 +300,7 @@ impl OsHelper {
             user_dir: supported_app.get_app_config_dir_absolute(false).to_string(),
             icon_path: icon_path_str.clone(),
             profiles: supported_app.find_profiles(executable_path.as_path(), false),
-            restricted_domains: restricted_domains,
+            restricted_domains: restricted_domain_patterns,
         };
 
         return Some(browser);

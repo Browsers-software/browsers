@@ -149,6 +149,7 @@ impl OSAppFinder {
             ("figma", vec!["figma.com", "www.figma.com"]),
             ("linear", vec!["linear.app"]),
             ("notion", vec!["notion.so", "www.notion.so"]),
+            ("slack", vec!["*.slack.com"]),
             ("spotify", vec!["open.spotify.com"]),
             ("tg", vec!["t.me"]), // telegram
             (
@@ -169,10 +170,10 @@ impl OSAppFinder {
         ];
         let schemes_vec: Vec<(String, Vec<String>)> = schemes
             .iter()
-            .map(|(scheme, domains)| {
+            .map(|(scheme, domain_patterns)| {
                 (
                     scheme.to_string(),
-                    domains.iter().map(|d| d.to_string()).collect(),
+                    domain_patterns.iter().map(|d| d.to_string()).collect(),
                 )
             })
             .collect();

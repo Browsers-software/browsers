@@ -1,18 +1,11 @@
 use std::cmp;
 use std::error::Error;
 use std::path::{Path, PathBuf};
-use std::sync::mpsc::Sender;
 use std::sync::Arc;
+use std::sync::mpsc::Sender;
 
-use druid::commands::{CONFIGURE_WINDOW_SIZE_AND_POSITION, QUIT_APP, SHOW_ALL, SHOW_WINDOW};
-use druid::keyboard_types::Key;
-use druid::piet::{InterpolationMode, TextStorage};
-use druid::widget::{
-    Container, Controller, ControllerHost, CrossAxisAlignment, Either, Flex, Image, Label,
-    LineBreaking, List, ZStack,
-};
 use druid::{
-    image, Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, LayoutCtx, LensExt,
+    Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, image, LayoutCtx, LensExt,
     LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, Modifiers, Monitor, Rect,
     TextAlignment, UnitPoint, UpdateCtx, Vec2, WidgetId, WindowHandle, WindowLevel,
     WindowSizePolicy,
@@ -22,11 +15,20 @@ use druid::{
     ImageBuf, KbKey, KeyEvent, Lens, PaintCtx, Point, RenderContext, Selector, Size, Target,
     Widget, WidgetExt, WindowDesc, WindowId,
 };
+use druid::commands::{CONFIGURE_WINDOW_SIZE_AND_POSITION, QUIT_APP, SHOW_ALL, SHOW_WINDOW};
+use druid::keyboard_types::Key;
+use druid::piet::{InterpolationMode, TextStorage};
+use druid::widget::{
+    Container, Controller, ControllerHost, CrossAxisAlignment, Either, Flex, Image, Label,
+    LineBreaking, List, ZStack,
+};
+use globset::GlobMatcher;
 use image::io::Reader as ImageReader;
 use tracing::{debug, info};
 use url::Url;
 
-use crate::{paths, CommonBrowserProfile, MessageToMain};
+use crate::{CommonBrowserProfile, MessageToMain, paths, url_rule};
+use crate::url_rule::{UrlGlobMatcher, UrlMatcher};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -58,6 +60,7 @@ impl UI {
         let first_orderable_item_index = first_orderable_item_index_maybe.unwrap_or(0);
 
         let profiles_count = all_browser_profiles.len();
+
         return all_browser_profiles
             .iter()
             .enumerate()
@@ -65,7 +68,7 @@ impl UI {
                 browser_profile_index: i,
                 is_first: i == first_orderable_item_index,
                 is_last: i == profiles_count - 1,
-                restricted_domains: Arc::new(p.get_restricted_domains().clone()),
+                restricted_url_matchers: Arc::new(p.get_restricted_hostname_matchers().clone()),
                 browser_name: p.get_browser_name().to_string(),
                 profile_name: p.get_profile_name().to_string(),
                 supports_profiles: p.get_browser_common().supports_profiles(),
@@ -296,7 +299,7 @@ pub struct UIBrowser {
     browser_profile_index: usize,
     is_first: bool,
     is_last: bool,
-    restricted_domains: Arc<Vec<String>>,
+    restricted_url_matchers: Arc<Vec<UrlGlobMatcher>>,
     browser_name: String,
     profile_name: String,
     profile_name_maybe: Option<String>,
@@ -311,7 +314,7 @@ pub struct UIBrowser {
 
 impl UIBrowser {
     pub fn has_priority_ordering(&self) -> bool {
-        return !self.restricted_domains.is_empty();
+        return !self.restricted_url_matchers.is_empty();
     }
 
     /// Returns app name + optionally profile name if app supports multiple profiles
@@ -1006,15 +1009,19 @@ fn get_filtered_browsers(url: &str, ui_browsers: &Arc<Vec<UIBrowser>>) -> Vec<UI
         .iter()
         .cloned()
         .filter(|b| {
-            if b.restricted_domains.is_empty() {
-                return true;
-            }
-
-            return if domain_maybe.is_none() {
-                false
+            return if b.restricted_url_matchers.is_empty() {
+                true
             } else {
-                let domain = domain_maybe.as_ref().unwrap();
-                b.restricted_domains.contains(domain)
+                if domain_maybe.is_none() {
+                    false
+                } else {
+                    let domain = domain_maybe.as_ref().unwrap();
+
+                    let restricted_hostname_matchers = &b.restricted_url_matchers;
+                    restricted_hostname_matchers
+                        .iter()
+                        .any(|matcher| matcher.hostname_matches(domain))
+                }
             };
         })
         .collect();

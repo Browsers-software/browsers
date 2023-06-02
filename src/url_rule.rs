@@ -15,6 +15,7 @@ pub struct UrlMatcher {
     fragment: String,
 }
 
+#[derive(Clone, Debug)]
 pub struct UrlGlobMatcher {
     scheme: GlobMatcher,
     hostname: GlobMatcher,
@@ -87,8 +88,7 @@ impl UrlGlobMatcher {
         //self.scheme.is_match_candidate()
         let scheme_matches = self.scheme.is_match(target_url.scheme);
 
-        let target_hostname_with_slashes = target_url.hostname.replace(".", "/");
-        let hostname_matches = self.hostname.is_match(target_hostname_with_slashes);
+        let hostname_matches = self.hostname_matches(target_url.hostname.as_str());
         let path_matches = self.path.is_match(target_url.path);
 
         let target_query_with_slashes = target_url.query.replace("&", "/");
@@ -100,6 +100,11 @@ impl UrlGlobMatcher {
             && path_matches
             && query_matches
             && fragment_matches;
+    }
+
+    pub fn hostname_matches(&self, target_hostname: &str) -> bool {
+        let target_hostname_with_slashes = target_hostname.replace(".", "/");
+        return self.hostname.is_match(target_hostname_with_slashes);
     }
 }
 

@@ -3,7 +3,11 @@ use std::path::{Path, PathBuf};
 
 use url::Url;
 
-use crate::{chromium_profiles_parser, firefox_profiles_parser, paths, InstalledBrowserProfile};
+use crate::{
+    chromium_profiles_parser, firefox_profiles_parser, InstalledBrowserProfile, paths, url_rule,
+};
+use crate::ui::RESTORE_HIDDEN_PROFILE;
+use crate::url_rule::UrlGlobMatcher;
 
 // Holds list of custom SupportedApp configurations
 // All other apps will be the "default" supported app implementation
@@ -29,7 +33,7 @@ impl SupportedAppRepository {
     pub fn get_or_generate(
         &self,
         app_id_str: &str,
-        restricted_domains: &Vec<String>,
+        restricted_domain_patterns: &Vec<String>,
     ) -> SupportedApp {
         return self
             .supported_apps
@@ -37,7 +41,7 @@ impl SupportedAppRepository {
             .map(|app| app.to_owned())
             .unwrap_or_else(|| {
                 let app_id = AppIdentifier::new_for_os(app_id_str);
-                Self::generic_app(app_id, restricted_domains.clone())
+                Self::generic_app(app_id, restricted_domain_patterns.clone())
             });
     }
 
@@ -127,6 +131,7 @@ impl SupportedAppRepository {
             .add_firefox_based_mac(vec!["net.waterfox.waterfox"], "Waterfox")
             .add(Self::linear_app())
             .add(Self::notion_app())
+            .add(Self::slack_app())
             .add(Self::spotify_app())
             .add(Self::telegram_app())
             .add(Self::workflowy_app())
@@ -306,7 +311,7 @@ impl SupportedAppRepository {
             app_config_dir_absolute: app_config_dir_absolute,
             snap_app_config_dir_absolute: snap_app_config_dir_absolute,
             find_profiles_fn: Some(chromium_profiles_parser::find_chromium_profiles),
-            restricted_domains: vec![],
+            restricted_url_matchers: vec![],
             profile_args_fn: |profile_cli_arg_value| {
                 vec![format!("--profile-directory={}", profile_cli_arg_value)]
             },
@@ -326,7 +331,7 @@ impl SupportedAppRepository {
             app_config_dir_absolute: app_config_dir_absolute,
             snap_app_config_dir_absolute: snap_app_config_dir_absolute,
             find_profiles_fn: Some(firefox_profiles_parser::find_firefox_profiles),
-            restricted_domains: vec![],
+            restricted_url_matchers: vec![],
             profile_args_fn: |profile_cli_arg_value| {
                 vec!["-P".to_string(), profile_cli_arg_value.to_string()]
             },
@@ -344,26 +349,44 @@ impl SupportedAppRepository {
         }
     }
 
-    fn generic_app(app_id: AppIdentifier, restricted_domains: Vec<String>) -> SupportedApp {
-        Self::generic_app_with_url(app_id, restricted_domains, |_, url| url.to_string())
+    fn generic_app(app_id: AppIdentifier, restricted_domain_patterns: Vec<String>) -> SupportedApp {
+        Self::generic_app_with_url(app_id, restricted_domain_patterns, |_, url| url.to_string())
     }
 
     fn generic_app_with_url(
         app_id: AppIdentifier,
-        restricted_domains: Vec<String>,
+        restricted_domain_patterns: Vec<String>,
         url_transform_fn: fn(profile_cli_container_name: Option<&String>, url: &str) -> String,
     ) -> SupportedApp {
+        let restricted_url_matchers =
+            Self::generate_restricted_hostname_matchers(&restricted_domain_patterns);
+
         SupportedApp {
             app_id: app_id,
             app_config_dir_absolute: PathBuf::new(),
             snap_app_config_dir_absolute: PathBuf::new(),
             find_profiles_fn: None,
-            restricted_domains: restricted_domains,
+            restricted_url_matchers: restricted_url_matchers,
             profile_args_fn: |_profile_cli_arg_value| vec![],
             incognito_args: vec![],
             url_transform_fn: url_transform_fn,
             url_as_first_arg: false,
         }
+    }
+
+    fn generate_restricted_hostname_matchers(
+        restricted_domains: &Vec<String>,
+    ) -> Vec<UrlGlobMatcher> {
+        let restricted_hostname_matchers: Vec<UrlGlobMatcher> = restricted_domains
+            .iter()
+            .map(|url_pattern| {
+                let url_matcher = url_rule::to_url_matcher(url_pattern.as_str());
+                let glob_matcher = url_matcher.to_glob_matcher();
+                glob_matcher
+            })
+            .collect();
+
+        return restricted_hostname_matchers;
     }
 
     fn linear_app() -> SupportedApp {
@@ -399,6 +422,16 @@ impl SupportedAppRepository {
         };
 
         Self::generic_app(app_id, vec!["t.me".to_string()])
+    }
+
+    fn slack_app() -> SupportedApp {
+        let app_id = AppIdentifier {
+            mac_bundle_id: "com.tinyspeck.slackmacgap".to_string(),
+            linux_desktop_id: "LINUXTODO".to_string(),
+            windows_app_id: "WINDOWSTODO".to_string(),
+        };
+        // TODO: don't double-create domain matcher - it's already in utils
+        Self::generic_app_with_url(app_id, vec!["*.slack.com".to_string()], convert_slack_uri)
     }
 
     fn workflowy_app() -> SupportedApp {
@@ -439,7 +472,7 @@ pub struct SupportedApp {
     app_id: AppIdentifier,
     app_config_dir_absolute: PathBuf,
     snap_app_config_dir_absolute: PathBuf,
-    restricted_domains: Vec<String>,
+    restricted_url_matchers: Vec<UrlGlobMatcher>,
     find_profiles_fn: Option<
         fn(
             app_config_dir_absolute: &Path,
@@ -470,8 +503,8 @@ impl SupportedApp {
         return self.get_app_config_dir_abs(is_snap).to_str().unwrap();
     }
 
-    pub fn get_restricted_domains(&self) -> &Vec<String> {
-        return &self.restricted_domains;
+    pub fn get_restricted_hostname_matchers(&self) -> &Vec<UrlGlobMatcher> {
+        return &self.restricted_url_matchers;
     }
 
     pub fn find_profiles(&self, binary_path: &Path, is_snap: bool) -> Vec<InstalledBrowserProfile> {
@@ -641,6 +674,11 @@ impl AppConfigDir {
     fn config_dir_absolute(&self) -> PathBuf {
         return self.root_path.join(self.config_dir_relative());
     }
+}
+
+fn convert_slack_uri(_: Option<&String>, url: &str) -> String {
+    // TODO: https://api.slack.com/reference/deep-linking#supported_URIs
+    return "slack://user".to_string();
 }
 
 fn convert_workflowy_uri(_: Option<&String>, url: &str) -> String {
