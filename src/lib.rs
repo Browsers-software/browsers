@@ -114,15 +114,15 @@ impl BrowserCommon {
 
     fn create_command(
         &self,
-        profile_cli_arg_value: &str,
-        profile_cli_container_name: Option<&String>,
+        common_browser_profile: &CommonBrowserProfile,
         url: &str,
         incognito_mode: bool,
     ) -> Command {
+        let profile_cli_arg_value: &str = &common_browser_profile.profile_cli_arg_value;
         let profile_args = self.supported_app.get_profile_args(profile_cli_arg_value);
         let app_url = self
             .supported_app
-            .get_transformed_url(profile_cli_container_name, url);
+            .get_transformed_url(common_browser_profile, url);
 
         let (main_command, arguments) = self.command.split_at(1);
         let main_command = main_command.first().unwrap(); // guaranteed to not be empty
@@ -277,12 +277,7 @@ impl CommonBrowserProfile {
     }
 
     fn create_command(&self, url: &str, incognito_mode: bool) -> Command {
-        return self.app.create_command(
-            &self.profile_cli_arg_value,
-            self.profile_cli_container_name.as_ref(),
-            url,
-            incognito_mode,
-        );
+        return self.app.create_command(self, url, incognito_mode);
     }
 }
 
