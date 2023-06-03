@@ -157,7 +157,8 @@ impl OsHelper {
         let _string = app_info.to_string();
         //println!("app_info: {}", id);
 
-        let profiles = supported_app.find_profiles(executable_path_best_guess.clone(), is_snap);
+        let profiles =
+            supported_app.find_profiles(executable_path_best_guess.clone(), is_snap, false);
 
         let browser = InstalledBrowser {
             command: command_parts.clone(),
@@ -165,7 +166,7 @@ impl OsHelper {
             display_name: display_name.to_string(),
             bundle: supported_app.get_app_id().to_string(),
             user_dir: supported_app
-                .get_app_config_dir_absolute(is_snap)
+                .get_app_config_dir_absolute(is_snap, false)
                 .to_string(),
             icon_path: icon_path_str.clone(),
             profiles: profiles,

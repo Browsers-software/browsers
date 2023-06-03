@@ -1,10 +1,10 @@
-use std::{env, thread};
 use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::process::Command;
 use std::str::FromStr;
-use std::sync::{Arc, mpsc};
 use std::sync::mpsc::{Receiver, Sender};
+use std::sync::{mpsc, Arc};
+use std::{env, thread};
 
 use druid::{ExtEventSink, Target, UrlOpenInfo};
 use serde::{Deserialize, Serialize};
@@ -41,6 +41,7 @@ pub mod communicate;
 
 mod chromium_profiles_parser;
 mod firefox_profiles_parser;
+mod slack_profiles_parser;
 mod url_rule;
 
 // a browser (with profiles), or Spotify, Zoom, etc

@@ -250,14 +250,17 @@ impl OsHelper {
             .map(|path_perhaps| Path::new(path_perhaps))
             .unwrap_or(Path::new("unknown"));
 
-        let profiles = supported_app.find_profiles(executable_path_best_guess.clone(), false);
+        let profiles =
+            supported_app.find_profiles(executable_path_best_guess.clone(), false, false);
 
         let browser = InstalledBrowser {
             command: command_parts.clone(),
             executable_path: executable_path_best_guess.to_str().unwrap().to_string(),
             display_name: display_name.to_string(),
             bundle: app_id.to_string(),
-            user_dir: supported_app.get_app_config_dir_absolute(false).to_string(),
+            user_dir: supported_app
+                .get_app_config_dir_absolute(false, false)
+                .to_string(),
             icon_path: icon_path_str.clone(),
             profiles: profiles,
             restricted_domains: restricted_domains,

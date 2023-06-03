@@ -86,6 +86,38 @@ pub fn get_firefox_user_dir_root() -> PathBuf {
     return windows_utils::get_unsandboxed_roaming_config_dir();
 }
 
+// ~/Library/Application Support/
+#[cfg(target_os = "macos")]
+pub fn get_user_home_for_unsandboxed_app() -> PathBuf {
+    return macos_utils::macos_get_unsandboxed_home_dir();
+}
+
+// ~/
+#[cfg(target_os = "macos")]
+pub fn get_user_home_for_sandboxed_app(app_id: &str) -> PathBuf {
+    return macos_utils::macos_get_sandboxed_home_dir(app_id);
+}
+
+#[cfg(target_os = "linux")]
+pub fn get_user_home_for_unsandboxed_app() -> PathBuf {
+    return PathBuf::new();
+}
+
+#[cfg(target_os = "linux")]
+pub fn get_user_home_for_sandboxed_app(app_id: &str) -> PathBuf {
+    return PathBuf::new();
+}
+
+#[cfg(target_os = "windows")]
+pub fn get_user_home_for_unsandboxed_app() -> PathBuf {
+    return PathBuf::new();
+}
+
+#[cfg(target_os = "windows")]
+pub fn get_user_home_for_sandboxed_app(app_id: &str) -> PathBuf {
+    return PathBuf::new();
+}
+
 #[cfg(target_os = "macos")]
 pub fn get_snap_root() -> PathBuf {
     return PathBuf::new();
