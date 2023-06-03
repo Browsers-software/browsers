@@ -1,13 +1,15 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+use druid::piet::TextStorage;
+use tracing::info;
 use url::Url;
 
 use crate::ui::RESTORE_HIDDEN_PROFILE;
 use crate::url_rule::UrlGlobMatcher;
 use crate::{
     chromium_profiles_parser, firefox_profiles_parser, paths, slack_profiles_parser, url_rule,
-    InstalledBrowserProfile,
+    CommonBrowserProfile, InstalledBrowserProfile,
 };
 
 // Holds list of custom SupportedApp configurations
@@ -349,6 +351,8 @@ impl SupportedAppRepository {
         snap_app_config_dir_absolute: PathBuf,
         macos_sandbox_app_config_dir_absolute: PathBuf,
     ) -> SupportedApp {
+        let chromium_url_transform_fn: UrlTransformFn = |_, url| url.to_string();
+
         SupportedApp {
             app_id: app_id,
             app_config_dir_absolute: app_config_dir_absolute,
@@ -360,7 +364,7 @@ impl SupportedAppRepository {
                 vec![format!("--profile-directory={}", profile_cli_arg_value)]
             },
             incognito_args: vec!["-incognito".to_string()],
-            url_transform_fn: |_, url| url.to_string(),
+            url_transform_fn: chromium_url_transform_fn,
             url_as_first_arg: true,
         }
     }
@@ -371,6 +375,18 @@ impl SupportedAppRepository {
         snap_app_config_dir_absolute: PathBuf,
         macos_sandbox_app_config_dir_absolute: PathBuf,
     ) -> SupportedApp {
+        let firefox_url_transform_fn: UrlTransformFn = |common_browser_profile, url| {
+            let container_name_maybe: Option<&String> =
+                common_browser_profile.profile_cli_container_name.as_ref();
+            return if let Some(container_name) = container_name_maybe {
+                let fake_url = "ext+container:name=".to_string() + container_name;
+                let full_url = fake_url + "&url=" + url.clone();
+                full_url.to_string()
+            } else {
+                url.to_string()
+            };
+        };
+
         SupportedApp {
             app_id: app_id,
             app_config_dir_absolute: app_config_dir_absolute,
@@ -382,15 +398,7 @@ impl SupportedAppRepository {
                 vec!["-P".to_string(), profile_cli_arg_value.to_string()]
             },
             incognito_args: vec!["-private".to_string()],
-            url_transform_fn: |container_name_maybe, url| {
-                return if let Some(container_name) = container_name_maybe {
-                    let fake_url = "ext+container:name=".to_string() + container_name;
-                    let full_url = fake_url + "&url=" + url.clone();
-                    full_url.to_string()
-                } else {
-                    url.to_string()
-                };
-            },
+            url_transform_fn: firefox_url_transform_fn,
             url_as_first_arg: true,
         }
     }
@@ -402,7 +410,7 @@ impl SupportedAppRepository {
     fn generic_app_with_url(
         app_id: AppIdentifier,
         restricted_domain_patterns: Vec<String>,
-        url_transform_fn: fn(profile_cli_container_name: Option<&String>, url: &str) -> String,
+        url_transform_fn: UrlTransformFn,
     ) -> SupportedApp {
         let restricted_url_matchers =
             Self::generate_restricted_hostname_matchers(&restricted_domain_patterns);
@@ -545,9 +553,20 @@ pub struct SupportedApp {
     >,
     profile_args_fn: fn(profile_cli_arg_value: &str) -> Vec<String>,
     incognito_args: Vec<String>,
-    url_transform_fn: fn(profile_cli_container_name: Option<&String>, url: &str) -> String,
+    url_transform_fn: UrlTransformFn,
     url_as_first_arg: bool,
 }
+
+pub type UrlTransformFn = fn(&CommonBrowserProfile, url: &str) -> String;
+
+//
+// profile_cli_arg_value: workspace.id.to_string(),
+// profile_cli_container_name: Some(workspace.domain.to_string()),
+// I need mapping from domain to team id (workspace id)
+// so in this case from cli_container_name to cli_arg_value
+// or maybe just pass the whole profile info?
+// or maybe its better to make it a closure instead,
+// so we don't depend on profile selection by user, so user can select wrong profile as well
 
 impl SupportedApp {
     pub fn get_app_id(&self) -> &str {
@@ -624,10 +643,10 @@ impl SupportedApp {
 
     pub fn get_transformed_url(
         &self,
-        profile_cli_container_name: Option<&String>,
+        common_browser_profile: &CommonBrowserProfile,
         url: &str,
     ) -> String {
-        return (self.url_transform_fn)(profile_cli_container_name, url);
+        return (self.url_transform_fn)(common_browser_profile, url);
     }
 
     pub fn is_url_as_first_arg(&self) -> bool {
@@ -749,36 +768,102 @@ impl AppConfigDir {
     }
 }
 
-fn convert_slack_uri(_: Option<&String>, url: &str) -> String {
-    // TODO: https://api.slack.com/reference/deep-linking#supported_URIs
-    return "slack://user".to_string();
-}
+fn convert_slack_uri(common_browser_profile: &CommonBrowserProfile, url_str: &str) -> String {
+    let profile_team_id: &str = &common_browser_profile.profile_cli_arg_value;
+    let profile_team_domain_maybe: Option<&String> =
+        common_browser_profile.profile_cli_container_name.as_ref();
+    let profile_team_domain = profile_team_domain_maybe.unwrap();
 
-fn convert_workflowy_uri(_: Option<&String>, url: &str) -> String {
-    let result = Url::parse(url);
-    if result.is_err() {
-        return "".to_string();
-    }
-    let mut url1 = result.unwrap();
-    let _ = url1.set_scheme("workflowy");
+    let unknown = format!("slack://channel?team={}", profile_team_id);
 
-    return url1.as_str().to_string();
-}
-
-fn convert_spotify_uri(_: Option<&String>, url: &str) -> String {
-    let unknown = "spotify:track:2QFvsZEjbketrpCgCNC9Zp".to_string();
-
-    let result = Url::parse(url);
+    let result = Url::parse(url_str);
     if result.is_err() {
         return unknown;
     }
 
-    let url1 = result.unwrap();
+    let url = result.unwrap();
+    let url_host_str = url.host_str().unwrap();
+
+    let url_path_segments_maybe = url.path_segments().map(|c| c.collect::<Vec<_>>());
+
+    // https://slack.com/help/articles/221769328-Locate-your-Slack-URL
+    // TODO: https://api.slack.com/reference/deep-linking#supported_URIs
+
+    return if url_host_str == format!("{}.slack.com", profile_team_domain) {
+        info!("Domain matches Slack profile");
+
+        // Team host:
+        //    File: https://<team-domain-name>.slack.com/messages/<ignored_id>/files/<file_id>
+        //    Channel: https://<team-domain-name>.slack.com/archives/<channel_id>
+        //    Channel message: https://<team-domain-name>.slack.com/archives/<channel_id>/p<timestamp_without_decimal>
+        //    User: https://<team-domain-name>.slack.com/team/<user_id>
+        //    User?: https://<team-domain-name>.slack.com/messages/<ignored_id>/team/<user_id>
+
+        if url_path_segments_maybe.is_some() {
+            let segments = url_path_segments_maybe.unwrap();
+            let first_maybe = segments.get(0);
+            let second_maybe = segments.get(1);
+            if first_maybe.is_some() {
+                let first = first_maybe.unwrap().to_string();
+                if first == "archives" {
+                    if second_maybe.is_some() {
+                        let second = second_maybe.unwrap();
+                        let channel_id = second;
+                        // Channel: https://<team-domain-name>.slack.com/archives/<channel_id>
+                        return format!(
+                            "slack://channel?team={}&id={}",
+                            profile_team_id, channel_id
+                        );
+                    }
+                }
+            }
+
+            return unknown;
+        }
+
+        format!("slack://channel?team={}", profile_team_id)
+    } else if url_host_str == format!("{}.enterprise.slack.com", profile_team_domain) {
+        //        https://mycompany.enterprise.slack.com/files/<ignored_id>/<file_id>/<optional_file_name>
+        format!("slack://channel?team={}", profile_team_id)
+    } else if url_host_str == "app.slack.com" {
+        // Generic 'app' host:
+        //    File: https://app.slack.com/client/<team_id>/<ignored_id>/files/<file_id>
+        //    File: https://app.slack.com/docs/<team_id>/<file_id>
+        //    Channel: https://app.slack.com/client/<team_id>/<channel_id>
+        //    Channel message: https://app.slack.com/client/<team_id>/<channel_id>/<timestamp_with_decimal>
+        //    User: https://app.slack.com/client/<team_id>/<channel_id>/user_profile/<user_id>
+
+        format!("slack://channel?team={}", profile_team_id)
+    } else {
+        format!("slack://channel?team={}", profile_team_id)
+    };
+}
+
+fn convert_workflowy_uri(_: &CommonBrowserProfile, url_str: &str) -> String {
+    let result = Url::parse(url_str);
+    if result.is_err() {
+        return "".to_string();
+    }
+    let mut url = result.unwrap();
+    let _ = url.set_scheme("workflowy");
+
+    return url.as_str().to_string();
+}
+
+fn convert_spotify_uri(_: &CommonBrowserProfile, url_str: &str) -> String {
+    let unknown = "spotify:track:2QFvsZEjbketrpCgCNC9Zp".to_string();
+
+    let result = Url::parse(url_str);
+    if result.is_err() {
+        return unknown;
+    }
+
+    let url = result.unwrap();
     //let host_maybe = url1.host_str();
     // verify it's "open.spotify.com" ?
     //let x = url1.path();
 
-    let segments_maybe = url1.path_segments().map(|c| c.collect::<Vec<_>>());
+    let segments_maybe = url.path_segments().map(|c| c.collect::<Vec<_>>());
     if segments_maybe.is_none() {
         return unknown;
     }
