@@ -102,7 +102,7 @@ impl UrlGlobMatcher {
             && fragment_matches;
     }
 
-    pub fn hostname_matches(&self, target_hostname: &str) -> bool {
+    fn hostname_matches(&self, target_hostname: &str) -> bool {
         let target_hostname_with_slashes = target_hostname.replace(".", "/");
         return self.hostname.is_match(target_hostname_with_slashes);
     }

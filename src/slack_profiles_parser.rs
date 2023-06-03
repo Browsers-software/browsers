@@ -55,11 +55,25 @@ pub fn find_slack_profiles(
         };*/
         let profile_icon_path = None;
 
+        let workspace_url_pattern = format!("{}.slack.com", workspace.domain.as_str());
+        let enterprise_workspace_url_pattern =
+            format!("{}.enterprise.slack.com", workspace.domain.as_str());
+        let slack_gov_workspace_url_pattern =
+            format!("{}.slack-gov.com", workspace.domain.as_str());
+
+        let app_url_pattern = format!("app.slack.com/**/{}/**", workspace.id.as_str());
+
         browser_profiles.push(InstalledBrowserProfile {
             profile_cli_arg_value: workspace.id.to_string(),
             profile_cli_container_name: Some(workspace.domain.to_string()),
             profile_name: workspace.name,
             profile_icon: profile_icon_path,
+            profile_restricted_url_patterns: vec![
+                workspace_url_pattern,
+                //enterprise_workspace_url_pattern,
+                //slack_gov_workspace_url_pattern,
+                //app_url_pattern,
+            ],
         })
     }
     return browser_profiles;

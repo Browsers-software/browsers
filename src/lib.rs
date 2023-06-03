@@ -42,6 +42,7 @@ pub mod communicate;
 mod chromium_profiles_parser;
 mod firefox_profiles_parser;
 mod slack_profiles_parser;
+mod slack_url_parser;
 mod url_rule;
 
 // a browser (with profiles), or Spotify, Zoom, etc
@@ -204,11 +205,16 @@ pub struct CommonBrowserProfile {
     profile_cli_container_name: Option<String>,
     profile_name: String,
     profile_icon: Option<String>,
+    profile_restricted_url_matchers: Vec<UrlGlobMatcher>,
     app: Arc<BrowserCommon>,
 }
 
 impl CommonBrowserProfile {
     fn new(installed_browser_profile: &InstalledBrowserProfile, app: Arc<BrowserCommon>) -> Self {
+        let profile_restricted_url_matchers = Self::generate_restricted_hostname_matchers(
+            &installed_browser_profile.profile_restricted_url_patterns,
+        );
+
         CommonBrowserProfile {
             profile_cli_arg_value: installed_browser_profile.profile_cli_arg_value.to_string(),
             profile_cli_container_name: installed_browser_profile
@@ -219,8 +225,24 @@ impl CommonBrowserProfile {
                 .profile_icon
                 .as_ref()
                 .map(|path| path.clone()),
+            profile_restricted_url_matchers: profile_restricted_url_matchers,
             app: app,
         }
+    }
+
+    fn generate_restricted_hostname_matchers(
+        restricted_url_patterns: &Vec<String>,
+    ) -> Vec<UrlGlobMatcher> {
+        let restricted_hostname_matchers: Vec<UrlGlobMatcher> = restricted_url_patterns
+            .iter()
+            .map(|url_pattern| {
+                let url_matcher = url_rule::to_url_matcher(url_pattern.as_str());
+                let glob_matcher = url_matcher.to_glob_matcher();
+                glob_matcher
+            })
+            .collect();
+
+        return restricted_hostname_matchers;
     }
 
     // used in configuration file to uniquely identify this app+profile+container
@@ -246,14 +268,17 @@ impl CommonBrowserProfile {
     }
 
     pub fn has_priority_ordering(&self) -> bool {
-        return !self.get_restricted_hostname_matchers().is_empty();
+        return !self.get_restricted_url_matchers().is_empty();
     }
 
-    fn get_restricted_hostname_matchers(&self) -> &Vec<UrlGlobMatcher> {
-        return self
-            .get_browser_common()
-            .supported_app
-            .get_restricted_hostname_matchers();
+    fn get_restricted_url_matchers(&self) -> &Vec<UrlGlobMatcher> {
+        return if !&self.profile_restricted_url_matchers.is_empty() {
+            &self.profile_restricted_url_matchers
+        } else {
+            self.get_browser_common()
+                .supported_app
+                .get_restricted_hostname_matchers()
+        };
     }
 
     fn get_browser_name(&self) -> &str {
@@ -323,6 +348,7 @@ pub struct InstalledBrowserProfile {
     profile_cli_container_name: Option<String>,
     profile_name: String,
     profile_icon: Option<String>,
+    profile_restricted_url_patterns: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

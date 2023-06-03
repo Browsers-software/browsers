@@ -3,13 +3,14 @@ use std::path::{Path, PathBuf};
 
 use druid::piet::TextStorage;
 use tracing::info;
+use url::form_urlencoded::Parse;
 use url::Url;
 
 use crate::ui::RESTORE_HIDDEN_PROFILE;
 use crate::url_rule::UrlGlobMatcher;
 use crate::{
-    chromium_profiles_parser, firefox_profiles_parser, paths, slack_profiles_parser, url_rule,
-    CommonBrowserProfile, InstalledBrowserProfile,
+    chromium_profiles_parser, firefox_profiles_parser, paths, slack_profiles_parser,
+    slack_url_parser, url_rule, CommonBrowserProfile, InstalledBrowserProfile,
 };
 
 // Holds list of custom SupportedApp configurations
@@ -486,7 +487,10 @@ impl SupportedAppRepository {
         macos_sandbox_app_config_dir_absolute: PathBuf,
     ) -> SupportedApp {
         // todo: filter only specific profiles? But per profile?
-        let restricted_domain_patterns = vec!["*.slack.com".to_string()];
+        let restricted_domain_patterns = vec![
+            "*.slack.com".to_string(),
+            "*.enterprise.slack.com".to_string(),
+        ];
         let restricted_url_matchers =
             Self::generate_restricted_hostname_matchers(&restricted_domain_patterns);
 
@@ -620,6 +624,7 @@ impl SupportedApp {
             profile_cli_container_name: None,
             profile_name: "".to_string(),
             profile_icon: None,
+            profile_restricted_url_patterns: vec![],
         });
 
         return browser_profiles;
@@ -780,63 +785,9 @@ fn convert_slack_uri(common_browser_profile: &CommonBrowserProfile, url_str: &st
     if result.is_err() {
         return unknown;
     }
-
     let url = result.unwrap();
-    let url_host_str = url.host_str().unwrap();
 
-    let url_path_segments_maybe = url.path_segments().map(|c| c.collect::<Vec<_>>());
-
-    // https://slack.com/help/articles/221769328-Locate-your-Slack-URL
-    // TODO: https://api.slack.com/reference/deep-linking#supported_URIs
-
-    return if url_host_str == format!("{}.slack.com", profile_team_domain) {
-        info!("Domain matches Slack profile");
-
-        // Team host:
-        //    File: https://<team-domain-name>.slack.com/messages/<ignored_id>/files/<file_id>
-        //    Channel: https://<team-domain-name>.slack.com/archives/<channel_id>
-        //    Channel message: https://<team-domain-name>.slack.com/archives/<channel_id>/p<timestamp_without_decimal>
-        //    User: https://<team-domain-name>.slack.com/team/<user_id>
-        //    User?: https://<team-domain-name>.slack.com/messages/<ignored_id>/team/<user_id>
-
-        if url_path_segments_maybe.is_some() {
-            let segments = url_path_segments_maybe.unwrap();
-            let first_maybe = segments.get(0);
-            let second_maybe = segments.get(1);
-            if first_maybe.is_some() {
-                let first = first_maybe.unwrap().to_string();
-                if first == "archives" {
-                    if second_maybe.is_some() {
-                        let second = second_maybe.unwrap();
-                        let channel_id = second;
-                        // Channel: https://<team-domain-name>.slack.com/archives/<channel_id>
-                        return format!(
-                            "slack://channel?team={}&id={}",
-                            profile_team_id, channel_id
-                        );
-                    }
-                }
-            }
-
-            return unknown;
-        }
-
-        format!("slack://channel?team={}", profile_team_id)
-    } else if url_host_str == format!("{}.enterprise.slack.com", profile_team_domain) {
-        //        https://mycompany.enterprise.slack.com/files/<ignored_id>/<file_id>/<optional_file_name>
-        format!("slack://channel?team={}", profile_team_id)
-    } else if url_host_str == "app.slack.com" {
-        // Generic 'app' host:
-        //    File: https://app.slack.com/client/<team_id>/<ignored_id>/files/<file_id>
-        //    File: https://app.slack.com/docs/<team_id>/<file_id>
-        //    Channel: https://app.slack.com/client/<team_id>/<channel_id>
-        //    Channel message: https://app.slack.com/client/<team_id>/<channel_id>/<timestamp_with_decimal>
-        //    User: https://app.slack.com/client/<team_id>/<channel_id>/user_profile/<user_id>
-
-        format!("slack://channel?team={}", profile_team_id)
-    } else {
-        format!("slack://channel?team={}", profile_team_id)
-    };
+    return slack_url_parser::convert_slack_uri(profile_team_id, profile_team_domain, &url);
 }
 
 fn convert_workflowy_uri(_: &CommonBrowserProfile, url_str: &str) -> String {

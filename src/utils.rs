@@ -1,22 +1,22 @@
-use std::{fs, u32};
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
+use std::{fs, u32};
 
 use druid::image;
-use druid::image::{ImageFormat, Rgba};
 use druid::image::imageops::FilterType;
+use druid::image::{ImageFormat, Rgba};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
 
-use crate::{InstalledBrowser, paths, SupportedAppRepository};
 #[cfg(target_os = "linux")]
 use crate::linux_utils;
 #[cfg(target_os = "macos")]
 use crate::macos_utils;
 #[cfg(target_os = "windows")]
 use crate::windows_utils;
+use crate::{paths, InstalledBrowser, SupportedAppRepository};
 
 #[cfg(target_os = "macos")]
 pub fn set_as_default_web_browser() -> bool {
@@ -149,7 +149,7 @@ impl OSAppFinder {
             ("figma", vec!["figma.com", "www.figma.com"]),
             ("linear", vec!["linear.app"]),
             ("notion", vec!["notion.so", "www.notion.so"]),
-            ("slack", vec!["*.slack.com"]),
+            ("slack", vec!["*.slack.com", "*.enterprise.slack.com"]),
             ("spotify", vec!["open.spotify.com"]),
             ("tg", vec!["t.me"]), // telegram
             (

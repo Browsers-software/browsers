@@ -68,6 +68,7 @@ pub fn find_chromium_profiles(
             profile_cli_container_name: None,
             profile_name: profile_name,
             profile_icon: profile_icon_path,
+            profile_restricted_url_patterns: vec![],
         })
     }
 

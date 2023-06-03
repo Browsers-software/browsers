@@ -1,11 +1,18 @@
 use std::cmp;
 use std::error::Error;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 use std::sync::mpsc::Sender;
+use std::sync::Arc;
 
+use druid::commands::{CONFIGURE_WINDOW_SIZE_AND_POSITION, QUIT_APP, SHOW_ALL, SHOW_WINDOW};
+use druid::keyboard_types::Key;
+use druid::piet::{InterpolationMode, TextStorage};
+use druid::widget::{
+    Container, Controller, ControllerHost, CrossAxisAlignment, Either, Flex, Image, Label,
+    LineBreaking, List, ZStack,
+};
 use druid::{
-    Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, image, LayoutCtx, LensExt,
+    image, Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, LayoutCtx, LensExt,
     LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, Modifiers, Monitor, Rect,
     TextAlignment, UnitPoint, UpdateCtx, Vec2, WidgetId, WindowHandle, WindowLevel,
     WindowSizePolicy,
@@ -15,20 +22,13 @@ use druid::{
     ImageBuf, KbKey, KeyEvent, Lens, PaintCtx, Point, RenderContext, Selector, Size, Target,
     Widget, WidgetExt, WindowDesc, WindowId,
 };
-use druid::commands::{CONFIGURE_WINDOW_SIZE_AND_POSITION, QUIT_APP, SHOW_ALL, SHOW_WINDOW};
-use druid::keyboard_types::Key;
-use druid::piet::{InterpolationMode, TextStorage};
-use druid::widget::{
-    Container, Controller, ControllerHost, CrossAxisAlignment, Either, Flex, Image, Label,
-    LineBreaking, List, ZStack,
-};
 use globset::GlobMatcher;
 use image::io::Reader as ImageReader;
 use tracing::{debug, info};
 use url::Url;
 
-use crate::{CommonBrowserProfile, MessageToMain, paths, url_rule};
 use crate::url_rule::{UrlGlobMatcher, UrlMatcher};
+use crate::{paths, url_rule, CommonBrowserProfile, MessageToMain};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -68,7 +68,7 @@ impl UI {
                 browser_profile_index: i,
                 is_first: i == first_orderable_item_index,
                 is_last: i == profiles_count - 1,
-                restricted_url_matchers: Arc::new(p.get_restricted_hostname_matchers().clone()),
+                restricted_url_matchers: Arc::new(p.get_restricted_url_matchers().clone()),
                 browser_name: p.get_browser_name().to_string(),
                 profile_name: p.get_profile_name().to_string(),
                 supports_profiles: p.get_browser_common().supports_profiles(),
@@ -999,11 +999,7 @@ fn recalculate_window_size(url: &str, ui_browsers: &Arc<Vec<UIBrowser>>) -> Size
 }
 
 fn get_filtered_browsers(url: &str, ui_browsers: &Arc<Vec<UIBrowser>>) -> Vec<UIBrowser> {
-    let url_result = Url::parse(url);
-    let domain_maybe = url_result
-        .ok()
-        .map(|url| url.host_str().map(|d| d.to_string()))
-        .flatten();
+    let url_maybe = Url::parse(url).ok();
 
     let mut filtered: Vec<UIBrowser> = ui_browsers
         .iter()
@@ -1012,16 +1008,15 @@ fn get_filtered_browsers(url: &str, ui_browsers: &Arc<Vec<UIBrowser>>) -> Vec<UI
             return if b.restricted_url_matchers.is_empty() {
                 true
             } else {
-                if domain_maybe.is_none() {
-                    false
-                } else {
-                    let domain = domain_maybe.as_ref().unwrap();
-
-                    let restricted_hostname_matchers = &b.restricted_url_matchers;
-                    restricted_hostname_matchers
-                        .iter()
-                        .any(|matcher| matcher.hostname_matches(domain))
-                }
+                url_maybe
+                    .as_ref()
+                    .map(|url| {
+                        let restricted_hostname_matchers = &b.restricted_url_matchers;
+                        restricted_hostname_matchers
+                            .iter()
+                            .any(|matcher| matcher.url_matches(url))
+                    })
+                    .unwrap_or(false)
             };
         })
         .collect();
