@@ -174,6 +174,7 @@ pub fn find_firefox_profiles(
             profile_cli_container_name: None,
             profile_name: profile_name.to_string(),
             profile_icon: None,
+            profile_restricted_url_patterns: vec![],
         });
 
         if !container_names.is_empty() {
@@ -183,6 +184,7 @@ pub fn find_firefox_profiles(
                     profile_cli_container_name: Some(container_name.to_string()),
                     profile_name: profile_name.to_string() + " " + container_name.as_str(),
                     profile_icon: None,
+                    profile_restricted_url_patterns: vec![],
                 })
             }
         }
