@@ -3,11 +3,12 @@ use std::path::{Path, PathBuf};
 
 use url::Url;
 
-use crate::{
-    chromium_profiles_parser, firefox_profiles_parser, InstalledBrowserProfile, paths, url_rule,
-};
 use crate::ui::RESTORE_HIDDEN_PROFILE;
 use crate::url_rule::UrlGlobMatcher;
+use crate::{
+    chromium_profiles_parser, firefox_profiles_parser, paths, slack_profiles_parser, url_rule,
+    InstalledBrowserProfile,
+};
 
 // Holds list of custom SupportedApp configurations
 // All other apps will be the "default" supported app implementation
@@ -129,9 +130,9 @@ impl SupportedAppRepository {
             .add_firefox_based_mac(vec!["org.torproject.torbrowser"], "TorBrowser-Data/Browser")
             .add_firefox_based_mac(vec!["org.mozilla.librewolf"], "LibreWolf")
             .add_firefox_based_mac(vec!["net.waterfox.waterfox"], "Waterfox")
+            .add_slack_mac("com.tinyspeck.slackmacgap", "Slack")
             .add(Self::linear_app())
             .add(Self::notion_app())
-            .add(Self::slack_app())
             .add(Self::spotify_app())
             .add(Self::telegram_app())
             .add(Self::workflowy_app())
@@ -153,6 +154,7 @@ impl SupportedAppRepository {
             let app = Self::firefox_based_app(
                 app_id,
                 app_config_dir.config_dir_absolute(),
+                PathBuf::from(""),
                 PathBuf::from(""),
             );
             self.add(app);
@@ -176,6 +178,7 @@ impl SupportedAppRepository {
             let app = Self::firefox_based_app(
                 app_id,
                 app_config_dir.config_dir_absolute(),
+                PathBuf::from(""),
                 PathBuf::from(""),
             );
             self.add(app);
@@ -204,6 +207,7 @@ impl SupportedAppRepository {
                 app_id,
                 app_config_dir.config_dir_absolute(),
                 snap_app_config_dir_absolute.clone(),
+                PathBuf::from(""),
             );
             self.add(app);
         }
@@ -212,6 +216,41 @@ impl SupportedAppRepository {
     }
 
     fn start(&mut self) -> &mut SupportedAppRepository {
+        return self;
+    }
+
+    fn add_slack_mac(
+        &mut self,
+        mac_bundle_id: &str,
+        mac_config_dir_relative: &str,
+    ) -> &mut SupportedAppRepository {
+        let user_home_for_unsandboxed_app = paths::get_user_home_for_unsandboxed_app();
+        let unsandboxed_user_dir_root = user_home_for_unsandboxed_app
+            .join("Library")
+            .join("Application Support");
+        let unsandboxed_app_config_dir = AppConfigDir::new_mac(
+            unsandboxed_user_dir_root.clone(),
+            PathBuf::from(mac_config_dir_relative),
+        );
+
+        let user_home_for_sandboxed_app = paths::get_user_home_for_sandboxed_app(mac_bundle_id);
+        let sandboxed_user_dir_root = user_home_for_sandboxed_app
+            .join("Library")
+            .join("Application Support");
+        let sandboxed_app_config_dir = AppConfigDir::new_mac(
+            sandboxed_user_dir_root.clone(),
+            PathBuf::from(mac_config_dir_relative),
+        );
+
+        let app_id = AppIdentifier::new_mac(mac_bundle_id);
+        let app = Self::slack_app(
+            app_id,
+            unsandboxed_app_config_dir.config_dir_absolute(),
+            PathBuf::from(""),
+            sandboxed_app_config_dir.config_dir_absolute(),
+        );
+        self.add(app);
+
         return self;
     }
 
@@ -230,6 +269,7 @@ impl SupportedAppRepository {
             let app = Self::chromium_based_app(
                 app_id,
                 app_config_dir.config_dir_absolute(),
+                PathBuf::from(""),
                 PathBuf::from(""),
             );
             self.add(app);
@@ -253,6 +293,7 @@ impl SupportedAppRepository {
             let app = Self::chromium_based_app(
                 app_id,
                 app_config_dir.config_dir_absolute(),
+                PathBuf::from(""),
                 PathBuf::from(""),
             );
             self.add(app);
@@ -281,6 +322,7 @@ impl SupportedAppRepository {
                 app_id,
                 app_config_dir.config_dir_absolute(),
                 snap_app_config_dir_absolute.clone(),
+                PathBuf::from(""),
             );
             self.add(app);
         }
@@ -305,11 +347,13 @@ impl SupportedAppRepository {
         app_id: AppIdentifier,
         app_config_dir_absolute: PathBuf,
         snap_app_config_dir_absolute: PathBuf,
+        macos_sandbox_app_config_dir_absolute: PathBuf,
     ) -> SupportedApp {
         SupportedApp {
             app_id: app_id,
             app_config_dir_absolute: app_config_dir_absolute,
             snap_app_config_dir_absolute: snap_app_config_dir_absolute,
+            macos_sandbox_app_config_dir_absolute: macos_sandbox_app_config_dir_absolute,
             find_profiles_fn: Some(chromium_profiles_parser::find_chromium_profiles),
             restricted_url_matchers: vec![],
             profile_args_fn: |profile_cli_arg_value| {
@@ -325,11 +369,13 @@ impl SupportedAppRepository {
         app_id: AppIdentifier,
         app_config_dir_absolute: PathBuf,
         snap_app_config_dir_absolute: PathBuf,
+        macos_sandbox_app_config_dir_absolute: PathBuf,
     ) -> SupportedApp {
         SupportedApp {
             app_id: app_id,
             app_config_dir_absolute: app_config_dir_absolute,
             snap_app_config_dir_absolute: snap_app_config_dir_absolute,
+            macos_sandbox_app_config_dir_absolute: macos_sandbox_app_config_dir_absolute,
             find_profiles_fn: Some(firefox_profiles_parser::find_firefox_profiles),
             restricted_url_matchers: vec![],
             profile_args_fn: |profile_cli_arg_value| {
@@ -365,6 +411,7 @@ impl SupportedAppRepository {
             app_id: app_id,
             app_config_dir_absolute: PathBuf::new(),
             snap_app_config_dir_absolute: PathBuf::new(),
+            macos_sandbox_app_config_dir_absolute: PathBuf::new(),
             find_profiles_fn: None,
             restricted_url_matchers: restricted_url_matchers,
             profile_args_fn: |_profile_cli_arg_value| vec![],
@@ -424,14 +471,29 @@ impl SupportedAppRepository {
         Self::generic_app(app_id, vec!["t.me".to_string()])
     }
 
-    fn slack_app() -> SupportedApp {
-        let app_id = AppIdentifier {
-            mac_bundle_id: "com.tinyspeck.slackmacgap".to_string(),
-            linux_desktop_id: "LINUXTODO".to_string(),
-            windows_app_id: "WINDOWSTODO".to_string(),
-        };
-        // TODO: don't double-create domain matcher - it's already in utils
-        Self::generic_app_with_url(app_id, vec!["*.slack.com".to_string()], convert_slack_uri)
+    fn slack_app(
+        app_id: AppIdentifier,
+        app_config_dir_absolute: PathBuf,
+        snap_app_config_dir_absolute: PathBuf,
+        macos_sandbox_app_config_dir_absolute: PathBuf,
+    ) -> SupportedApp {
+        // todo: filter only specific profiles? But per profile?
+        let restricted_domain_patterns = vec!["*.slack.com".to_string()];
+        let restricted_url_matchers =
+            Self::generate_restricted_hostname_matchers(&restricted_domain_patterns);
+
+        SupportedApp {
+            app_id: app_id,
+            app_config_dir_absolute: app_config_dir_absolute,
+            snap_app_config_dir_absolute: snap_app_config_dir_absolute,
+            macos_sandbox_app_config_dir_absolute: macos_sandbox_app_config_dir_absolute,
+            find_profiles_fn: Some(slack_profiles_parser::find_slack_profiles),
+            restricted_url_matchers: restricted_url_matchers,
+            profile_args_fn: |_profile_cli_arg_value| vec![],
+            incognito_args: vec![],
+            url_transform_fn: convert_slack_uri,
+            url_as_first_arg: false,
+        }
     }
 
     fn workflowy_app() -> SupportedApp {
@@ -472,6 +534,7 @@ pub struct SupportedApp {
     app_id: AppIdentifier,
     app_config_dir_absolute: PathBuf,
     snap_app_config_dir_absolute: PathBuf,
+    macos_sandbox_app_config_dir_absolute: PathBuf,
     restricted_url_matchers: Vec<UrlGlobMatcher>,
     find_profiles_fn: Option<
         fn(
@@ -491,25 +554,35 @@ impl SupportedApp {
         return self.app_id.app_id();
     }
 
-    pub fn get_app_config_dir_abs(&self, is_snap: bool) -> &Path {
+    pub fn get_app_config_dir_abs(&self, is_snap: bool, is_macos_sandbox: bool) -> &Path {
         return if is_snap {
             &self.snap_app_config_dir_absolute.as_path()
+        } else if is_macos_sandbox {
+            &self.macos_sandbox_app_config_dir_absolute.as_path()
         } else {
             &self.app_config_dir_absolute.as_path()
         };
     }
 
-    pub fn get_app_config_dir_absolute(&self, is_snap: bool) -> &str {
-        return self.get_app_config_dir_abs(is_snap).to_str().unwrap();
+    pub fn get_app_config_dir_absolute(&self, is_snap: bool, is_macos_sandbox: bool) -> &str {
+        return self
+            .get_app_config_dir_abs(is_snap, is_macos_sandbox)
+            .to_str()
+            .unwrap();
     }
 
     pub fn get_restricted_hostname_matchers(&self) -> &Vec<UrlGlobMatcher> {
         return &self.restricted_url_matchers;
     }
 
-    pub fn find_profiles(&self, binary_path: &Path, is_snap: bool) -> Vec<InstalledBrowserProfile> {
+    pub fn find_profiles(
+        &self,
+        binary_path: &Path,
+        is_snap: bool,
+        is_macos_sandbox: bool,
+    ) -> Vec<InstalledBrowserProfile> {
         return if let Some(find_profiles_fn) = self.find_profiles_fn {
-            let app_config_dir_abs = self.get_app_config_dir_abs(is_snap);
+            let app_config_dir_abs = self.get_app_config_dir_abs(is_snap, is_macos_sandbox);
             let mut browser_profiles: Vec<InstalledBrowserProfile> =
                 find_profiles_fn(app_config_dir_abs, binary_path, self.get_app_id());
 

@@ -1,8 +1,8 @@
-use std::{fs, mem, ptr};
 use std::collections::HashSet;
 use std::ffi::{CStr, OsString};
 use std::os::unix::ffi::OsStringExt;
 use std::path::{Path, PathBuf};
+use std::{fs, mem, ptr};
 
 use cocoa_foundation::base::{id, nil};
 use cocoa_foundation::foundation::{NSAutoreleasePool, NSPoint, NSRect, NSSize, NSString, NSURL};
@@ -10,13 +10,14 @@ use core_foundation::array::{CFArray, CFArrayRef};
 use core_foundation::base::TCFType;
 use core_foundation::string::CFString;
 use core_foundation::string::CFStringRef;
-use objc::{class, msg_send, sel, sel_impl};
+use core_foundation::url::{CFURLRef, CFURL};
 use objc::runtime::Object;
 use objc::runtime::YES;
+use objc::{class, msg_send, sel, sel_impl};
 use tracing::{debug, info};
 
-use crate::{InstalledBrowser, macos};
 use crate::browser_repository::SupportedAppRepository;
+use crate::{macos, InstalledBrowser};
 
 const APP_DIR_NAME: &'static str = "software.Browsers";
 const APP_BUNDLE_ID: &'static str = "software.Browsers";
@@ -135,6 +136,22 @@ pub fn macos_get_unsandboxed_application_support_dir() -> PathBuf {
     return home_dir.join("Library").join("Application Support");
 }
 
+// ~/
+pub fn macos_get_unsandboxed_home_dir() -> PathBuf {
+    let home_dir = macos::mac_paths::unsandboxed_home_dir().unwrap();
+    return home_dir;
+}
+
+// ~/Library/Containers/com.tinyspeck.slackmacgap/Data/
+pub fn macos_get_sandboxed_home_dir(app_id: &str) -> PathBuf {
+    let home_dir = macos::mac_paths::unsandboxed_home_dir().unwrap();
+    return home_dir
+        .join("Library")
+        .join("Containers")
+        .join(app_id)
+        .join("Data");
+}
+
 /// get macOS standard directory, supports sandboxing
 pub fn macos_get_directory(directory: u64) -> PathBuf {
     let results = unsafe { NSSearchPathForDirectoriesInDomains(directory, 1, 1) };
@@ -169,6 +186,77 @@ extern "C" {
     pub static kCFBundleExecutableKey: CFStringRef;
 }
 
+fn has_sandbox_entitlement(bundle_url: id) -> bool {
+    unsafe {
+        let is_sandboxed = false;
+        //SecStaticCodeCreateWithPath(bundle_url, 0, nil)
+        //CFUrlRef *bundleURL = [[NSBundle mainBundle] bundleURL];
+
+        // Can use https://stackoverflow.com/a/42244464/752697
+        /*
+        BOOL isSandboxed = NO;
+
+        SecStaticCodeRef staticCode = NULL;
+        NSURL *bundleURL = [[NSBundle mainBundle] bundleURL];
+
+        if (SecStaticCodeCreateWithPath((__bridge CFURLRef)bundleURL, kSecCSDefaultFlags, &staticCode) == errSecSuccess) {
+            if (SecStaticCodeCheckValidityWithErrors(staticCode, kSecCSBasicValidateOnly, NULL, NULL) == errSecSuccess) {
+                SecRequirementRef sandboxRequirement;
+                if (SecRequirementCreateWithString(CFSTR("entitlement[\"com.apple.security.app-sandbox\"] exists"), kSecCSDefaultFlags,
+                                               &sandboxRequirement) == errSecSuccess)
+                {
+                    OSStatus codeCheckResult = SecStaticCodeCheckValidityWithErrors(staticCode, kSecCSBasicValidateOnly, sandboxRequirement, NULL);
+                    if (codeCheckResult == errSecSuccess) {
+                        isSandboxed = YES;
+                    }
+                }
+            }
+            CFRelease(staticCode);
+        }
+        */
+    }
+
+    return false;
+
+    // Or use codesign utility:
+    // codesign - d - -entitlements - --xml "/Applications/Slack.app"
+
+    // TODO: check if "com.apple.security.app-sandbox" key exists and if it's value is true
+    /*
+    Executable=/Applications/Slack.app/Contents/MacOS/Slack
+    <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+        "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
+    <plist version="1.0">
+        <dict>
+            <key>com.apple.security.app-sandbox</key>
+            <true/>
+            <key>com.apple.security.application-groups</key>
+            <array>
+                <string>BQR82RBBHL.com.tinyspeck.slackmacgap</string>
+                <string>BQR82RBBHL.slack</string>
+            </array>
+            <key>com.apple.security.device.camera</key>
+            <true/>
+            <key>com.apple.security.device.microphone</key>
+            <true/>
+            <key>com.apple.security.device.usb</key>
+            <true/>
+            <key>com.apple.security.files.bookmarks.app-scope</key>
+            <true/>
+            <key>com.apple.security.files.downloads.read-write</key>
+            <true/>
+            <key>com.apple.security.files.user-selected.read-write</key>
+            <true/>
+            <key>com.apple.security.network.client</key>
+            <true/>
+            <key>com.apple.security.network.server</key>
+            <true/>
+            <key>com.apple.security.print</key>
+            <true/>
+        </dict>
+    </plist>
+     */
+}
 fn get_app_name(bundle_path: id) -> String {
     let bundle = get_bundle(bundle_path);
     //bundleWithURL
@@ -237,7 +325,9 @@ impl OsHelper {
         // to for each bundle id copy the domain
         let bundle_ids_and_domain_patterns: Vec<(String, Vec<String>)> = schemes
             .iter()
-            .map(|(scheme, domain_patterns)| (find_bundle_ids_for_url_scheme(scheme), domain_patterns))
+            .map(|(scheme, domain_patterns)| {
+                (find_bundle_ids_for_url_scheme(scheme), domain_patterns)
+            })
             .flat_map(|(bundle_ids, domain_patterns)| {
                 let bundle_id_and_domains: Vec<(String, Vec<String>)> = bundle_ids
                     .iter()
@@ -249,8 +339,11 @@ impl OsHelper {
             .collect();
 
         for (bundle_id, domain_patterns) in bundle_ids_and_domain_patterns {
-            let browser_maybe =
-                self.to_installed_browser(bundle_id.as_str(), icons_root_dir.as_path(), domain_patterns);
+            let browser_maybe = self.to_installed_browser(
+                bundle_id.as_str(),
+                icons_root_dir.as_path(),
+                domain_patterns,
+            );
             if let Some(browser) = browser_maybe {
                 info!("Added app: {:?}", browser);
                 browsers.push(browser);
@@ -292,14 +385,25 @@ impl OsHelper {
 
         let command_parts: Vec<String> = vec![executable_path.to_str().unwrap().to_string()];
 
+        // TODO: check if "com.apple.security.app-sandbox" entitlement exists for the app
+        // TODO: https://stackoverflow.com/questions/12177948/how-do-i-detect-if-my-app-is-sandboxed
+        let is_macos_sandbox = has_sandbox_entitlement(bundle_url);
+        let is_macos_sandbox = bundle_id == "com.tinyspeck.slackmacgap";
+
         let browser = InstalledBrowser {
             command: command_parts,
             executable_path: executable_path.to_str().unwrap().to_string(),
             display_name: display_name.to_string(),
             bundle: supported_app.get_app_id().to_string(),
-            user_dir: supported_app.get_app_config_dir_absolute(false).to_string(),
+            user_dir: supported_app
+                .get_app_config_dir_absolute(false, is_macos_sandbox)
+                .to_string(),
             icon_path: icon_path_str.clone(),
-            profiles: supported_app.find_profiles(executable_path.as_path(), false),
+            profiles: supported_app.find_profiles(
+                executable_path.as_path(),
+                false,
+                is_macos_sandbox,
+            ),
             restricted_domains: restricted_domain_patterns,
         };
 
