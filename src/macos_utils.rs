@@ -2,6 +2,7 @@ use std::collections::HashSet;
 use std::ffi::{CStr, OsString};
 use std::os::unix::ffi::OsStringExt;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::{fs, mem, ptr};
 
 use cocoa_foundation::base::{id, nil};
@@ -14,7 +15,7 @@ use core_foundation::url::{CFURLRef, CFURL};
 use objc::runtime::Object;
 use objc::runtime::YES;
 use objc::{class, msg_send, sel, sel_impl};
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
 use crate::browser_repository::SupportedAppRepository;
 use crate::{macos, InstalledBrowser};
@@ -186,7 +187,30 @@ extern "C" {
     pub static kCFBundleExecutableKey: CFStringRef;
 }
 
-fn has_sandbox_entitlement(bundle_url: id) -> bool {
+// bundle_path e.g "/Applications/Slack.app"
+fn has_sandbox_entitlement(bundle_path: &str) -> bool {
+    let mut command = Command::new("codesign");
+    command
+        .arg("-d")
+        .arg("--entitlements")
+        .arg("-")
+        .arg("--xml")
+        .arg(bundle_path);
+
+    let result = command.output();
+    if result.is_err() {
+        warn!("Could not check if app is sandboxed or not, defaulting to not");
+        return false;
+    }
+    let output = result.unwrap();
+    let stdout = output.stdout;
+    let cow = String::from_utf8_lossy(&stdout);
+    let search = "<key>com.apple.security.app-sandbox</key><true/>";
+
+    return cow.contains(search);
+}
+
+fn has_sandbox_entitlement2(bundle_url: id) -> bool {
     unsafe {
         let is_sandboxed = false;
         //SecStaticCodeCreateWithPath(bundle_url, 0, nil)
@@ -387,8 +411,7 @@ impl OsHelper {
 
         // TODO: check if "com.apple.security.app-sandbox" entitlement exists for the app
         // TODO: https://stackoverflow.com/questions/12177948/how-do-i-detect-if-my-app-is-sandboxed
-        let is_macos_sandbox = has_sandbox_entitlement(bundle_url);
-        let is_macos_sandbox = bundle_id == "com.tinyspeck.slackmacgap";
+        let is_macos_sandbox = has_sandbox_entitlement(bundle_path.as_str());
 
         let browser = InstalledBrowser {
             command: command_parts,
