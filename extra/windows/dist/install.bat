@@ -1,6 +1,7 @@
 @echo off
 
 echo Starting Installation
+setlocal enabledelayedexpansion
 
 REM .bat location with trailing \
 set THIS_DIR=%~dp0
@@ -16,7 +17,6 @@ if "%ARCH_WIN%" == "AMD64" (set ARCH=x86_64)
 REM echo %ARCH%
 
 set SRC_BINARY_PATH=%THIS_DIR%%ARCH%\browsers.exe
-
 
 if exist "%windir%\system32\config\systemprofile\*" (
   set is_admin=true
@@ -49,7 +49,7 @@ REM C:\Users\x\AppData\Local\software.Browsers\
 if %is_local_install% == true (
     REM TODO: would be even more correct to take from registry
     set LocalProgramsDir=%LocalAppData%\Programs
-    set ProgramDir=%LocalProgramsDir%\software.Browsers
+    set ProgramDir=!LocalProgramsDir!\software.Browsers
 ) else (
     set ProgramDir=%ProgramFiles%\software.Browsers
 )
@@ -77,6 +77,9 @@ REM C:\Users\x\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Browsers\Br
 if not exist "%AppData%\Microsoft\Windows\Start Menu\Programs\Browsers\" (
   mkdir "%AppData%\Microsoft\Windows\Start Menu\Programs\Browsers" || exit /b
 )
+
+REM TODO: use different shortcut if system install
+REM TODO: add shortcut for all users start menu dir if system install
 copy "%THIS_DIR%startmenu\Browsers.lnk" "%AppData%\Microsoft\Windows\Start Menu\Programs\Browsers\Browsers.lnk" 1>nul
 
 REG ADD "HKCU\Software\Classes\software.Browsers" /ve /d "Browsers HTML Document" /f 1>nul
