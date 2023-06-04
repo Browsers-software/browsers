@@ -78,9 +78,13 @@ if not exist "%AppData%\Microsoft\Windows\Start Menu\Programs\Browsers\" (
   mkdir "%AppData%\Microsoft\Windows\Start Menu\Programs\Browsers" || exit /b
 )
 
-REM TODO: use different shortcut if system install
-REM TODO: add shortcut for all users start menu dir if system install
-copy "%THIS_DIR%startmenu\Browsers.lnk" "%AppData%\Microsoft\Windows\Start Menu\Programs\Browsers\Browsers.lnk" 1>nul
+copy "%THIS_DIR%startmenu\user\Browsers.lnk" "%AppData%\Microsoft\Windows\Start Menu\Programs\Browsers\Browsers.lnk" 1>nul
+
+if %is_local_install% == true (
+    copy "%THIS_DIR%startmenu\user\Browsers.lnk" "%AppData%\Microsoft\Windows\Start Menu\Programs\Browsers\Browsers.lnk" 1>nul
+) else (
+    copy "%THIS_DIR%startmenu\system\Browsers.lnk" "%ALLUSERSPROFILE%\Microsoft\Windows\Start Menu\Programs\Browsers\Browsers.lnk" 1>nul
+)
 
 REG ADD "HKCU\Software\Classes\software.Browsers" /ve /d "Browsers HTML Document" /f 1>nul
 REG ADD "HKCU\Software\Classes\software.Browsers" /v AppUserModelId /t REG_SZ /d "software.Browsers" /f 1>nul

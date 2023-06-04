@@ -36,6 +36,8 @@ build_app_bundle() {
   mkdir -p "$target_dir/i18n/en-US"
 
   mkdir -p "$target_dir/startmenu"
+  mkdir -p "$target_dir/startmenu/user"
+  mkdir -p "$target_dir/startmenu/system"
 
   cp "resources/icons/16x16/software.Browsers.png" "$target_dir/icons/16x16/software.Browsers.png"
   cp "resources/icons/32x32/software.Browsers.png" "$target_dir/icons/32x32/software.Browsers.png"
@@ -47,7 +49,8 @@ build_app_bundle() {
 
   cp "extra/windows/dist/install.bat" "$target_dir/install.bat"
   cp "extra/windows/dist/announce_default.ps1" "$target_dir/announce_default.ps1"
-  cp "extra/windows/dist/startmenu/Browsers.lnk" "$target_dir/startmenu/Browsers.lnk"
+  cp "extra/windows/dist/startmenu/user/Browsers.lnk" "$target_dir/startmenu/user/Browsers.lnk"
+  cp "extra/windows/dist/startmenu/system/Browsers.lnk" "$target_dir/startmenu/system/Browsers.lnk"
 }
 
 make_archives() {
@@ -73,7 +76,8 @@ make_archives() {
       './i18n/en-US/builtin.ftl'
       './install.bat'
       './announce_default.ps1'
-      './startmenu/Browsers.lnk'
+      './startmenu/user/Browsers.lnk'
+      './startmenu/system/Browsers.lnk'
     )
 
   cd "./$target_dir"
