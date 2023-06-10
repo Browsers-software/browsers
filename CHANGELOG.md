@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- macOS: Support Slack desktop app for `<team>.slack.com` urls
+
+### Fixed:
+- Windows: Fix install script
+- Windows: Fix shortcut when installing for all users
+
 ## [0.3.6]
 
 ### Added
