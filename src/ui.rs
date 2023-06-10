@@ -381,6 +381,35 @@ pub struct UIDelegate {
     monitor: Monitor,
 }
 
+impl UIDelegate {
+    fn open_link_in_filtered_browser(
+        &self,
+        ctx: &mut DelegateCtx,
+        data: &mut UIState,
+        filtered_profile_index: usize,
+    ) {
+        let browser_index_maybe =
+            self.filtered_index_to_browser_index(data, filtered_profile_index);
+
+        if browser_index_maybe.is_some() {
+            let browser_index = browser_index_maybe.unwrap();
+            ctx.get_external_handle()
+                .submit_command(OPEN_LINK_IN_BROWSER, browser_index, Target::Global)
+                .ok();
+        }
+    }
+    fn filtered_index_to_browser_index(
+        &self,
+        data: &mut UIState,
+        filtered_profile_index: usize,
+    ) -> Option<usize> {
+        let filtered_browsers = get_filtered_browsers(data.url.as_str(), &data.browsers);
+        let browser_maybe = filtered_browsers.get(filtered_profile_index);
+        let browser_index_maybe = browser_maybe.map(|b| b.browser_profile_index);
+        return browser_index_maybe;
+    }
+}
+
 impl AppDelegate<UIState> for UIDelegate {
     fn event(
         &mut self,
@@ -458,6 +487,7 @@ impl AppDelegate<UIState> for UIDelegate {
                         .ok();
                 }
             }
+
             Event::KeyDown(KeyEvent {
                 key: KbKey::Character(ref char),
                 ..
@@ -469,6 +499,24 @@ impl AppDelegate<UIState> for UIDelegate {
                         .ok();
                 }
             }
+
+            Event::KeyDown(KeyEvent {
+                key: KbKey::Character(ref char),
+                ..
+            }) => match char.as_str() {
+                "1" => self.open_link_in_filtered_browser(ctx, data, 0),
+                "2" => self.open_link_in_filtered_browser(ctx, data, 1),
+                "3" => self.open_link_in_filtered_browser(ctx, data, 2),
+                "4" => self.open_link_in_filtered_browser(ctx, data, 3),
+                "5" => self.open_link_in_filtered_browser(ctx, data, 4),
+                "6" => self.open_link_in_filtered_browser(ctx, data, 5),
+                "7" => self.open_link_in_filtered_browser(ctx, data, 6),
+                "8" => self.open_link_in_filtered_browser(ctx, data, 7),
+                "9" => self.open_link_in_filtered_browser(ctx, data, 8),
+                "0" => self.open_link_in_filtered_browser(ctx, data, 9),
+                _ => {}
+            },
+
             _ => {}
         }
 

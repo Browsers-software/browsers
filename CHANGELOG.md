@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - macOS: Support Slack desktop app for `<team>.slack.com` urls
+- Allow opening browser by numerical key 1, 2, ..., 9, 0
 
 ### Fixed:
 - Windows: Fix install script
