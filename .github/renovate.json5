@@ -1,0 +1,8 @@
+{
+  "ignoreDeps": [
+    // we use older version, because it should be the same version of glib as druid is using
+    "glib",
+    // we use older version, because it should be the same version of gtk as druid is using
+    "gtk"
+  ]
+}
