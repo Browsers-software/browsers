@@ -1,11 +1,18 @@
 use std::cmp;
 use std::error::Error;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 use std::sync::mpsc::Sender;
+use std::sync::Arc;
 
+use druid::commands::{CONFIGURE_WINDOW_SIZE_AND_POSITION, QUIT_APP, SHOW_ALL, SHOW_WINDOW};
+use druid::keyboard_types::Key;
+use druid::piet::{InterpolationMode, TextStorage};
+use druid::widget::{
+    Container, Controller, ControllerHost, CrossAxisAlignment, Either, Flex, Image, Label,
+    LineBreaking, List, ZStack,
+};
 use druid::{
-    Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, image, LayoutCtx, LensExt,
+    image, Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, LayoutCtx, LensExt,
     LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, Modifiers, Monitor, Rect,
     TextAlignment, UnitPoint, UpdateCtx, Vec2, WidgetId, WindowHandle, WindowLevel,
     WindowSizePolicy,
@@ -15,25 +22,19 @@ use druid::{
     ImageBuf, KbKey, KeyEvent, Lens, PaintCtx, Point, RenderContext, Selector, Size, Target,
     Widget, WidgetExt, WindowDesc, WindowId,
 };
-use druid::commands::{CONFIGURE_WINDOW_SIZE_AND_POSITION, QUIT_APP, SHOW_ALL, SHOW_WINDOW};
-use druid::keyboard_types::Key;
-use druid::piet::{InterpolationMode, TextStorage};
-use druid::widget::{
-    Container, Controller, ControllerHost, CrossAxisAlignment, Either, Flex, Image, Label,
-    LineBreaking, List, ZStack,
-};
 use globset::GlobMatcher;
 use image::io::Reader as ImageReader;
 use tracing::{debug, info};
 use url::Url;
 
-use crate::{CommonBrowserProfile, MessageToMain, paths, url_rule};
 use crate::url_rule::{UrlGlobMatcher, UrlMatcher};
+use crate::{paths, url_rule, CommonBrowserProfile, MessageToMain};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const PADDING_X: f64 = 5.0;
 const PADDING_Y: f64 = 10.0;
+const ITEM_WIDTH: f64 = 210.0;
 const ITEM_HEIGHT: f64 = 32.0;
 
 pub struct UI {
@@ -838,7 +839,7 @@ fn visible_scroll_area_height(browsers_count_f64: f64) -> f64 {
 fn calculate_window_size(item_count: usize) -> Size {
     let browsers_count_f64 = item_count as f64;
     //let window_width = browsers_count_f64 * (64.0 + 6.0) + PADDING_X * 2.0;
-    let item_width = 32.0 + 160.0;
+    let item_width = ITEM_WIDTH;
     let border_width = 1.0;
     let window_width = item_width + PADDING_X * 2.0 + 2.0 * border_width;
     let visible_scroll_area_height = visible_scroll_area_height(browsers_count_f64);
@@ -1188,35 +1189,44 @@ fn create_browser(
         .with_weight(FontWeight::NORMAL)
         .with_size(text_size);
 
-    let hotkey_label = Label::dynamic(|(_incognito_mode, item): &(bool, UIBrowser), _env: &_| {
-        if item.filtered_index < 9 {
-            let hotkey_number = item.filtered_index + 1;
-            let hotkey = hotkey_number.to_string();
-            hotkey
-        } else {
-            "".to_string()
-        }
-    })
-    .with_text_alignment(TextAlignment::Center)
-    .with_font(font)
-    .with_text_color(Color::from_hex_str("808080").unwrap())
-    .fix_size(text_size, text_size)
-    .padding(4.0);
+    let hotkey_label = Either::new(
+        |(_incognito_mode, item): &(bool, UIBrowser), _env| item.filtered_index < 9,
+        {
+            let hotkey_label =
+                Label::dynamic(|(_incognito_mode, item): &(bool, UIBrowser), _env: &_| {
+                    if item.filtered_index < 9 {
+                        let hotkey_number = item.filtered_index + 1;
+                        let hotkey = hotkey_number.to_string();
+                        hotkey
+                    } else {
+                        "".to_string()
+                    }
+                })
+                .with_text_alignment(TextAlignment::Center)
+                .with_font(font)
+                .with_text_color(Color::from_hex_str("808080").unwrap())
+                .fix_size(text_size, text_size)
+                .padding(4.0);
 
-    let hotkey_label = Container::new(hotkey_label)
-        .background(Color::rgba(0.15, 0.15, 0.15, 1.0))
-        .rounded(5.0)
-        .border(Color::rgba(0.4, 0.4, 0.4, 0.9), 0.5);
+            let hotkey_label = Container::new(hotkey_label)
+                .background(Color::rgba(0.15, 0.15, 0.15, 1.0))
+                .rounded(5.0)
+                .border(Color::rgba(0.4, 0.4, 0.4, 0.9), 0.5);
+
+            hotkey_label
+        },
+        { Label::new("") },
+    );
 
     let icon_and_label = Flex::row()
         .with_child(icon_stack)
         .with_child(item_label)
         .with_flex_spacer(1.0)
         .with_child(hotkey_label)
-        .with_spacer(5.0);
+        .with_spacer(15.0);
 
     let container = Container::new(icon_and_label)
-        .fix_size(192.0, ITEM_HEIGHT)
+        .fix_size(ITEM_WIDTH, ITEM_HEIGHT)
         .on_click(move |_ctx, (_, data): &mut (bool, UIBrowser), _env| {
             _ctx.get_external_handle()
                 .submit_command(OPEN_LINK_IN_BROWSER, data.browser_profile_index, Target::Global)
