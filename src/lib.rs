@@ -1,24 +1,25 @@
+use std::{env, thread};
 use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::process::Command;
 use std::str::FromStr;
+use std::sync::{Arc, mpsc};
 use std::sync::mpsc::{Receiver, Sender};
-use std::sync::{mpsc, Arc};
-use std::{env, thread};
 
 use druid::{ExtEventSink, Target, UrlOpenInfo};
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info, warn};
 use url::Url;
 
-use ui::UI;
+use gui::ui;
 
 use crate::browser_repository::{SupportedApp, SupportedAppRepository};
-use crate::ui::MoveTo;
+use crate::gui::ui::MoveTo;
+use crate::gui::ui::UI;
 use crate::url_rule::UrlGlobMatcher;
 use crate::utils::{OSAppFinder, ProfileAndOptions};
 
-mod ui;
+mod gui;
 
 pub mod paths;
 pub mod utils;
@@ -832,7 +833,7 @@ fn move_app_profile(
         }
     }
 
-    // 2. send visible_browser_profiles to ui
+    // 2. send visible_browser_profiles to gui
     let ui_browsers = UI::real_to_ui_browsers(&visible_browser_profiles);
     ui_event_sink
         .submit_command(ui::NEW_BROWSERS_RECEIVED, ui_browsers, Target::Global)
@@ -854,7 +855,7 @@ fn move_app_profile(
 pub enum MessageToMain {
     Refresh,
     OpenLink(usize, bool, String),
-    UrlOpenRequest(String, String), // almost as LinkOpenedFromBundle, but triggers ui, not from ui
+    UrlOpenRequest(String, String), // almost as LinkOpenedFromBundle, but triggers gui, not from gui
     LinkOpenedFromBundle(String, String),
     SetBrowsersAsDefaultBrowser,
     HideAppProfile(String),
