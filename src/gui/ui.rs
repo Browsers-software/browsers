@@ -1,18 +1,11 @@
 use std::cmp;
 use std::error::Error;
 use std::path::{Path, PathBuf};
-use std::sync::mpsc::Sender;
 use std::sync::Arc;
+use std::sync::mpsc::Sender;
 
-use druid::commands::{CONFIGURE_WINDOW_SIZE_AND_POSITION, QUIT_APP, SHOW_ALL, SHOW_WINDOW};
-use druid::keyboard_types::Key;
-use druid::piet::{InterpolationMode, TextStorage};
-use druid::widget::{
-    Container, Controller, ControllerHost, CrossAxisAlignment, Either, Flex, Image, Label,
-    LineBreaking, List, ZStack,
-};
 use druid::{
-    image, Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, LayoutCtx, LensExt,
+    Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, image, LayoutCtx, LensExt,
     LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, Modifiers, Monitor, Rect,
     TextAlignment, UnitPoint, UpdateCtx, Vec2, WidgetId, WindowHandle, WindowLevel,
     WindowSizePolicy,
@@ -22,13 +15,20 @@ use druid::{
     ImageBuf, KbKey, KeyEvent, Lens, PaintCtx, Point, RenderContext, Selector, Size, Target,
     Widget, WidgetExt, WindowDesc, WindowId,
 };
+use druid::commands::{CONFIGURE_WINDOW_SIZE_AND_POSITION, QUIT_APP, SHOW_ALL, SHOW_WINDOW};
+use druid::keyboard_types::Key;
+use druid::piet::{InterpolationMode, TextStorage};
+use druid::widget::{
+    Container, Controller, ControllerHost, CrossAxisAlignment, Either, Flex, Image, Label,
+    LineBreaking, List, ZStack,
+};
 use globset::GlobMatcher;
 use image::io::Reader as ImageReader;
 use tracing::{debug, info};
 use url::Url;
 
+use crate::{CommonBrowserProfile, MessageToMain, paths, url_rule};
 use crate::url_rule::{UrlGlobMatcher, UrlMatcher};
-use crate::{paths, url_rule, CommonBrowserProfile, MessageToMain};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
