@@ -32,6 +32,7 @@ use crate::{paths, url_rule, CommonBrowserProfile, MessageToMain};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+const WINDOW_BORDER_WIDTH: f64 = 1.0;
 const PADDING_X: f64 = 5.0;
 const PADDING_Y: f64 = 10.0;
 const ITEM_WIDTH: f64 = 210.0;
@@ -839,9 +840,7 @@ fn visible_scroll_area_height(browsers_count_f64: f64) -> f64 {
 fn calculate_window_size(item_count: usize) -> Size {
     let browsers_count_f64 = item_count as f64;
     //let window_width = browsers_count_f64 * (64.0 + 6.0) + PADDING_X * 2.0;
-    let item_width = ITEM_WIDTH;
-    let border_width = 1.0;
-    let window_width = item_width + PADDING_X * 2.0 + 2.0 * border_width;
+    let window_width = ITEM_WIDTH + PADDING_X * 2.0 + WINDOW_BORDER_WIDTH * 2.0;
     let visible_scroll_area_height = visible_scroll_area_height(browsers_count_f64);
     let window_height = visible_scroll_area_height + 5.0 + 12.0 + PADDING_Y * 2.0 + 10.0;
 
