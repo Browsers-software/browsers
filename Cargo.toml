@@ -75,7 +75,7 @@ libc = "0.2"
 xdg-mime = "^0.3.3"
 
 # to find default registered icons
-glib = { version = "0.16.6", package = "gio" }
+glib = { version = "0.17.10", package = "gio" }
 
 # to find icon theme and icon; (should be same version of gtk as druid is using)
 gtk = { version = "0.16.2" }
