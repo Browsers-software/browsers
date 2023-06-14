@@ -41,6 +41,7 @@ pub struct UI {
     main_sender: Sender<MessageToMain>,
     url: String,
     ui_browsers: Arc<Vec<UIBrowser>>,
+    filtered_browsers: Arc<Vec<UIBrowser>>,
     restorable_app_profiles: Arc<Vec<UIBrowser>>,
     show_set_as_default: bool,
 }
@@ -83,6 +84,7 @@ impl UI {
                     .map_or("".to_string(), |a| a.to_string()),
                 unique_id: p.get_unique_id(),
                 unique_app_id: p.get_unique_app_id(),
+                filtered_index: i, // TODO: filter against current url
             })
             .collect();
     }
@@ -95,11 +97,15 @@ impl UI {
         restorable_app_profiles: Vec<UIBrowser>,
         show_set_as_default: bool,
     ) -> Self {
+        let ui_browsers = Arc::new(ui_browsers);
+        let filtered_browsers = get_filtered_browsers(&url, &ui_browsers);
+
         Self {
             localizations_basedir: localizations_basedir,
             main_sender: main_sender.clone(),
             url: url.to_string(),
-            ui_browsers: Arc::new(ui_browsers),
+            ui_browsers: ui_browsers,
+            filtered_browsers: Arc::new(filtered_browsers),
             restorable_app_profiles: Arc::new(restorable_app_profiles),
             show_set_as_default: show_set_as_default,
         }
@@ -114,7 +120,7 @@ impl UI {
             // add some spacing around screen
             .inflate(-5f64, -5f64);
 
-        let window_size = recalculate_window_size(&self.url, &self.ui_browsers);
+        let window_size = recalculate_window_size(&self.filtered_browsers);
         let window_position =
             calculate_window_position(&mouse_position, &screen_rect, &window_size);
 
@@ -150,6 +156,7 @@ impl UI {
             focused_index: None,
             incognito_mode: false,
             browsers: self.ui_browsers.clone(),
+            filtered_browsers: self.filtered_browsers.clone(),
             restorable_app_profiles: self.restorable_app_profiles.clone(),
         };
         return initial_ui_state;
@@ -247,10 +254,7 @@ impl UI {
 
         let browsers_list = List::new(move || create_browser(ImageBuf::empty(), ImageBuf::empty()))
             .with_spacing(0.0)
-            .lens((
-                UIState::incognito_mode,
-                (UIState::url, UIState::browsers).then(FilteredBrowsersLens),
-            ))
+            .lens((UIState::incognito_mode, UIState::filtered_browsers))
             .scroll();
 
         // viewport size is fixed, while scrollable are is full size
@@ -278,6 +282,9 @@ pub struct UIState {
     incognito_mode: bool,
 
     browsers: Arc<Vec<UIBrowser>>,
+
+    // same as browsers, but filtered view - only the ones matching current url
+    filtered_browsers: Arc<Vec<UIBrowser>>,
     restorable_app_profiles: Arc<Vec<UIBrowser>>,
 }
 
@@ -290,12 +297,14 @@ impl FocusData for UIState {
 impl FocusData for (bool, UIBrowser) {
     fn has_autofocus(&self) -> bool {
         let browser = &self.1;
-        return browser.browser_profile_index == 0;
+        return browser.filtered_index == 0;
     }
 }
 
 #[derive(Clone, Data, Lens)]
 pub struct UIBrowser {
+    // index in not-explicitly-hidden browsers list, used to send message to main event cycle
+    // is not impacted by current url, i.e no filters apply
     browser_profile_index: usize,
     is_first: bool,
     is_last: bool,
@@ -310,6 +319,10 @@ pub struct UIBrowser {
     profile_icon_path: String,
     unique_id: String,
     unique_app_id: String,
+
+    // index in list of actually visible browsers for current url
+    // (correctly set only in filtered_browsers list)
+    filtered_index: usize,
 }
 
 impl UIBrowser {
@@ -388,8 +401,10 @@ impl UIDelegate {
         data: &mut UIState,
         filtered_profile_index: usize,
     ) {
-        let browser_index_maybe =
-            self.filtered_index_to_browser_index(data, filtered_profile_index);
+        let browser_index_maybe = data
+            .filtered_browsers
+            .get(filtered_profile_index)
+            .map(|b| b.browser_profile_index);
 
         if browser_index_maybe.is_some() {
             let browser_index = browser_index_maybe.unwrap();
@@ -397,16 +412,6 @@ impl UIDelegate {
                 .submit_command(OPEN_LINK_IN_BROWSER, browser_index, Target::Global)
                 .ok();
         }
-    }
-    fn filtered_index_to_browser_index(
-        &self,
-        data: &mut UIState,
-        filtered_profile_index: usize,
-    ) -> Option<usize> {
-        let filtered_browsers = get_filtered_browsers(data.url.as_str(), &data.browsers);
-        let browser_maybe = filtered_browsers.get(filtered_profile_index);
-        let browser_index_maybe = browser_maybe.map(|b| b.browser_profile_index);
-        return browser_index_maybe;
     }
 }
 
@@ -555,6 +560,9 @@ impl AppDelegate<UIState> for UIDelegate {
             let url_open_info = cmd.get_unchecked(URL_OPENED);
             data.url = url_open_info.url.clone();
 
+            let filtered_browsers = get_filtered_browsers(&data.url, &data.browsers);
+            data.filtered_browsers = Arc::new(filtered_browsers);
+
             let (mouse_position, monitor) = druid::Screen::get_mouse_position();
             self.mouse_position = mouse_position;
             self.monitor = monitor;
@@ -565,7 +573,7 @@ impl AppDelegate<UIState> for UIDelegate {
                 // add some spacing around screen
                 .inflate(-5f64, -5f64);
 
-            let window_size = recalculate_window_size(&data.url, &data.browsers);
+            let window_size = recalculate_window_size(&data.filtered_browsers);
             let window_position =
                 calculate_window_position(&self.mouse_position, &screen_rect, &window_size);
 
@@ -617,6 +625,8 @@ impl AppDelegate<UIState> for UIDelegate {
             let ui_browsers = cmd.get_unchecked(NEW_BROWSERS_RECEIVED).clone();
             // let old_v = std::mem::replace(&mut data.browsers, Arc::new(ui_browsers));
             data.browsers = Arc::new(ui_browsers);
+            let filtered_browsers = get_filtered_browsers(&data.url, &data.browsers);
+            data.filtered_browsers = Arc::new(filtered_browsers);
 
             let mouse_position = self.mouse_position;
 
@@ -626,7 +636,7 @@ impl AppDelegate<UIState> for UIDelegate {
                 // add some spacing around screen
                 .inflate(-5f64, -5f64);
 
-            let window_size = recalculate_window_size(&data.url, &data.browsers);
+            let window_size = recalculate_window_size(&data.filtered_browsers);
             let window_position =
                 calculate_window_position(&mouse_position, &screen_rect, &window_size);
 
@@ -1032,8 +1042,7 @@ const fn get_icon_padding() -> f64 {
     }
 }
 
-fn recalculate_window_size(url: &str, ui_browsers: &Arc<Vec<UIBrowser>>) -> Size {
-    let filtered_browsers = get_filtered_browsers(url, &ui_browsers);
+fn recalculate_window_size(filtered_browsers: &Arc<Vec<UIBrowser>>) -> Size {
     let filtered_browsers_total = filtered_browsers.len();
     let item_count = calculate_visible_browser_count(filtered_browsers_total);
     let window_size = calculate_window_size(item_count);
@@ -1067,43 +1076,17 @@ fn get_filtered_browsers(url: &str, ui_browsers: &Arc<Vec<UIBrowser>>) -> Vec<UI
                     .unwrap_or(false)
             };
         })
+        .enumerate()
+        .map(|(index, mut browser)| {
+            browser.filtered_index = index;
+            browser
+        })
         .collect();
 
     // always show special apps first
     filtered.sort_by_key(|b| !b.has_priority_ordering());
 
     return filtered;
-}
-
-/* Filters browsers based on url */
-struct FilteredBrowsersLens;
-
-impl FilteredBrowsersLens {
-    // gets browsers relevant only for current url
-    fn get_filtered_browsers(data: &(String, Arc<Vec<UIBrowser>>)) -> Vec<UIBrowser> {
-        return get_filtered_browsers(&data.0, &data.1);
-    }
-}
-impl Lens<(String, Arc<Vec<UIBrowser>>), Arc<Vec<UIBrowser>>> for FilteredBrowsersLens {
-    fn with<R, F: FnOnce(&Arc<Vec<UIBrowser>>) -> R>(
-        &self,
-        data: &(String, Arc<Vec<UIBrowser>>),
-        f: F,
-    ) -> R {
-        let filtered = Self::get_filtered_browsers(data);
-        let arc_filtered = Arc::new(filtered);
-        f(&arc_filtered)
-    }
-
-    fn with_mut<R, F: FnOnce(&mut Arc<Vec<UIBrowser>>) -> R>(
-        &self,
-        data: &mut (String, Arc<Vec<UIBrowser>>),
-        f: F,
-    ) -> R {
-        let filtered = Self::get_filtered_browsers(data);
-        let mut arc_filtered = Arc::new(filtered);
-        f(&mut arc_filtered) // &mut data
-    }
 }
 
 /* Extracts browser from the (bool, UIBrowser) tuple*/
