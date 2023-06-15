@@ -134,6 +134,7 @@ impl SupportedAppRepository {
             .add_firefox_based_mac(vec!["org.mozilla.librewolf"], "LibreWolf")
             .add_firefox_based_mac(vec!["net.waterfox.waterfox"], "Waterfox")
             .add_slack_mac("com.tinyspeck.slackmacgap", "Slack")
+            .add_slack_linux("slack.desktop", "slack", "Slack")
             .add(Self::linear_app())
             .add(Self::notion_app())
             .add(Self::spotify_app())
@@ -219,6 +220,33 @@ impl SupportedAppRepository {
     }
 
     fn start(&mut self) -> &mut SupportedAppRepository {
+        return self;
+    }
+
+    fn add_slack_linux(
+        &mut self,
+        linux_desktop_id: &str,
+        linux_snap_id: &str,
+        linux_config_dir_relative: &str,
+    ) -> &mut SupportedAppRepository {
+        let app_config_dir = AppConfigDir::new_linux(
+            self.chromium_user_dir_base.clone(),
+            PathBuf::from(linux_config_dir_relative),
+        );
+
+        let snap_app_config_dir_absolute =
+            self.snap_config_dir_absolute_path(linux_snap_id, linux_config_dir_relative);
+
+        let app_id = AppIdentifier::new_linux(linux_desktop_id);
+        let app = Self::slack_app(
+            app_id,
+            app_config_dir.config_dir_absolute(),
+            snap_app_config_dir_absolute.clone(),
+            PathBuf::from(""),
+        );
+
+        self.add(app);
+
         return self;
     }
 

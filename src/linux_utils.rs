@@ -295,6 +295,7 @@ fn get_this_app_xdg_state_dir() -> PathBuf {
     return state_dir.join(XDG_NAME);
 }
 
+// $HOME/.config
 pub fn linux_get_unsandboxed_config_dir() -> PathBuf {
     // TODO: escape sandbox if Browsers is running in snap/flatpak
     return dirs::config_dir().unwrap();
