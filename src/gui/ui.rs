@@ -1193,13 +1193,9 @@ fn create_browser(
         {
             let hotkey_label =
                 Label::dynamic(|(_incognito_mode, item): &(bool, UIBrowser), _env: &_| {
-                    if item.filtered_index < 9 {
-                        let hotkey_number = item.filtered_index + 1;
-                        let hotkey = hotkey_number.to_string();
-                        hotkey
-                    } else {
-                        "".to_string()
-                    }
+                    let hotkey_number = item.filtered_index + 1;
+                    let hotkey = hotkey_number.to_string();
+                    hotkey
                 })
                 .with_text_alignment(TextAlignment::Center)
                 .with_font(font)
