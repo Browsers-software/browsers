@@ -36,6 +36,19 @@ pub struct Config {
     profile_order: Vec<String>,
     default_profile: Option<ProfileAndOptions>,
     rules: Vec<ConfigRule>,
+    ui: UIConfig,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(default)]
+pub struct UIConfig {
+    pub show_hotkeys: bool,
+}
+
+impl Default for UIConfig {
+    fn default() -> Self {
+        UIConfig { show_hotkeys: true }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
@@ -108,6 +121,10 @@ impl Config {
 
     pub fn get_default_profile(&self) -> &Option<ProfileAndOptions> {
         return &self.default_profile;
+    }
+
+    pub fn get_ui_config(&self) -> &UIConfig {
+        return &self.ui;
     }
 }
 

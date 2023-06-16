@@ -46,6 +46,7 @@ pub struct UI {
     filtered_browsers: Arc<Vec<UIBrowser>>,
     restorable_app_profiles: Arc<Vec<UIBrowser>>,
     show_set_as_default: bool,
+    show_hotkeys: bool,
 }
 
 impl UI {
@@ -98,6 +99,7 @@ impl UI {
         ui_browsers: Vec<UIBrowser>,
         restorable_app_profiles: Vec<UIBrowser>,
         show_set_as_default: bool,
+        show_hotkeys: bool,
     ) -> Self {
         let ui_browsers = Arc::new(ui_browsers);
         let filtered_browsers = get_filtered_browsers(&url, &ui_browsers);
@@ -110,6 +112,7 @@ impl UI {
             filtered_browsers: Arc::new(filtered_browsers),
             restorable_app_profiles: Arc::new(restorable_app_profiles),
             show_set_as_default: show_set_as_default,
+            show_hotkeys: show_hotkeys,
         }
     }
 
@@ -254,10 +257,12 @@ impl UI {
 
         //LensWrap::new(self, then1);
 
-        let browsers_list = List::new(move || create_browser(ImageBuf::empty(), ImageBuf::empty()))
-            .with_spacing(0.0)
-            .lens((UIState::incognito_mode, UIState::filtered_browsers))
-            .scroll();
+        let show_hotkeys = self.show_hotkeys;
+        let browsers_list =
+            List::new(move || create_browser(ImageBuf::empty(), ImageBuf::empty(), show_hotkeys))
+                .with_spacing(0.0)
+                .lens((UIState::incognito_mode, UIState::filtered_browsers))
+                .scroll();
 
         // viewport size is fixed, while scrollable are is full size
         let browsers_list = Container::new(browsers_list).expand_height();
@@ -1121,6 +1126,7 @@ fn create_browser_label() -> Label<(bool, UIBrowser)> {
 fn create_browser(
     app_icon_buf: ImageBuf,
     profile_img_buf: ImageBuf,
+    show_hotkeys: bool,
 ) -> impl Widget<(bool, UIBrowser)> {
     let icon_size = get_icon_size();
     let icon_padding = get_icon_padding();
@@ -1189,7 +1195,9 @@ fn create_browser(
         .with_size(text_size);
 
     let hotkey_label = Either::new(
-        |(_incognito_mode, item): &(bool, UIBrowser), _env| item.filtered_index < 9,
+        move |(_incognito_mode, item): &(bool, UIBrowser), _env| {
+            show_hotkeys && item.filtered_index < 9
+        },
         {
             let hotkey_label =
                 Label::dynamic(|(_incognito_mode, item): &(bool, UIBrowser), _env: &_| {

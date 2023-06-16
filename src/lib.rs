@@ -1,10 +1,10 @@
-use std::{env, thread};
 use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::process::Command;
 use std::str::FromStr;
-use std::sync::{Arc, mpsc};
 use std::sync::mpsc::{Receiver, Sender};
+use std::sync::{mpsc, Arc};
+use std::{env, thread};
 
 use druid::{ExtEventSink, Target, UrlOpenInfo};
 use serde::{Deserialize, Serialize};
@@ -567,6 +567,9 @@ pub fn basically_main(
 
     let localizations_basedir = paths::get_localizations_basedir();
 
+    let config = app_finder.get_installed_browsers_config();
+    let ui_config = config.get_ui_config();
+
     let ui2 = UI::new(
         localizations_basedir,
         main_sender.clone(),
@@ -574,6 +577,7 @@ pub fn basically_main(
         UI::real_to_ui_browsers(visible_browser_profiles.as_slice()),
         UI::real_to_ui_browsers(hidden_browser_profiles.as_slice()),
         show_set_as_default,
+        ui_config.show_hotkeys,
     );
     let initial_ui_state = ui2.create_initial_ui_state();
     let launcher = ui2.create_app_launcher();
