@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.3.7]
+## [0.3.7] - 2023-06-16
 
 ### Added
 - Support Slack desktop app for `<team>.slack.com` urls
@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windows: Fix install script
 - Windows: Fix shortcut when installing for all users
 
-## [0.3.6]
+## [0.3.6] - 2023-05-31
 
 ### Added
 
@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Make UI a big higher. Might need to reduce it only in Windows, as Windows seems to fit more
 - Stable ordering of profiles when refreshing
 
-## [0.3.5]
+## [0.3.5]- 2023-05-28
 
 ### Added
 
