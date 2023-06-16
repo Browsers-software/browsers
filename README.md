@@ -21,7 +21,7 @@ Popover menu with list of browsers and browser profiles is shown that user can c
 ### Special Skills
 
 - Non-obtrusive design, looking more like a context menu
-- Supports opening popular desktop applications directly, e.g Figma, Linear, Notion, Spotify, Telegram, Zoom.
+- Supports opening popular desktop applications directly, e.g Figma, Linear, Notion, Slack, Spotify, Telegram, Zoom.
 - Supports user profiles for browsers based on Chrome and Firefox
 - Supports Firefox containers (also
   need [Open external links in a container](https://addons.mozilla.org/en-US/firefox/addon/open-url-in-container/)
