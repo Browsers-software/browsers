@@ -1197,7 +1197,6 @@ fn create_browser(
                     let hotkey = hotkey_number.to_string();
                     hotkey
                 })
-                .with_text_alignment(TextAlignment::Center)
                 .with_font(font)
                 .with_text_color(Color::from_hex_str("808080").unwrap())
                 .fix_size(text_size, text_size)
