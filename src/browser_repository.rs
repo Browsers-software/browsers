@@ -135,6 +135,7 @@ impl SupportedAppRepository {
             .add_firefox_based_mac(vec!["net.waterfox.waterfox"], "Waterfox")
             .add_slack_mac("com.tinyspeck.slackmacgap", "Slack")
             .add_slack_linux("slack.desktop", "slack", "Slack")
+            .add_slack_windows("URL:slack", "Slack")
             .add(Self::linear_app())
             .add(Self::notion_app())
             .add(Self::spotify_app())
@@ -279,6 +280,28 @@ impl SupportedAppRepository {
             unsandboxed_app_config_dir.config_dir_absolute(),
             PathBuf::from(""),
             sandboxed_app_config_dir.config_dir_absolute(),
+        );
+        self.add(app);
+
+        return self;
+    }
+
+    fn add_slack_windows(
+        &mut self,
+        bundle_id: &str,
+        config_dir_relative: &str,
+    ) -> &mut SupportedAppRepository {
+        let app_config_dir = AppConfigDir::new_windows(
+            self.chromium_user_dir_base.clone(),
+            PathBuf::from(config_dir_relative),
+        );
+
+        let app_id = AppIdentifier::new_windows(bundle_id);
+        let app = Self::slack_app(
+            app_id,
+            app_config_dir.config_dir_absolute(),
+            PathBuf::from(""),
+            PathBuf::from(""),
         );
         self.add(app);
 
