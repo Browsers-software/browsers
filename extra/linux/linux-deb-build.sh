@@ -82,7 +82,8 @@ create_deb_content() {
 create_deb() {
   local deb_arch="$1"
   local deb_filename="browsers_${deb_arch}.deb"
-  dpkg-deb --root-owner-group --build "$DEB_SRC_DIR" "$deb_filename"
+  # using xz compression instead of the new default zstd, which can't be opened by older distros
+  dpkg-deb -Zxz --root-owner-group --build "$DEB_SRC_DIR" "$deb_filename"
   cp "$deb_filename" "$LINUX_TARGET_DIR/release/"
 }
 
