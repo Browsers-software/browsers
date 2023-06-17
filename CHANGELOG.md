@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.8] - 2023-06-17
+
+### Added
+- Linux: provide deb package
+
 ## [0.3.7] - 2023-06-16
 
 ### Added
@@ -163,7 +168,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial Release
 
-[unreleased]: https://github.com/Browsers-software/browsers/compare/0.3.7...HEAD
+[unreleased]: https://github.com/Browsers-software/browsers/compare/0.3.8...HEAD
+[0.3.8]: https://github.com/Browsers-software/browsers/releases/tag/0.3.8
 [0.3.7]: https://github.com/Browsers-software/browsers/releases/tag/0.3.7
 [0.3.6]: https://github.com/Browsers-software/browsers/releases/tag/0.3.6
 [0.3.5]: https://github.com/Browsers-software/browsers/releases/tag/0.3.5

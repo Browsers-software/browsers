@@ -190,7 +190,7 @@ dependencies = [
 
 [[package]]
 name = "browsers"
-version = "0.3.7"
+version = "0.3.8"
 dependencies = [
  "clap",
  "cocoa-foundation",
