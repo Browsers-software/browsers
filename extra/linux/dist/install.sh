@@ -157,7 +157,7 @@ cp "$SOURCE_XFCE4_DESKTOP_FILE_PATH" "$TARGET_XFCE4_DESKTOP_FILE_PATH"
 # $HOME/.local/share/software.Browsers/bin/browsers
 cp "$SRC_BINARY_PATH" "$TARGET_BINARY_PATH"
 
-# Symlink binary to $HOME/.local/bin
+# Symlink binary to $HOME/.local/bin/browsers or /usr/local/bin/browsers
 ln -sf "$TARGET_BINARY_PATH" "$TARGET_INSTALL_BINARY_PATH"
 
 # Installs to ~/.local/share/icons/hicolor/512x512/apps/software.Browsers.png
