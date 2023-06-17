@@ -1,10 +1,10 @@
+#[cfg(target_os = "windows")]
+extern crate winres;
+
 use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-
-#[cfg(target_os = "windows")]
-extern crate winres;
 
 #[cfg(target_os = "macos")]
 fn main() {
@@ -47,4 +47,79 @@ fn main() {
 }
 
 #[cfg(target_os = "linux")]
-fn main() {}
+fn main() {
+    const VERSION: &str = env!("CARGO_PKG_VERSION");
+    const ROOT_DIR: &str = env!("CARGO_MANIFEST_DIR");
+
+    // x86_64, aarch64, arm, i686
+    // https://doc.rust-lang.org/reference/conditional-compilation.html#target_arch
+    let rust_target_arch = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap();
+
+    // e.g "/target/aarch64-unknown-linux-gnu/release/build/browsers-f4fff742057613df/out"
+    //  or "/target/release/build/browsers-f4fff742057613df/out"
+    let out_dir = std::env::var("OUT_DIR").unwrap();
+    let out_dir = PathBuf::from(out_dir.as_str());
+
+    // /target/aarch64-unknown-linux-gnu
+    let arch_target_dir = out_dir
+        .parent() // release/build/browsers/
+        .map(|a| a.parent()) // target/.../release/build/
+        .flatten()
+        .map(|a| a.parent()) // target/.../release/
+        .flatten()
+        .map(|a| a.parent()) // target/
+        .flatten()
+        .unwrap();
+
+    // https://wiki.debian.org/SupportedArchitectures
+    let deb_arch = match rust_target_arch.as_str() {
+        "x86_64" => "amd64",
+        "aarch64" => "arm64",
+        "arm" => "armhf",
+        "i686" => "i386",
+        _ => "unknown",
+    };
+
+    let template_deb_control_file_path: PathBuf = Path::new(ROOT_DIR)
+        .join("extra")
+        .join("linux")
+        .join("deb")
+        .join("DEBIAN")
+        .join("template.control");
+
+    // /target/aarch64-unknown-linux-gnu/meta/deb_control
+    let target_deb_control_dir_path = arch_target_dir.join("meta").join("deb_control");
+
+    /*
+    let linux_uname_arch = match rust_target_arch.as_str() {
+        "x86_64" => "x86_64",
+        "aarch64" => "aarch64",
+        "arm" => "armv7l",
+        "i686" => "i686",
+        other => other,
+    };
+
+    let target_deb_control_dir_path: PathBuf = Path::new(ROOT_DIR)
+        .join("target")
+        .join("universal-unknown-linux-gnu")
+        .join("meta")
+        .join("deb_control")
+        .join(linux_uname_arch);*/
+
+    // /target/aarch64-unknown-linux-gnu/meta/deb_control
+    let target_deb_control_path: PathBuf = target_deb_control_dir_path.join("control");
+
+    fs::create_dir_all(target_deb_control_dir_path).unwrap();
+
+    // 7 MB estimate at the moment
+    const INSTALLED_SIZE_KB: &str = "7168";
+
+    let deb_control_content = fs::read_to_string(template_deb_control_file_path).unwrap();
+    let new_deb_control_content = deb_control_content
+        .replace("€Version€", VERSION)
+        .replace("€Architecture€", deb_arch)
+        .replace("€InstalledSize€", INSTALLED_SIZE_KB);
+
+    let mut file = File::create(target_deb_control_path.as_path()).unwrap();
+    file.write_all(new_deb_control_content.as_bytes()).unwrap();
+}

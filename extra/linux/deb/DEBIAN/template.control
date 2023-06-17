@@ -1,0 +1,11 @@
+Package: browsers
+Version: €Version€
+Section: utils
+Priority: optional
+Architecture: €Architecture€
+Depends: libgtk-3-0, libpango-1.0-0
+Installed-Size: €InstalledSize€
+Maintainer: Browsers.software team <info@browsers.software>
+Description: context menu with a list of browsers and other apps when clicking on a web link
+ Browsers is an intuitive context menu that pops up when you press a link in an app other than a web browser.
+Homepage: https://browsers.software
