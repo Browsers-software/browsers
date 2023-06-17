@@ -99,6 +99,25 @@ create_signatures() {
   signify -S -s "$APPCAST_SECRET_KEY_FILE" -m "./$target_dir/$file_name"
 }
 
+build_deb() {
+  # Build deb package
+  cd extra/linux || exit
+  ./linux-deb-build.sh "$1" "$2"
+  cd ../../
+}
+
+make_deb_packages() {
+  # creating deb does not depend on universal directory at all, but will store the deb there
+  build_deb "amd64" "target/x86_64-unknown-linux-gnu"
+  build_deb "arm64" "target/aarch64-unknown-linux-gnu"
+  build_deb "armhf" "target/armv7-unknown-linux-gnueabihf"
+
+  cp "target/x86_64-unknown-linux-gnu/release/browsers_amd64.deb" "$target_dir/x86_64/browsers_amd64.deb"
+  cp "target/aarch64-unknown-linux-gnu/release/browsers_arm64.deb" "$target_dir/aarch64/browsers_arm64.deb"
+  cp "target/armv7-unknown-linux-gnueabihf/release/browsers_armhf.deb" "$target_dir/armv7l/browsers_armhf.deb"
+}
+
 build_binary
 build_app_bundle
 make_archives
+make_deb_packages
