@@ -184,6 +184,11 @@ impl BrowserCommon {
             cmd.args(arguments);
             cmd.args(profile_args);
 
+            if incognito_mode && self.supported_app.supports_incognito() {
+                let incognito_args = self.supported_app.get_incognito_args();
+                cmd.args(incognito_args);
+            }
+
             // Non-browser apps don't have the placeholder
             if !has_url_placeholder {
                 cmd.arg(app_url);
@@ -192,7 +197,15 @@ impl BrowserCommon {
             return cmd;
         } else if cfg!(target_os = "windows") {
             let mut cmd = Command::new(main_command.to_string());
-            cmd.args(profile_args).arg(app_url);
+            cmd.args(profile_args);
+
+            if incognito_mode && self.supported_app.supports_incognito() {
+                let incognito_args = self.supported_app.get_incognito_args();
+                cmd.args(incognito_args);
+            }
+
+            cmd.arg(app_url);
+
             return cmd;
         }
 
