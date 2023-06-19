@@ -12,8 +12,8 @@ use druid::widget::{
     LineBreaking, List, ZStack,
 };
 use druid::{
-    image, Application, BoxConstraints, FontDescriptor, FontFamily, FontWeight, LayoutCtx, LensExt,
-    LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, Modifiers, Monitor, Rect,
+    image, Application, BoxConstraints, Code, FontDescriptor, FontFamily, FontWeight, LayoutCtx,
+    LensExt, LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, Modifiers, Monitor, Rect,
     TextAlignment, UnitPoint, UpdateCtx, Vec2, WidgetId, WindowHandle, WindowLevel,
     WindowSizePolicy,
 };
@@ -489,64 +489,40 @@ impl AppDelegate<UIState> for UIDelegate {
                     .ok();
             }
 
-            Event::KeyDown(KeyEvent {
-                key: KbKey::Enter, ..
-            }) => {
-                debug!("Enter caught in delegate");
-                if let Some(focused_index) = data.focused_index {
-                    ctx.get_external_handle()
-                        .submit_command(OPEN_LINK_IN_BROWSER, focused_index, Target::Global)
-                        .ok();
+            Event::KeyDown(KeyEvent { code, .. }) => match code {
+                Code::Space | Code::Enter => {
+                    if let Some(focused_index) = data.focused_index {
+                        ctx.get_external_handle()
+                            .submit_command(OPEN_LINK_IN_BROWSER, focused_index, Target::Global)
+                            .ok();
+                    }
                 }
-            }
-
-            Event::KeyDown(KeyEvent {
-                key: KbKey::Character(ref char),
-                ..
-            }) if char == " " => {
-                debug!("Space caught in delegate");
-                if let Some(focused_index) = data.focused_index {
-                    ctx.get_external_handle()
-                        .submit_command(OPEN_LINK_IN_BROWSER, focused_index, Target::Global)
-                        .ok();
+                Code::ShiftLeft | Code::ShiftRight => {
+                    data.incognito_mode = true;
                 }
-            }
+                Code::Digit1 | Code::Numpad1 => self.open_link_in_filtered_browser(ctx, data, 0),
+                Code::Digit2 | Code::Numpad2 => self.open_link_in_filtered_browser(ctx, data, 1),
+                Code::Digit3 | Code::Numpad3 => self.open_link_in_filtered_browser(ctx, data, 2),
+                Code::Digit4 | Code::Numpad4 => self.open_link_in_filtered_browser(ctx, data, 3),
+                Code::Digit5 | Code::Numpad5 => self.open_link_in_filtered_browser(ctx, data, 4),
+                Code::Digit6 | Code::Numpad6 => self.open_link_in_filtered_browser(ctx, data, 5),
+                Code::Digit7 | Code::Numpad7 => self.open_link_in_filtered_browser(ctx, data, 6),
+                Code::Digit8 | Code::Numpad8 => self.open_link_in_filtered_browser(ctx, data, 7),
+                Code::Digit9 | Code::Numpad9 => self.open_link_in_filtered_browser(ctx, data, 8),
+                Code::Digit0 | Code::Numpad0 => self.open_link_in_filtered_browser(ctx, data, 9),
+                _ => {}
+            },
 
-            Event::KeyDown(KeyEvent {
-                key: KbKey::Character(ref char),
-                ..
-            }) => match char.as_str() {
-                "1" => self.open_link_in_filtered_browser(ctx, data, 0),
-                "2" => self.open_link_in_filtered_browser(ctx, data, 1),
-                "3" => self.open_link_in_filtered_browser(ctx, data, 2),
-                "4" => self.open_link_in_filtered_browser(ctx, data, 3),
-                "5" => self.open_link_in_filtered_browser(ctx, data, 4),
-                "6" => self.open_link_in_filtered_browser(ctx, data, 5),
-                "7" => self.open_link_in_filtered_browser(ctx, data, 6),
-                "8" => self.open_link_in_filtered_browser(ctx, data, 7),
-                "9" => self.open_link_in_filtered_browser(ctx, data, 8),
-                "0" => self.open_link_in_filtered_browser(ctx, data, 9),
+            Event::KeyUp(KeyEvent { code, .. }) => match code {
+                Code::ShiftLeft | Code::ShiftRight => {
+                    data.incognito_mode = false;
+                }
                 _ => {}
             },
 
             _ => {}
         }
 
-        match event {
-            Event::KeyDown(ref key) => {
-                if key.key == Key::Shift {
-                    //info!("{:?} pressed", key);
-                    data.incognito_mode = true;
-                }
-            }
-            Event::KeyUp(ref key) => {
-                if key.key == Key::Shift {
-                    //info!("{:?} released ", key);
-                    data.incognito_mode = false;
-                }
-            }
-            _ => {}
-        }
         // println!("{:?}", event);
 
         Some(event)
