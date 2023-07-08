@@ -16,7 +16,7 @@ if "%ARCH_WIN%" == "AMD64" (set ARCH=x86_64)
 
 REM echo %ARCH%
 
-if not exists "%windir%\system32\vcruntime140.dll" (
+if not exist "%windir%\system32\vcruntime140.dll" (
     echo You don't seem to have Microsoft Visual C++ Redistributable installed
     echo Browsers, like many other software, requires it.
     echo Please download it from https://aka.ms/vs/17/release/vc_redist.x64.exe
@@ -131,7 +131,7 @@ REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe" 
 REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe\SupportedProtocols" /v http /t REG_SZ /d "" /f 1>nul
 REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe\SupportedProtocols" /v https /t REG_SZ /d "" /f 1>nul
 
-powershell -ExecutionPolicy Bypass -File %THIS_DIR%announce_default.ps1
+powershell -ExecutionPolicy Bypass -File "%THIS_DIR%announce_default.ps1"
 
 echo Browsers has been installed. Enjoy!
 echo Please report any issues at https://github.com/Browsers-software/browsers/issues
