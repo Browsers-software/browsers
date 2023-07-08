@@ -117,7 +117,26 @@ make_deb_packages() {
   cp "target/armv7-unknown-linux-gnueabihf/release/browsers_armhf.deb" "$target_dir/armv7l/browsers_armhf.deb"
 }
 
+build_rpm() {
+  # Build rpm package
+  cd extra/linux || exit
+  ./linux-rpm-build.sh "$1" "$2"
+  cd ../../
+}
+
+make_rpm_packages() {
+  # creating rpm does not depend on universal directory at all, but will store the rpm there
+  build_rpm "x86_64" "target/x86_64-unknown-linux-gnu"
+  build_rpm "aarch64" "target/aarch64-unknown-linux-gnu"
+  build_rpm "armhfp" "target/armv7-unknown-linux-gnueabihf"
+
+  cp "target/x86_64-unknown-linux-gnu/release/browsers.x86_64.rpm" "$target_dir/x86_64/browsers.x86_64.rpm"
+  cp "target/aarch64-unknown-linux-gnu/release/browsers.aarch64.rpm" "$target_dir/aarch64/browsers.aarch64.rpm"
+  cp "target/armv7-unknown-linux-gnueabihf/release/browsers.armhfp.rpm" "$target_dir/armv7l/browsers.armhfp.rpm"
+}
+
 build_binary
 build_app_bundle
 make_archives
 make_deb_packages
+make_rpm_packages
