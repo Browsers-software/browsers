@@ -100,6 +100,9 @@ jobs:
             target/universal-unknown-linux-gnu/release/x86_64/browsers_amd64.deb
             target/universal-unknown-linux-gnu/release/aarch64/browsers_arm64.deb
             target/universal-unknown-linux-gnu/release/armv7l/browsers_armhf.deb
+            target/universal-unknown-linux-gnu/release/x86_64/browsers.x86_64.rpm
+            target/universal-unknown-linux-gnu/release/aarch64/browsers.aarch64.rpm
+            target/universal-unknown-linux-gnu/release/armv7l/browsers.armhfp.rpm
   build-macos:
     environment: PROD_2028
     runs-on: macos-12
@@ -265,6 +268,9 @@ jobs:
             browsers-linux-artifacts/x86_64/browsers_amd64.deb
             browsers-linux-artifacts/aarch64/browsers_arm64.deb
             browsers-linux-artifacts/armv7l/browsers_armhf.deb
+            browsers-linux-artifacts/x86_64/browsers.x86_64.rpm
+            browsers-linux-artifacts/aarch64/browsers.aarch64.rpm
+            browsers-linux-artifacts/armv7l/browsers.armhfp.rpm
             browsers-mac-artifacts/Browsers.dmg
             browsers-mac-artifacts/browsers_mac.tar.gz
             browsers-mac-artifacts/browsers_mac.tar.gz.sha256

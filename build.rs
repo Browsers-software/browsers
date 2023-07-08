@@ -48,9 +48,6 @@ fn main() {
 
 #[cfg(target_os = "linux")]
 fn main() {
-    const VERSION: &str = env!("CARGO_PKG_VERSION");
-    const ROOT_DIR: &str = env!("CARGO_MANIFEST_DIR");
-
     // x86_64, aarch64, arm, i686
     // https://doc.rust-lang.org/reference/conditional-compilation.html#target_arch
     let rust_target_arch = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap();
@@ -71,8 +68,17 @@ fn main() {
         .flatten()
         .unwrap();
 
+    create_deb_control(rust_target_arch.as_str(), arch_target_dir);
+    create_rpm_spec(rust_target_arch.as_str(), arch_target_dir);
+}
+
+#[cfg(target_os = "linux")]
+fn create_deb_control(rust_target_arch: &str, arch_target_dir: &Path) {
+    const VERSION: &str = env!("CARGO_PKG_VERSION");
+    const ROOT_DIR: &str = env!("CARGO_MANIFEST_DIR");
+
     // https://wiki.debian.org/SupportedArchitectures
-    let deb_arch = match rust_target_arch.as_str() {
+    let deb_arch = match rust_target_arch {
         "x86_64" => "amd64",
         "aarch64" => "arm64",
         "arm" => "armhf",
@@ -90,23 +96,7 @@ fn main() {
     // /target/aarch64-unknown-linux-gnu/meta/deb_control
     let target_deb_control_dir_path = arch_target_dir.join("meta").join("deb_control");
 
-    /*
-    let linux_uname_arch = match rust_target_arch.as_str() {
-        "x86_64" => "x86_64",
-        "aarch64" => "aarch64",
-        "arm" => "armv7l",
-        "i686" => "i686",
-        other => other,
-    };
-
-    let target_deb_control_dir_path: PathBuf = Path::new(ROOT_DIR)
-        .join("target")
-        .join("universal-unknown-linux-gnu")
-        .join("meta")
-        .join("deb_control")
-        .join(linux_uname_arch);*/
-
-    // /target/aarch64-unknown-linux-gnu/meta/deb_control
+    // /target/aarch64-unknown-linux-gnu/meta/deb_control/control
     let target_deb_control_path: PathBuf = target_deb_control_dir_path.join("control");
 
     fs::create_dir_all(target_deb_control_dir_path).unwrap();
@@ -122,4 +112,45 @@ fn main() {
 
     let mut file = File::create(target_deb_control_path.as_path()).unwrap();
     file.write_all(new_deb_control_content.as_bytes()).unwrap();
+}
+
+#[cfg(target_os = "linux")]
+fn create_rpm_spec(rust_target_arch: &str, arch_target_dir: &Path) {
+    const VERSION: &str = env!("CARGO_PKG_VERSION");
+    const ROOT_DIR: &str = env!("CARGO_MANIFEST_DIR");
+
+    let rpm_arch = match rust_target_arch {
+        "x86_64" => "x86_64",
+        "aarch64" => "aarch64",
+        "arm" => "armhfp",
+        "i686" => "i386",
+        _ => "unknown",
+    };
+
+    let template_rpm_control_file_path: PathBuf = Path::new(ROOT_DIR)
+        .join("extra")
+        .join("linux")
+        .join("rpm")
+        .join("SPECS")
+        .join("template.browsers.spec");
+
+    // /target/aarch64-unknown-linux-gnu/meta/rpm_spec/
+    let target_rpm_spec_dir_path = arch_target_dir.join("meta").join("rpm_spec");
+
+    // /target/aarch64-unknown-linux-gnu/meta/rpm_spec/browsers.spec
+    let target_rpm_spec_file_path: PathBuf = target_rpm_spec_dir_path.join("browsers.spec");
+
+    fs::create_dir_all(target_rpm_spec_dir_path).unwrap();
+
+    // 7 MB estimate at the moment
+    const INSTALLED_SIZE_KB: &str = "7168";
+
+    let rpm_control_content = fs::read_to_string(template_rpm_control_file_path).unwrap();
+    let new_rpm_control_content = rpm_control_content
+        .replace("€Version€", VERSION)
+        .replace("€Architecture€", rpm_arch)
+        .replace("€InstalledSize€", INSTALLED_SIZE_KB);
+
+    let mut file = File::create(target_rpm_spec_file_path.as_path()).unwrap();
+    file.write_all(new_rpm_control_content.as_bytes()).unwrap();
 }
