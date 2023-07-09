@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Windows: Fix install script
+
+### Added
+- Linux: provide rpm package
+
 ## [0.3.9] - 2023-06-19
 
 ### Fixed:
