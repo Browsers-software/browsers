@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Windows: Fix install script
+- Firefox Containers: Fix urls with `&` and `+` #73
 
 ### Added
 - Linux: provide rpm package

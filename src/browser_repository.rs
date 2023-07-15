@@ -432,7 +432,12 @@ impl SupportedAppRepository {
                 common_browser_profile.profile_cli_container_name.as_ref();
             return if let Some(container_name) = container_name_maybe {
                 let fake_url = "ext+container:name=".to_string() + container_name;
-                let full_url = fake_url + "&url=" + url.clone();
+
+                // handle https://github.com/honsiorovskyi/open-url-in-container/issues/112
+                let url_encoded = url.replace("&", "%26");
+                let url_encoded = url_encoded.replace("+", "%2B");
+
+                let full_url = fake_url + "&url=" + url_encoded.as_str();
                 full_url.to_string()
             } else {
                 url.to_string()
