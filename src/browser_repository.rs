@@ -2,11 +2,9 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use druid::piet::TextStorage;
-use tracing::info;
-use url::form_urlencoded::Parse;
+use url::form_urlencoded::byte_serialize;
 use url::Url;
 
-use crate::ui::RESTORE_HIDDEN_PROFILE;
 use crate::url_rule::UrlGlobMatcher;
 use crate::{
     chromium_profiles_parser, firefox_profiles_parser, paths, slack_profiles_parser,
@@ -433,11 +431,10 @@ impl SupportedAppRepository {
             return if let Some(container_name) = container_name_maybe {
                 let fake_url = "ext+container:name=".to_string() + container_name;
 
-                // handle https://github.com/honsiorovskyi/open-url-in-container/issues/112
-                let url_encoded = url.replace("&", "%26");
-                let url_encoded = url_encoded.replace("+", "%2B");
+                // encode target url so it can be passed as a parameter
+                let url_encoded: String = byte_serialize(url.as_bytes()).collect();
 
-                let full_url = fake_url + "&url=" + url_encoded.as_str();
+                let full_url = fake_url + "&url=" + url_encoded.as_ref();
                 full_url.to_string()
             } else {
                 url.to_string()
