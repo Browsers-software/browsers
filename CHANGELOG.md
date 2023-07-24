@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fix all urls when using Firefox containers #73. Contribution by @blandir.
+
 ## [0.4.0] - 2023-07-15
 
 ### Fixed
