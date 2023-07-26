@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fix all urls when using Firefox containers #73. Contribution by @blandir.
+- macOS: Don't prompt to be default browser on launch. There is an option to set it via default via options menu. #76
 
 ## [0.4.0] - 2023-07-15
 

@@ -3,8 +3,8 @@ use std::fmt::Debug;
 use std::process::Command;
 use std::str::FromStr;
 use std::sync::mpsc::{Receiver, Sender};
-use std::sync::{mpsc, Arc};
-use std::{env, thread};
+use std::sync::Arc;
+use std::thread;
 
 use druid::{ExtEventSink, Target, UrlOpenInfo};
 use serde::{Deserialize, Serialize};
@@ -552,7 +552,7 @@ pub fn basically_main(
 ) {
     let app_finder = OSAppFinder::new();
 
-    let is_default = utils::set_as_default_web_browser();
+    let is_default = utils::is_default_web_browser();
     let show_set_as_default = !is_default;
 
     let (opening_rules, default_profile, mut visible_browser_profiles, mut hidden_browser_profiles) =
