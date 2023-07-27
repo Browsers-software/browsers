@@ -44,7 +44,7 @@ druid = { git = "https://github.com/browsers-software/druid.git", branch = "brow
 url = "2.4.0"
 
 # parse url rules
-globset = "0.4.11"
+globset = "0.4.12"
 
 # Parse .ini files (e.g Firefox profiles.ini)
 configparser = "3.0.2"
