@@ -4,8 +4,7 @@ use std::path::{Path, PathBuf};
 use std::sync::mpsc::Sender;
 use std::sync::Arc;
 
-use druid::commands::{CONFIGURE_WINDOW_SIZE_AND_POSITION, QUIT_APP, SHOW_ALL, SHOW_WINDOW};
-use druid::keyboard_types::Key;
+use druid::commands::{CONFIGURE_WINDOW_SIZE_AND_POSITION, QUIT_APP, SHOW_WINDOW};
 use druid::piet::{InterpolationMode, TextStorage};
 use druid::widget::{
     Container, Controller, ControllerHost, CrossAxisAlignment, Either, Flex, Image, Label,
@@ -22,13 +21,13 @@ use druid::{
     ImageBuf, KbKey, KeyEvent, Lens, PaintCtx, Point, RenderContext, Selector, Size, Target,
     Widget, WidgetExt, WindowDesc, WindowId,
 };
-use globset::GlobMatcher;
 use image::io::Reader as ImageReader;
 use tracing::{debug, info};
 use url::Url;
 
-use crate::url_rule::{UrlGlobMatcher, UrlMatcher};
-use crate::{paths, url_rule, CommonBrowserProfile, MessageToMain};
+use crate::url_rule::UrlGlobMatcher;
+use crate::utils::UIConfig;
+use crate::{paths, CommonBrowserProfile, MessageToMain};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -47,6 +46,7 @@ pub struct UI {
     restorable_app_profiles: Arc<Vec<UIBrowser>>,
     show_set_as_default: bool,
     show_hotkeys: bool,
+    quit_on_lost_focus: bool,
 }
 
 impl UI {
@@ -99,7 +99,7 @@ impl UI {
         ui_browsers: Vec<UIBrowser>,
         restorable_app_profiles: Vec<UIBrowser>,
         show_set_as_default: bool,
-        show_hotkeys: bool,
+        ui_config: &UIConfig,
     ) -> Self {
         let ui_browsers = Arc::new(ui_browsers);
         let filtered_browsers = get_filtered_browsers(&url, &ui_browsers);
@@ -112,7 +112,8 @@ impl UI {
             filtered_browsers: Arc::new(filtered_browsers),
             restorable_app_profiles: Arc::new(restorable_app_profiles),
             show_set_as_default: show_set_as_default,
-            show_hotkeys: show_hotkeys,
+            show_hotkeys: ui_config.show_hotkeys,
+            quit_on_lost_focus: ui_config.quit_on_lost_focus,
         }
     }
 
@@ -150,6 +151,7 @@ impl UI {
                 main_window_id: main_window_id,
                 mouse_position: mouse_position.clone(),
                 monitor: monitor.clone(),
+                quit_on_lost_focus: self.quit_on_lost_focus,
             })
             .localization_resources(vec!["builtin.ftl".to_string()], basedir);
     }
@@ -399,6 +401,7 @@ pub struct UIDelegate {
     windows: Vec<WindowId>,
     mouse_position: Point,
     monitor: Monitor,
+    quit_on_lost_focus: bool,
 }
 
 impl UIDelegate {
@@ -435,14 +438,11 @@ impl AppDelegate<UIState> for UIDelegate {
         // linux calls this even when just opening a context menu
         //let close_on_lost_focus = !is_linux;
 
-        // always keep open right now even when focus is lost
-        let close_on_lost_focus = false;
-
         let should_exit = match event {
             Event::KeyDown(KeyEvent {
                 key: KbKey::Escape, ..
             }) => true,
-            Event::WindowLostFocus => close_on_lost_focus,
+            Event::WindowLostFocus => self.quit_on_lost_focus,
             _ => false,
         };
 
