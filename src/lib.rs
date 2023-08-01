@@ -1,6 +1,6 @@
 use std::borrow::Borrow;
 use std::fmt::Debug;
-use std::process::Command;
+use std::process::{exit, Command};
 use std::str::FromStr;
 use std::sync::mpsc::{Receiver, Sender};
 use std::sync::Arc;
@@ -634,6 +634,15 @@ pub fn basically_main(
                     // TODO: do something once we have rules to
                     //       prioritize/default browsers based on source app and/or url
                     debug!("source_bundle_id: {}", from_bundle_id.clone());
+
+                    if from_bundle_id == "com.apple.Safari" {
+                        // workaround for weird bug where Safari opens default browser on hard launch
+                        // see https://github.com/Browsers-software/browsers/issues/79
+                        // We might need to remove this workaround if we want to allow Safari
+                        // to open Browsers via some extension
+                        info!("Safari has a weird bug and launched Browsers. Exiting Browsers.",);
+                        exit(0x0100);
+                    }
                     debug!("url: {}", url);
                     let opening_profile_id_maybe = get_rule_for_source_app_and_url(
                         &opening_rules,
