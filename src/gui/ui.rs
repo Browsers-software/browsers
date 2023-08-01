@@ -1,6 +1,7 @@
 use std::cmp;
 use std::error::Error;
 use std::path::{Path, PathBuf};
+use std::process::exit;
 use std::sync::mpsc::Sender;
 use std::sync::Arc;
 
@@ -451,6 +452,7 @@ impl AppDelegate<UIState> for UIDelegate {
             // ctx.send_command() does not work correctly on WindowLostFocus
             sink.submit_command(EXIT_APP, "".to_string(), Target::Global)
                 .unwrap();
+            return None;
         }
 
         // Cmd+C on macOS, Ctrl+C on windows/linux/OpenBSD
@@ -538,6 +540,8 @@ impl AppDelegate<UIState> for UIDelegate {
     ) -> Handled {
         if cmd.is(EXIT_APP) {
             ctx.submit_command(QUIT_APP);
+            // QUIT_APP doesn't always actually quit the app on macOS, so forcing exit until thats figured out
+            exit(0x0100);
             Handled::Yes
         } else if cmd.is(URL_OPENED) {
             let url_open_info = cmd.get_unchecked(URL_OPENED);
@@ -599,7 +603,9 @@ impl AppDelegate<UIState> for UIDelegate {
                 .ok();
             Handled::Yes
         } else if cmd.is(OPEN_LINK_IN_BROWSER_COMPLETED) {
-            ctx.submit_command(QUIT_APP);
+            let sink = ctx.get_external_handle();
+            sink.submit_command(EXIT_APP, "".to_string(), Target::Global)
+                .unwrap();
             Handled::Yes
         } else if cmd.is(REFRESH) {
             self.main_sender.send(MessageToMain::Refresh).ok();
@@ -928,7 +934,7 @@ fn make_options_menu(
         ))
         .entry(MenuItem::new(LocalizedString::new("Quit")).on_activate(
             |ctx, _data: &mut UIState, _env| {
-                ctx.submit_command(QUIT_APP);
+                ctx.submit_command(EXIT_APP.with("".to_string()));
             },
         ));
 
