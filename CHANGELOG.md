@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2023-08-01
+
 ### Fixed
 - Fix all urls when using Firefox containers #73. Contribution by @blandir.
 - macOS: Don't prompt to be default browser on launch. There is an option to set it via default via options menu. #76
@@ -191,7 +193,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial Release
 
-[unreleased]: https://github.com/Browsers-software/browsers/compare/0.4.0...HEAD
+[unreleased]: https://github.com/Browsers-software/browsers/compare/0.4.1...HEAD
+[0.4.1]: https://github.com/Browsers-software/browsers/releases/tag/0.4.1
 [0.4.0]: https://github.com/Browsers-software/browsers/releases/tag/0.4.0
 [0.3.9]: https://github.com/Browsers-software/browsers/releases/tag/0.3.9
 [0.3.8]: https://github.com/Browsers-software/browsers/releases/tag/0.3.8
