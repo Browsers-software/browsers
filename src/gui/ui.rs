@@ -539,6 +539,7 @@ impl AppDelegate<UIState> for UIDelegate {
         _env: &Env,
     ) -> Handled {
         if cmd.is(EXIT_APP) {
+            info!("Exiting Browsers");
             ctx.submit_command(QUIT_APP);
             // QUIT_APP doesn't always actually quit the app on macOS, so forcing exit until thats figured out
             exit(0x0100);
