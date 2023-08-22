@@ -3,6 +3,7 @@ use std::sync::mpsc::Sender;
 use std::{fs, io, thread};
 
 use interprocess::local_socket::{LocalSocketListener, LocalSocketStream};
+use serde::{Deserialize, Serialize};
 use single_instance::SingleInstance;
 use tracing::{info, warn};
 
@@ -24,6 +25,12 @@ fn lock_name_or_path() -> String {
     return "software.Browsers.lock".to_string();
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+struct SocketMessage {
+    opener: String,
+    url: String,
+}
+
 // returns SingleInstance, so that lock is held until end of program lifetime
 pub fn check_single_instance(
     url: &str,
@@ -41,6 +48,7 @@ pub fn check_single_instance(
         // another process is not running, so this is first
 
         if local_socket_path.exists() {
+            info!("Cleaning up previous local socket file");
             let result1 = fs::remove_file(local_socket_path.as_path());
             if result1.is_err() {
                 warn!("Could not remove local socket file")
@@ -74,9 +82,12 @@ pub fn check_single_instance(
                 conn.read_line(&mut buffer).unwrap();
 
                 info!("Another Browsers instance sent arguments: {}", buffer);
-                let url = buffer.clone();
+
+                let message: SocketMessage = serde_json::from_str(buffer.as_str())
+                    .expect("socket message is not in valid json format");
+
                 let url_open_request =
-                    MessageToMain::UrlOpenRequest("".to_string(), url.to_string());
+                    MessageToMain::UrlOpenRequest(message.opener.to_string(), message.url.clone());
                 main_sender.send(url_open_request).unwrap();
 
                 // Clear the buffer so that the next iteration will display new data instead of messages
@@ -96,7 +107,15 @@ pub fn check_single_instance(
         }
         let mut local_socket_stream = result.unwrap();
 
-        let message = format!("{url}\n");
+        let message = SocketMessage {
+            opener: "".to_string(),
+            url: url.to_string(),
+        };
+
+        let message_json =
+            serde_json::to_string(&message).expect("Could not create socket message");
+
+        let message = format!("{message_json}\n");
         let message_bytes = message.as_bytes();
         let write_result = local_socket_stream.write_all(message_bytes);
         if write_result.is_err() {
