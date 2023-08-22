@@ -38,6 +38,11 @@ fn main() {
         .and_then(|level| Level::from_str(&level).ok())
         .unwrap_or(Level::INFO);
 
+    if log_level == Level::DEBUG {
+        // also show full backtrace if debug log level
+        env::set_var("RUST_BACKTRACE", "full");
+    }
+
     tracing_subscriber::fmt()
         .with_timer(offset_time)
         .with_writer(non_blocking.and(std::io::stdout))
