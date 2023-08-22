@@ -8,7 +8,7 @@ use std::thread;
 
 use druid::{ExtEventSink, Target, UrlOpenInfo};
 use serde::{Deserialize, Serialize};
-use tracing::{debug, info, warn};
+use tracing::{debug, info, instrument, warn};
 use url::Url;
 
 use gui::ui;
@@ -382,6 +382,7 @@ pub struct OpeningRule {
     incognito: bool,
 }
 
+#[instrument(skip_all)]
 fn generate_all_browser_profiles(
     app_finder: &OSAppFinder,
     force_reload: bool,
@@ -471,6 +472,7 @@ fn sort_browser_profiles(
     visible_browser_profiles.sort_by_key(|b| !b.has_priority_ordering());
 }
 
+#[instrument(skip_all)]
 fn get_rule_for_source_app_and_url(
     opening_rules: &Vec<OpeningRule>,
     default_profile_maybe: Option<ProfileAndOptions>,
@@ -543,6 +545,7 @@ fn get_browser_profile_by_id<'a>(
     return None;
 }
 
+#[instrument(skip_all)]
 pub fn basically_main(
     url: &str,
     show_gui: bool,

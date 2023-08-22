@@ -23,7 +23,7 @@ use druid::{
     Widget, WidgetExt, WindowDesc, WindowId,
 };
 use image::io::Reader as ImageReader;
-use tracing::{debug, info};
+use tracing::{debug, info, instrument};
 use url::Url;
 
 use crate::url_rule::UrlGlobMatcher;
@@ -118,6 +118,7 @@ impl UI {
         }
     }
 
+    #[instrument(skip_all)]
     pub fn create_app_launcher(self) -> AppLauncher<UIState> {
         let basedir = self.localizations_basedir.to_str().unwrap().to_string();
 
@@ -157,6 +158,7 @@ impl UI {
             .localization_resources(vec!["builtin.ftl".to_string()], basedir);
     }
 
+    #[instrument(skip_all)]
     pub fn create_initial_ui_state(&self) -> UIState {
         let initial_ui_state = UIState {
             url: self.url.to_string(),
@@ -170,6 +172,7 @@ impl UI {
         return initial_ui_state;
     }
 
+    #[instrument(skip_all)]
     pub fn ui_builder(&self, window_size: Size) -> impl Widget<UIState> {
         const BOTTOM_ROW_HEIGHT: f64 = 18.0;
 

@@ -1,12 +1,13 @@
 #![windows_subsystem = "windows"]
+
+use std::str::FromStr;
 use std::sync::mpsc;
 use std::{env, fs};
 
 use rolling_file;
 use rolling_file::{BasicRollingFileAppender, RollingConditionBasic};
 use single_instance::SingleInstance;
-use tracing::info;
-use tracing::metadata::LevelFilter;
+use tracing::{info, Level};
 use tracing_subscriber;
 use tracing_subscriber::fmt::time::OffsetTime;
 use tracing_subscriber::fmt::writer::MakeWriterExt;
@@ -32,10 +33,15 @@ fn main() {
     //let file_appender = tracing_appender::rolling::daily(logs_root_dir, "browsers.log");
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
 
+    let log_level = env::var("BROWSERS_LOG_LEVEL")
+        .ok()
+        .and_then(|level| Level::from_str(&level).ok())
+        .unwrap_or(Level::INFO);
+
     tracing_subscriber::fmt()
         .with_timer(offset_time)
         .with_writer(non_blocking.and(std::io::stdout))
-        .with_max_level(LevelFilter::INFO)
+        .with_max_level(log_level)
         .with_ansi(false)
         .init();
 
