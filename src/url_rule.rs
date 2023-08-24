@@ -6,10 +6,14 @@ use url::Url;
 
 /// [scheme://]hostname[/path][?query][#fragment]
 /// [*://]**[/**][?**][#*]
+// TODO: replace hostname with user:password@hostname:port
 #[derive(Debug, PartialEq)]
 pub struct UrlMatcher {
     scheme: String,
+    user: String,
+    password: String,
     hostname: String,
+    port: String,
     path: String,
     query: String,
     fragment: String,
@@ -18,7 +22,10 @@ pub struct UrlMatcher {
 #[derive(Clone, Debug)]
 pub struct UrlGlobMatcher {
     scheme: GlobMatcher,
+    user: GlobMatcher,
+    password: GlobMatcher,
     hostname: GlobMatcher,
+    port: GlobMatcher,
     path: GlobMatcher,
     query: GlobMatcher,
     fragment: GlobMatcher,
@@ -28,9 +35,15 @@ impl UrlGlobMatcher {
     fn from_url_matcher(url_matcher: &UrlMatcher) -> Self {
         let scheme_matcher = Self::str_to_glob(url_matcher.scheme.as_str(), "scheme");
 
+        let user_matcher = Self::str_to_glob(url_matcher.user.as_str(), "user");
+        let password_matcher = Self::str_to_glob(url_matcher.password.as_str(), "password");
+
         // "my.path.**" -> "my/path/**"
         let hostname_with_slashes = url_matcher.hostname.replace(".", "/");
         let hostname_matcher = Self::str_to_glob(hostname_with_slashes.as_str(), "hostname");
+
+        let port_matcher = Self::str_to_glob(url_matcher.password.as_str(), "port");
+
         let path_matcher = Self::str_to_glob(url_matcher.path.as_str(), "path");
 
         // "name=ferret&color=purple" -> "name=ferret/color=purple"
@@ -40,7 +53,10 @@ impl UrlGlobMatcher {
 
         Self {
             scheme: scheme_matcher,
+            user: user_matcher,
+            password: password_matcher,
             hostname: hostname_matcher,
+            port: port_matcher,
             path: path_matcher,
             query: query_matcher,
             fragment: fragment_matcher,
@@ -63,13 +79,20 @@ impl UrlGlobMatcher {
         let host = url
             .host_str()
             .unwrap_or_else(|| panic!("no host found from url: {}", url.as_str()));
+
+        let user = url.username();
+        let password = url.password().unwrap_or("");
+        let port = url.port().map(|x| x.to_string()).unwrap_or("".to_string());
         let path = url.path();
         let query = url.query().unwrap_or("");
         let fragment = url.fragment().unwrap_or("");
 
         return TargetUrl {
             scheme: scheme.to_string(),
+            user: user.to_string(),
+            password: password.to_string(),
             hostname: host.to_string(),
+            port: port.to_string(),
             path: path.to_string(),
             query: query.to_string(),
             fragment: fragment.to_string(),
@@ -88,16 +111,23 @@ impl UrlGlobMatcher {
         //self.scheme.is_match_candidate()
         let scheme_matches = self.scheme.is_match(target_url.scheme);
 
+        let username_matches = self.user.is_match(target_url.user);
+        let password_matches = self.password.is_match(target_url.password);
+
         let hostname_matches = self.hostname_matches(target_url.hostname.as_str());
         let path_matches = self.path.is_match(target_url.path);
+        let port_matches = self.port.is_match(target_url.port);
 
         let target_query_with_slashes = target_url.query.replace("&", "/");
         let query_matches = self.query.is_match(target_query_with_slashes);
         let fragment_matches = self.fragment.is_match(target_url.fragment);
 
         return scheme_matches
+            && username_matches
+            && password_matches
             && hostname_matches
             && path_matches
+            && port_matches
             && query_matches
             && fragment_matches;
     }
@@ -116,7 +146,10 @@ impl UrlMatcher {
 
 struct TargetUrl {
     scheme: String,
+    user: String,
+    password: String,
     hostname: String,
+    port: String,
     path: String,
     query: String,
     fragment: String,
@@ -154,7 +187,10 @@ fn extract_part_matchers(full_rule: &str) -> UrlMatcher {
 
     return UrlMatcher {
         scheme: scheme_pattern.to_string(),
+        user: "".to_string(),
+        password: "".to_string(),
         hostname: hostname_pattern.to_string(),
+        port: "".to_string(),
         path: path_pattern.to_string(),
         query: query_pattern.to_string(),
         fragment: fragment_pattern.to_string(),
@@ -229,7 +265,10 @@ mod tests {
             extract_part_matchers("*://example.com/?#"),
             UrlMatcher {
                 scheme: "*".to_string(),
+                user: "".to_string(),
+                password: "".to_string(),
                 hostname: "example.com".to_string(),
+                port: "".to_string(),
                 path: "/".to_string(),
                 query: "".to_string(),
                 fragment: "".to_string(),
@@ -243,7 +282,10 @@ mod tests {
             to_url_matcher("*://example.com/?#"),
             UrlMatcher {
                 scheme: "*".to_string(),
+                user: "".to_string(),
+                password: "".to_string(),
                 hostname: "example.com".to_string(),
+                port: "".to_string(),
                 path: "/".to_string(),
                 query: "".to_string(),
                 fragment: "".to_string(),
@@ -256,7 +298,10 @@ mod tests {
             to_url_matcher("example.com/?#"),
             UrlMatcher {
                 scheme: "*".to_string(),
+                user: "".to_string(),
+                password: "".to_string(),
                 hostname: "example.com".to_string(),
+                port: "".to_string(),
                 path: "/".to_string(),
                 query: "".to_string(),
                 fragment: "".to_string(),
@@ -270,7 +315,10 @@ mod tests {
             to_url_matcher("example.com/?"),
             UrlMatcher {
                 scheme: "*".to_string(),
+                user: "".to_string(),
+                password: "".to_string(),
                 hostname: "example.com".to_string(),
+                port: "".to_string(),
                 path: "/".to_string(),
                 query: "".to_string(),
                 fragment: "*".to_string(),
@@ -284,7 +332,10 @@ mod tests {
             to_url_matcher("example.com/"),
             UrlMatcher {
                 scheme: "*".to_string(),
+                user: "".to_string(),
+                password: "".to_string(),
                 hostname: "example.com".to_string(),
+                port: "".to_string(),
                 path: "/".to_string(),
                 query: "**".to_string(),
                 fragment: "*".to_string(),
@@ -298,7 +349,10 @@ mod tests {
             to_url_matcher("example.com"),
             UrlMatcher {
                 scheme: "*".to_string(),
+                user: "".to_string(),
+                password: "".to_string(),
                 hostname: "example.com".to_string(),
+                port: "".to_string(),
                 path: "/**".to_string(),
                 query: "**".to_string(),
                 fragment: "*".to_string(),
@@ -312,7 +366,10 @@ mod tests {
             to_url_matcher("*://example.com"),
             UrlMatcher {
                 scheme: "*".to_string(),
+                user: "".to_string(),
+                password: "".to_string(),
                 hostname: "example.com".to_string(),
+                port: "".to_string(),
                 path: "/**".to_string(),
                 query: "**".to_string(),
                 fragment: "*".to_string(),
@@ -326,7 +383,10 @@ mod tests {
             to_url_matcher("app.company.xyz/v2/**"),
             UrlMatcher {
                 scheme: "*".to_string(),
+                user: "".to_string(),
+                password: "".to_string(),
                 hostname: "app.company.xyz".to_string(),
+                port: "".to_string(),
                 path: "/v2/**".to_string(),
                 query: "**".to_string(),
                 fragment: "*".to_string(),
