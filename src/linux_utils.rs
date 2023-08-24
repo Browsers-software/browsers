@@ -191,15 +191,29 @@ fn create_icon_for_app(
     let icon_theme = Arc::clone(&icon_theme);
     let icon_theme2 = icon_theme.lock().unwrap();
 
-    let icon_info = icon_theme2
-        .lookup_by_gicon(icon, 48, IconLookupFlags::USE_BUILTIN)
-        .unwrap();
+    let icon_info_option = icon_theme2.lookup_by_gicon(icon, 48, IconLookupFlags::USE_BUILTIN);
+    if icon_info_option.is_none() {
+        warn!(
+            "Could not load icon from active icon theme (destination icon={})",
+            to_icon_path
+        );
+        return;
+    }
+    let icon_info = icon_info_option.unwrap();
 
     // to support scaled resolutions
     //let icon_info = icon_theme.lookup_by_gicon_for_scale(&icon, 128, 1,IconLookupFlags::USE_BUILTIN).unwrap();
 
     // or load_icon() to get PixBuf
-    let original_icon_filepath = icon_info.filename().unwrap();
+    let original_icon_filepath_option = icon_info.filename();
+    if original_icon_filepath_option.is_none() {
+        warn!(
+            "Could not get filename from icon (destination icon={})",
+            to_icon_path
+        );
+        return;
+    }
+    let original_icon_filepath = original_icon_filepath_option.unwrap();
     let original_icon_path_str = original_icon_filepath
         .as_path()
         .to_str()
