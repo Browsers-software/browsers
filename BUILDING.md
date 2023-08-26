@@ -11,6 +11,10 @@
     sudo apt install build-essential
     sudo apt install libpango-1.0-0 libpango1.0-dev libgtk-3-dev
 
+## Setup (e.g Fedora)
+    sudo dnf groupinstall "Development Tools"
+    sudo dnf install glib2-devel pango-devel cairo-gobject-devel atk-devel gtk3-devel
+
 ## Build Natively
 
     cargo build --release
