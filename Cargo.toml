@@ -41,7 +41,7 @@ serde = { version = "1.0", features = ["derive"] }
 druid = { git = "https://github.com/browsers-software/druid.git", branch = "browsers", features = ["png", "jpeg", "image"] }
 
 # parse urls
-url = "2.4.0"
+url = "2.4.1"
 
 # parse url rules
 globset = "0.4.12"
