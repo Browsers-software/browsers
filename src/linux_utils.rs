@@ -2,12 +2,12 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
-use dirs::home_dir;
+use tracing::{info, warn};
+
 use glib::prelude::AppInfoExt;
 use glib::AppInfo;
 use gtk::prelude::*;
 use gtk::{gio, IconLookupFlags, IconTheme};
-use tracing::{info, warn};
 
 use crate::{InstalledBrowser, SupportedAppRepository};
 
@@ -157,17 +157,24 @@ impl OsHelper {
         let _string = app_info.to_string();
         //println!("app_info: {}", id);
 
+        // new firefox actually doesn't refer to the snap binary in the desktop file,
+        // so there is no clean way to check that
+        // I think we should just try both
+        if !is_snap {
+            // look deeper!
+        }
+
+        let app_config_dir_abs = supported_app.get_app_config_dir_abs(is_snap, false);
+
         let profiles =
-            supported_app.find_profiles(executable_path_best_guess.clone(), is_snap, false);
+            supported_app.find_profiles(executable_path_best_guess.clone(), app_config_dir_abs);
 
         let browser = InstalledBrowser {
             command: command_parts.clone(),
             executable_path: executable_path_best_guess.to_str().unwrap().to_string(),
             display_name: display_name.to_string(),
             bundle: supported_app.get_app_id().to_string(),
-            user_dir: supported_app
-                .get_app_config_dir_absolute(is_snap, false)
-                .to_string(),
+            user_dir: app_config_dir_abs.to_str().unwrap().to_string(),
             icon_path: icon_path_str.clone(),
             profiles: profiles,
             restricted_domains: restricted_domains,

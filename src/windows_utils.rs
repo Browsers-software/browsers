@@ -8,6 +8,7 @@ use std::{
 
 use druid::image::{ImageFormat, RgbaImage};
 use tracing::{info, warn};
+
 use winapi::shared::windef::{HBITMAP, HDC, HICON, HWND};
 use winapi::um::winuser::{GetDC, GetIconInfo, ReleaseDC, ICONINFO};
 use winapi::{
@@ -250,17 +251,17 @@ impl OsHelper {
             .map(|path_perhaps| Path::new(path_perhaps))
             .unwrap_or(Path::new("unknown"));
 
+        let app_config_dir_abs = supported_app.get_app_config_dir_abs(false, false);
+
         let profiles =
-            supported_app.find_profiles(executable_path_best_guess.clone(), false, false);
+            supported_app.find_profiles(executable_path_best_guess.clone(), app_config_dir_abs);
 
         let browser = InstalledBrowser {
             command: command_parts.clone(),
             executable_path: executable_path_best_guess.to_str().unwrap().to_string(),
             display_name: display_name.to_string(),
             bundle: app_id.to_string(),
-            user_dir: supported_app
-                .get_app_config_dir_absolute(false, false)
-                .to_string(),
+            user_dir: app_config_dir_abs.to_str().unwrap().to_string(),
             icon_path: icon_path_str.clone(),
             profiles: profiles,
             restricted_domains: restricted_domains,

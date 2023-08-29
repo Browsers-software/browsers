@@ -1,9 +1,7 @@
 use std::collections::HashSet;
-use std::ffi::{CStr, OsString};
-use std::os::unix::ffi::OsStringExt;
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::{fs, mem, ptr};
 
 use cocoa_foundation::base::{id, nil};
 use cocoa_foundation::foundation::{NSAutoreleasePool, NSPoint, NSRect, NSSize, NSString, NSURL};
@@ -11,7 +9,6 @@ use core_foundation::array::{CFArray, CFArrayRef};
 use core_foundation::base::TCFType;
 use core_foundation::string::CFString;
 use core_foundation::string::CFStringRef;
-use core_foundation::url::{CFURLRef, CFURL};
 use objc::runtime::Object;
 use objc::runtime::YES;
 use objc::{class, msg_send, sel, sel_impl};
@@ -412,21 +409,16 @@ impl OsHelper {
         // TODO: check if "com.apple.security.app-sandbox" entitlement exists for the app
         // TODO: https://stackoverflow.com/questions/12177948/how-do-i-detect-if-my-app-is-sandboxed
         let is_macos_sandbox = has_sandbox_entitlement(bundle_path.as_str());
+        let app_config_dir_abs = supported_app.get_app_config_dir_abs(false, is_macos_sandbox);
 
         let browser = InstalledBrowser {
             command: command_parts,
             executable_path: executable_path.to_str().unwrap().to_string(),
             display_name: display_name.to_string(),
             bundle: supported_app.get_app_id().to_string(),
-            user_dir: supported_app
-                .get_app_config_dir_absolute(false, is_macos_sandbox)
-                .to_string(),
+            user_dir: app_config_dir_abs.to_str().unwrap().to_string(),
             icon_path: icon_path_str.clone(),
-            profiles: supported_app.find_profiles(
-                executable_path.as_path(),
-                false,
-                is_macos_sandbox,
-            ),
+            profiles: supported_app.find_profiles(executable_path.as_path(), app_config_dir_abs),
             restricted_domains: restricted_domain_patterns,
         };
 

@@ -640,13 +640,6 @@ impl SupportedApp {
         };
     }
 
-    pub fn get_app_config_dir_absolute(&self, is_snap: bool, is_macos_sandbox: bool) -> &str {
-        return self
-            .get_app_config_dir_abs(is_snap, is_macos_sandbox)
-            .to_str()
-            .unwrap();
-    }
-
     pub fn get_restricted_hostname_matchers(&self) -> &Vec<UrlGlobMatcher> {
         return &self.restricted_url_matchers;
     }
@@ -654,11 +647,9 @@ impl SupportedApp {
     pub fn find_profiles(
         &self,
         binary_path: &Path,
-        is_snap: bool,
-        is_macos_sandbox: bool,
+        app_config_dir_abs: &Path,
     ) -> Vec<InstalledBrowserProfile> {
         return if let Some(find_profiles_fn) = self.find_profiles_fn {
-            let app_config_dir_abs = self.get_app_config_dir_abs(is_snap, is_macos_sandbox);
             let mut browser_profiles: Vec<InstalledBrowserProfile> =
                 find_profiles_fn(app_config_dir_abs, binary_path, self.get_app_id());
 
