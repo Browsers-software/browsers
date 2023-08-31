@@ -14,8 +14,8 @@ use druid::widget::{
 use druid::{
     image, Application, BoxConstraints, Code, FontDescriptor, FontFamily, FontWeight, LayoutCtx,
     LensExt, LifeCycle, LifeCycleCtx, LocalizedString, Menu, MenuItem, Modifiers, Monitor, Rect,
-    TextAlignment, UnitPoint, UpdateCtx, Vec2, WidgetId, WindowHandle, WindowLevel,
-    WindowSizePolicy,
+    TextAlignment, UnitPoint, UpdateCtx, Vec2, WidgetId, WindowHandle, WindowInitialPosition,
+    WindowLevel, WindowSizePolicy,
 };
 use druid::{
     AppDelegate, AppLauncher, Color, Command, Data, DelegateCtx, Env, Event, EventCtx, Handled,
@@ -137,11 +137,14 @@ impl UI {
             .transparent(true)
             .resizable(false)
             .set_level(WindowLevel::Utility)
+            .set_initial_position(WindowInitialPosition::Mouse)
             //.window_size_policy(WindowSizePolicy::Content)
             .window_size_policy(WindowSizePolicy::User)
             .window_size(window_size)
             // .with_min_size() seems to be required on LXDE/OpenBox, or window height is too tall
             .with_min_size((window_size.width, 10.0 as f64))
+            .set_initial_position(WindowInitialPosition::Mouse)
+            // fall back to coordinates if backend doesn't support WindowInitialPosition::Mouse
             .set_position(window_position)
             .title("Browsers v".to_owned() + env!("CARGO_PKG_VERSION"));
 
