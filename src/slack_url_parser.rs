@@ -28,6 +28,7 @@ pub fn convert_slack_uri(profile_team_id: &str, profile_team_domain: &str, url: 
         // message: ([0-9]+\.[0-9]+)
 
         // Team host:
+        //    Canvas:          https://<team-domain-name>.slack.com/docs/<ignored_id>/<doc_id>
         //    File:            https://<team-domain-name>.slack.com/messages/<ignored_id>/files/<file_id>
         //    Channel:         https://<team-domain-name>.slack.com/archives/<channel_id>
         //    Channel message: https://<team-domain-name>.slack.com/archives/<channel_id>/p<timestamp_without_decimal>
@@ -46,6 +47,13 @@ pub fn convert_slack_uri(profile_team_id: &str, profile_team_domain: &str, url: 
                         let subresource_id_maybe = segments.get(2);
 
                         match (resource_type.as_str(), subresource_id_maybe) {
+                            ("docs", Some(doc_id)) => {
+                                // Canvas; resource_id: team id; subresource_id: doc id
+                                // From: https://<team-domain>.slack.com/docs/<team-id>/<resource_id>
+                                //   To: slack://doc?team=<team-id>&id=<resource_id>
+                                //        &user_id=???
+                                format!("slack://doc?team={}&id={}", profile_team_id, doc_id)
+                            }
                             ("team", _) => {
                                 // User; resource_id: user id
                                 // From: https://<team-domain>.slack.com/team/<resource_id>
