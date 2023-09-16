@@ -136,7 +136,7 @@ impl UI {
             .show_titlebar(false)
             .transparent(true)
             .resizable(false)
-            .set_level(WindowLevel::Utility)
+            .set_level(WindowLevel::AppWindow)
             .set_initial_position(WindowInitialPosition::Mouse)
             //.window_size_policy(WindowSizePolicy::Content)
             .window_size_policy(WindowSizePolicy::User)
@@ -810,7 +810,7 @@ fn show_about_dialog(ctx: &mut DelegateCtx, monitor: Monitor) {
         .with_min_size((size.width, 10.0 as f64))
         // make sure about dialog is on top of our main window
         // so using same window level
-        .set_level(WindowLevel::Utility)
+        .set_level(WindowLevel::AppWindow)
         .show_titlebar(true)
         .resizable(false)
         .set_position(window_position);
