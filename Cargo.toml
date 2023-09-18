@@ -12,7 +12,7 @@ build = "build.rs"
 [dependencies]
 
 # command-line argument parser
-clap = "4.3.19"
+clap = "4.4.4"
 
 # logging library
 tracing = "0.1"
