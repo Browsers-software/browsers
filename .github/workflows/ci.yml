@@ -8,6 +8,8 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
+        with:
+          show-progress: false
       - name: Set up Docker Buildx
         id: buildx
         # Use the action from the master, as we've seen some inconsistencies with @v1
@@ -109,6 +111,8 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
+        with:
+          show-progress: false
       - name: Download cache
         uses: actions/cache@v3
         with:
@@ -179,6 +183,8 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
+        with:
+          show-progress: false
       - name: Download cache
         uses: actions/cache@v3
         with:
@@ -240,6 +246,8 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
+        with:
+          show-progress: false
       - name: Generate Changelog
         # Search from CHANGELOG.md for the changelog of the version (tag name)
         run: ./tools/extract_release_notes.sh ${{ github.ref_name }} < CHANGELOG.md > ${{ github.workspace }}-RELEASE_NOTES.md
