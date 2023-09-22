@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Linux: Fix opening Browsers on top of a Snap application window Contribution by @tommoyer. #87
+- Linux: Handle more errors when loading app icons. #90
+- Linux: Fix initial position in Wayland
+- Windows: Fix shortcut in system-wide installation
+
+### Added
+- Support deeplink for a Slack canvas
+
 ## [0.4.1] - 2023-08-01
 
 ### Fixed
