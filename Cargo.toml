@@ -67,7 +67,7 @@ interprocess = "1.2.1"
 # small selection of Core Foundation libs I happen to need
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.9.3"
-cocoa-foundation = "0.1.1"
+cocoa-foundation = "0.1.2"
 objc = "0.2.7"
 libc = "0.2"
 
