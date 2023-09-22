@@ -138,6 +138,7 @@ impl UI {
             .transparent(true)
             .resizable(false)
             .set_level(WindowLevel::AppWindow)
+            .set_always_on_top(true)
             .set_initial_position(WindowInitialPosition::Mouse)
             //.window_size_policy(WindowSizePolicy::Content)
             .window_size_policy(WindowSizePolicy::User)
