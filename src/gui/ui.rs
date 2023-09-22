@@ -134,6 +134,7 @@ impl UI {
 
         let main_window = WindowDesc::new(self.ui_builder(window_size))
             .show_titlebar(false)
+            .skip_taskbar(true)
             .transparent(true)
             .resizable(false)
             .set_level(WindowLevel::AppWindow)
