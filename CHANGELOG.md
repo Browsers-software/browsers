@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2] - 2023-09-25
+
 ### Fixed
 - Linux: Fix opening Browsers on top of a Snap application window Contribution by @tommoyer. #87
 - Linux: Handle more errors when loading app icons. #90
@@ -15,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Support deeplink for a Slack canvas
+- Linux: uninstall.sh script in the archive
 
 ## [0.4.1] - 2023-08-01
 
@@ -202,7 +205,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial Release
 
-[unreleased]: https://github.com/Browsers-software/browsers/compare/0.4.1...HEAD
+[unreleased]: https://github.com/Browsers-software/browsers/compare/0.4.2...HEAD
+[0.4.2]: https://github.com/Browsers-software/browsers/releases/tag/0.4.2
 [0.4.1]: https://github.com/Browsers-software/browsers/releases/tag/0.4.1
 [0.4.0]: https://github.com/Browsers-software/browsers/releases/tag/0.4.0
 [0.3.9]: https://github.com/Browsers-software/browsers/releases/tag/0.3.9
