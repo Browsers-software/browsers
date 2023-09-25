@@ -46,6 +46,7 @@ build_app_bundle() {
   cp "resources/i18n/en-US/builtin.ftl" "$target_dir/i18n/en-US/builtin.ftl"
 
   cp "extra/linux/dist/install.sh" "$target_dir/install.sh"
+  cp "extra/linux/dist/uninstall.sh" "$target_dir/uninstall.sh"
   cp "extra/linux/dist/software.Browsers.template.desktop" "$target_dir/software.Browsers.template.desktop"
   cp "extra/linux/dist/xfce4/helpers/software.Browsers.template.desktop" "$target_dir/xfce4/helpers/software.Browsers.template.desktop"
 }
@@ -73,6 +74,7 @@ make_archives() {
     './xfce4/helpers/software.Browsers.template.desktop'
     './i18n/en-US/builtin.ftl'
     './install.sh'
+    './uninstall.sh'
   )
 
   tar -zcf "./$target_dir/browsers_linux.tar.gz" \
