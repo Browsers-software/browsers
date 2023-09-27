@@ -15,7 +15,7 @@ use crate::linux::linux_utils;
 #[cfg(target_os = "macos")]
 use crate::macos::macos_utils;
 #[cfg(target_os = "windows")]
-use crate::windows_utils;
+use crate::windows::windows_utils;
 use crate::{paths, InstalledBrowser, SupportedAppRepository};
 
 #[cfg(target_os = "macos")]
