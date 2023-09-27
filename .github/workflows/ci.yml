@@ -17,39 +17,6 @@ jobs:
         uses: docker/setup-buildx-action@master
         with:
           install: true
-      - name: Build cross builder image for x86_64
-        uses: docker/build-push-action@v5
-        with:
-          context: ./cross/
-          builder: ${{ steps.buildx.outputs.name }}
-          file: cross/Dockerfile.linux_x86_64
-          push: false
-          tags: browsers.software/x86_64-unknown-linux-gnu-gtk:local
-          cache-from: type=gha,scope=x86_64
-          cache-to: type=gha,scope=x86_64,mode=max
-          load: true # load the created image into docker, so cross can find it
-      - name: Build cross builder image for aarch64
-        uses: docker/build-push-action@v5
-        with:
-          context: ./cross/
-          builder: ${{ steps.buildx.outputs.name }}
-          file: cross/Dockerfile.linux_aarch64
-          push: false
-          tags: browsers.software/aarch64-unknown-linux-gnu-gtk:local
-          cache-from: type=gha,scope=aarch64
-          cache-to: type=gha,scope=aarch64,mode=max
-          load: true # load the created image into docker, so cross can find it
-      - name: Build cross builder image for armv7
-        uses: docker/build-push-action@v5
-        with:
-          context: ./cross/
-          builder: ${{ steps.buildx.outputs.name }}
-          file: cross/Dockerfile.linux_armv7
-          push: false
-          tags: browsers.software/armv7-unknown-linux-gnueabihf-gtk:local
-          cache-from: type=gha,scope=armv7
-          cache-to: type=gha,scope=armv7,mode=max
-          load: true # load the created image into docker, so cross can find it
       # even though we build inside a docker container via `cross`, then `cross` mounts
       # target/
       - name: Download cache
