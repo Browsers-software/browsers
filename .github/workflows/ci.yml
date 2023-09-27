@@ -63,7 +63,10 @@ jobs:
             ~/.cargo/.crates.toml
             ~/.cargo/.crates2.json
             target/
-          key: linux-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-cargo-
       - name: Install signify
         run: cargo install signify --target-dir ./target/signify
       - name: Install cross
@@ -124,7 +127,10 @@ jobs:
             ~/.cargo/.crates.toml
             ~/.cargo/.crates2.json
             target/
-          key: macos-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-cargo-
       - name: Install signify
         run: cargo install signify --target-dir ./target/signify
       - name: Install apple-codesign
@@ -196,7 +202,10 @@ jobs:
             ~/.cargo/.crates.toml
             ~/.cargo/.crates2.json
             target/
-          key: windows-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-cargo-
       - name: Install signify
         run: cargo install signify --target-dir ./target/signify
       - name: Add Rust targets
