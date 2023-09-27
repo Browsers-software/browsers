@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
 
 #[cfg(target_os = "linux")]
-use crate::linux_utils;
+use crate::linux::linux_utils;
 #[cfg(target_os = "macos")]
 use crate::macos::macos_utils;
 #[cfg(target_os = "windows")]
