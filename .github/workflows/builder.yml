@@ -17,6 +17,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Test
         run: |
-          docker build -t ghcr.io/browsers-software/demo2:latest cross/Dockerfile.linux_x86_64
+          docker build -t ghcr.io/browsers-software/demo2:latest - < cross/Dockerfile.linux_x86_64
           docker push ghcr.io/browsers-software/demo2:latest
           
