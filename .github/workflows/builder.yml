@@ -15,8 +15,15 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Test
+      - name: Build x86_64
         run: |
-          docker build -t ghcr.io/browsers-software/demo2:latest - < cross/Dockerfile.linux_x86_64
-          docker push ghcr.io/browsers-software/demo2:latest
-          
+          docker build -t ghcr.io/browsers-software/cross-x86_64-unknown-linux-gnu-gtk:latest - < cross/Dockerfile.linux_x86_64
+          docker push ghcr.io/browsers-software/cross-x86_64-unknown-linux-gnu-gtk:latest
+      - name: Build aarch64
+        run: |
+          docker build -t ghcr.io/browsers-software/cross-aarch64-unknown-linux-gnu-gtk:latest - < cross/Dockerfile.linux_aarch64
+          docker push ghcr.io/browsers-software/cross-aarch64-unknown-linux-gnu-gtk:latest
+      - name: Build armv7
+        run: |
+          docker build -t ghcr.io/browsers-software/cross-armv7-unknown-linux-gnu-gtk:latest - < cross/Dockerfile.linux_armv7
+          docker push ghcr.io/browsers-software/cross-armv7-unknown-linux-gnu-gtk:latest
