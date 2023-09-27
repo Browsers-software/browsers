@@ -6,7 +6,7 @@ use crate::linux::linux_utils;
 use crate::macos::macos_utils;
 
 #[cfg(target_os = "windows")]
-use crate::windows_utils;
+use crate::windows::windows_utils;
 
 #[cfg(target_os = "macos")]
 pub fn get_cache_root_dir() -> PathBuf {

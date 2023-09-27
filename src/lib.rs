@@ -33,7 +33,7 @@ mod macos;
 mod linux;
 
 #[cfg(target_os = "windows")]
-mod windows_utils;
+mod windows;
 
 pub mod communicate;
 
