@@ -30,7 +30,7 @@ mod browser_repository;
 mod macos;
 
 #[cfg(target_os = "linux")]
-mod linux_utils;
+mod linux;
 
 #[cfg(target_os = "windows")]
 mod windows_utils;
