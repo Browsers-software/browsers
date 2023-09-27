@@ -1,0 +1,22 @@
+name: Create builder Docker Image
+run-name: Create builder Docker Image
+on: workflow_dispatch
+jobs:
+  create-images:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Test
+        run: |
+          docker build -t ghcr.io/browsers-software/demo2:latest cross/Dockerfile.linux_x86_64
+          docker push ghcr.io/browsers-software/demo2:latest
+          
