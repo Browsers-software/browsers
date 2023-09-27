@@ -13,7 +13,7 @@ use tracing::{debug, info};
 #[cfg(target_os = "linux")]
 use crate::linux_utils;
 #[cfg(target_os = "macos")]
-use crate::macos_utils;
+use crate::macos::macos_utils;
 #[cfg(target_os = "windows")]
 use crate::windows_utils;
 use crate::{paths, InstalledBrowser, SupportedAppRepository};
