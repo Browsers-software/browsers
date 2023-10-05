@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- macOS: Exit on lost focus when application looses focus not the window. #95
+
 ## [0.4.2] - 2023-09-25
 
 ### Fixed

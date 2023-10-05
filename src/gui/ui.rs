@@ -363,6 +363,7 @@ impl UIBrowser {
 impl UIState {}
 
 pub const URL_OPENED: Selector<druid::UrlOpenInfo> = Selector::new("url_opened");
+pub const APP_LOST_FOCUS: Selector<druid::ApplicationLostFocus> = Selector::new("app_lost_focus");
 
 pub const EXIT_APP: Selector<String> = Selector::new("browsers.exit_app");
 
@@ -443,15 +444,18 @@ impl AppDelegate<UIState> for UIDelegate {
         data: &mut UIState,
         _env: &Env,
     ) -> Option<Event> {
-        //let is_linux = cfg!(target_os = "linux");
+        let is_mac = cfg!(target_os = "macos");
         // linux calls this even when just opening a context menu
-        //let close_on_lost_focus = !is_linux;
+        // mac calls this when opening About window
+        // mac is handled by application event instead now, which is fired
+        // when all windows of app loose focus
+        let quit_on_lost_focus = !is_mac && self.quit_on_lost_focus;
 
         let should_exit = match event {
             Event::KeyDown(KeyEvent {
                 key: KbKey::Escape, ..
             }) => true,
-            Event::WindowLostFocus => self.quit_on_lost_focus,
+            Event::WindowLostFocus => quit_on_lost_focus,
             _ => false,
         };
 
@@ -551,6 +555,14 @@ impl AppDelegate<UIState> for UIDelegate {
             ctx.submit_command(QUIT_APP);
             // QUIT_APP doesn't always actually quit the app on macOS, so forcing exit until thats figured out
             exit(0x0100);
+            Handled::Yes
+        } else if cmd.is(APP_LOST_FOCUS) {
+            info!("App lost focus");
+            if self.quit_on_lost_focus {
+                let sink = ctx.get_external_handle();
+                sink.submit_command(EXIT_APP, "".to_string(), Target::Global)
+                    .unwrap();
+            }
             Handled::Yes
         } else if cmd.is(URL_OPENED) {
             let url_open_info = cmd.get_unchecked(URL_OPENED);
