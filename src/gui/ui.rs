@@ -6,7 +6,7 @@ use std::sync::mpsc::Sender;
 use std::sync::Arc;
 
 use druid::commands::{CONFIGURE_WINDOW_SIZE_AND_POSITION, QUIT_APP, SHOW_WINDOW};
-use druid::piet::{InterpolationMode, TextStorage};
+use druid::piet::InterpolationMode;
 use druid::widget::{
     Container, Controller, ControllerHost, CrossAxisAlignment, Either, Flex, Image, Label,
     LineBreaking, List, ZStack,
@@ -1208,7 +1208,7 @@ fn create_browser(
 
             hotkey_label
         },
-        { Label::new("") },
+        Label::new(""),
     );
 
     let icon_and_label = Flex::row()

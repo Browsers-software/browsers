@@ -1,12 +1,12 @@
 use std::fs;
 use std::fs::File;
-use std::io::{BufReader, Read};
+use std::io::BufReader;
 use std::path::Path;
 
 use serde_json::{Map, Value};
 use tracing::{debug, info};
 
-use crate::{paths, utils, InstalledBrowserProfile};
+use crate::{paths, InstalledBrowserProfile};
 
 pub fn find_slack_profiles(
     slack_user_dir: &Path,

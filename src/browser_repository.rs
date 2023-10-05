@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use druid::piet::TextStorage;
 use url::form_urlencoded::byte_serialize;
 use url::Url;
 

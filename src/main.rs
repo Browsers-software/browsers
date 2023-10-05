@@ -6,7 +6,6 @@ use std::{env, fs};
 
 use rolling_file;
 use rolling_file::{BasicRollingFileAppender, RollingConditionBasic};
-use single_instance::SingleInstance;
 use tracing::{info, Level};
 use tracing_subscriber;
 use tracing_subscriber::fmt::time::OffsetTime;

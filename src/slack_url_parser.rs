@@ -70,8 +70,8 @@ pub fn convert_slack_uri(profile_team_id: &str, profile_team_domain: &str, url: 
                                 let query_pairs = url.query_pairs();
                                 let thread_ts_maybe: Option<String> = query_pairs
                                     .into_iter()
-                                    .find(|(key, value)| key == "thread_ts")
-                                    .map(|(key, value)| value.to_string());
+                                    .find(|(key, _)| key == "thread_ts")
+                                    .map(|(_, value)| value.to_string());
 
                                 match thread_ts_maybe {
                                     // Channel thread message; resource_id: channel id; subresource_id: message id

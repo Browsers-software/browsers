@@ -29,7 +29,7 @@ pub fn find_chromium_profiles(
     for profile in profiles {
         let profile_name = profile.name;
 
-        let profile_dir = chromium_user_dir.join(profile.profile_dir_name.as_str());
+        //let profile_dir = chromium_user_dir.join(profile.profile_dir_name.as_str());
 
         let cache_root_dir = paths::get_cache_root_dir();
         let profiles_icons_root_dir = cache_root_dir.join("icons").join("profiles");
@@ -220,7 +220,7 @@ impl ChromeProfileAttributesEntry {
 
         profile_avatar_file_path.clone().map(|a| {
             let x1 = a.to_str().unwrap();
-            let x = info!("{}", x1);
+            info!("{}", x1);
         });
 
         return ChromeProfilePreferences {
@@ -382,11 +382,11 @@ impl ChromeProfileAttributesEntry {
         self.profile["use_gaia_picture"].as_bool().unwrap_or(false)
     }
 
-    fn get_last_downloaded_gaia_picture_url_with_size(&self) -> Option<String> {
+    /*fn get_last_downloaded_gaia_picture_url_with_size(&self) -> Option<String> {
         self.profile["last_downloaded_gaia_picture_url_with_size"]
             .as_str()
             .map(|a| a.to_string())
-    }
+    }*/
 
     fn get_gaia_picture_file_name(&self) -> Option<String> {
         self.profile["gaia_picture_file_name"]
@@ -438,7 +438,7 @@ impl ChromeProfileAttributesEntry {
 }
 
 // This avatar does not exist on the server, the high res copy is in the build.
-const K_NO_HIGH_RES_AVATAR: &str = "NothingToDownload";
+//const K_NO_HIGH_RES_AVATAR: &str = "NothingToDownload";
 
 enum ChromeNameForm {
     GaiaName,
