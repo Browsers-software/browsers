@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.4.3] - 2023-10-24
 
 ### Fixed
 - macOS: Exit on lost focus when application looses focus not the window. #95
@@ -208,7 +208,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial Release
 
-[unreleased]: https://github.com/Browsers-software/browsers/compare/0.4.2...HEAD
+[unreleased]: https://github.com/Browsers-software/browsers/compare/0.4.3...HEAD
+[0.4.3]: https://github.com/Browsers-software/browsers/releases/tag/0.4.3
 [0.4.2]: https://github.com/Browsers-software/browsers/releases/tag/0.4.2
 [0.4.1]: https://github.com/Browsers-software/browsers/releases/tag/0.4.1
 [0.4.0]: https://github.com/Browsers-software/browsers/releases/tag/0.4.0
