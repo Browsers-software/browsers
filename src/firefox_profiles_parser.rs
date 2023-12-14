@@ -134,7 +134,7 @@ pub fn find_firefox_profiles(
             continue;
         }
 
-        let mut container_names = Vec::new();
+        let mut containers = Vec::new();
 
         let mut open_url_in_container_extension_installed = false;
         let extensions_json_file = profile_dir.join("extensions.json");
@@ -156,8 +156,8 @@ pub fn find_firefox_profiles(
                 profile_dir.display()
             );
             } else {
-                // container names for this profile
-                container_names = containers_json_map(containers_json_file.as_path());
+                // containers for this profile
+                containers = containers_json_map(containers_json_file.as_path());
             }
         }
 
@@ -177,12 +177,12 @@ pub fn find_firefox_profiles(
             profile_restricted_url_patterns: vec![],
         });
 
-        if !container_names.is_empty() {
-            for container_name in container_names {
+        if !containers.is_empty() {
+            for container in containers {
                 browser_profiles.push(InstalledBrowserProfile {
                     profile_cli_arg_value: profile_name.to_string(),
-                    profile_cli_container_name: Some(container_name.to_string()),
-                    profile_name: profile_name.to_string() + " " + container_name.as_str(),
+                    profile_cli_container_name: Some(container.id.to_string()),
+                    profile_name: profile_name.to_string() + " " + container.name.as_str(),
                     profile_icon: None,
                     profile_restricted_url_patterns: vec![],
                 })
@@ -214,7 +214,7 @@ fn has_open_url_in_container_extension_installed(extensions_json_file_path: &Pat
     return false;
 }
 
-fn containers_json_map(containers_json_file_path: &Path) -> Vec<String> {
+fn containers_json_map(containers_json_file_path: &Path) -> Vec<FirefoxContainer> {
     // Open the file in read-only mode with buffer.
     let file = File::open(containers_json_file_path).unwrap();
     let reader = BufReader::new(file);
@@ -222,7 +222,7 @@ fn containers_json_map(containers_json_file_path: &Path) -> Vec<String> {
     let identities = &v["identities"];
     let identities_arr = identities.as_array().unwrap();
 
-    let mut container_names: Vec<String> = Vec::new();
+    let mut containers: Vec<FirefoxContainer> = Vec::new();
 
     for identity in identities_arr {
         let is_public = identity["public"].as_bool().unwrap();
@@ -239,10 +239,20 @@ fn containers_json_map(containers_json_file_path: &Path) -> Vec<String> {
             } else {
                 identity["name"].as_str().unwrap()
             };
-            container_names.push(name.to_string());
+
+            let container = FirefoxContainer {
+                id: name.to_string(),
+                name: name.to_string(),
+            };
+            containers.push(container);
         }
     }
-    return container_names;
+    return containers;
+}
+
+struct FirefoxContainer {
+    id: String, // aka cookie store id in Firefox
+    name: String,
 }
 
 fn hash_firefox_install_dir(ff_binary_dir: &str) -> String {
