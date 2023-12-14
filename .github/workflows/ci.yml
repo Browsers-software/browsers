@@ -262,7 +262,7 @@ jobs:
         run: ./tools/extract_release_notes.sh ${{ github.ref_name }} < CHANGELOG.md > ${{ github.workspace }}-RELEASE_NOTES.md
         shell: bash
       - name: Download release artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
       - name: Verify directories exist
         run: |
           [ -e "browsers-linux-artifacts" ]
