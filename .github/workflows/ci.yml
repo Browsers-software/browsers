@@ -92,7 +92,7 @@ jobs:
           ./build-linux.sh
         shell: bash
       - name: Upload release artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: browsers-linux-artifacts
           path: |
@@ -172,7 +172,7 @@ jobs:
           ./build-mac.sh
         shell: bash
       - name: Upload mac artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: browsers-mac-artifacts
           path: |
@@ -237,7 +237,7 @@ jobs:
           ./build-windows.sh
         shell: bash
       - name: Upload release artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: browsers-windows-artifacts
           path: |
