@@ -42,6 +42,7 @@ mod firefox_profiles_parser;
 mod slack_profiles_parser;
 mod slack_url_parser;
 mod url_rule;
+mod vivaldi_workspaces_parser;
 
 // a browser (with profiles), or Spotify, Zoom, etc
 pub struct GenericApp {

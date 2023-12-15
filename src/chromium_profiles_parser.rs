@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use serde_json::{Map, Value};
 use tracing::{debug, info};
 
-use crate::{paths, utils, InstalledBrowserProfile};
+use crate::{paths, utils, vivaldi_workspaces_parser, InstalledBrowserProfile};
 
 pub fn find_chromium_profiles(
     chromium_user_dir: &Path,
@@ -62,14 +62,44 @@ pub fn find_chromium_profiles(
             })
             .flatten();
 
+        let profile_dir = chromium_user_dir.join(profile.profile_dir_name.as_str());
+
+        let mut containers = Vec::new();
+
+        let containers_json_file = profile_dir.join("Preferences");
+        if !containers_json_file.exists() {
+            info!(
+                "Skipping containers for profile '{}', because it does not have Preferences file",
+                profile_dir.display()
+            );
+        } else {
+            // containers for this profile
+            containers =
+                vivaldi_workspaces_parser::preferences_json_map(containers_json_file.as_path());
+        }
+
         let profile_dir_name = profile.profile_dir_name;
+
+        // Even if profile has containers, also add a non-container option
         browser_profiles.push(InstalledBrowserProfile {
             profile_cli_arg_value: profile_dir_name.to_string(),
             profile_cli_container_name: None,
-            profile_name: profile_name,
+            profile_name: profile_name.to_string(),
             profile_icon: profile_icon_path,
             profile_restricted_url_patterns: vec![],
-        })
+        });
+
+        if !containers.is_empty() {
+            for container in containers {
+                browser_profiles.push(InstalledBrowserProfile {
+                    profile_cli_arg_value: profile_name.to_string(),
+                    profile_cli_container_name: Some(container.id.to_string()),
+                    profile_name: profile_name.to_string() + " " + container.name.as_str(),
+                    profile_icon: None,
+                    profile_restricted_url_patterns: vec![],
+                })
+            }
+        }
     }
 
     return browser_profiles;
