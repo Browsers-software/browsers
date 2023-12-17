@@ -195,6 +195,9 @@ pub fn find_firefox_profiles(
 
 // has "open-url-in-container" extension installed, which adds "ext+container" protocol support
 fn has_open_url_in_container_extension_installed(extensions_json_file_path: &Path) -> bool {
+    let extension_id = "{f069aec0-43c5-4bbf-b6b4-df95c4326b98}";
+    let extension2_id = "openincontainer@browsers.software";
+
     // Open the file in read-only mode with buffer.
     let file = File::open(extensions_json_file_path).unwrap();
     let reader = BufReader::new(file);
@@ -204,8 +207,8 @@ fn has_open_url_in_container_extension_installed(extensions_json_file_path: &Pat
     for addon in addons_arr {
         let addon_id = addon["id"].as_str().unwrap();
         // https://addons.mozilla.org/en-US/firefox/addon/open-url-in-container/
-        let extension_id = "{f069aec0-43c5-4bbf-b6b4-df95c4326b98}";
-        if addon_id == extension_id {
+
+        if addon_id == extension_id || addon_id == extension2_id {
             let is_active = addon["active"].as_bool().unwrap();
             return is_active;
         }
