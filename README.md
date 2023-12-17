@@ -36,19 +36,23 @@ Popover menu with list of browsers and browser profiles is shown that user can c
 
 Download for your platform
 
-#### macOS
-Download [**Browsers.dmg**](https://github.com/Browsers-software/browsers/releases/latest/download/Browsers.dmg)
-(Universal - Apple Silicon and Intel based Macs)
+- macOS
+  - To stay up with latest releases, install via homebrew:
 
-Or to stay up with latest releases, install via homebrew:
+        brew install --cask browsers-software/tap/browsers
 
-    brew install --cask browsers-software/tap/browsers
-
-#### Linux
-Download [**browsers_linux.tar.gz**](https://github.com/Browsers-software/browsers/releases/latest/download/browsers_linux.tar.gz) (arm64, arm7l, and x86_64)
-
-#### Windows
-Download [**Browsers_windows.zip**](https://github.com/Browsers-software/browsers/releases/latest/download/Browsers_windows.zip) (arm64 and x86_64)
+  - [**Browsers.dmg**](https://github.com/Browsers-software/browsers/releases/latest/download/Browsers.dmg) (Apple Silicon and Intel based Macs)
+- Linux
+  - DEB package
+    - [**browsers_amd64.deb**](https://github.com/Browsers-software/browsers/releases/latest/download/browsers_amd64.deb) (x86_64)
+    - [**browsers_arm64.deb**](https://github.com/Browsers-software/browsers/releases/latest/download/browsers_arm64.deb) (arm64)
+    - [**browsers_armhf.deb**](https://github.com/Browsers-software/browsers/releases/latest/download/browsers_armhf.deb) (armv7l)
+  - RPM package
+    - [**browsers.x86_64.rpm**](https://github.com/Browsers-software/browsers/releases/latest/download/browsers_x86_64.deb) (x86_64)
+    - [**browsers.aarch64.rpm**](https://github.com/Browsers-software/browsers/releases/latest/download/browsers_aarch64.deb) (arm64)
+    - [**browsers.armhfp.rpm**](https://github.com/Browsers-software/browsers/releases/latest/download/browsers_armhfp.deb) (armv7l)
+  - Universal - [**browsers_linux.tar.gz**](https://github.com/Browsers-software/browsers/releases/latest/download/browsers_linux.tar.gz) (x86_64, arm64 and armv7l)
+- Windows - [**Browsers_windows.zip**](https://github.com/Browsers-software/browsers/releases/latest/download/Browsers_windows.zip) (x86_64 and arm64)
 
 ## Social
 
