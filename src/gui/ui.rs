@@ -26,7 +26,7 @@ use image::io::Reader as ImageReader;
 use tracing::{debug, info, instrument};
 use url::Url;
 
-use crate::gui::about;
+use crate::gui::{about_dialog, settings_dialog};
 use crate::url_rule::UrlGlobMatcher;
 use crate::utils::UIConfig;
 use crate::{paths, CommonBrowserProfile, MessageToMain};
@@ -404,6 +404,7 @@ pub enum MoveTo {
 }
 
 pub const SHOW_ABOUT_DIALOG: Selector<()> = Selector::new("browsers.show_about_dialog");
+pub const SHOW_SETTINGS_DIALOG: Selector<()> = Selector::new("browsers.show_settings_dialog");
 
 pub struct UIDelegate {
     main_sender: Sender<MessageToMain>,
@@ -700,7 +701,10 @@ impl AppDelegate<UIState> for UIDelegate {
                 .ok();
             Handled::Yes
         } else if cmd.is(SHOW_ABOUT_DIALOG) {
-            about::show_about_dialog(ctx, self.monitor.clone());
+            about_dialog::show_about_dialog(ctx, self.monitor.clone());
+            Handled::Yes
+        } else if cmd.is(SHOW_SETTINGS_DIALOG) {
+            settings_dialog::show_settings_dialog(ctx);
             Handled::Yes
         } else {
             //println!("cmd forwarded: {:?}", cmd);
@@ -851,6 +855,11 @@ fn make_options_menu(
 
     menu = menu
         .entry(submenu_hidden_apps)
+        .entry(MenuItem::new(LocalizedString::new("Settings...")).on_activate(
+            |ctx, _data: &mut UIState, _env| {
+                ctx.submit_command(SHOW_SETTINGS_DIALOG);
+            },
+        ))
         .entry(MenuItem::new(LocalizedString::new("About")).on_activate(
             |ctx, _data: &mut UIState, _env| {
                 ctx.submit_command(SHOW_ABOUT_DIALOG);

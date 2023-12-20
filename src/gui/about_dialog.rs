@@ -1,4 +1,4 @@
-use druid::widget::{CrossAxisAlignment, Flex, Image, Label};
+use druid::widget::{Container, CrossAxisAlignment, Flex, Image, Label};
 use druid::{
     Color, DelegateCtx, FontDescriptor, FontFamily, FontWeight, ImageBuf, Monitor, Point, Selector,
     Size, WidgetExt, WindowDesc, WindowLevel,
@@ -69,7 +69,7 @@ pub fn show_about_dialog(ctx: &mut DelegateCtx, monitor: Monitor) {
                 .with_child(Label::new(resources_root_dir).with_text_size(8.0)),
         );
 
-    let col = Flex::column()
+    let col: Container<UIState> = Flex::column()
         .with_spacer(10.0)
         .with_child(app_icon_row)
         .with_spacer(10.0)
