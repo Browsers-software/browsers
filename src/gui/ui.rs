@@ -3,7 +3,7 @@ use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::process::exit;
 use std::sync::mpsc::Sender;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use druid::commands::{CONFIGURE_WINDOW_SIZE_AND_POSITION, QUIT_APP, SHOW_WINDOW};
 use druid::piet::InterpolationMode;
@@ -28,7 +28,7 @@ use url::Url;
 
 use crate::gui::{about_dialog, settings_dialog};
 use crate::url_rule::UrlGlobMatcher;
-use crate::utils::UIConfig;
+use crate::utils::{Config, UIConfig};
 use crate::{paths, CommonBrowserProfile, MessageToMain};
 
 const WINDOW_BORDER_WIDTH: f64 = 1.0;
@@ -47,9 +47,35 @@ pub struct UI {
     show_set_as_default: bool,
     show_hotkeys: bool,
     quit_on_lost_focus: bool,
+    ui_settings: UISettings,
 }
 
 impl UI {
+    pub fn config_to_ui_settings(config: &Config) -> UISettings {
+        let ui_settings_rules = config
+            .get_rules()
+            .iter()
+            .enumerate()
+            .map(|(i, rule)| UISettingsRule {
+                index: i,
+                source_app: rule
+                    .source_app
+                    .as_ref()
+                    .map_or("".to_string(), |s| s.clone()),
+                url_pattern: rule
+                    .url_pattern
+                    .as_ref()
+                    .map_or("".to_string(), |s| s.clone()),
+                profile: rule.profile.clone(),
+                incognito: rule.incognito,
+            })
+            .collect();
+
+        return UISettings {
+            rules: Arc::new(ui_settings_rules),
+        };
+    }
+
     pub fn real_to_ui_browsers(all_browser_profiles: &[CommonBrowserProfile]) -> Vec<UIBrowser> {
         if all_browser_profiles.is_empty() {
             return vec![];
@@ -100,6 +126,7 @@ impl UI {
         restorable_app_profiles: Vec<UIBrowser>,
         show_set_as_default: bool,
         ui_config: &UIConfig,
+        ui_settings: UISettings,
     ) -> Self {
         let ui_browsers = Arc::new(ui_browsers);
         let filtered_browsers = get_filtered_browsers(&url, &ui_browsers);
@@ -114,6 +141,7 @@ impl UI {
             show_set_as_default: show_set_as_default,
             show_hotkeys: ui_config.show_hotkeys,
             quit_on_lost_focus: ui_config.quit_on_lost_focus,
+            ui_settings: ui_settings,
         }
     }
 
@@ -172,6 +200,7 @@ impl UI {
             browsers: self.ui_browsers.clone(),
             filtered_browsers: self.filtered_browsers.clone(),
             restorable_app_profiles: self.restorable_app_profiles.clone(),
+            ui_settings: self.ui_settings.clone(),
         };
         return initial_ui_state;
     }
@@ -303,6 +332,22 @@ pub struct UIState {
     // same as browsers, but filtered view - only the ones matching current url
     filtered_browsers: Arc<Vec<UIBrowser>>,
     restorable_app_profiles: Arc<Vec<UIBrowser>>,
+
+    pub ui_settings: UISettings,
+}
+
+#[derive(Clone, Data, Lens)]
+pub struct UISettings {
+    pub rules: Arc<Vec<UISettingsRule>>,
+}
+
+#[derive(Clone, Data, Lens)]
+pub struct UISettingsRule {
+    pub index: usize,
+    source_app: String,  // Optional in datamodel
+    url_pattern: String, // Optional in datamodel
+    pub profile: String,
+    incognito: bool,
 }
 
 impl FocusData for UIState {
@@ -334,7 +379,7 @@ pub struct UIBrowser {
 
     icon_path: String,
     profile_icon_path: String,
-    unique_id: String,
+    pub unique_id: String,
     unique_app_id: String,
 
     // index in list of actually visible browsers for current url
@@ -704,7 +749,7 @@ impl AppDelegate<UIState> for UIDelegate {
             about_dialog::show_about_dialog(ctx, self.monitor.clone());
             Handled::Yes
         } else if cmd.is(SHOW_SETTINGS_DIALOG) {
-            settings_dialog::show_settings_dialog(ctx);
+            settings_dialog::show_settings_dialog(ctx, &data.browsers);
             Handled::Yes
         } else {
             //println!("cmd forwarded: {:?}", cmd);
