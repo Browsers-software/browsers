@@ -591,6 +591,7 @@ pub fn basically_main(
         UI::real_to_ui_browsers(hidden_browser_profiles.as_slice()),
         show_set_as_default,
         ui_config,
+        UI::config_to_ui_settings(&config),
     );
     let initial_ui_state = ui2.create_initial_ui_state();
     let launcher = ui2.create_app_launcher();
