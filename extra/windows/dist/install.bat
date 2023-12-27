@@ -1,7 +1,9 @@
 @echo off
 
 echo Starting Installation
-setlocal enabledelayedexpansion
+REM Delayed Expansion is usually disabled by default, but
+REM we are explicit about it here not to make that assumption
+setlocal DisableDelayedExpansion
 
 REM .bat location with trailing \
 set THIS_DIR=%~dp0
@@ -59,7 +61,9 @@ REM C:\Users\x\AppData\Local\software.Browsers\
 if %is_local_install% == true (
     REM TODO: would be even more correct to take from registry
     set LocalProgramsDir=%LocalAppData%\Programs
+    setlocal EnableDelayedExpansion
     set ProgramDir=!LocalProgramsDir!\software.Browsers
+    setlocal DisableDelayedExpansion
 ) else (
     set ProgramDir=%ProgramFiles%\software.Browsers
 )
@@ -87,11 +91,15 @@ REM C:\Users\x\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Browsers\Br
 if %is_local_install% == true (
     set ShortcutFromPath=%THIS_DIR%startmenu\user\Browsers.lnk
     set ShortcutToDir=%AppData%\Microsoft\Windows\Start Menu\Programs\Browsers
+    setlocal EnableDelayedExpansion
     set ShortcutToPath=!ShortcutToDir!\Browsers.lnk
+    setlocal DisableDelayedExpansion
 ) else (
     set ShortcutFromPath=%THIS_DIR%startmenu\system\Browsers.lnk
     set ShortcutToDir=%ALLUSERSPROFILE%\Microsoft\Windows\Start Menu\Programs\Browsers
+    setlocal EnableDelayedExpansion
     set ShortcutToPath=!ShortcutToDir!\Browsers.lnk
+    setlocal DisableDelayedExpansion
 )
 
 if not exist "%ShortcutToDir%\" (
@@ -135,7 +143,7 @@ REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe" 
 REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe\SupportedProtocols" /v http /t REG_SZ /d "" /f 1>nul
 REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe\SupportedProtocols" /v https /t REG_SZ /d "" /f 1>nul
 
-powershell -ExecutionPolicy Bypass -File "%THIS_DIR%announce_default.ps1"
+powershell -ExecutionPolicy Bypass -File "%THIS_DIR%announce_default.ps1" || exit /b
 
 echo Browsers has been installed. Enjoy!
 echo Please report any issues at https://github.com/Browsers-software/browsers/issues
