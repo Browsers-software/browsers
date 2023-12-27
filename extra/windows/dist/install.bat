@@ -112,18 +112,18 @@ REG ADD "HKCU\Software\Classes\software.Browsers" /ve /d "Browsers HTML Document
 REG ADD "HKCU\Software\Classes\software.Browsers" /v AppUserModelId /t REG_SZ /d "software.Browsers" /f 1>nul
 
 REG ADD "HKCU\Software\Classes\software.Browsers\Application" /v AppUserModelId /t REG_SZ /d "software.Browsers" /f 1>nul
-REG ADD "HKCU\Software\Classes\software.Browsers\Application" /v ApplicationIcon /t REG_SZ /d "%LocalAppData%\Programs\software.Browsers\browsers.exe,0" /f 1>nul
+REG ADD "HKCU\Software\Classes\software.Browsers\Application" /v ApplicationIcon /t REG_SZ /d "%ProgramDir%\browsers.exe,0" /f 1>nul
 REG ADD "HKCU\Software\Classes\software.Browsers\Application" /v ApplicationName /t REG_SZ /d "Browsers" /f 1>nul
 REG ADD "HKCU\Software\Classes\software.Browsers\Application" /v ApplicationDescription /t REG_SZ /d "Open the right browser at the right time" /f 1>nul
 REG ADD "HKCU\Software\Classes\software.Browsers\Application" /v ApplicationCompany /t REG_SZ /d "Browsers.software team" /f 1>nul
 
-REG ADD "HKCU\Software\Classes\software.Browsers\DefaultIcon" /ve /d "%LocalAppData%\Programs\software.Browsers\browsers.exe,0" /f 1>nul
+REG ADD "HKCU\Software\Classes\software.Browsers\DefaultIcon" /ve /d "%ProgramDir%\browsers.exe,0" /f 1>nul
 
-REG ADD "HKCU\Software\Classes\software.Browsers\shell\open\command" /ve /d "\"%LocalAppData%\Programs\software.Browsers\browsers.exe\" \"%%1\"" /f 1>nul
+REG ADD "HKCU\Software\Classes\software.Browsers\shell\open\command" /ve /d "\"%ProgramDir%\browsers.exe\" \"%%1\"" /f 1>nul
 
 REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers" /ve /d "Browsers" /f 1>nul
 
-REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers\Capabilities" /v ApplicationIcon /t REG_SZ /d "%LocalAppData%\Programs\software.Browsers\browsers.exe,0" /f 1>nul
+REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers\Capabilities" /v ApplicationIcon /t REG_SZ /d "%ProgramDir%\browsers.exe,0" /f 1>nul
 
 REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers\Capabilities" /v ApplicationName /t REG_SZ /d "Browsers" /f 1>nul
 REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers\Capabilities" /v ApplicationDescription /t REG_SZ /d "Open the right browser at the right time" /f 1>nul
@@ -131,14 +131,14 @@ REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers\Capabilities"
 REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers\Capabilities\URLAssociations" /v http /t REG_SZ /d "software.Browsers" /f 1>nul
 REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers\Capabilities\URLAssociations" /v https /t REG_SZ /d "software.Browsers" /f 1>nul
 
-REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers\DefaultIcon" /ve /d "%LocalAppData%\Programs\software.Browsers\browsers.exe,0" /f 1>nul
+REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers\DefaultIcon" /ve /d "%ProgramDir%\browsers.exe,0" /f 1>nul
 
-REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers\shell\open\command" /ve /d "\"%LocalAppData%\Programs\software.Browsers\browsers.exe\"" /f 1>nul
+REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers\shell\open\command" /ve /d "\"%ProgramDir%\browsers.exe\"" /f 1>nul
 
 REG ADD "HKCU\Software\RegisteredApplications" /v software.Browsers /t REG_SZ /d "Software\Clients\StartMenuInternet\software.Browsers\Capabilities" /f 1>nul
 
-REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe" /ve /d "%LocalAppData%\Programs\software.Browsers\browsers.exe" /f 1>nul
-REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe" /v Path /t REG_SZ /d "%LocalAppData%\Programs\software.Browsers" /f 1>nul
+REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe" /ve /d "%ProgramDir%\browsers.exe" /f 1>nul
+REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe" /v Path /t REG_SZ /d "%ProgramDir%" /f 1>nul
 
 REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe\SupportedProtocols" /v http /t REG_SZ /d "" /f 1>nul
 REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe\SupportedProtocols" /v https /t REG_SZ /d "" /f 1>nul
