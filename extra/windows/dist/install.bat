@@ -32,13 +32,6 @@ if exist "%windir%\system32\config\systemprofile\*" (
 )
 
 if "%~1"=="--system" (
-  if %is_admin% == false (
-    echo You must run this installer with Administrator privileges when using --system flag
-    echo Please run as administrator (no --system required then^)
-    echo.
-
-    exit /b 1
-  )
   set is_explicitly_requested_system=true
 ) else (
   set is_explicitly_requested_system=false
@@ -64,7 +57,7 @@ if "%~1"=="--user" (
   set is_explicitly_requested_user=false
 )
 
-if %is_admin% == true and %is_explicitly_requested_user% != true (
+if %is_admin% == true if not %is_explicitly_requested_user% == true (
   echo Because you are running this as an administrator we are going to install it to the whole system
   echo Please run this installer with --user flag to override this behaviour.
   echo.
