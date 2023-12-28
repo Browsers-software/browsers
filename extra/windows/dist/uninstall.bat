@@ -1,6 +1,6 @@
 @echo off
 
-echo Starting Installation
+echo Starting Uninstallation
 REM Delayed Expansion is usually disabled by default, but
 REM we are explicit about it here not to make that assumption
 setlocal DisableDelayedExpansion
@@ -22,9 +22,21 @@ if exist "%windir%\system32\config\systemprofile\*" (
   set is_admin=false
 )
 
+if exist "%windir%\system32\config\systemprofile\*" (
+  set is_admin=true
+) else (
+  set is_admin=false
+)
+
 if "%~1"=="--system" (
+  set is_explicitly_requested_system=true
+) else (
+  set is_explicitly_requested_system=false
+)
+
+if %is_explicitly_requested_system% == true (
   if %is_admin% == false (
-    echo You must run this installer with Administrator privileges when using --system flag
+    echo You must run this uninstaller with Administrator privileges when using --system flag
     echo Please run as administrator (no --system required then^)
     echo.
 
@@ -36,8 +48,15 @@ if "%~1"=="--system" (
   set is_local_install=true
 )
 
-if %is_admin% == true (
-  echo Because you are running this as an administrator we are going to install it to the whole system
+if "%~1"=="--user" (
+  set is_explicitly_requested_user=true
+) else (
+  set is_explicitly_requested_user=false
+)
+
+if %is_admin% == true if not %is_explicitly_requested_user% == true (
+  echo Because you are running this as an administrator we are going to uninstall it from the whole system
+  echo Please run this uninstaller with --user flag to override this behaviour.
   echo.
   set is_local_install=false
 )
