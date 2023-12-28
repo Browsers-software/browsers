@@ -13,14 +13,7 @@ REM echo %ARCH_WIN%
 if "%ARCH_WIN%" == "ARM64" (set ARCH=aarch64)
 if "%ARCH_WIN%" == "AMD64" (set ARCH=x86_64)
 
-REM echo %ARCH%ˇ
-
-
-if exist "%windir%\system32\config\systemprofile\*" (
-  set is_admin=true
-) else (
-  set is_admin=false
-)
+REM echo %ARCH%
 
 if exist "%windir%\system32\config\systemprofile\*" (
   set is_admin=true
@@ -61,25 +54,6 @@ if %is_admin% == true if not %is_explicitly_requested_user% == true (
   set is_local_install=false
 )
 
-REM C:\Users\x\AppData\Local\software.Browsers\
-
-if %is_local_install% == true (
-    REM TODO: would be even more correct to take from registry
-    set LocalProgramsDir=%LocalAppData%\Programs
-    setlocal EnableDelayedExpansion
-    set ProgramDir=!LocalProgramsDir!\software.Browsers
-    setlocal DisableDelayedExpansion
-) else (
-    set ProgramDir=%ProgramFiles%\software.Browsers
-)
-
-REM delete if exists
-if exist "%ProgramDir%\" (
-  @echo on
-  rmdir "%ProgramDir%" /s /q
-  @echo off
-)
-
 REM C:\Users\x\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Browsers\Browsers.lnk
 
 if %is_local_install% == true (
@@ -89,9 +63,7 @@ if %is_local_install% == true (
 )
 
 if exist "%ShortcutToDir%\" (
-  @echo on
   rmdir "%ShortcutToDir%" /s /q
-  @echo off
 )
 
 REM TODO: add prompt to ask user if they want to also delete the configuration
@@ -105,7 +77,30 @@ REG DELETE "HKCU\Software\Classes\software.Browsers" /f
 REG DELETE "HKCU\Software\Clients\StartMenuInternet\software.Browsers" /f
 REG DELETE "HKCU\Software\RegisteredApplications" /v software.Browsers /f
 REG DELETE "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe" /f
+REG DELETE "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /f
 
+REM C:\Users\x\AppData\Local\software.Browsers\
+
+if %is_local_install% == true (
+    REM TODO: would be even more correct to take from registry
+    set LocalProgramsDir=%LocalAppData%\Programs
+    setlocal EnableDelayedExpansion
+    set ProgramDir=!LocalProgramsDir!\software.Browsers
+    setlocal DisableDelayedExpansion
+) else (
+    set ProgramDir=%ProgramFiles%\software.Browsers
+)
+REM delete if exists
+REM doing this as the last thing, because it would exit the script when this bat file itself
+REM is located in that directory
+REM In future the script should copy itself to temp (but not during install, because people might clear their temps)
+REM and launch it from there
+if exist "%ProgramDir%\" (
+  REM launching in subprocess to avoid "The system cannot find the path specified"
+  REM when continuing running this script after its been deleted
+  REM https://stackoverflow.com/questions/40624147/how-do-i-make-a-batch-file-delete-its-own-directory
+  start /b "" cmd /c rmdir /s /q "%ProgramDir%"
+)
 
 echo Browsers has been uninstalled.
 echo Please report any issues at https://github.com/Browsers-software/browsers/issues
