@@ -5,9 +5,6 @@ REM Delayed Expansion is usually disabled by default, but
 REM we are explicit about it here not to make that assumption
 setlocal DisableDelayedExpansion
 
-REM .bat location with trailing \
-set THIS_DIR=%~dp0
-
 REM Sets ARCH to ARM64 or AMD64
 for /f "tokens=3" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v PROCESSOR_ARCHITECTURE ^| findstr /ri "REG_SZ"') do set ARCH_WIN=%%a
 
@@ -28,8 +25,6 @@ if not exist "%windir%\system32\vcruntime140.dll" (
     exit /b 1
 )
 
-set SRC_BINARY_PATH=%THIS_DIR%%ARCH%\browsers.exe
-
 if exist "%windir%\system32\config\systemprofile\*" (
   set is_admin=true
 ) else (
@@ -44,14 +39,34 @@ if "%~1"=="--system" (
 
     exit /b 1
   )
+  set is_explicitly_requested_system=true
+) else (
+  set is_explicitly_requested_system=false
+)
+
+if %is_explicitly_requested_system% == true (
+  if %is_admin% == false (
+    echo You must run this installer with Administrator privileges when using --system flag
+    echo Please run as administrator (no --system required then^)
+    echo.
+
+    exit /b 1
+  )
 
   set is_local_install=false
 ) else (
   set is_local_install=true
 )
 
-if %is_admin% == true (
+if "%~1"=="--user" (
+  set is_explicitly_requested_user=true
+) else (
+  set is_explicitly_requested_user=false
+)
+
+if %is_admin% == true and %is_explicitly_requested_user% != true (
   echo Because you are running this as an administrator we are going to install it to the whole system
+  echo Please run this installer with --user flag to override this behaviour.
   echo.
   set is_local_install=false
 )
@@ -72,6 +87,10 @@ if not exist "%ProgramDir%\" (
   mkdir "%ProgramDir%" || exit /b
 )
 
+REM .bat location with trailing \
+set THIS_DIR=%~dp0
+
+set SRC_BINARY_PATH=%THIS_DIR%%ARCH%\browsers.exe
 copy "%SRC_BINARY_PATH%" "%ProgramDir%\browsers.exe" 1>nul
 
 if not exist "%ProgramDir%\resources\icons\512x512\" (
