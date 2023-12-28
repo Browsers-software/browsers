@@ -101,23 +101,18 @@ copy "%THIS_DIR%i18n\en-US\builtin.ftl" "%ProgramDir%\resources\i18n\en-US\built
 REM C:\Users\x\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Browsers\Browsers.lnk
 
 if %is_local_install% == true (
-    set ShortcutFromPath=%THIS_DIR%startmenu\user\Browsers.lnk
+    set ShortcutFromPath="%THIS_DIR%startmenu\user\Browsers.lnk"
     set ShortcutToDir=%AppData%\Microsoft\Windows\Start Menu\Programs\Browsers
-    setlocal EnableDelayedExpansion
-    set ShortcutToPath=!ShortcutToDir!\Browsers.lnk
-    setlocal DisableDelayedExpansion
 ) else (
-    set ShortcutFromPath=%THIS_DIR%startmenu\system\Browsers.lnk
+    set ShortcutFromPath="%THIS_DIR%startmenu\system\Browsers.lnk"
     set ShortcutToDir=%ALLUSERSPROFILE%\Microsoft\Windows\Start Menu\Programs\Browsers
-    setlocal EnableDelayedExpansion
-    set ShortcutToPath=!ShortcutToDir!\Browsers.lnk
-    setlocal DisableDelayedExpansion
 )
 
 if not exist "%ShortcutToDir%\" (
   mkdir "%ShortcutToDir%" || exit /b
 )
 
+set ShortcutToPath=%ShortcutToDir%\Browsers.lnk
 copy "%ShortcutFromPath%" "%ShortcutToPath%" 1>nul
 
 REG ADD "HKCU\Software\Classes\software.Browsers" /ve /d "Browsers HTML Document" /f 1>nul
