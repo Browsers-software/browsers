@@ -119,53 +119,68 @@ if not exist "%ShortcutToDir%\" (
 set ShortcutToPath=%ShortcutToDir%\Browsers.lnk
 copy "%ShortcutFromPath%" "%ShortcutToPath%" 1>nul
 
-REG ADD "HKCU\Software\Classes\software.Browsers" /ve /d "Browsers HTML Document" /f 1>nul
-REG ADD "HKCU\Software\Classes\software.Browsers" /v AppUserModelId /t REG_SZ /d "software.Browsers" /f 1>nul
+if %is_local_install% == true (
+    REM HKEY_CURRENT_USER
+    set RegistryRoot=HKCU
+) else (
+    REM HKEY_LOCAL_MACHINE
+    set RegistryRoot=HKLM
+)
 
-REG ADD "HKCU\Software\Classes\software.Browsers\Application" /v AppUserModelId /t REG_SZ /d "software.Browsers" /f 1>nul
-REG ADD "HKCU\Software\Classes\software.Browsers\Application" /v ApplicationIcon /t REG_SZ /d "%ProgramDir%\browsers.exe,0" /f 1>nul
-REG ADD "HKCU\Software\Classes\software.Browsers\Application" /v ApplicationName /t REG_SZ /d "Browsers" /f 1>nul
-REG ADD "HKCU\Software\Classes\software.Browsers\Application" /v ApplicationDescription /t REG_SZ /d "Open the right browser at the right time" /f 1>nul
-REG ADD "HKCU\Software\Classes\software.Browsers\Application" /v ApplicationCompany /t REG_SZ /d "Browsers.software team" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Classes\software.Browsers" /ve /d "Browsers HTML Document" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Classes\software.Browsers" /v AppUserModelId /t REG_SZ /d "software.Browsers" /f 1>nul
 
-REG ADD "HKCU\Software\Classes\software.Browsers\DefaultIcon" /ve /d "%ProgramDir%\browsers.exe,0" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Classes\software.Browsers\Application" /v AppUserModelId /t REG_SZ /d "software.Browsers" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Classes\software.Browsers\Application" /v ApplicationIcon /t REG_SZ /d "%ProgramDir%\browsers.exe,0" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Classes\software.Browsers\Application" /v ApplicationName /t REG_SZ /d "Browsers" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Classes\software.Browsers\Application" /v ApplicationDescription /t REG_SZ /d "Open the right browser at the right time" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Classes\software.Browsers\Application" /v ApplicationCompany /t REG_SZ /d "Browsers.software team" /f 1>nul
 
-REG ADD "HKCU\Software\Classes\software.Browsers\shell\open\command" /ve /d "\"%ProgramDir%\browsers.exe\" \"%%1\"" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Classes\software.Browsers\DefaultIcon" /ve /d "%ProgramDir%\browsers.exe,0" /f 1>nul
 
-REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers" /ve /d "Browsers" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Classes\software.Browsers\shell\open\command" /ve /d "\"%ProgramDir%\browsers.exe\" \"%%1\"" /f 1>nul
 
-REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers\Capabilities" /v ApplicationIcon /t REG_SZ /d "%ProgramDir%\browsers.exe,0" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Clients\StartMenuInternet\software.Browsers" /ve /d "Browsers" /f 1>nul
 
-REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers\Capabilities" /v ApplicationName /t REG_SZ /d "Browsers" /f 1>nul
-REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers\Capabilities" /v ApplicationDescription /t REG_SZ /d "Open the right browser at the right time" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Clients\StartMenuInternet\software.Browsers\Capabilities" /v ApplicationIcon /t REG_SZ /d "%ProgramDir%\browsers.exe,0" /f 1>nul
 
-REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers\Capabilities\URLAssociations" /v http /t REG_SZ /d "software.Browsers" /f 1>nul
-REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers\Capabilities\URLAssociations" /v https /t REG_SZ /d "software.Browsers" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Clients\StartMenuInternet\software.Browsers\Capabilities" /v ApplicationName /t REG_SZ /d "Browsers" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Clients\StartMenuInternet\software.Browsers\Capabilities" /v ApplicationDescription /t REG_SZ /d "Open the right browser at the right time" /f 1>nul
 
-REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers\DefaultIcon" /ve /d "%ProgramDir%\browsers.exe,0" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Clients\StartMenuInternet\software.Browsers\Capabilities\URLAssociations" /v http /t REG_SZ /d "software.Browsers" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Clients\StartMenuInternet\software.Browsers\Capabilities\URLAssociations" /v https /t REG_SZ /d "software.Browsers" /f 1>nul
 
-REG ADD "HKCU\Software\Clients\StartMenuInternet\software.Browsers\shell\open\command" /ve /d "\"%ProgramDir%\browsers.exe\"" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Clients\StartMenuInternet\software.Browsers\DefaultIcon" /ve /d "%ProgramDir%\browsers.exe,0" /f 1>nul
 
-REG ADD "HKCU\Software\RegisteredApplications" /v software.Browsers /t REG_SZ /d "Software\Clients\StartMenuInternet\software.Browsers\Capabilities" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Clients\StartMenuInternet\software.Browsers\shell\open\command" /ve /d "\"%ProgramDir%\browsers.exe\"" /f 1>nul
 
-REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe" /ve /d "%ProgramDir%\browsers.exe" /f 1>nul
-REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe" /v Path /t REG_SZ /d "%ProgramDir%" /f 1>nul
+REG ADD "%RegistryRoot%\Software\RegisteredApplications" /v software.Browsers /t REG_SZ /d "Software\Clients\StartMenuInternet\software.Browsers\Capabilities" /f 1>nul
 
-REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe\SupportedProtocols" /v http /t REG_SZ /d "" /f 1>nul
-REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe\SupportedProtocols" /v https /t REG_SZ /d "" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe" /ve /d "%ProgramDir%\browsers.exe" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe" /v Path /t REG_SZ /d "%ProgramDir%" /f 1>nul
 
-REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /f 1>nul
-REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v DisplayName /t REG_SZ /d "Browsers" /f 1>nul
-REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v DisplayIcon /t REG_SZ /d "%ProgramDir%\browsers.exe" /f 1>nul
-REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v DisplayVersion /t REG_SZ /d "0.0.0" /f 1>nul
-REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v EstimatedSize /t REG_DWORD /d 4800 /f 1>nul
-REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v Publisher /t REG_SZ /d "Browsers.software" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe\SupportedProtocols" /v http /t REG_SZ /d "" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe\SupportedProtocols" /v https /t REG_SZ /d "" /f 1>nul
+
+REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v DisplayName /t REG_SZ /d "Browsers" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v DisplayIcon /t REG_SZ /d "%ProgramDir%\browsers.exe" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v DisplayVersion /t REG_SZ /d "0.0.0" /f 1>nul
+REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v EstimatedSize /t REG_DWORD /d 4800 /f 1>nul
+REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v Publisher /t REG_SZ /d "Browsers.software" /f 1>nul
 
 if %is_local_install% == true (
-  REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v UninstallString /t REG_SZ /d "\"%ProgramDir%\uninstall.bat\" --user" /f 1>nul
+  REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v UninstallString /t REG_SZ /d "\"%ProgramDir%\uninstall.bat\" --user" /f 1>nul
 ) else (
-  REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v UninstallString /t REG_SZ /d "\"%ProgramDir%\uninstall.bat\" --system" /f 1>nul
+  REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v UninstallString /t REG_SZ /d "\"%ProgramDir%\uninstall.bat\" --system" /f 1>nul
 )
+
+if %is_local_install% == true (
+    set UninstallParameter=--user
+) else (
+    set UninstallParameter=--system
+)
+REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v UninstallString /t REG_SZ /d "\"%ProgramDir%\uninstall.bat\" %UninstallParameter%" /f 1>nul
 
 powershell -ExecutionPolicy Bypass -File "%THIS_DIR%announce_default.ps1" || exit /b
 
