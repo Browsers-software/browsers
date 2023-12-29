@@ -73,11 +73,19 @@ REM   rmdir "%LocalAppData%\software.Browsers" /s /q
 REM   @echo off
 REM )
 
-REG DELETE "HKCU\Software\Classes\software.Browsers" /f
-REG DELETE "HKCU\Software\Clients\StartMenuInternet\software.Browsers" /f
-REG DELETE "HKCU\Software\RegisteredApplications" /v software.Browsers /f
-REG DELETE "HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe" /f
-REG DELETE "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /f
+if %is_local_install% == true (
+    REM HKEY_CURRENT_USER
+    set RegistryRoot=HKCU
+) else (
+    REM HKEY_LOCAL_MACHINE
+    set RegistryRoot=HKLM
+)
+
+REG DELETE "%RegistryRoot%\Software\Classes\software.Browsers" /f
+REG DELETE "%RegistryRoot%\Software\Clients\StartMenuInternet\software.Browsers" /f
+REG DELETE "%RegistryRoot%\Software\RegisteredApplications" /v software.Browsers /f
+REG DELETE "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe" /f
+REG DELETE "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /f
 
 REM C:\Users\x\AppData\Local\software.Browsers\
 
