@@ -171,15 +171,16 @@ REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\App Paths\brow
 REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe\SupportedProtocols" /v https /t REG_SZ /d "" /f 1>nul
 
 REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /f 1>nul
-REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v DisplayName /t REG_SZ /d "Browsers" /f 1>nul
 REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v DisplayIcon /t REG_SZ /d "%ProgramDir%\browsers.exe" /f 1>nul
 REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v DisplayVersion /t REG_SZ /d "0.0.0" /f 1>nul
 REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v EstimatedSize /t REG_DWORD /d 4800 /f 1>nul
 REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v Publisher /t REG_SZ /d "Browsers.software" /f 1>nul
 
 if %is_local_install% == true (
+  REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v DisplayName /t REG_SZ /d "Browsers (Current User)" /f 1>nul
   REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v UninstallString /t REG_SZ /d "\"%ProgramDir%\uninstall.bat\" --user" /f 1>nul
 ) else (
+  REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v DisplayName /t REG_SZ /d "Browsers (All Users)" /f 1>nul
   REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v UninstallString /t REG_SZ /d "\"%ProgramDir%\uninstall.bat\" --system" /f 1>nul
 )
 
