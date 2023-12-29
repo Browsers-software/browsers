@@ -5,6 +5,8 @@ REM Delayed Expansion is usually disabled by default, but
 REM we are explicit about it here not to make that assumption
 setlocal DisableDelayedExpansion
 
+set APP_VERSION=0.4.4
+
 REM Sets ARCH to ARM64 or AMD64
 for /f "tokens=3" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v PROCESSOR_ARCHITECTURE ^| findstr /ri "REG_SZ"') do set ARCH_WIN=%%a
 
@@ -162,7 +164,8 @@ REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\App Paths\brow
 
 REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /f 1>nul
 REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v DisplayIcon /t REG_SZ /d "%ProgramDir%\browsers.exe" /f 1>nul
-REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v DisplayVersion /t REG_SZ /d "0.0.0" /f 1>nul
+
+REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v DisplayVersion /t REG_SZ /d "%APP_VERSION%" /f 1>nul
 REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v EstimatedSize /t REG_DWORD /d 4800 /f 1>nul
 REG ADD "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /v Publisher /t REG_SZ /d "Browsers.software" /f 1>nul
 
