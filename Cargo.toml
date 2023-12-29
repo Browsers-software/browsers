@@ -101,6 +101,9 @@ dunce = "1.0.4"
 # Requires rc.exe from the Windows SDK (or windres.exe and ar.exe from minGW64)
 winres = "0.1.12"
 
+# statically link vcruntime140.dll instead of requiring user to install the runtime
+static_vcruntime = "2.0"
+
 #[profile.dev]
 #lto = true
 

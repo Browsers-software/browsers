@@ -44,6 +44,9 @@ fn main() {
     let mut res = winres::WindowsResource::new();
     res.set_icon("extra/windows/icons/browsers.ico");
     res.compile().unwrap();
+
+    // statically link vcruntime140.dll instead of requiring user to install the runtime
+    static_vcruntime::metabuild();
 }
 
 #[cfg(target_os = "linux")]
