@@ -57,11 +57,17 @@ if "%~1"=="--user" (
   set is_explicitly_requested_user=false
 )
 
-if %is_admin% == true if not %is_explicitly_requested_user% == true (
-  echo Because you are running this as an administrator we are going to install it to the whole system
-  echo Please run this installer with --user flag to override this behaviour.
-  echo.
-  set is_local_install=false
+REM Default to system-wide install if running with admin rights and
+REM not specifying explicit user/system install mode
+if %is_admin% == true (
+    if not %is_explicitly_requested_user% == true (
+        if not %is_explicitly_requested_system% == true (
+          echo Because you are running this as an administrator we are going to install it to the whole system
+          echo Please run this installer with --user flag to override this behaviour.
+          echo.
+          set is_local_install=false
+        )
+    )
 )
 
 REM C:\Users\x\AppData\Local\software.Browsers\
@@ -72,8 +78,10 @@ if %is_local_install% == true (
     setlocal EnableDelayedExpansion
     set ProgramDir=!LocalProgramsDir!\software.Browsers
     setlocal DisableDelayedExpansion
+    echo Installing only for current user
 ) else (
     set ProgramDir=%ProgramFiles%\software.Browsers
+    echo Installing for all users
 )
 
 echo Installing to %ProgramDir%
