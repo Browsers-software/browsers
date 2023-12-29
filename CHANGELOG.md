@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.4] - 2023-12-29
+
+### Fixed
+- Windows: Fix various installer issues. Thanks to @Erquint for thorough report #116
+- Windows: Don't require "Microsoft Visual C++ Redistributable" to be installed
+
+### Added
+- Windows: Add uninstaller to Installed Apps
+
 ## [0.4.3] - 2023-10-24
 
 ### Fixed
@@ -208,7 +217,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial Release
 
-[unreleased]: https://github.com/Browsers-software/browsers/compare/0.4.3...HEAD
+[unreleased]: https://github.com/Browsers-software/browsers/compare/0.4.4...HEAD
+[0.4.4]: https://github.com/Browsers-software/browsers/releases/tag/0.4.4
 [0.4.3]: https://github.com/Browsers-software/browsers/releases/tag/0.4.3
 [0.4.2]: https://github.com/Browsers-software/browsers/releases/tag/0.4.2
 [0.4.1]: https://github.com/Browsers-software/browsers/releases/tag/0.4.1
