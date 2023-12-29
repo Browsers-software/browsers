@@ -15,16 +15,6 @@ if "%ARCH_WIN%" == "AMD64" (set ARCH=x86_64)
 
 REM echo %ARCH%
 
-if not exist "%windir%\system32\vcruntime140.dll" (
-    echo You don't seem to have Microsoft Visual C++ Redistributable installed
-    echo Browsers, like many other software, requires it.
-    echo Please download it from https://aka.ms/vs/17/release/vc_redist.x64.exe
-    echo Install it and then reopen this installer again.
-    echo.
-
-    exit /b 1
-)
-
 fltmc >nul 2>&1 && (
   set is_admin=true
 ) || (
