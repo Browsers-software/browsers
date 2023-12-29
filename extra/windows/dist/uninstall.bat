@@ -15,9 +15,9 @@ if "%ARCH_WIN%" == "AMD64" (set ARCH=x86_64)
 
 REM echo %ARCH%
 
-if exist "%windir%\system32\config\systemprofile\*" (
+fltmc >nul 2>&1 && (
   set is_admin=true
-) else (
+) || (
   set is_admin=false
 )
 
@@ -47,11 +47,29 @@ if "%~1"=="--user" (
   set is_explicitly_requested_user=false
 )
 
-if %is_admin% == true if not %is_explicitly_requested_user% == true (
-  echo Because you are running this as an administrator we are going to uninstall it from the whole system
-  echo Please run this uninstaller with --user flag to override this behaviour.
-  echo.
-  set is_local_install=false
+REM Default to system-wide install if running with admin rights and
+REM not specifying explicit user/system install mode
+if %is_admin% == true (
+    if not %is_explicitly_requested_user% == true (
+        if not %is_explicitly_requested_system% == true (
+          echo Because you are running this as an administrator we are going to uninstall it from the whole system
+          echo Please run this uninstaller with --user flag to override this behaviour.
+          echo.
+          set is_local_install=false
+        )
+    )
+)
+
+if %is_local_install% == true (
+    REM TODO: would be even more correct to take from registry
+    set LocalProgramsDir=%LocalAppData%\Programs
+    setlocal EnableDelayedExpansion
+    set ProgramDir=!LocalProgramsDir!\software.Browsers
+    setlocal DisableDelayedExpansion
+    echo Uninstalling only for current user
+) else (
+    set ProgramDir=%ProgramFiles%\software.Browsers
+    echo Uninstalling for all users
 )
 
 REM C:\Users\x\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Browsers\Browsers.lnk
@@ -89,15 +107,6 @@ REG DELETE "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\s
 
 REM C:\Users\x\AppData\Local\software.Browsers\
 
-if %is_local_install% == true (
-    REM TODO: would be even more correct to take from registry
-    set LocalProgramsDir=%LocalAppData%\Programs
-    setlocal EnableDelayedExpansion
-    set ProgramDir=!LocalProgramsDir!\software.Browsers
-    setlocal DisableDelayedExpansion
-) else (
-    set ProgramDir=%ProgramFiles%\software.Browsers
-)
 REM delete if exists
 REM doing this as the last thing, because it would exit the script when this bat file itself
 REM is located in that directory
