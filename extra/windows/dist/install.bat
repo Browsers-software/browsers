@@ -25,9 +25,9 @@ if not exist "%windir%\system32\vcruntime140.dll" (
     exit /b 1
 )
 
-if exist "%windir%\system32\config\systemprofile\*" (
+fltmc >nul 2>&1 && (
   set is_admin=true
-) else (
+) || (
   set is_admin=false
 )
 
