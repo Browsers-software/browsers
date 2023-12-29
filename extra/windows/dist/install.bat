@@ -5,8 +5,6 @@ REM Delayed Expansion is usually disabled by default, but
 REM we are explicit about it here not to make that assumption
 setlocal DisableDelayedExpansion
 
-set APP_VERSION=0.4.4
-
 REM Sets ARCH to ARM64 or AMD64
 for /f "tokens=3" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v PROCESSOR_ARCHITECTURE ^| findstr /ri "REG_SZ"') do set ARCH_WIN=%%a
 
@@ -86,6 +84,11 @@ REM .bat location with trailing \
 set THIS_DIR=%~dp0
 
 set SRC_BINARY_PATH=%THIS_DIR%%ARCH%\browsers.exe
+
+FOR /F "delims=" %%F IN ('powershell -NoLogo -NoProfile -Command ^(Get-Item \"%SRC_BINARY_PATH%\"^).VersionInfo.FileVersion') DO (SET APP_VERSION=%%F)
+
+echo Browsers Version: %APP_VERSION%
+
 copy "%SRC_BINARY_PATH%" "%ProgramDir%\browsers.exe" 1>nul
 
 copy "%THIS_DIR%uninstall.bat" "%ProgramDir%\uninstall.bat" 1>nul
