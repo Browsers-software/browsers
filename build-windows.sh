@@ -99,6 +99,12 @@ make_archives() {
   create_signatures "$target_dir" "browsers_windows.tar.xz"
 }
 
+sign_binary() {
+  echo "Signing binaries"
+  #signtool "$target_dir/x86_64/browsers.exe"
+  #signtool "$target_dir/aarch64/browsers.exe"
+}
+
 create_signatures() {
   local target_dir="$1"
   local file_name="$2"
@@ -111,5 +117,6 @@ create_signatures() {
 }
 
 build_binary
+#sign_binary
 build_app_bundle
 make_archives

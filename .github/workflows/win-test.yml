@@ -1,0 +1,31 @@
+name: CI Test
+run-name: CI Test
+on: [ push ]
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - name: Install tools
+        run: |
+          #dir 'C:\Program Files (x86)\'
+          # dir 'C:\Program Files (x86)\Windows Kits\'
+          # dir 'C:\Program Files (x86)\Windows Kits\10\'
+          # dir 'C:\Program Files (x86)\Windows Kits\10\bin\'
+          # dir 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\'
+          # dir 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\'
+          # export PATH=$PATH:'C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\arm64'
+          # export PATH=$PATH:'C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64'
+          # "C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x86\signtool" sign /fd SHA256 /p "<PASSWORD_HERE>" /ac SectigoPublicCodeSigningRootR46_AAA.crt /f codesign.pfx /tr http://timestamp.sectigo.com/rfc3161 /td sha256 yourProgram.exe
+          # "C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x86\signtool" sign /fd SHA256 /p "<PASSWORD_HERE>" /ac SectigoPublicCodeSigningRootR46_AAA.crt /f codesign.pfx /tr http://timestamp.sectigo.com/rfc3161 /td sha256 yourProgram.exe
+
+          export PATH=$PATH:'/c/Program Files (x86)/Windows Kits/10/bin/10.0.22621.0/x64'
+          signtool sign -fd SHA256 -p password -ac signingroot.crt -f codesign.pfx -tr http:////time.certum.pl -td sha256 my.exe
+          
+          #   & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.22621.0/x86/signtool.exe' sign /fd SHA256 /p $env:CODESIGN_PWD /ac certificate\intermediate.crt /f certificate\certificate.pfx /tr "http://timestamp.sectigo.com/rfc3161" /td sha256 target/release/espanso.exe
+
+
+        shell: bash
