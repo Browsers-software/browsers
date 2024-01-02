@@ -47,7 +47,7 @@ url = "2.5.0"
 globset = "0.4.14"
 
 # Parse .ini files (e.g Firefox profiles.ini)
-configparser = "3.0.3"
+configparser = "3.0.4"
 
 # Hash Firefox path with cityhash64, to map it to
 # locked installation in profiles.ini
