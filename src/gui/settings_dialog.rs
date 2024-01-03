@@ -7,11 +7,17 @@ use druid::{
 };
 use tracing::info;
 
-use crate::gui::ui::{UIBrowser, UISettings, UISettingsRule, UIState};
+use crate::gui::ui::{UIBrowser, UISettings, UISettingsRule, UIState, REMOVE_RULE};
 
 fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<(UISettingsRule)> {
     let url_pattern_label = Label::new("If URL contains");
     let profile_label = Label::new("Open in");
+
+    let remove_rule_button =
+        Button::new("Remove rule").on_click(move |ctx, data: &mut UISettingsRule, _env| {
+            let command = REMOVE_RULE.with(data.index);
+            ctx.submit_command(command);
+        });
 
     let url_pattern = TextBox::new()
         .with_placeholder("https://")
@@ -43,8 +49,9 @@ fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<(UISettingsRule)> 
                 - crate::gui::ui::OPTIONS_LABEL_SIZE / 2.0,
         );*/
 
+        let rule_index = rule.index.clone();
         ctx.show_context_menu(
-            make_profiles_menu(browsers_clone2.clone(), rule),
+            make_profiles_menu(browsers_clone2.clone(), rule_index),
             Point::new(0.0, 0.0),
         );
     });
@@ -60,6 +67,7 @@ fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<(UISettingsRule)> 
         .with_child(selected_profile)
         .with_child(incognito_checkbox);
     return Flex::column()
+        .with_child(remove_rule_button)
         .with_child(url_pattern_row)
         .with_child(profile_row);
 }
@@ -98,18 +106,19 @@ pub fn show_settings_dialog(ctx: &mut DelegateCtx, browsers: &Arc<Vec<UIBrowser>
     ctx.new_window(new_win);
 }
 
-fn make_profiles_menu(browsers: Arc<Vec<UIBrowser>>, rule: &mut UISettingsRule) -> Menu<UIState> {
+fn make_profiles_menu(browsers: Arc<Vec<UIBrowser>>, rule_index: usize) -> Menu<UIState> {
     // TODO: should also add Prompt (no profile) as an option (also in settings).
     let menu = browsers
         .iter()
-        .map(move |b| {
-            let rule_index = rule.index.clone();
+        .map(|b| {
+            let profile_full_name = b.get_full_name();
             let profile_id = b.unique_id.clone();
+            let profile_id_clone = profile_id.clone();
 
-            MenuItem::new(b.get_full_name())
-                .selected(b.unique_id == rule.profile.to_string())
+            MenuItem::new(profile_full_name)
+                .selected_if(move |data: &UISettingsRule, _env| data.profile == profile_id)
                 .on_activate(move |ctx, data: &mut UISettingsRule, _env| {
-                    data.profile = profile_id.clone();
+                    data.profile = profile_id_clone.clone();
                 })
                 .lens(
                     UIState::ui_settings
@@ -117,7 +126,8 @@ fn make_profiles_menu(browsers: Arc<Vec<UIBrowser>>, rule: &mut UISettingsRule) 
                         .then(Identity.index(rule_index).in_arc()),
                 )
         })
-        .fold(Menu::empty(), |acc, e| acc.entry(e));
+        .fold(Menu::empty(), |acc, e| acc.entry(e))
+        .enabled_if(|a, _| !a.ui_settings.rules.is_empty());
 
     menu
 }

@@ -358,6 +358,15 @@ impl UISettings {
         rules_mut.push(rule);
         info!("add_rule called")
     }
+
+    pub fn remove_rule_by_index(&mut self, index: usize) {
+        let rules_mut = Arc::make_mut(&mut self.rules);
+        rules_mut.remove(index);
+        // and update .index of all rules
+        for (i, rule) in rules_mut.iter_mut().enumerate() {
+            rule.index = i
+        }
+    }
 }
 
 #[derive(Clone, Data, Lens)]
@@ -458,6 +467,8 @@ pub const RESTORE_HIDDEN_PROFILE: Selector<String> =
     Selector::new("browsers.restore_hidden_profile");
 
 pub const MOVE_PROFILE: Selector<(String, MoveTo)> = Selector::new("browsers.move_profile");
+
+pub const REMOVE_RULE: Selector<usize> = Selector::new("browsers.remove_rule");
 
 #[derive(Clone, Copy, Debug)]
 pub enum MoveTo {
@@ -769,6 +780,10 @@ impl AppDelegate<UIState> for UIDelegate {
             Handled::Yes
         } else if cmd.is(SHOW_SETTINGS_DIALOG) {
             settings_dialog::show_settings_dialog(ctx, &data.browsers);
+            Handled::Yes
+        } else if cmd.is(REMOVE_RULE) {
+            let rule_index = cmd.get_unchecked(REMOVE_RULE).clone();
+            data.ui_settings.remove_rule_by_index(rule_index);
             Handled::Yes
         } else {
             //println!("cmd forwarded: {:?}", cmd);
