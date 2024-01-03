@@ -3,7 +3,7 @@ use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::process::exit;
 use std::sync::mpsc::Sender;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use druid::commands::{CONFIGURE_WINDOW_SIZE_AND_POSITION, QUIT_APP, SHOW_WINDOW};
 use druid::piet::InterpolationMode;
@@ -29,7 +29,7 @@ use url::Url;
 use crate::gui::{about_dialog, settings_dialog};
 use crate::url_rule::UrlGlobMatcher;
 use crate::utils::{Config, UIConfig};
-use crate::{paths, CommonBrowserProfile, MessageToMain};
+use crate::{CommonBrowserProfile, MessageToMain};
 
 const WINDOW_BORDER_WIDTH: f64 = 1.0;
 const PADDING_X: f64 = 5.0;
@@ -339,6 +339,25 @@ pub struct UIState {
 #[derive(Clone, Data, Lens)]
 pub struct UISettings {
     pub rules: Arc<Vec<UISettingsRule>>,
+}
+
+impl UISettings {
+    pub fn add_empty_rule(&mut self) {
+        let mut next_index = self.rules.len();
+
+        // todo: mut rule?
+        let rule = UISettingsRule {
+            index: next_index,
+            source_app: "".to_string(),
+            url_pattern: "".to_string(),
+            profile: "".to_string(),
+            incognito: false,
+        };
+
+        let rules_mut = Arc::make_mut(&mut self.rules);
+        rules_mut.push(rule);
+        info!("add_rule called")
+    }
 }
 
 #[derive(Clone, Data, Lens)]
