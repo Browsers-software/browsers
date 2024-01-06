@@ -58,6 +58,7 @@ impl UI {
             .enumerate()
             .map(|(i, rule)| UISettingsRule {
                 index: i,
+                deleted: false,
                 source_app: rule
                     .source_app
                     .as_ref()
@@ -345,9 +346,9 @@ impl UISettings {
     pub fn add_empty_rule(&mut self) {
         let mut next_index = self.rules.len();
 
-        // todo: mut rule?
         let rule = UISettingsRule {
             index: next_index,
+            deleted: false,
             source_app: "".to_string(),
             url_pattern: "".to_string(),
             profile: "".to_string(),
@@ -372,6 +373,8 @@ impl UISettings {
 #[derive(Clone, Data, Lens)]
 pub struct UISettingsRule {
     pub index: usize,
+    pub deleted: bool, // soft-deleting to avoid complex druid issues
+
     source_app: String,  // Optional in datamodel
     url_pattern: String, // Optional in datamodel
     pub profile: String,
