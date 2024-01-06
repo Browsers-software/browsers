@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use druid::lens::Identity;
-use druid::widget::{Button, Checkbox, Flex, Label, List, TextBox};
+use druid::widget::{Button, Checkbox, Either, Flex, Label, List, TextBox};
 use druid::{
     Color, DelegateCtx, EventCtx, LensExt, Menu, MenuItem, Point, Widget, WidgetExt, WindowDesc,
 };
@@ -13,11 +13,8 @@ fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<(UISettingsRule)> 
     let url_pattern_label = Label::new("If URL contains");
     let profile_label = Label::new("Open in");
 
-    let remove_rule_button =
-        Button::new("Remove rule").on_click(move |ctx, data: &mut UISettingsRule, _env| {
-            let command = REMOVE_RULE.with(data.index);
-            ctx.submit_command(command);
-        });
+    let remove_rule_button = Button::new("Remove rule")
+        .on_click(move |ctx, data: &mut UISettingsRule, _env| data.deleted = true);
 
     let url_pattern = TextBox::new()
         .with_placeholder("https://")
@@ -50,10 +47,8 @@ fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<(UISettingsRule)> 
         );*/
 
         let rule_index = rule.index.clone();
-        ctx.show_context_menu(
-            make_profiles_menu(browsers_clone2.clone(), rule_index),
-            Point::new(0.0, 0.0),
-        );
+        let menu = make_profiles_menu(browsers_clone2.clone(), rule_index);
+        ctx.show_context_menu(menu, Point::new(0.0, 0.0));
     });
 
     let url_pattern_row = Flex::row()
@@ -66,10 +61,14 @@ fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<(UISettingsRule)> 
         .with_child(profile_label)
         .with_child(selected_profile)
         .with_child(incognito_checkbox);
-    return Flex::column()
-        .with_child(remove_rule_button)
-        .with_child(url_pattern_row)
-        .with_child(profile_row);
+
+    return Either::new(|data: &UISettingsRule, _env| data.deleted, { Flex::column() }, {
+        Flex::column()
+            .with_child(remove_rule_button)
+            .with_child(url_pattern_row)
+            .with_child(profile_row)
+            .with_spacer(10.0)
+    });
 }
 
 pub fn show_settings_dialog(ctx: &mut DelegateCtx, browsers: &Arc<Vec<UIBrowser>>) {
@@ -79,7 +78,6 @@ pub fn show_settings_dialog(ctx: &mut DelegateCtx, browsers: &Arc<Vec<UIBrowser>
     let browsers_arc = browsers.clone();
 
     let rules_list = List::new(move || create_rule(&browsers_arc))
-        .with_spacing(20.0)
         .lens(UIState::ui_settings.then(UISettings::rules))
         .scroll();
 
@@ -126,8 +124,7 @@ fn make_profiles_menu(browsers: Arc<Vec<UIBrowser>>, rule_index: usize) -> Menu<
                         .then(Identity.index(rule_index).in_arc()),
                 )
         })
-        .fold(Menu::empty(), |acc, e| acc.entry(e))
-        .enabled_if(|a, _| !a.ui_settings.rules.is_empty());
+        .fold(Menu::empty(), |acc, e| acc.entry(e));
 
     menu
 }
