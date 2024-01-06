@@ -219,7 +219,7 @@ impl OSAppFinder {
         return self.inner.get_app_repository();
     }
 
-    pub(crate) fn save_installed_browsers_config(&self, config: &Config) {
+    pub(crate) fn save_config(&self, config: &Config) {
         let config_root_dir = paths::get_config_root_dir();
         fs::create_dir_all(config_root_dir.as_path()).unwrap();
         let config_json_path = paths::get_config_json_path();
@@ -227,7 +227,7 @@ impl OSAppFinder {
         serde_json::to_writer_pretty(buffer, config).unwrap();
     }
 
-    pub(crate) fn get_installed_browsers_config(&self) -> Config {
+    pub(crate) fn get_config(&self) -> Config {
         let config_root_dir = paths::get_config_root_dir();
         fs::create_dir_all(config_root_dir.as_path()).unwrap();
         let config_json_path = paths::get_config_json_path();
