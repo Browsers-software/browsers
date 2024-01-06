@@ -390,7 +390,7 @@ fn generate_all_browser_profiles(
     Vec<CommonBrowserProfile>,
 ) {
     let installed_browsers = app_finder.get_installed_browsers_cached(force_reload);
-    let config = app_finder.get_installed_browsers_config();
+    let config = app_finder.get_config();
     let hidden_apps = config.get_hidden_apps();
     let hidden_profiles = config.get_hidden_profiles();
 
@@ -580,7 +580,7 @@ pub fn basically_main(
 
     let localizations_basedir = paths::get_localizations_basedir();
 
-    let config = app_finder.get_installed_browsers_config();
+    let config = app_finder.get_config();
     let ui_config = config.get_ui_config();
 
     let ui2 = UI::new(
@@ -685,9 +685,9 @@ pub fn basically_main(
                         .map(|p| p.get_unique_id())
                         .collect();
 
-                    let mut config = app_finder.get_installed_browsers_config();
+                    let mut config = app_finder.get_config();
                     config.hide_all_profiles(&to_hide);
-                    app_finder.save_installed_browsers_config(&config);
+                    app_finder.save_config(&config);
 
                     visible_browser_profiles.retain(|visible_profile| {
                         let delete = visible_profile.get_unique_app_id() == app_id;
@@ -714,9 +714,9 @@ pub fn basically_main(
                 MessageToMain::HideAppProfile(unique_id) => {
                     info!("Hiding profile {}", unique_id);
 
-                    let mut config = app_finder.get_installed_browsers_config();
+                    let mut config = app_finder.get_config();
                     config.hide_profile(unique_id.as_str());
-                    app_finder.save_installed_browsers_config(&config);
+                    app_finder.save_config(&config);
 
                     let visible_profile_index_maybe = visible_browser_profiles
                         .iter()
@@ -745,9 +745,9 @@ pub fn basically_main(
                     info!("Restoring profile {}", unique_id);
                     // will add to the end of visible profiles
 
-                    let mut config = app_finder.get_installed_browsers_config();
+                    let mut config = app_finder.get_config();
                     config.restore_profile(unique_id.as_str());
-                    app_finder.save_installed_browsers_config(&config);
+                    app_finder.save_config(&config);
 
                     let profile_order = config.get_profile_order();
 
@@ -873,9 +873,9 @@ fn move_app_profile(
         .map(|p| p.get_unique_id())
         .collect();
 
-    let mut config = app_finder.get_installed_browsers_config();
+    let mut config = app_finder.get_config();
     config.set_profile_order(&profile_ids_sorted);
-    app_finder.save_installed_browsers_config(&config);
+    app_finder.save_config(&config);
 }
 
 #[derive(Debug)]
