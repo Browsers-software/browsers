@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use druid::lens::Identity;
-use druid::widget::{Button, Checkbox, Either, Flex, Label, List, TextBox};
+use druid::widget::{Button, Checkbox, Container, Either, Flex, Label, List, TextBox};
 use druid::{
     Color, DelegateCtx, EventCtx, LensExt, Menu, MenuItem, Point, Widget, WidgetExt, WindowDesc,
 };
@@ -13,8 +13,10 @@ fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<(UISettingsRule)> 
     let url_pattern_label = Label::new("If URL contains");
     let profile_label = Label::new("Open in");
 
-    let remove_rule_button = Button::new("Remove rule")
-        .on_click(move |ctx, data: &mut UISettingsRule, _env| data.deleted = true);
+    let remove_rule_button =
+        Button::new("➖").on_click(move |ctx, data: &mut UISettingsRule, _env| data.deleted = true);
+
+    let action_row = Flex::row().with_child(remove_rule_button);
 
     let url_pattern = TextBox::new()
         .with_placeholder("https://")
@@ -63,11 +65,17 @@ fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<(UISettingsRule)> 
         .with_child(incognito_checkbox);
 
     return Either::new(|data: &UISettingsRule, _env| data.deleted, { Flex::column() }, {
-        Flex::column()
-            .with_child(remove_rule_button)
-            .with_child(url_pattern_row)
-            .with_child(profile_row)
-            .with_spacer(10.0)
+        Container::new(
+            Flex::column()
+                .with_child(action_row)
+                .with_child(url_pattern_row)
+                .with_child(profile_row),
+        )
+        .padding(10.0)
+        .background(Color::rgba(0.1, 0.1, 0.1, 0.9))
+        .rounded(10.0)
+        .border(Color::rgba(0.5, 0.5, 0.5, 0.9), 0.5)
+        .padding(10.0)
     });
 }
 
