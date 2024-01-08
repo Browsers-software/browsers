@@ -3,11 +3,14 @@ use std::sync::Arc;
 use druid::lens::Identity;
 use druid::widget::{Button, Checkbox, Container, Either, Flex, Label, List, TextBox};
 use druid::{
-    Color, DelegateCtx, EventCtx, LensExt, Menu, MenuItem, Point, Widget, WidgetExt, WindowDesc,
+    Color, DelegateCtx, EventCtx, LensExt, Menu, MenuItem, Point, Target, Widget, WidgetExt,
+    WindowDesc,
 };
 use tracing::info;
 
-use crate::gui::ui::{UIBrowser, UISettings, UISettingsRule, UIState, REMOVE_RULE};
+use crate::gui::ui::{
+    UIBrowser, UISettings, UISettingsRule, UIState, REMOVE_RULE, SAVE_RULES, SET_FOCUSED_INDEX,
+};
 
 fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<(UISettingsRule)> {
     let url_pattern_label = Label::new("If URL contains");
@@ -93,10 +96,14 @@ pub fn show_settings_dialog(ctx: &mut DelegateCtx, browsers: &Arc<Vec<UIBrowser>
         .on_click(move |_ctx, data: &mut UISettings, _env| data.add_empty_rule())
         .lens(UIState::ui_settings);
 
+    let save_button = Button::new("Save rules")
+        .on_click(|ctx, _data, _env| ctx.submit_command(SAVE_RULES.with(0)));
+
     let col = Flex::column()
         .with_child(app_name_row)
         .with_child(rules_list)
-        .with_child(add_rule_button);
+        .with_child(add_rule_button)
+        .with_child(save_button);
 
     let new_win = WindowDesc::new(col).title("Settings").show_titlebar(true);
 

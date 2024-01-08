@@ -136,6 +136,10 @@ impl Config {
         return &self.rules;
     }
 
+    pub fn set_rules(&mut self, rules: &Vec<ConfigRule>) {
+        self.rules = rules.clone();
+    }
+
     pub fn get_default_profile(&self) -> &Option<ProfileAndOptions> {
         return &self.default_profile;
     }

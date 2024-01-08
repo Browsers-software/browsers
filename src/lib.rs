@@ -14,10 +14,10 @@ use url::Url;
 use gui::ui;
 
 use crate::browser_repository::{SupportedApp, SupportedAppRepository};
-use crate::gui::ui::MoveTo;
 use crate::gui::ui::UI;
+use crate::gui::ui::{MoveTo, UISettingsRule};
 use crate::url_rule::UrlGlobMatcher;
-use crate::utils::{OSAppFinder, ProfileAndOptions};
+use crate::utils::{ConfigRule, OSAppFinder, ProfileAndOptions};
 
 mod gui;
 
@@ -782,6 +782,21 @@ pub fn basically_main(
                     move_to,
                     &ui_event_sink,
                 ),
+                MessageToMain::SaveConfigRules(ui_rules) => {
+                    let mut config = app_finder.get_config();
+                    let new_rules: Vec<ConfigRule> = ui_rules
+                        .iter()
+                        .map(|ui_rule| ConfigRule {
+                            source_app: None, // TODO
+                            url_pattern: Some(ui_rule.url_pattern.clone()),
+                            profile: ui_rule.profile.clone(),
+                            incognito: ui_rule.incognito,
+                        })
+                        .collect();
+
+                    config.set_rules(&new_rules);
+                    app_finder.save_config(&config);
+                }
             }
         }
         info!("Exiting waiting thread");
@@ -889,4 +904,5 @@ pub enum MessageToMain {
     HideAllProfiles(String),
     RestoreAppProfile(String),
     MoveAppProfile(String, MoveTo),
+    SaveConfigRules(Vec<UISettingsRule>),
 }
