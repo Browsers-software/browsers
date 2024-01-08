@@ -360,25 +360,29 @@ impl UISettings {
         info!("add_rule called")
     }
 
-    pub fn remove_rule_by_index(&mut self, index: usize) {
+    pub fn get_rule_by_index(&self, index: usize) -> Option<&UISettingsRule> {
+        return self.rules.get(index);
+    }
+
+    /*pub fn remove_rule_by_index(&mut self, index: usize) {
         let rules_mut = Arc::make_mut(&mut self.rules);
         rules_mut.remove(index);
         // and update .index of all rules
         for (i, rule) in rules_mut.iter_mut().enumerate() {
             rule.index = i
         }
-    }
+    }*/
 }
 
-#[derive(Clone, Data, Lens)]
+#[derive(Clone, Debug, Data, Lens)]
 pub struct UISettingsRule {
     pub index: usize,
     pub deleted: bool, // soft-deleting to avoid complex druid issues
 
-    source_app: String,  // Optional in datamodel
-    url_pattern: String, // Optional in datamodel
+    pub source_app: String,  // Optional in datamodel
+    pub url_pattern: String, // Optional in datamodel
     pub profile: String,
-    incognito: bool,
+    pub incognito: bool,
 }
 
 impl FocusData for UIState {
@@ -471,6 +475,10 @@ pub const RESTORE_HIDDEN_PROFILE: Selector<String> =
 
 pub const MOVE_PROFILE: Selector<(String, MoveTo)> = Selector::new("browsers.move_profile");
 
+// or save draft?
+// or save rules, but allow "invalid" rules to be saved and handle them?
+pub const SAVE_RULES: Selector<usize> = Selector::new("browsers.save_rules");
+pub const SAVE_RULE: Selector<usize> = Selector::new("browsers.save_rule");
 pub const REMOVE_RULE: Selector<usize> = Selector::new("browsers.remove_rule");
 
 #[derive(Clone, Copy, Debug)]
@@ -784,9 +792,30 @@ impl AppDelegate<UIState> for UIDelegate {
         } else if cmd.is(SHOW_SETTINGS_DIALOG) {
             settings_dialog::show_settings_dialog(ctx, &data.browsers);
             Handled::Yes
+        } else if cmd.is(SAVE_RULES) {
+            let rules = &data.ui_settings.rules.clone();
+            let rules_clone: Vec<UISettingsRule> = rules.iter().map(|a| a.clone()).collect();
+            self.main_sender
+                .send(MessageToMain::SaveConfigRules(rules_clone))
+                .ok();
+            Handled::Yes
+        } else if cmd.is(SAVE_RULE) {
+            //let rule_index = cmd.get_unchecked(SAVE_RULE).clone();
+            let rules = &data.ui_settings.rules.clone();
+            let rules_clone: Vec<UISettingsRule> = rules.iter().map(|a| a.clone()).collect();
+
+            //let rule_maybe = data.ui_settings.get_rule_by_index(rule_index);
+            //if rule_maybe.is_some() {
+            //let rule = rule_maybe.unwrap();
+            self.main_sender
+                .send(MessageToMain::SaveConfigRules(rules_clone))
+                .ok();
+            //}
+            Handled::Yes
         } else if cmd.is(REMOVE_RULE) {
             let rule_index = cmd.get_unchecked(REMOVE_RULE).clone();
-            data.ui_settings.remove_rule_by_index(rule_index);
+
+            //data.ui_settings.remove_rule_by_index(rule_index);
             Handled::Yes
         } else {
             //println!("cmd forwarded: {:?}", cmd);
