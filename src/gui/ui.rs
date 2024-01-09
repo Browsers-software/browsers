@@ -477,7 +477,7 @@ pub const MOVE_PROFILE: Selector<(String, MoveTo)> = Selector::new("browsers.mov
 
 // or save draft?
 // or save rules, but allow "invalid" rules to be saved and handle them?
-pub const SAVE_RULES: Selector<usize> = Selector::new("browsers.save_rules");
+pub const SAVE_RULES: Selector<()> = Selector::new("browsers.save_rules");
 pub const SAVE_RULE: Selector<usize> = Selector::new("browsers.save_rule");
 pub const REMOVE_RULE: Selector<usize> = Selector::new("browsers.remove_rule");
 
@@ -794,7 +794,11 @@ impl AppDelegate<UIState> for UIDelegate {
             Handled::Yes
         } else if cmd.is(SAVE_RULES) {
             let rules = &data.ui_settings.rules.clone();
-            let rules_clone: Vec<UISettingsRule> = rules.iter().map(|a| a.clone()).collect();
+            let rules_clone: Vec<UISettingsRule> = rules
+                .iter()
+                .filter(|r| !r.deleted)
+                .map(|a| a.clone())
+                .collect();
             self.main_sender
                 .send(MessageToMain::SaveConfigRules(rules_clone))
                 .ok();
@@ -802,7 +806,11 @@ impl AppDelegate<UIState> for UIDelegate {
         } else if cmd.is(SAVE_RULE) {
             //let rule_index = cmd.get_unchecked(SAVE_RULE).clone();
             let rules = &data.ui_settings.rules.clone();
-            let rules_clone: Vec<UISettingsRule> = rules.iter().map(|a| a.clone()).collect();
+            let rules_clone: Vec<UISettingsRule> = rules
+                .iter()
+                .filter(|r| !r.deleted)
+                .map(|a| a.clone())
+                .collect();
 
             //let rule_maybe = data.ui_settings.get_rule_by_index(rule_index);
             //if rule_maybe.is_some() {
