@@ -1,15 +1,21 @@
 use std::sync::Arc;
 
 use druid::lens::Identity;
-use druid::widget::{Button, Checkbox, Container, Either, Flex, Label, List, TextBox};
+use druid::platform_menus::mac::file::print;
+use druid::text::ParseFormatter;
+use druid::widget::{
+    Button, Checkbox, Container, Controller, ControllerHost, Either, Flex, Label, List, Switch,
+    TextBox, ValueTextBox,
+};
 use druid::{
-    Color, DelegateCtx, EventCtx, LensExt, Menu, MenuItem, Point, Target, Widget, WidgetExt,
-    WindowDesc,
+    Color, Data, DelegateCtx, Env, Event, EventCtx, LensExt, Menu, MenuItem, Point, Target,
+    UpdateCtx, Widget, WidgetExt, WindowDesc,
 };
 use tracing::info;
 
 use crate::gui::ui::{
-    UIBrowser, UISettings, UISettingsRule, UIState, REMOVE_RULE, SAVE_RULES, SET_FOCUSED_INDEX,
+    UIBrowser, UISettings, UISettingsRule, UIState, REMOVE_RULE, SAVE_RULE, SAVE_RULES,
+    SET_FOCUSED_INDEX,
 };
 
 fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<(UISettingsRule)> {
@@ -17,13 +23,22 @@ fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<(UISettingsRule)> 
     let profile_label = Label::new("Open in");
 
     let remove_rule_button =
-        Button::new("➖").on_click(move |ctx, data: &mut UISettingsRule, _env| data.deleted = true);
+        Button::new("➖").on_click(move |ctx, data: &mut UISettingsRule, _env| {
+            data.deleted = true;
+            ctx.submit_command(SAVE_RULES.with(()));
+        });
 
     let action_row = Flex::row().with_child(remove_rule_button);
 
-    let url_pattern = TextBox::new()
+    let text_box = TextBox::new()
         .with_placeholder("https://")
-        .with_text_size(18.0)
+        .with_text_size(18.0);
+
+    //let formatter = ParseFormatter::new();
+    //let value_text_box = ValueTextBox::new(text_box, formatter).update_data_while_editing(true);
+    let value_text_box = ControllerHost::new(text_box, SaveRulesOnDataChange);
+
+    let url_pattern = value_text_box
         .fix_width(200.0)
         .lens(UISettingsRule::url_pattern);
 
@@ -60,7 +75,8 @@ fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<(UISettingsRule)> 
         .with_child(url_pattern_label)
         .with_child(url_pattern);
 
-    let incognito_checkbox = Checkbox::new("incognito").lens(UISettingsRule::incognito);
+    let incognito_checkbox = ControllerHost::new(Checkbox::new("incognito"), SaveRulesOnDataChange)
+        .lens(UISettingsRule::incognito);
 
     let profile_row = Flex::row()
         .with_child(profile_label)
@@ -82,6 +98,17 @@ fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<(UISettingsRule)> 
     });
 }
 
+struct SaveRulesOnDataChange;
+
+impl<T: Data, W: Widget<T>> Controller<T, W> for SaveRulesOnDataChange {
+    fn update(&mut self, child: &mut W, ctx: &mut UpdateCtx, old_data: &T, data: &T, env: &Env) {
+        child.update(ctx, old_data, data, env);
+        if !old_data.same(data) {
+            ctx.submit_command(SAVE_RULES.with(()));
+        }
+    }
+}
+
 pub fn show_settings_dialog(ctx: &mut DelegateCtx, browsers: &Arc<Vec<UIBrowser>>) {
     info!("show_settings_dialog");
 
@@ -93,17 +120,16 @@ pub fn show_settings_dialog(ctx: &mut DelegateCtx, browsers: &Arc<Vec<UIBrowser>
         .scroll();
 
     let add_rule_button = Button::new("Add rule")
-        .on_click(move |_ctx, data: &mut UISettings, _env| data.add_empty_rule())
+        .on_click(move |ctx, data: &mut UISettings, _env| {
+            data.add_empty_rule();
+            ctx.submit_command(SAVE_RULES.with(()));
+        })
         .lens(UIState::ui_settings);
-
-    let save_button = Button::new("Save rules")
-        .on_click(|ctx, _data, _env| ctx.submit_command(SAVE_RULES.with(0)));
 
     let col = Flex::column()
         .with_child(app_name_row)
         .with_child(rules_list)
-        .with_child(add_rule_button)
-        .with_child(save_button);
+        .with_child(add_rule_button);
 
     let new_win = WindowDesc::new(col).title("Settings").show_titlebar(true);
 
@@ -132,6 +158,7 @@ fn make_profiles_menu(browsers: Arc<Vec<UIBrowser>>, rule_index: usize) -> Menu<
                 .selected_if(move |data: &UISettingsRule, _env| data.profile == profile_id)
                 .on_activate(move |ctx, data: &mut UISettingsRule, _env| {
                     data.profile = profile_id_clone.clone();
+                    ctx.submit_command(SAVE_RULE.with(rule_index))
                 })
                 .lens(
                     UIState::ui_settings
