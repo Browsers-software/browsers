@@ -523,14 +523,20 @@ impl UIDelegate {
 }
 
 impl AppDelegate<UIState> for UIDelegate {
+    // move event handling to main window
     fn event(
         &mut self,
         ctx: &mut DelegateCtx,
-        _window_id: WindowId,
+        window_id: WindowId,
         event: Event,
         data: &mut UIState,
         _env: &Env,
     ) -> Option<Event> {
+        if window_id != self.main_window_id {
+            // another window triggered event (e.g About or Settings) - ignore
+            return Some(event);
+        }
+
         let is_mac = cfg!(target_os = "macos");
         // linux calls this even when just opening a context menu
         // mac calls this when opening About window
@@ -578,6 +584,8 @@ impl AppDelegate<UIState> for UIDelegate {
         #[cfg(not(target_os = "macos"))]
         let copy_key_mod = Modifiers::CONTROL;
 
+        // TODO: disable if settings dialog is up
+        // TODO: disable if main dialog is not focused
         match event {
             Event::KeyDown(KeyEvent {
                 key: KbKey::Character(ref key),
