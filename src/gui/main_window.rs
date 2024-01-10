@@ -67,6 +67,7 @@ pub struct MainWindow {
     filtered_browsers: Arc<Vec<UIBrowser>>,
     show_set_as_default: bool,
     show_hotkeys: bool,
+    show_settings: bool,
 }
 
 impl MainWindow {
@@ -74,11 +75,13 @@ impl MainWindow {
         filtered_browsers: Arc<Vec<UIBrowser>>,
         show_set_as_default: bool,
         show_hotkeys: bool,
+        show_settings: bool,
     ) -> Self {
         Self {
             filtered_browsers: filtered_browsers,
             show_set_as_default: show_set_as_default,
             show_hotkeys: show_hotkeys,
+            show_settings: show_settings,
         }
     }
 
@@ -159,6 +162,8 @@ impl MainWindow {
             .fix_height(OPTIONS_LABEL_SIZE);
 
         let show_set_as_default = self.show_set_as_default;
+        let show_settings = self.show_settings;
+
         let options_button = FocusWidget::new(
             options_label,
             |ctx, _data: &UIState, _env| {
@@ -186,7 +191,11 @@ impl MainWindow {
             );
 
             ctx.show_context_menu(
-                make_options_menu(show_set_as_default, data.restorable_app_profiles.clone()),
+                make_options_menu(
+                    show_set_as_default,
+                    data.restorable_app_profiles.clone(),
+                    show_settings,
+                ),
                 position,
             );
         })
@@ -631,6 +640,7 @@ impl Lens<(bool, UIBrowser), UIBrowser> for BrowserLens {
 fn make_options_menu(
     show_set_as_default: bool,
     hidden_browsers: Arc<Vec<UIBrowser>>,
+    show_settings: bool,
 ) -> Menu<UIState> {
     let submenu_hidden_apps = make_hidden_apps_menu(hidden_browsers);
 
@@ -652,13 +662,17 @@ fn make_options_menu(
         );
     }
 
-    menu = menu
-        .entry(submenu_hidden_apps)
-        .entry(MenuItem::new(LocalizedString::new("Settings...")).on_activate(
+    menu = menu.entry(submenu_hidden_apps);
+
+    if show_settings {
+        menu = menu.entry(MenuItem::new(LocalizedString::new("Settings...")).on_activate(
             |ctx, _data: &mut UIState, _env| {
                 ctx.submit_command(SHOW_SETTINGS_DIALOG);
             },
         ))
+    }
+
+    menu = menu
         .entry(MenuItem::new(LocalizedString::new("About")).on_activate(
             |ctx, _data: &mut UIState, _env| {
                 ctx.submit_command(SHOW_ABOUT_DIALOG);

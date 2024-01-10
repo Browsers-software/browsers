@@ -52,6 +52,9 @@ pub struct Config {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(default)]
 pub struct UIConfig {
+    // hide WIP settings dialog behind a feature flag
+    pub show_settings: bool,
+
     pub show_hotkeys: bool,
 
     // quit_on_lost_focus works OK only in macOS
@@ -62,6 +65,7 @@ pub struct UIConfig {
 impl Default for UIConfig {
     fn default() -> Self {
         UIConfig {
+            show_settings: false,
             show_hotkeys: true,
             quit_on_lost_focus: false,
         }

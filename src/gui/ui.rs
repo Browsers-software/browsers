@@ -32,6 +32,7 @@ pub struct UI {
     show_set_as_default: bool,
     show_hotkeys: bool,
     quit_on_lost_focus: bool,
+    show_settings: bool,
     ui_settings: UISettings,
 }
 
@@ -127,6 +128,7 @@ impl UI {
             show_set_as_default: show_set_as_default,
             show_hotkeys: ui_config.show_hotkeys,
             quit_on_lost_focus: ui_config.quit_on_lost_focus,
+            show_settings: ui_config.show_settings,
             ui_settings: ui_settings,
         }
     }
@@ -140,6 +142,7 @@ impl UI {
             self.filtered_browsers.clone(),
             self.show_set_as_default,
             self.show_hotkeys,
+            self.show_settings,
         );
         let main_window = main_window1.create_main_window(&mouse_position, &monitor);
 
