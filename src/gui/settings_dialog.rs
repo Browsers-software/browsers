@@ -1,24 +1,20 @@
 use std::sync::Arc;
 
 use druid::lens::Identity;
-use druid::platform_menus::mac::file::print;
 use druid::text::ParseFormatter;
 use druid::widget::{
-    Button, Checkbox, Container, Controller, ControllerHost, Either, Flex, Label, List, Switch,
-    TextBox, ValueTextBox,
+    Button, Checkbox, Container, Controller, ControllerHost, Either, Flex, Label, List, TextBox,
+    ValueTextBox,
 };
 use druid::{
-    Color, Data, DelegateCtx, Env, Event, EventCtx, LensExt, Menu, MenuItem, Point, Target,
-    UpdateCtx, Widget, WidgetExt, WindowDesc,
+    Color, Data, DelegateCtx, Env, EventCtx, LensExt, Menu, MenuItem, Point, UpdateCtx, Widget,
+    WidgetExt, WindowDesc,
 };
 use tracing::info;
 
-use crate::gui::ui::{
-    UIBrowser, UISettings, UISettingsRule, UIState, REMOVE_RULE, SAVE_RULE, SAVE_RULES,
-    SET_FOCUSED_INDEX,
-};
+use crate::gui::ui::{UIBrowser, UISettings, UISettingsRule, UIState, SAVE_RULE, SAVE_RULES};
 
-fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<(UISettingsRule)> {
+fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettingsRule> {
     let url_pattern_label = Label::new("If URL contains");
     let profile_label = Label::new("Open in");
 
@@ -83,7 +79,7 @@ fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<(UISettingsRule)> 
         .with_child(selected_profile)
         .with_child(incognito_checkbox);
 
-    return Either::new(|data: &UISettingsRule, _env| data.deleted, { Flex::column() }, {
+    return Either::new(|data: &UISettingsRule, _env| data.deleted, Flex::column(), {
         Container::new(
             Flex::column()
                 .with_child(action_row)

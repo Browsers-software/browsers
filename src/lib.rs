@@ -14,8 +14,8 @@ use url::Url;
 use gui::ui;
 
 use crate::browser_repository::{SupportedApp, SupportedAppRepository};
+use crate::gui::ui::UISettingsRule;
 use crate::gui::ui::UI;
-use crate::gui::ui::{MoveTo, UISettingsRule};
 use crate::url_rule::UrlGlobMatcher;
 use crate::utils::{ConfigRule, OSAppFinder, ProfileAndOptions};
 
@@ -891,6 +891,14 @@ fn move_app_profile(
     let mut config = app_finder.get_config();
     config.set_profile_order(&profile_ids_sorted);
     app_finder.save_config(&config);
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum MoveTo {
+    UP,
+    DOWN,
+    TOP,
+    BOTTOM,
 }
 
 #[derive(Debug)]

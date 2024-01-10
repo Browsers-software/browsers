@@ -1,7 +1,7 @@
 use druid::widget::{Container, CrossAxisAlignment, Flex, Image, Label};
 use druid::{
-    Color, DelegateCtx, FontDescriptor, FontFamily, FontWeight, ImageBuf, Monitor, Point, Selector,
-    Size, WidgetExt, WindowDesc, WindowLevel,
+    Color, DelegateCtx, FontDescriptor, FontFamily, FontWeight, ImageBuf, Monitor, Point, Size,
+    WidgetExt, WindowDesc, WindowLevel,
 };
 use tracing::info;
 
