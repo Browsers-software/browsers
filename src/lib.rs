@@ -17,7 +17,7 @@ use crate::browser_repository::{SupportedApp, SupportedAppRepository};
 use crate::gui::ui::UISettingsRule;
 use crate::gui::ui::UI;
 use crate::url_rule::UrlGlobMatcher;
-use crate::utils::{ConfigRule, OSAppFinder, ProfileAndOptions};
+use crate::utils::{Config, ConfigRule, OSAppFinder, ProfileAndOptions};
 
 mod gui;
 
@@ -380,6 +380,27 @@ pub struct OpeningRule {
 }
 
 #[instrument(skip_all)]
+fn load_opening_rules(app_finder: &OSAppFinder) -> (Vec<OpeningRule>, Option<ProfileAndOptions>) {
+    let config = app_finder.get_config();
+    return get_opening_rules(&config);
+}
+
+fn get_opening_rules(config: &Config) -> (Vec<OpeningRule>, Option<ProfileAndOptions>) {
+    let config_rules = config.get_rules();
+    let default_profile = config.get_default_profile();
+    let opening_rules = config_rules
+        .iter()
+        .map(|r| OpeningRule {
+            source_app: r.source_app.clone(),
+            url_pattern: r.url_pattern.clone(),
+            profile: r.profile.clone(),
+            incognito: r.incognito.clone(),
+        })
+        .collect();
+
+    return (opening_rules, default_profile.clone());
+}
+#[instrument(skip_all)]
 fn generate_all_browser_profiles(
     app_finder: &OSAppFinder,
     force_reload: bool,
@@ -394,17 +415,7 @@ fn generate_all_browser_profiles(
     let hidden_apps = config.get_hidden_apps();
     let hidden_profiles = config.get_hidden_profiles();
 
-    let config_rules = config.get_rules();
-    let default_profile = config.get_default_profile();
-    let opening_rules = config_rules
-        .iter()
-        .map(|r| OpeningRule {
-            source_app: r.source_app.clone(),
-            url_pattern: r.url_pattern.clone(),
-            profile: r.profile.clone(),
-            incognito: r.incognito.clone(),
-        })
-        .collect();
+    let (opening_rules, default_profile) = get_opening_rules(&config);
 
     let mut visible_browser_profiles: Vec<CommonBrowserProfile> = Vec::new();
     let mut hidden_browser_profiles: Vec<CommonBrowserProfile> = Vec::new();
@@ -555,8 +566,12 @@ pub fn basically_main(
     let is_default = utils::is_default_web_browser();
     let show_set_as_default = !is_default;
 
-    let (opening_rules, default_profile, mut visible_browser_profiles, mut hidden_browser_profiles) =
-        generate_all_browser_profiles(&app_finder, force_reload);
+    let (
+        mut opening_rules,
+        mut default_profile,
+        mut visible_browser_profiles,
+        mut hidden_browser_profiles,
+    ) = generate_all_browser_profiles(&app_finder, force_reload);
 
     // TODO: url should not be considered here in case of macos
     //       and only the one in LinkOpenedFromBundle should be considered
@@ -796,6 +811,13 @@ pub fn basically_main(
 
                     config.set_rules(&new_rules);
                     app_finder.save_config(&config);
+
+                    // refresh opening rules immediately
+                    // so that if same Browsers instance stays open,
+                    // it will already work with the new rule without restarting Browsers
+                    let (new_opening_rules, new_default_profile) = load_opening_rules(&app_finder);
+                    opening_rules = new_opening_rules;
+                    default_profile = new_default_profile;
                 }
             }
         }
