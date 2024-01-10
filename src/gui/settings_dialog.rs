@@ -41,12 +41,9 @@ fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettingsRule> {
     let browsers_clone = browsers.clone();
     let browsers_clone2 = browsers.clone();
     let selected_profile = Label::dynamic(move |rule: &UISettingsRule, _| {
-        let profile_maybe = browsers_clone
-            .iter()
-            .filter(|b| b.unique_id == rule.profile.clone())
-            .map(|b| b.get_full_name())
-            .next();
-        let profile_name = profile_maybe.unwrap_or("Unknown".to_string());
+        let browser_maybe = find_browser(&browsers_clone, rule.profile.clone());
+        let profile_name_maybe = browser_maybe.map(|b| b.get_full_name());
+        let profile_name = profile_name_maybe.unwrap_or("Unknown".to_string());
 
         format!("{profile_name} ▼")
     })
@@ -71,13 +68,28 @@ fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettingsRule> {
         .with_child(url_pattern_label)
         .with_child(url_pattern);
 
-    let incognito_checkbox = ControllerHost::new(Checkbox::new("incognito"), SaveRulesOnDataChange)
-        .lens(UISettingsRule::incognito);
+    let browsers_clone3 = browsers.clone();
+
+    let incognito_either = Either::new(
+        move |rule: &UISettingsRule, _env| {
+            let browser_maybe = find_browser(&browsers_clone3, rule.profile.clone());
+            let browser_supports_incognito_maybe = browser_maybe.map(|p| p.supports_incognito);
+            let profile_supports_incognito = browser_supports_incognito_maybe.unwrap_or(false);
+            profile_supports_incognito
+        },
+        {
+            let incognito_checkbox =
+                ControllerHost::new(Checkbox::new("incognito"), SaveRulesOnDataChange)
+                    .lens(UISettingsRule::incognito);
+            incognito_checkbox
+        },
+        Flex::column(),
+    );
 
     let profile_row = Flex::row()
         .with_child(profile_label)
         .with_child(selected_profile)
-        .with_child(incognito_checkbox);
+        .with_child(incognito_either);
 
     return Either::new(|data: &UISettingsRule, _env| data.deleted, Flex::column(), {
         Container::new(
@@ -92,6 +104,10 @@ fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettingsRule> {
         .border(Color::rgba(0.5, 0.5, 0.5, 0.9), 0.5)
         .padding(10.0)
     });
+}
+fn find_browser(browsers: &Arc<Vec<UIBrowser>>, unique_id: String) -> Option<&UIBrowser> {
+    let option = browsers.iter().filter(|b| b.unique_id == unique_id).next();
+    return option;
 }
 
 struct SaveRulesOnDataChange;
