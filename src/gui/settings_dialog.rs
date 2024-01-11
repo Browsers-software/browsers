@@ -1,14 +1,12 @@
 use std::sync::Arc;
 
 use druid::lens::Identity;
-use druid::text::ParseFormatter;
 use druid::widget::{
     Button, Checkbox, Container, Controller, ControllerHost, Either, Flex, Label, List, TextBox,
-    ValueTextBox,
 };
 use druid::{
-    Color, Data, DelegateCtx, Env, EventCtx, LensExt, Menu, MenuItem, Point, UpdateCtx, Widget,
-    WidgetExt, WindowDesc,
+    Color, Data, DelegateCtx, Env, EventCtx, LensExt, Menu, MenuItem, Monitor, Point, Size,
+    UpdateCtx, Widget, WidgetExt, WindowDesc, WindowLevel,
 };
 use tracing::info;
 
@@ -121,7 +119,11 @@ impl<T: Data, W: Widget<T>> Controller<T, W> for SaveRulesOnDataChange {
     }
 }
 
-pub fn show_settings_dialog(ctx: &mut DelegateCtx, browsers: &Arc<Vec<UIBrowser>>) {
+pub fn show_settings_dialog(
+    ctx: &mut DelegateCtx,
+    monitor: Monitor,
+    browsers: &Arc<Vec<UIBrowser>>,
+) {
     info!("show_settings_dialog");
 
     let app_name_row: Label<UIState> = Label::new("Rules");
@@ -143,7 +145,24 @@ pub fn show_settings_dialog(ctx: &mut DelegateCtx, browsers: &Arc<Vec<UIBrowser>
         .with_child(rules_list)
         .with_child(add_rule_button);
 
-    let new_win = WindowDesc::new(col).title("Settings").show_titlebar(true);
+    let size = Size::new(500.0, 400.0);
+    let screen_rect = monitor.virtual_work_rect();
+
+    let x = screen_rect.x0 + (screen_rect.x1 - screen_rect.x0) / 2.0 - size.width / 2.0;
+    let y = screen_rect.y0 + 190.0;
+    let window_position = Point::new(x, y);
+
+    let new_win = WindowDesc::new(col)
+        .title("Settings")
+        .window_size(size)
+        // with_min_size helps on LXDE
+        .with_min_size((size.width, 200.0f64))
+        // make sure this window is on top of our main window, so using same window level
+        // (except that it doesn't work on macOS)
+        .set_level(WindowLevel::AppWindow)
+        .show_titlebar(true)
+        .resizable(true)
+        .set_position(window_position);
 
     /*
     Default browser : pick profile from dropdown or pick Prompt

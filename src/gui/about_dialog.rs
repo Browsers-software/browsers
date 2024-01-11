@@ -97,9 +97,9 @@ pub fn show_about_dialog(ctx: &mut DelegateCtx, monitor: Monitor) {
         .title(" ")
         .window_size(size)
         // with_min_size helps on LXDE
-        .with_min_size((size.width, 10.0 as f64))
-        // make sure about dialog is on top of our main window
-        // so using same window level
+        .with_min_size((size.width, 10.0f64))
+        // make sure this window is on top of our main window, so using same window level
+        // (except that it doesn't work on macOS)
         .set_level(WindowLevel::AppWindow)
         .show_titlebar(true)
         .resizable(false)

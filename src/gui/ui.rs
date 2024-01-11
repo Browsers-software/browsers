@@ -608,7 +608,7 @@ impl AppDelegate<UIState> for UIDelegate {
             about_dialog::show_about_dialog(ctx, self.monitor.clone());
             Handled::Yes
         } else if cmd.is(SHOW_SETTINGS_DIALOG) {
-            settings_dialog::show_settings_dialog(ctx, &data.browsers);
+            settings_dialog::show_settings_dialog(ctx, self.monitor.clone(), &data.browsers);
             Handled::Yes
         } else if cmd.is(SAVE_RULES) {
             let rules = &data.ui_settings.rules.clone();
