@@ -2,7 +2,8 @@ use std::sync::Arc;
 
 use druid::lens::Identity;
 use druid::widget::{
-    Button, Checkbox, Container, Controller, ControllerHost, Either, Flex, Label, List, TextBox,
+    Button, Checkbox, Container, Controller, ControllerHost, CrossAxisAlignment, Either, Flex,
+    Label, List, MainAxisAlignment, TextBox, ViewSwitcher,
 };
 use druid::{
     Color, Data, DelegateCtx, Env, EventCtx, LensExt, Menu, MenuItem, Monitor, Point, Size,
@@ -10,7 +11,9 @@ use druid::{
 };
 use tracing::info;
 
-use crate::gui::ui::{UIBrowser, UISettings, UISettingsRule, UIState, SAVE_RULE, SAVE_RULES};
+use crate::gui::ui::{
+    SettingsTab, UIBrowser, UISettings, UISettingsRule, UIState, SAVE_RULE, SAVE_RULES,
+};
 
 fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettingsRule> {
     let url_pattern_label = Label::new("If URL contains");
@@ -33,7 +36,7 @@ fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettingsRule> {
     let value_text_box = ControllerHost::new(text_box, SaveRulesOnDataChange);
 
     let url_pattern = value_text_box
-        .fix_width(200.0)
+        .fix_width(300.0)
         .lens(UISettingsRule::url_pattern);
 
     let browsers_clone = browsers.clone();
@@ -119,6 +122,49 @@ impl<T: Data, W: Widget<T>> Controller<T, W> for SaveRulesOnDataChange {
     }
 }
 
+fn rules_content(browsers: Arc<Vec<UIBrowser>>) -> impl Widget<UISettings> {
+    let browsers_arc = browsers.clone();
+
+    let app_name_row: Label<UISettings> = Label::new("Rules");
+
+    let rules_list = List::new(move || create_rule(&browsers_arc))
+        .lens(UISettings::rules)
+        .scroll()
+        .vertical()
+        .content_must_fill(true);
+
+    let add_rule_button =
+        Button::new("Add rule").on_click(move |ctx, data: &mut UISettings, _env| {
+            data.add_empty_rule();
+            ctx.submit_command(SAVE_RULES.with(()));
+        });
+
+    let col = Flex::column()
+        .with_child(app_name_row)
+        .with_child(rules_list)
+        .with_child(add_rule_button);
+
+    return col;
+}
+
+fn tabs_row() -> impl Widget<UISettings> {
+    Flex::row()
+        .must_fill_main_axis(true)
+        .main_axis_alignment(MainAxisAlignment::Center)
+        .with_child(tab_button("General", SettingsTab::GENERAL))
+        .with_default_spacer()
+        .with_child(tab_button("Rules", SettingsTab::RULES))
+}
+
+fn tab_button(text: &'static str, tab: SettingsTab) -> impl Widget<UISettings> {
+    Flex::column()
+        .with_default_spacer()
+        .with_child(Label::new(text))
+        .on_click(move |_ctx, data: &mut UISettings, _env| {
+            data.tab = tab;
+        })
+}
+
 pub fn show_settings_dialog(
     ctx: &mut DelegateCtx,
     monitor: Monitor,
@@ -126,24 +172,22 @@ pub fn show_settings_dialog(
 ) {
     info!("show_settings_dialog");
 
-    let app_name_row: Label<UIState> = Label::new("Rules");
     let browsers_arc = browsers.clone();
 
-    let rules_list = List::new(move || create_rule(&browsers_arc))
-        .lens(UIState::ui_settings.then(UISettings::rules))
-        .scroll();
-
-    let add_rule_button = Button::new("Add rule")
-        .on_click(move |ctx, data: &mut UISettings, _env| {
-            data.add_empty_rule();
-            ctx.submit_command(SAVE_RULES.with(()));
-        })
-        .lens(UIState::ui_settings);
+    let view_switcher = ViewSwitcher::new(
+        |data: &UISettings, _env| data.clone(),
+        move |selector, _data, _env| match selector.tab {
+            SettingsTab::GENERAL => Box::new(Label::new("General content")),
+            SettingsTab::RULES => Box::new(rules_content(browsers_arc.clone())),
+        },
+    );
 
     let col = Flex::column()
-        .with_child(app_name_row)
-        .with_child(rules_list)
-        .with_child(add_rule_button);
+        .must_fill_main_axis(true)
+        .cross_axis_alignment(CrossAxisAlignment::Fill)
+        .with_child(tabs_row())
+        .with_flex_child(view_switcher, 1.0)
+        .lens(UIState::ui_settings);
 
     let size = Size::new(500.0, 400.0);
     let screen_rect = monitor.virtual_work_rect();

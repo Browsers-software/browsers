@@ -17,6 +17,7 @@ use crate::gui::main_window::{
     HIDE_PROFILE, MOVE_PROFILE, OPEN_LINK_IN_BROWSER, REFRESH, RESTORE_HIDDEN_PROFILE,
     SET_BROWSERS_AS_DEFAULT_BROWSER, SET_FOCUSED_INDEX, SHOW_ABOUT_DIALOG, SHOW_SETTINGS_DIALOG,
 };
+use crate::gui::ui::SettingsTab::GENERAL;
 use crate::gui::{about_dialog, main_window, settings_dialog};
 use crate::url_rule::UrlGlobMatcher;
 use crate::utils::{Config, UIConfig};
@@ -59,6 +60,7 @@ impl UI {
             .collect();
 
         return UISettings {
+            tab: GENERAL,
             rules: Arc::new(ui_settings_rules),
         };
     }
@@ -193,7 +195,14 @@ pub struct UIState {
 
 #[derive(Clone, Data, Lens)]
 pub struct UISettings {
+    pub tab: SettingsTab,
     pub rules: Arc<Vec<UISettingsRule>>,
+}
+
+#[derive(Clone, PartialEq, Data, Copy)]
+pub enum SettingsTab {
+    GENERAL,
+    RULES,
 }
 
 impl UISettings {
