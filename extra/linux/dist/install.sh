@@ -97,6 +97,11 @@ create_dir_if_not_exists "$I18N_EN_US_DIR" true
 SRC_I18N_DIR="$THIS_DIR/i18n"
 cp "$SRC_I18N_DIR/en-US/builtin.ftl" "$I18N_DIR/en-US/builtin.ftl"
 
+LIB_DIR="$RESOURCES_DIR/lib"
+create_dir_if_not_exists "$LIB_DIR" true
+SRC_LIB_DIR="$THIS_DIR/lib"
+cp "$SRC_LIB_DIR/application-repository.toml" "$LIB_DIR/application-repository.toml"
+
 # armv7l, aarch64, x86_64
 ARCH="$(uname -m)"
 

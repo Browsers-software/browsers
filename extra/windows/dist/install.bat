@@ -105,6 +105,11 @@ if not exist "%ProgramDir%\resources\i18n\en-US\" (
 
 copy "%THIS_DIR%i18n\en-US\builtin.ftl" "%ProgramDir%\resources\i18n\en-US\builtin.ftl" 1>nul
 
+if not exist "%ProgramDir%\resources\lib\" (
+  mkdir "%ProgramDir%\resources\lib" || exit /b
+)
+copy "%THIS_DIR%lib\application-repository.toml" "%ProgramDir%\resources\lib\application-repository.toml" 1>nul
+
 REM C:\Users\x\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Browsers\Browsers.lnk
 
 if %is_local_install% == true (
