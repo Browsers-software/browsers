@@ -1,0 +1,362 @@
+[[apps]]
+id = "company.thebrowser.Browser"
+config_dir_relative = "Arc/User Data"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "com.google.Chrome"
+config_dir_relative = "Google/Chrome"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "google-chrome.desktop"
+config_dir_relative = "google-chrome"
+kind = "CHROMIUM"
+os = "LINUX"
+
+[[apps]]
+id = "Google Chrome"
+config_dir_relative = "Google/Chrome/User Data"
+kind = "CHROMIUM"
+os = "WINDOWS"
+
+[[apps]]
+id = "com.google.Chrome.beta"
+config_dir_relative = "Google/Chrome Beta"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "google-chrome-beta.desktop"
+config_dir_relative = "google-chrome-beta"
+kind = "CHROMIUM"
+os = "LINUX"
+
+[[apps]]
+id = "com.google.Chrome.dev"
+config_dir_relative = "Google/Chrome Dev"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "google-chrome-dev.desktop"
+config_dir_relative = "google-chrome-dev"
+kind = "CHROMIUM"
+os = "LINUX"
+
+[[apps]]
+id = "com.google.Chrome.canary"
+config_dir_relative = "Google/Chrome Canary"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "google-chrome-canary.desktop"
+config_dir_relative = "google-chrome-canary"
+kind = "CHROMIUM"
+os = "LINUX"
+
+[[apps]]
+id = "org.chromium.Chromium"
+config_dir_relative = "Chromium"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "chromium.desktop"
+config_dir_relative = "google-chrome-canary"
+snap_dir = "chromium"
+kind = "CHROMIUM"
+os = "LINUX"
+
+[[apps]]
+id = "chromium_chromium.desktop"
+config_dir_relative = "google-chrome-canary"
+snap_dir = "chromium"
+kind = "CHROMIUM"
+os = "LINUX"
+
+[[apps]]
+id = "chromium-browser.desktop"
+config_dir_relative = "google-chrome-canary"
+snap_dir = "chromium"
+kind = "CHROMIUM"
+os = "LINUX"
+
+[[apps]]
+id = "com.avast.browser"
+config_dir_relative = "AVAST Software/Browser"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "com.whisttechnologies.whist"
+config_dir_relative = "Whist/Whist-Browser"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "com.bookry.wavebox"
+config_dir_relative = "WaveboxApp"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "com.coccoc.Coccoc"
+config_dir_relative = "Coccoc"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "net.qihoo.360browser"
+config_dir_relative = "360Chrome"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "ru.yandex.desktop.yandex-browser"
+config_dir_relative = "Yandex/YandexBrowser"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "com.microsoft.edgemac"
+config_dir_relative = "Microsoft Edge"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "com.microsoft.edgemac.Beta"
+config_dir_relative = "Microsoft Edge Beta"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "com.microsoft.edgemac.Dev"
+config_dir_relative = "Microsoft Edge Dev"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "microsoft-edge-dev.desktop"
+config_dir_relative = "microsoft-edge-dev"
+kind = "CHROMIUM"
+os = "LINUX"
+
+[[apps]]
+id = "com.microsoft.edgemac.Canary"
+config_dir_relative = "Microsoft Edge Canary"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "com.brave.Browser"
+config_dir_relative = "BraveSoftware/Brave-Browser"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "brave-browser.desktop"
+config_dir_relative = "BraveSoftware/Brave-Browser"
+snap_dir = "brave"
+kind = "CHROMIUM"
+os = "LINUX"
+
+[[apps]]
+id = "com.brave.Browser.beta"
+config_dir_relative = "BraveSoftware/Brave-Browser-Beta"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "com.brave.Browser.nightly"
+config_dir_relative = "BraveSoftware/Brave-Browser-Nightly"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "com.pushplaylabs.sidekick"
+config_dir_relative = "Sidekick"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "com.vivaldi.Vivaldi"
+config_dir_relative = "Vivaldi"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "vivaldi-stable.desktop"
+config_dir_relative = "vivaldi"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "com.vivaldi.Vivaldi.snapshot"
+config_dir_relative = "Vivaldi Snapshot"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "com.naver.Whale"
+config_dir_relative = "Naver/Whale"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "de.iridiumbrowser"
+config_dir_relative = "Iridium"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "org.mozilla.firefox"
+config_dir_relative = "Firefox"
+kind = "FIREFOX"
+os = "MAC"
+
+[[apps]]
+id = "firefox.desktop"
+config_dir_relative = ".mozilla/firefox"
+snap_dir = "firefox"
+kind = "FIREFOX"
+os = "LINUX"
+
+[[apps]]
+id = "firefox_firefox.desktop"
+config_dir_relative = ".mozilla/firefox"
+snap_dir = "firefox"
+kind = "FIREFOX"
+os = "LINUX"
+
+[[apps]]
+id = "firefox-esr.desktop"
+config_dir_relative = ".mozilla/firefox"
+snap_dir = "firefox"
+kind = "FIREFOX"
+os = "LINUX"
+
+[[apps]]
+id = "Mozilla Firefox"
+config_dir_relative = "Mozilla/Firefox"
+kind = "FIREFOX"
+os = "WINDOWS"
+
+[[apps]]
+id = "org.mozilla.firefoxdeveloperedition"
+config_dir_relative = "Firefox"
+kind = "FIREFOX"
+os = "MAC"
+
+[[apps]]
+id = "Firefox Developer Edition"
+config_dir_relative = "Mozilla/Firefox"
+kind = "FIREFOX"
+os = "WINDOWS"
+
+[[apps]]
+id = "org.mozilla.nightly"
+config_dir_relative = "Firefox"
+kind = "FIREFOX"
+os = "MAC"
+
+[[apps]]
+id = "org.mozilla.floorp"
+config_dir_relative = "Floorp"
+kind = "FIREFOX"
+os = "MAC"
+
+[[apps]]
+id = "org.torproject.torbrowser"
+config_dir_relative = "TorBrowser-Data/Browser"
+kind = "FIREFOX"
+os = "MAC"
+
+[[apps]]
+id = "org.mozilla.librewolf"
+config_dir_relative = "LibreWolf"
+kind = "FIREFOX"
+os = "MAC"
+
+[[apps]]
+id = "net.waterfox.waterfox"
+config_dir_relative = "Waterfox"
+kind = "FIREFOX"
+os = "MAC"
+
+[[apps]]
+id = "com.linear"
+kind = "LINEAR"
+os = "MAC"
+
+[[apps]]
+id = "notion.id"
+kind = "NOTION"
+os = "MAC"
+
+[[apps]]
+id = "com.tinyspeck.slackmacgap"
+config_dir_relative = "Slack"
+kind = "SLACK"
+os = "MAC"
+
+[[apps]]
+id = "slack.desktop"
+config_dir_relative = "Slack"
+snap_dir = "slack"
+kind = "SLACK"
+os = "LINUX"
+
+[[apps]]
+id = "URL:slack"
+config_dir_relative = "Slack"
+kind = "SLACK"
+os = "WINDOWS"
+
+[[apps]]
+id = "com.spotify.client"
+kind = "SPOTIFY"
+os = "MAC"
+
+[[apps]]
+id = "spotify_spotify.desktop"
+kind = "SPOTIFY"
+os = "LINUX"
+
+[[apps]]
+id = "spotify"
+kind = "SPOTIFY"
+os = "WINDOWS"
+
+[[apps]]
+id = "ru.keepcoder.Telegram"
+kind = "TELEGRAM"
+os = "MAC"
+
+[[apps]]
+id = "telegram-desktop_telegram-desktop.desktop"
+kind = "TELEGRAM"
+os = "LINUX"
+
+[[apps]]
+id = "com.workflowy.desktop"
+kind = "WORKFLOWY"
+os = "MAC"
+
+[[apps]]
+id = "URL:workflowy"
+kind = "WORKFLOWY"
+os = "WINDOWS"
+
+[[apps]]
+id = "us.zoom.xos"
+kind = "ZOOM"
+os = "MAC"
+
+[[apps]]
+id = "Zoom.desktop"
+kind = "ZOOM"
+os = "LINUX"

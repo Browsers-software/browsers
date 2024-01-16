@@ -214,6 +214,7 @@ dependencies = [
  "shell-words",
  "single-instance",
  "static_vcruntime",
+ "toml 0.8.8",
  "tracing",
  "tracing-appender",
  "tracing-subscriber",
