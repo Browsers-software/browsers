@@ -38,6 +38,10 @@ pub fn get_logs_root_dir() -> PathBuf {
     return windows_utils::get_this_app_logs_root_dir();
 }
 
+pub fn get_repository_toml_path() -> PathBuf {
+    return get_lib_basedir().join("application-repository.toml");
+}
+
 pub fn get_config_json_path() -> PathBuf {
     return get_config_root_dir().join("config.json");
 }
@@ -142,6 +146,10 @@ pub fn get_app_icon_path() -> PathBuf {
 // where '{locale}' is a valid BCP47 language tag, and {resource} is a file with .ftl extension.
 pub fn get_localizations_basedir() -> PathBuf {
     return get_resources_basedir().join("i18n");
+}
+
+pub fn get_lib_basedir() -> PathBuf {
+    return get_resources_basedir().join("lib");
 }
 
 // on macOS basedir should be "/Applications/Browsers.app/Contents/Resources/"

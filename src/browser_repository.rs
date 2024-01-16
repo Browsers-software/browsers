@@ -1,6 +1,10 @@
 use std::collections::HashMap;
+use std::fs::File;
+use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
 
+use serde::{Deserialize, Serialize};
+use tracing::info;
 use url::form_urlencoded::byte_serialize;
 use url::Url;
 
@@ -17,6 +21,54 @@ pub struct SupportedAppRepository {
     chromium_user_dir_base: PathBuf,
     firefox_user_dir_base: PathBuf,
     supported_apps: HashMap<String, SupportedApp>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+enum AppOS {
+    LINUX,
+    MAC,
+    WINDOWS,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+enum AppKind {
+    GENERIC,
+    CHROMIUM,
+    FIREFOX,
+    SLACK,
+    LINEAR,
+    NOTION,
+    SPOTIFY,
+    TELEGRAM,
+    WORKFLOWY,
+    ZOOM,
+}
+
+#[derive(Deserialize, Debug)]
+struct AppConfigRepository {
+    apps: Vec<AppConfig>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+#[serde(default)]
+struct AppConfig {
+    os: AppOS,     // linux, etc
+    kind: AppKind, // chromium, etc
+    id: String,
+    config_dir_relative: String,
+    snap_id: Option<String>,
+}
+
+impl Default for AppConfig {
+    fn default() -> Self {
+        AppConfig {
+            os: AppOS::LINUX,
+            kind: AppKind::GENERIC,
+            id: "".to_string(),
+            config_dir_relative: "".to_string(),
+            snap_id: None,
+        }
+    }
 }
 
 impl SupportedAppRepository {
@@ -52,149 +104,84 @@ impl SupportedAppRepository {
         return self;
     }
 
-    fn generate_app_id_to_supported_app(&mut self) {
-        self.start()
-            .add_chromium_based_mac(vec!["company.thebrowser.Browser"], "Arc/User Data")
-            .add_chromium_based_mac(vec!["com.google.Chrome"], "Google/Chrome")
-            .add_chromium_based_linux(vec!["google-chrome.desktop"], "", "google-chrome")
-            .add_chromium_based_windows(vec!["Google Chrome"], "Google/Chrome/User Data")
-            .add_chromium_based_mac(vec!["com.google.Chrome.beta"], "Google/Chrome Beta")
-            .add_chromium_based_linux(vec!["google-chrome-beta.desktop"], "", "google-chrome-beta")
-            .add_chromium_based_mac(vec!["com.google.Chrome.dev"], "Google/Chrome Dev")
-            .add_chromium_based_linux(vec!["google-chrome-dev.desktop"], "", "google-chrome-dev")
-            .add_chromium_based_mac(vec!["com.google.Chrome.canary"], "Google/Chrome Canary")
-            .add_chromium_based_linux(
-                vec!["google-chrome-canary.desktop"],
-                "",
-                "google-chrome-canary",
-            )
-            .add_chromium_based_mac(vec!["org.chromium.Chromium"], "Chromium")
-            .add_chromium_based_linux(
-                vec![
-                    "chromium.desktop",
-                    "chromium_chromium.desktop",
-                    "chromium-browser.desktop",
-                ],
-                "chromium",
-                "chromium",
-            )
-            .add_chromium_based_mac(vec!["com.avast.browser"], "AVAST Software/Browser")
-            .add_chromium_based_mac(vec!["com.whisttechnologies.whist"], "Whist/Whist-Browser")
-            .add_chromium_based_mac(vec!["com.bookry.wavebox"], "WaveboxApp")
-            .add_chromium_based_mac(vec!["com.coccoc.Coccoc"], "Coccoc")
-            .add_chromium_based_mac(vec!["net.qihoo.360browser"], "360Chrome")
-            .add_chromium_based_mac(
-                vec!["ru.yandex.desktop.yandex-browser"],
-                "Yandex/YandexBrowser",
-            )
-            .add_chromium_based_mac(vec!["com.microsoft.edgemac"], "Microsoft Edge")
-            .add_chromium_based_mac(vec!["com.microsoft.edgemac.Beta"], "Microsoft Edge Beta")
-            .add_chromium_based_mac(vec!["com.microsoft.edgemac.Dev"], "Microsoft Edge Dev")
-            .add_chromium_based_linux(vec!["microsoft-edge-dev.desktop"], "", "microsoft-edge-dev")
-            .add_chromium_based_mac(vec!["com.microsoft.edgemac.Canary"], "Microsoft Edge Canary")
-            .add_chromium_based_mac(vec!["com.brave.Browser"], "BraveSoftware/Brave-Browser")
-            .add_chromium_based_linux(
-                vec!["brave-browser.desktop"],
-                "brave",
-                "BraveSoftware/Brave-Browser",
-            )
-            .add_chromium_based_mac(
-                vec!["com.brave.Browser.beta"],
-                "BraveSoftware/Brave-Browser-Beta",
-            )
-            .add_chromium_based_mac(
-                vec!["com.brave.Browser.nightly"],
-                "BraveSoftware/Brave-Browser-Nightly",
-            )
-            .add_chromium_based_mac(vec!["com.pushplaylabs.sidekick"], "Sidekick")
-            .add_chromium_based_mac(vec!["com.vivaldi.Vivaldi"], "Vivaldi")
-            .add_chromium_based_linux(vec!["vivaldi-stable.desktop"], "", "vivaldi")
-            .add_chromium_based_mac(vec!["com.vivaldi.Vivaldi.snapshot"], "Vivaldi Snapshot")
-            .add_chromium_based_mac(vec!["com.naver.Whale"], "Naver/Whale")
-            .add_chromium_based_mac(vec!["de.iridiumbrowser"], "Iridium")
-            .add_firefox_based_mac(vec!["org.mozilla.firefox"], "Firefox")
-            .add_firefox_based_linux(
-                vec![
-                    "firefox.desktop",
-                    "firefox_firefox.desktop",
-                    "firefox-esr.desktop",
-                ],
-                "firefox",
-                ".mozilla/firefox",
-            )
-            .add_firefox_based_windows(vec!["Mozilla Firefox"], "Mozilla/Firefox")
-            .add_firefox_based_mac(vec!["org.mozilla.firefoxdeveloperedition"], "Firefox")
-            .add_firefox_based_windows(vec!["Firefox Developer Edition"], "Mozilla/Firefox")
-            .add_firefox_based_mac(vec!["org.mozilla.nightly"], "Firefox")
-            .add_firefox_based_mac(vec!["org.mozilla.floorp"], "Floorp")
-            .add_firefox_based_mac(vec!["org.torproject.torbrowser"], "TorBrowser-Data/Browser")
-            .add_firefox_based_mac(vec!["org.mozilla.librewolf"], "LibreWolf")
-            .add_firefox_based_mac(vec!["net.waterfox.waterfox"], "Waterfox")
-            .add_slack_mac("com.tinyspeck.slackmacgap", "Slack")
-            .add_slack_linux("slack.desktop", "slack", "Slack")
-            .add_slack_windows("URL:slack", "Slack")
-            .add(Self::linear_app())
-            .add(Self::notion_app())
-            .add(Self::spotify_app())
-            .add(Self::telegram_app())
-            .add(Self::workflowy_app())
-            .add(Self::zoom_app());
+    fn load_repository(&self) -> Vec<AppConfig> {
+        let repository_toml_path = paths::get_repository_toml_path();
+
+        info!("Repository: {}", repository_toml_path.display());
+
+        if !repository_toml_path.exists() {
+            return vec![];
+        }
+
+        // Open the file in read-only mode with buffer.
+        let file = File::open(repository_toml_path.as_path()).unwrap();
+        let mut reader = BufReader::new(file);
+
+        let mut data: String = String::new();
+        reader.read_to_string(&mut data).unwrap();
+        let result = toml::from_str(data.as_ref());
+        let repository: AppConfigRepository = result.unwrap();
+        return repository.apps;
     }
 
-    fn add_firefox_based_windows(
+    fn add_apps_from_repository_file(&mut self) {
+        let app_configs = self.load_repository();
+        for app_config in app_configs {
+            let app = self.create_app_from_app_config(app_config);
+            self.add(app);
+        }
+    }
+
+    fn generate_app_id_to_supported_app(&mut self) {
+        self.add_apps_from_repository_file();
+    }
+
+    fn create_firefox_based_windows(
         &mut self,
-        bundle_ids: Vec<&str>,
+        bundle_id: &str,
         config_dir_relative: &str,
-    ) -> &mut SupportedAppRepository {
+    ) -> SupportedApp {
         let app_config_dir = AppConfigDir::new_windows(
             self.firefox_user_dir_base.clone(),
             PathBuf::from(config_dir_relative),
         );
 
-        for bundle_id in bundle_ids {
-            let app_id = AppIdentifier::new_windows(bundle_id);
-            let app = Self::firefox_based_app(
-                app_id,
-                app_config_dir.config_dir_absolute(),
-                PathBuf::from(""),
-                PathBuf::from(""),
-            );
-            self.add(app);
-        }
-
-        return self;
+        let app_id = AppIdentifier::new_windows(bundle_id);
+        let app = Self::firefox_based_app(
+            app_id,
+            app_config_dir.config_dir_absolute(),
+            PathBuf::from(""),
+            PathBuf::from(""),
+        );
+        return app;
     }
 
-    fn add_firefox_based_mac(
+    fn create_firefox_based_mac(
         &mut self,
-        mac_bundle_ids: Vec<&str>,
+        mac_bundle_id: &str,
         mac_config_dir_relative: &str,
-    ) -> &mut SupportedAppRepository {
+    ) -> SupportedApp {
         let app_config_dir = AppConfigDir::new_mac(
             self.firefox_user_dir_base.clone(),
             PathBuf::from(mac_config_dir_relative),
         );
 
-        for mac_bundle_id in mac_bundle_ids {
-            let app_id = AppIdentifier::new_mac(mac_bundle_id);
-            let app = Self::firefox_based_app(
-                app_id,
-                app_config_dir.config_dir_absolute(),
-                PathBuf::from(""),
-                PathBuf::from(""),
-            );
-            self.add(app);
-        }
-
-        return self;
+        let app_id = AppIdentifier::new_mac(mac_bundle_id);
+        let app = Self::firefox_based_app(
+            app_id,
+            app_config_dir.config_dir_absolute(),
+            PathBuf::from(""),
+            PathBuf::from(""),
+        );
+        return app;
     }
 
-    fn add_firefox_based_linux(
+    fn create_firefox_based_linux(
         &mut self,
-        linux_desktop_ids: Vec<&str>,
+        linux_desktop_id: &str,
         linux_snap_id: &str,
         linux_config_dir_relative: &str,
-    ) -> &mut SupportedAppRepository {
+    ) -> SupportedApp {
         let app_config_dir = AppConfigDir::new_linux(
             self.firefox_user_dir_base.clone(),
             PathBuf::from(linux_config_dir_relative),
@@ -203,30 +190,108 @@ impl SupportedAppRepository {
         let snap_app_config_dir_absolute =
             self.snap_config_dir_absolute_path(linux_snap_id, linux_config_dir_relative);
 
-        for linux_desktop_id in linux_desktop_ids {
-            let app_id = AppIdentifier::new_linux(linux_desktop_id);
-            let app = Self::firefox_based_app(
-                app_id,
-                app_config_dir.config_dir_absolute(),
-                snap_app_config_dir_absolute.clone(),
-                PathBuf::from(""),
-            );
-            self.add(app);
-        }
-
-        return self;
+        let app_id = AppIdentifier::new_linux(linux_desktop_id);
+        let app = Self::firefox_based_app(
+            app_id,
+            app_config_dir.config_dir_absolute(),
+            snap_app_config_dir_absolute.clone(),
+            PathBuf::from(""),
+        );
+        return app;
     }
 
     fn start(&mut self) -> &mut SupportedAppRepository {
         return self;
     }
 
-    fn add_slack_linux(
+    fn create_app_from_app_config(&mut self, app_config: AppConfig) -> SupportedApp {
+        let app_id = app_config.id.as_str();
+
+        let config_dir_relative = app_config.config_dir_relative.as_str();
+
+        let snap_id_owned = app_config.snap_id.unwrap_or_default();
+        let linux_snap_id = snap_id_owned.as_str();
+
+        let app = match app_config.kind {
+            AppKind::GENERIC => {
+                let restricted_domain_patterns = vec![];
+                Self::create_generic_app(app_config.os, app_id, restricted_domain_patterns)
+            }
+            AppKind::CHROMIUM => match app_config.os {
+                AppOS::LINUX => {
+                    self.create_chromium_based_linux(app_id, linux_snap_id, config_dir_relative)
+                }
+                AppOS::MAC => self.create_chromium_based_mac(app_id, config_dir_relative),
+                AppOS::WINDOWS => self.create_chromium_based_windows(app_id, config_dir_relative),
+            },
+            AppKind::FIREFOX => match app_config.os {
+                AppOS::LINUX => {
+                    self.create_firefox_based_linux(app_id, linux_snap_id, config_dir_relative)
+                }
+                AppOS::MAC => self.create_firefox_based_mac(app_id, config_dir_relative),
+                AppOS::WINDOWS => self.create_firefox_based_windows(app_id, config_dir_relative),
+            },
+            AppKind::LINEAR => {
+                let restricted_domain_patterns = vec!["linear.app".to_string()];
+                Self::create_generic_app(app_config.os, app_id, restricted_domain_patterns)
+            }
+            AppKind::NOTION => {
+                let restricted_domain_patterns =
+                    vec!["notion.so".to_string(), "www.notion.so".to_string()];
+                Self::create_generic_app(app_config.os, app_id, restricted_domain_patterns)
+            }
+            AppKind::SLACK => match app_config.os {
+                AppOS::LINUX => self.create_slack_linux(app_id, linux_snap_id, config_dir_relative),
+                AppOS::MAC => self.create_slack_mac(app_id, config_dir_relative),
+                AppOS::WINDOWS => self.create_slack_windows(app_id, config_dir_relative),
+            },
+            AppKind::SPOTIFY => {
+                let restricted_domain_patterns = vec!["open.spotify.com".to_string()];
+                Self::create_generic_app_with_url(
+                    app_config.os,
+                    app_id,
+                    restricted_domain_patterns,
+                    convert_spotify_uri,
+                )
+            }
+            AppKind::TELEGRAM => {
+                let restricted_domain_patterns = vec!["t.me".to_string()];
+                Self::create_generic_app(app_config.os, app_id, restricted_domain_patterns)
+            }
+            AppKind::WORKFLOWY => {
+                let restricted_domain_patterns = vec!["workflowy.com".to_string()];
+                Self::create_generic_app_with_url(
+                    app_config.os,
+                    app_id,
+                    restricted_domain_patterns,
+                    convert_workflowy_uri,
+                )
+            }
+            AppKind::ZOOM => {
+                let restricted_domain_patterns = vec![
+                    "zoom.us".to_string(),
+                    "eu01web.zoom.us".to_string(),
+                    "us02web.zoom.us".to_string(),
+                    "us03web.zoom.us".to_string(),
+                    "us04web.zoom.us".to_string(),
+                    "us05web.zoom.us".to_string(),
+                    "us06web.zoom.us".to_string(),
+                    "us07web.zoom.us".to_string(),
+                ];
+
+                Self::create_generic_app(app_config.os, app_id, restricted_domain_patterns)
+            }
+        };
+
+        return app;
+    }
+
+    fn create_slack_linux(
         &mut self,
         linux_desktop_id: &str,
         linux_snap_id: &str,
         linux_config_dir_relative: &str,
-    ) -> &mut SupportedAppRepository {
+    ) -> SupportedApp {
         let app_config_dir = AppConfigDir::new_linux(
             self.chromium_user_dir_base.clone(),
             PathBuf::from(linux_config_dir_relative),
@@ -243,16 +308,14 @@ impl SupportedAppRepository {
             PathBuf::from(""),
         );
 
-        self.add(app);
-
-        return self;
+        return app;
     }
 
-    fn add_slack_mac(
+    fn create_slack_mac(
         &mut self,
         mac_bundle_id: &str,
         mac_config_dir_relative: &str,
-    ) -> &mut SupportedAppRepository {
+    ) -> SupportedApp {
         let user_home_for_unsandboxed_app = paths::get_user_home_for_unsandboxed_app();
         let unsandboxed_user_dir_root = user_home_for_unsandboxed_app
             .join("Library")
@@ -278,16 +341,10 @@ impl SupportedAppRepository {
             PathBuf::from(""),
             sandboxed_app_config_dir.config_dir_absolute(),
         );
-        self.add(app);
-
-        return self;
+        return app;
     }
 
-    fn add_slack_windows(
-        &mut self,
-        bundle_id: &str,
-        config_dir_relative: &str,
-    ) -> &mut SupportedAppRepository {
+    fn create_slack_windows(&mut self, bundle_id: &str, config_dir_relative: &str) -> SupportedApp {
         let app_config_dir = AppConfigDir::new_windows(
             self.chromium_user_dir_base.clone(),
             PathBuf::from(config_dir_relative),
@@ -300,65 +357,55 @@ impl SupportedAppRepository {
             PathBuf::from(""),
             PathBuf::from(""),
         );
-        self.add(app);
-
-        return self;
+        return app;
     }
 
-    fn add_chromium_based_mac(
+    fn create_chromium_based_mac(
         &mut self,
-        mac_bundle_ids: Vec<&str>,
+        mac_bundle_id: &str,
         mac_config_dir_relative: &str,
-    ) -> &mut SupportedAppRepository {
+    ) -> SupportedApp {
         let app_config_dir = AppConfigDir::new_mac(
             self.chromium_user_dir_base.clone(),
             PathBuf::from(mac_config_dir_relative),
         );
 
-        for mac_bundle_id in mac_bundle_ids {
-            let app_id = AppIdentifier::new_mac(mac_bundle_id);
-            let app = Self::chromium_based_app(
-                app_id,
-                app_config_dir.config_dir_absolute(),
-                PathBuf::from(""),
-                PathBuf::from(""),
-            );
-            self.add(app);
-        }
-
-        return self;
+        let app_id = AppIdentifier::new_mac(mac_bundle_id);
+        let app = Self::chromium_based_app(
+            app_id,
+            app_config_dir.config_dir_absolute(),
+            PathBuf::from(""),
+            PathBuf::from(""),
+        );
+        return app;
     }
 
-    fn add_chromium_based_windows(
+    fn create_chromium_based_windows(
         &mut self,
-        bundle_ids: Vec<&str>,
+        bundle_id: &str,
         config_dir_relative: &str,
-    ) -> &mut SupportedAppRepository {
+    ) -> SupportedApp {
         let app_config_dir = AppConfigDir::new_windows(
             self.chromium_user_dir_base.clone(),
             PathBuf::from(config_dir_relative),
         );
 
-        for bundle_id in bundle_ids {
-            let app_id = AppIdentifier::new_windows(bundle_id);
-            let app = Self::chromium_based_app(
-                app_id,
-                app_config_dir.config_dir_absolute(),
-                PathBuf::from(""),
-                PathBuf::from(""),
-            );
-            self.add(app);
-        }
-
-        return self;
+        let app_id = AppIdentifier::new_windows(bundle_id);
+        let app = Self::chromium_based_app(
+            app_id,
+            app_config_dir.config_dir_absolute(),
+            PathBuf::from(""),
+            PathBuf::from(""),
+        );
+        return app;
     }
 
-    fn add_chromium_based_linux(
+    fn create_chromium_based_linux(
         &mut self,
-        linux_desktop_ids: Vec<&str>,
+        linux_desktop_id: &str,
         linux_snap_id: &str,
         linux_config_dir_relative: &str,
-    ) -> &mut SupportedAppRepository {
+    ) -> SupportedApp {
         let app_config_dir = AppConfigDir::new_linux(
             self.chromium_user_dir_base.clone(),
             PathBuf::from(linux_config_dir_relative),
@@ -367,18 +414,14 @@ impl SupportedAppRepository {
         let snap_app_config_dir_absolute =
             self.snap_config_dir_absolute_path(linux_snap_id, linux_config_dir_relative);
 
-        for linux_desktop_id in linux_desktop_ids {
-            let app_id = AppIdentifier::new_linux(linux_desktop_id);
-            let app = Self::chromium_based_app(
-                app_id,
-                app_config_dir.config_dir_absolute(),
-                snap_app_config_dir_absolute.clone(),
-                PathBuf::from(""),
-            );
-            self.add(app);
-        }
-
-        return self;
+        let app_id = AppIdentifier::new_linux(linux_desktop_id);
+        let app = Self::chromium_based_app(
+            app_id,
+            app_config_dir.config_dir_absolute(),
+            snap_app_config_dir_absolute.clone(),
+            PathBuf::from(""),
+        );
+        return app;
     }
 
     fn snap_config_dir_absolute_path(
@@ -456,6 +499,43 @@ impl SupportedAppRepository {
         }
     }
 
+    fn create_generic_app(
+        os: AppOS,
+        app_id: &str,
+        restricted_domain_patterns: Vec<String>,
+    ) -> SupportedApp {
+        let url_transform_fn: UrlTransformFn = |_, url| url.to_string();
+        return Self::create_generic_app_with_url(
+            os,
+            app_id,
+            restricted_domain_patterns,
+            url_transform_fn,
+        );
+    }
+
+    fn create_generic_app_with_url(
+        os: AppOS,
+        app_id: &str,
+        restricted_domain_patterns: Vec<String>,
+        url_transform_fn: UrlTransformFn,
+    ) -> SupportedApp {
+        let app_identifier = Self::create_app_identifier(os, app_id);
+        let app = Self::generic_app_with_url(
+            app_identifier,
+            restricted_domain_patterns,
+            url_transform_fn,
+        );
+        return app;
+    }
+
+    fn create_app_identifier(os: AppOS, app_id: &str) -> AppIdentifier {
+        match os {
+            AppOS::LINUX => AppIdentifier::new_linux(app_id),
+            AppOS::MAC => AppIdentifier::new_mac(app_id),
+            AppOS::WINDOWS => AppIdentifier::new_windows(app_id),
+        }
+    }
+
     fn generic_app(app_id: AppIdentifier, restricted_domain_patterns: Vec<String>) -> SupportedApp {
         Self::generic_app_with_url(app_id, restricted_domain_patterns, |_, url| url.to_string())
     }
@@ -497,41 +577,6 @@ impl SupportedAppRepository {
         return restricted_hostname_matchers;
     }
 
-    fn linear_app() -> SupportedApp {
-        let app_id = AppIdentifier::new("com.linear", "NOLINUXAPPEXISTS.desktop", "TODOWINDOWS");
-
-        Self::generic_app(app_id, vec!["linear.app".to_string()])
-    }
-
-    fn notion_app() -> SupportedApp {
-        let app_id = AppIdentifier::new("notion.id", "NOLINUXAPPEXISTS.desktop", "TODOWINDOWS");
-
-        Self::generic_app(
-            app_id,
-            vec!["notion.so".to_string(), "www.notion.so".to_string()],
-        )
-    }
-
-    fn spotify_app() -> SupportedApp {
-        let app_id = AppIdentifier::new("com.spotify.client", "spotify_spotify.desktop", "spotify");
-
-        Self::generic_app_with_url(
-            app_id,
-            vec!["open.spotify.com".to_string()],
-            convert_spotify_uri,
-        )
-    }
-
-    fn telegram_app() -> SupportedApp {
-        let app_id = AppIdentifier {
-            mac_bundle_id: "ru.keepcoder.Telegram".to_string(),
-            linux_desktop_id: "telegram-desktop_telegram-desktop.desktop".to_string(),
-            windows_app_id: "WINDOWSTODO".to_string(),
-        };
-
-        Self::generic_app(app_id, vec!["t.me".to_string()])
-    }
-
     fn slack_app(
         app_id: AppIdentifier,
         app_config_dir_absolute: PathBuf,
@@ -558,38 +603,6 @@ impl SupportedAppRepository {
             url_transform_fn: convert_slack_uri,
             url_as_first_arg: false,
         }
-    }
-
-    fn workflowy_app() -> SupportedApp {
-        let app_id = AppIdentifier {
-            mac_bundle_id: "com.workflowy.desktop".to_string(),
-            linux_desktop_id: "LINUXTODO".to_string(),
-            windows_app_id: "URL:workflowy".to_string(),
-        };
-
-        Self::generic_app_with_url(app_id, vec!["workflowy.com".to_string()], convert_workflowy_uri)
-    }
-
-    fn zoom_app() -> SupportedApp {
-        let app_id = AppIdentifier {
-            mac_bundle_id: "us.zoom.xos".to_string(),
-            linux_desktop_id: "Zoom.desktop".to_string(),
-            windows_app_id: "WINDOWSTODO".to_string(),
-        };
-
-        Self::generic_app(
-            app_id,
-            vec![
-                "zoom.us".to_string(),
-                "eu01web.zoom.us".to_string(),
-                "us02web.zoom.us".to_string(),
-                "us03web.zoom.us".to_string(),
-                "us04web.zoom.us".to_string(),
-                "us05web.zoom.us".to_string(),
-                "us06web.zoom.us".to_string(),
-                "us07web.zoom.us".to_string(),
-            ],
-        )
     }
 }
 
