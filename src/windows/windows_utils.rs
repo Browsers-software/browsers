@@ -94,7 +94,10 @@ impl OsHelper {
                 // "C:\Users\Browsers\AppData\Local\Programs\WorkFlowy\WorkFlowy.exe" "%1"
                 let Ok(command) = protocol_key
                     .open_subkey("shell\\open\\command")
-                    .and_then(|command_reg_key| command_reg_key.get_value::<String, _>("")) else { return None};
+                    .and_then(|command_reg_key| command_reg_key.get_value::<String, _>(""))
+                else {
+                    return None;
+                };
 
                 let icon_path_maybe = protocol_key
                     .open_subkey("DefaultIcon")
