@@ -1,9 +1,7 @@
 use std::sync::Arc;
 
-use druid::widget::{Controller, CrossAxisAlignment, Flex, Label, MainAxisAlignment, ViewSwitcher};
-use druid::{
-    Data, DelegateCtx, LensExt, Monitor, Point, Size, Widget, WidgetExt, WindowDesc, WindowLevel,
-};
+use druid::widget::{CrossAxisAlignment, Flex, Label, MainAxisAlignment, ViewSwitcher};
+use druid::{DelegateCtx, Monitor, Point, Size, Widget, WidgetExt, WindowDesc, WindowLevel};
 use tracing::info;
 
 use crate::gui::ui::{SettingsTab, UIBrowser, UISettings, UIState};

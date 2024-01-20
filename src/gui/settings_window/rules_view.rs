@@ -28,8 +28,8 @@ pub(crate) fn rules_content(browsers: Arc<Vec<UIBrowser>>) -> impl Widget<UISett
 
     let add_rule_button =
         Button::new("Add rule").on_click(move |ctx, data: &mut UISettings, _env| {
-            data.add_empty_rule();
-            ctx.submit_command(SAVE_RULES.with(()));
+            let rule = data.add_empty_rule();
+            ctx.submit_command(SAVE_RULE.with(rule.index))
         });
 
     let col = Flex::column()

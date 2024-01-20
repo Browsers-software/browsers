@@ -206,7 +206,9 @@ pub enum SettingsTab {
 }
 
 impl UISettings {
-    pub fn add_empty_rule(&mut self) {
+    pub fn add_empty_rule(&mut self) -> &UISettingsRule {
+        info!("add_empty_rule called");
+
         let next_index = self.rules.len();
 
         let rule = UISettingsRule {
@@ -220,14 +222,15 @@ impl UISettings {
 
         let rules_mut = Arc::make_mut(&mut self.rules);
         rules_mut.push(rule);
-        info!("add_rule called")
+        return rules_mut.last().unwrap();
     }
 
-    /*pub fn get_rule_by_index(&self, index: usize) -> Option<&UISettingsRule> {
+    /*
+    pub fn get_rule_by_index(&self, index: usize) -> Option<&UISettingsRule> {
         return self.rules.get(index);
-    }*/
+    }
 
-    /*pub fn remove_rule_by_index(&mut self, index: usize) {
+    pub fn remove_rule_by_index(&mut self, index: usize) {
         let rules_mut = Arc::make_mut(&mut self.rules);
         rules_mut.remove(index);
         // and update .index of all rules
@@ -309,7 +312,6 @@ pub const NEW_HIDDEN_BROWSERS_RECEIVED: Selector<Vec<UIBrowser>> =
 // or save rules, but allow "invalid" rules to be saved and handle them?
 pub const SAVE_RULES: Selector<()> = Selector::new("browsers.save_rules");
 pub const SAVE_RULE: Selector<usize> = Selector::new("browsers.save_rule");
-pub const REMOVE_RULE: Selector<usize> = Selector::new("browsers.remove_rule");
 
 pub struct UIDelegate {
     main_sender: Sender<MessageToMain>,
@@ -321,6 +323,19 @@ pub struct UIDelegate {
 }
 
 impl UIDelegate {
+    fn save_config_rules(&self, rules_arc: &Arc<Vec<UISettingsRule>>) {
+        let rules_clone = rules_arc.clone();
+        let rules_vec: Vec<UISettingsRule> = rules_clone
+            .iter()
+            .filter(|r| !r.deleted)
+            .map(|a| a.clone())
+            .collect();
+
+        self.main_sender
+            .send(MessageToMain::SaveConfigRules(rules_vec))
+            .ok();
+    }
+
     fn open_link_in_filtered_browser(
         &self,
         ctx: &mut DelegateCtx,
@@ -469,8 +484,7 @@ impl AppDelegate<UIState> for UIDelegate {
             ctx.submit_command(QUIT_APP);
             // QUIT_APP doesn't always actually quit the app on macOS, so forcing exit until thats figured out
             exit(0x0100);
-            #[allow(unreachable_code)]
-            Handled::Yes
+            // Handled::Yes
         } else if cmd.is(APP_LOST_FOCUS) {
             info!("App lost focus");
             if self.quit_on_lost_focus {
@@ -621,37 +635,10 @@ impl AppDelegate<UIState> for UIDelegate {
             settings_window::show_settings_dialog(ctx, self.monitor.clone(), &data.browsers);
             Handled::Yes
         } else if cmd.is(SAVE_RULES) {
-            let rules = &data.ui_settings.rules.clone();
-            let rules_clone: Vec<UISettingsRule> = rules
-                .iter()
-                .filter(|r| !r.deleted)
-                .map(|a| a.clone())
-                .collect();
-            self.main_sender
-                .send(MessageToMain::SaveConfigRules(rules_clone))
-                .ok();
+            self.save_config_rules(&data.ui_settings.rules);
             Handled::Yes
         } else if cmd.is(SAVE_RULE) {
-            //let rule_index = cmd.get_unchecked(SAVE_RULE).clone();
-            let rules = &data.ui_settings.rules.clone();
-            let rules_clone: Vec<UISettingsRule> = rules
-                .iter()
-                .filter(|r| !r.deleted)
-                .map(|a| a.clone())
-                .collect();
-
-            //let rule_maybe = data.ui_settings.get_rule_by_index(rule_index);
-            //if rule_maybe.is_some() {
-            //let rule = rule_maybe.unwrap();
-            self.main_sender
-                .send(MessageToMain::SaveConfigRules(rules_clone))
-                .ok();
-            //}
-            Handled::Yes
-        } else if cmd.is(REMOVE_RULE) {
-            let rule_index = cmd.get_unchecked(REMOVE_RULE).clone();
-
-            //data.ui_settings.remove_rule_by_index(rule_index);
+            self.save_config_rules(&data.ui_settings.rules);
             Handled::Yes
         } else {
             //println!("cmd forwarded: {:?}", cmd);
