@@ -130,8 +130,11 @@ fn rules_content(browsers: Arc<Vec<UIBrowser>>) -> impl Widget<UISettings> {
     let rules_list = List::new(move || create_rule(&browsers_arc))
         .lens(UISettings::rules)
         .scroll()
-        .vertical()
-        .content_must_fill(true);
+        .vertical();
+    //.content_must_fill(true);
+
+    // viewport size is fixed, while scrollable are is full size
+    let rules_list = Container::new(rules_list).expand_height();
 
     let add_rule_button =
         Button::new("Add rule").on_click(move |ctx, data: &mut UISettings, _env| {
@@ -141,7 +144,7 @@ fn rules_content(browsers: Arc<Vec<UIBrowser>>) -> impl Widget<UISettings> {
 
     let col = Flex::column()
         .with_child(app_name_row)
-        .with_child(rules_list)
+        .with_flex_child(rules_list, 1.0)
         .with_child(add_rule_button);
 
     return col;
@@ -171,7 +174,14 @@ pub fn show_settings_dialog(
     browsers: &Arc<Vec<UIBrowser>>,
 ) {
     info!("show_settings_dialog");
+    let window = create_settings_window(monitor, browsers);
+    ctx.new_window(window);
+}
 
+pub fn create_settings_window(
+    monitor: Monitor,
+    browsers: &Arc<Vec<UIBrowser>>,
+) -> WindowDesc<UIState> {
     let browsers_arc = browsers.clone();
 
     let view_switcher = ViewSwitcher::new(
@@ -217,7 +227,7 @@ pub fn show_settings_dialog(
         Should detect if pattern is yoo complex then only advanced.
         Maybe have the advanced/novice option per rule.
      */
-    ctx.new_window(new_win);
+    return new_win;
 }
 
 fn make_profiles_menu(browsers: Arc<Vec<UIBrowser>>, rule_index: usize) -> Menu<UIState> {
