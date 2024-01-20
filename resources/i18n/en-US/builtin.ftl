@@ -4,3 +4,6 @@ move-profile-lower = Move { $item-name } Down
 move-profile-to-bottom = Move { $item-name } to Bottom
 hide-profile = Hide { $item-name }
 hide-app = Hide all profiles of { $app-name }
+
+settings-tab-general = General
+settings-tab-rules = Rules

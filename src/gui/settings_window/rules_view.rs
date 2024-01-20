@@ -2,26 +2,26 @@ use std::sync::Arc;
 
 use druid::lens::Identity;
 use druid::widget::{
-    Button, Checkbox, Container, Controller, ControllerHost, Either, Flex, Label, List, TextBox,
+    Button, Checkbox, Container, Controller, ControllerHost, CrossAxisAlignment, Either, Flex,
+    Label, List, TextBox,
 };
 use druid::{
-    Color, Data, Env, EventCtx, LensExt, LifeCycle, LifeCycleCtx, Menu, MenuItem, Point, UpdateCtx,
-    Widget, WidgetExt,
+    Color, Data, Env, EventCtx, FontDescriptor, FontFamily, LensExt, LifeCycle, LifeCycleCtx, Menu,
+    MenuItem, Point, UpdateCtx, Widget, WidgetExt,
 };
-use tracing::info;
 
 use crate::gui::ui::{UIBrowser, UISettings, UISettingsRule, UIState, SAVE_RULE, SAVE_RULES};
 
-pub(crate) fn rules_content(browsers: Arc<Vec<UIBrowser>>) -> impl Widget<UISettings> {
-    info!("recreating rules_content");
-    let browsers_arc = browsers.clone();
+const FONT: FontDescriptor = FontDescriptor::new(FontFamily::SYSTEM_UI).with_size(12.0);
 
-    let app_name_row: Label<UISettings> = Label::new("Rules");
+pub(crate) fn rules_content(browsers: Arc<Vec<UIBrowser>>) -> impl Widget<UISettings> {
+    let browsers_arc = browsers.clone();
 
     // TODO: add default_profile also to rules
 
     let rules_list = List::new(move || create_rule(&browsers_arc))
         .lens(UISettings::rules)
+        .padding((10.0, 0.0))
         .scroll()
         .vertical()
         .content_must_fill(true);
@@ -29,7 +29,7 @@ pub(crate) fn rules_content(browsers: Arc<Vec<UIBrowser>>) -> impl Widget<UISett
     // viewport size is fixed, while scrollable are is full size
     let rules_list = Container::new(rules_list).expand_height();
 
-    let add_rule_button = Button::new("Add rule")
+    let add_rule_button = Button::from_label(Label::new("Add Rule"))
         .on_click(move |ctx, data: &mut UISettings, _env| {
             // this will add new entry to data.rules
             // and that triggers rules_list to add new child
@@ -39,7 +39,7 @@ pub(crate) fn rules_content(browsers: Arc<Vec<UIBrowser>>) -> impl Widget<UISett
         .padding(10.0);
 
     let col = Flex::column()
-        .with_child(app_name_row)
+        .cross_axis_alignment(CrossAxisAlignment::End)
         .with_flex_child(rules_list, 1.0)
         .with_child(add_rule_button)
         .expand_height();
@@ -70,21 +70,19 @@ impl<W: Widget<UISettingsRule>> Controller<UISettingsRule, W> for AddRuleControl
 }
 
 fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettingsRule> {
-    info!("Creating rule");
-    let url_pattern_label = Label::new("If URL contains");
-    let profile_label = Label::new("Open in");
+    let url_pattern_label = Label::new("If URL matches").with_font(FONT);
+    let profile_label = Label::new("Open in").with_font(FONT);
 
-    let remove_rule_button =
-        Button::new("➖").on_click(move |ctx, data: &mut UISettingsRule, _env| {
+    let remove_rule_button = Button::from_label(Label::new("➖").with_text_size(5.0))
+        .on_click(move |ctx, data: &mut UISettingsRule, _env| {
             data.deleted = true;
             ctx.submit_command(SAVE_RULES.with(()));
-        });
-
-    let action_row = Flex::row().with_child(remove_rule_button);
+        })
+        .fix_size(30.0, 30.0);
 
     let text_box = TextBox::new()
         .with_placeholder("https://")
-        .with_text_size(18.0);
+        .with_text_size(12.0);
 
     //let formatter = ParseFormatter::new();
     //let value_text_box = ValueTextBox::new(text_box, formatter).update_data_while_editing(true);
@@ -103,6 +101,7 @@ fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettingsRule> {
 
         format!("{profile_name} ▼")
     })
+    .with_font(FONT)
     .border(Color::rgba(0.5, 0.5, 0.5, 0.9), 0.5)
     .on_click(move |ctx: &mut EventCtx, rule: &mut UISettingsRule, _env| {
         // Windows requires exact position relative to the window
@@ -134,9 +133,12 @@ fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettingsRule> {
             profile_supports_incognito
         },
         {
-            let incognito_checkbox =
-                ControllerHost::new(Checkbox::new("incognito"), SaveRulesOnDataChange)
-                    .lens(UISettingsRule::incognito);
+            let incognito_checkbox = ControllerHost::new(
+                Checkbox::from_label(Label::new("Incognito").with_font(FONT)),
+                SaveRulesOnDataChange,
+            )
+            .lens(UISettingsRule::incognito)
+            .padding((10.0, 0.0, 0.0, 0.0));
             incognito_checkbox
         },
         Flex::column(),
@@ -145,20 +147,27 @@ fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettingsRule> {
     let profile_row = Flex::row()
         .with_child(profile_label)
         .with_child(selected_profile)
-        .with_child(incognito_either);
+        .with_child(incognito_either)
+        .padding((0.0, 10.0, 0.0, 0.0));
 
     return Either::new(|data: &UISettingsRule, _env| data.deleted, Flex::column(), {
         Container::new(
-            Flex::column()
-                .with_child(action_row)
-                .with_child(url_pattern_row)
-                .with_child(profile_row),
+            Flex::row()
+                .cross_axis_alignment(CrossAxisAlignment::End)
+                .with_child(
+                    Flex::column()
+                        .cross_axis_alignment(CrossAxisAlignment::Start)
+                        .with_child(url_pattern_row)
+                        .with_child(profile_row),
+                )
+                .with_spacer(10.0)
+                .with_child(remove_rule_button),
         )
         .padding(10.0)
         .background(Color::rgba(0.1, 0.1, 0.1, 0.9))
         .rounded(10.0)
         .border(Color::rgba(0.5, 0.5, 0.5, 0.9), 0.5)
-        .padding(10.0)
+        .padding((0.0, 5.0))
     })
     .controller(AddRuleController);
 }
