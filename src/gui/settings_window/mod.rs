@@ -44,8 +44,8 @@ pub fn create_settings_window(
     let browsers_arc = browsers.clone();
 
     let view_switcher = ViewSwitcher::new(
-        |data: &UISettings, _env| data.clone(),
-        move |selector, _data, _env| match selector.tab {
+        |data: &UISettings, _env| data.tab.clone(),
+        move |selector, _data, _env| match selector {
             SettingsTab::GENERAL => Box::new(general_view::general_content()),
             SettingsTab::RULES => Box::new(rules_view::rules_content(browsers_arc.clone())),
         },
