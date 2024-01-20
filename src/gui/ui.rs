@@ -18,7 +18,7 @@ use crate::gui::main_window::{
     SET_BROWSERS_AS_DEFAULT_BROWSER, SET_FOCUSED_INDEX, SHOW_ABOUT_DIALOG, SHOW_SETTINGS_DIALOG,
 };
 use crate::gui::ui::SettingsTab::GENERAL;
-use crate::gui::{about_dialog, main_window, settings_dialog};
+use crate::gui::{about_dialog, main_window, settings_window};
 use crate::url_rule::UrlGlobMatcher;
 use crate::utils::{Config, UIConfig};
 use crate::{CommonBrowserProfile, MessageToMain};
@@ -617,7 +617,7 @@ impl AppDelegate<UIState> for UIDelegate {
             about_dialog::show_about_dialog(ctx, self.monitor.clone());
             Handled::Yes
         } else if cmd.is(SHOW_SETTINGS_DIALOG) {
-            settings_dialog::show_settings_dialog(ctx, self.monitor.clone(), &data.browsers);
+            settings_window::show_settings_dialog(ctx, self.monitor.clone(), &data.browsers);
             Handled::Yes
         } else if cmd.is(SAVE_RULES) {
             let rules = &data.ui_settings.rules.clone();
