@@ -4,7 +4,6 @@ use std::path::PathBuf;
 use crate::linux::linux_utils;
 #[cfg(target_os = "macos")]
 use crate::macos::macos_utils;
-
 #[cfg(target_os = "windows")]
 use crate::windows::windows_utils;
 

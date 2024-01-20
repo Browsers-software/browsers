@@ -469,6 +469,7 @@ impl AppDelegate<UIState> for UIDelegate {
             ctx.submit_command(QUIT_APP);
             // QUIT_APP doesn't always actually quit the app on macOS, so forcing exit until thats figured out
             exit(0x0100);
+            #[allow(unreachable_code)]
             Handled::Yes
         } else if cmd.is(APP_LOST_FOCUS) {
             info!("App lost focus");
