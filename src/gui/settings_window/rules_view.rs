@@ -7,10 +7,12 @@ use druid::widget::{
 use druid::{
     Color, Data, Env, EventCtx, LensExt, Menu, MenuItem, Point, UpdateCtx, Widget, WidgetExt,
 };
+use tracing::info;
 
 use crate::gui::ui::{UIBrowser, UISettings, UISettingsRule, UIState, SAVE_RULE, SAVE_RULES};
 
 pub(crate) fn rules_content(browsers: Arc<Vec<UIBrowser>>) -> impl Widget<UISettings> {
+    info!("recreating rules_content");
     let browsers_arc = browsers.clone();
 
     let app_name_row: Label<UISettings> = Label::new("Rules");
@@ -20,8 +22,8 @@ pub(crate) fn rules_content(browsers: Arc<Vec<UIBrowser>>) -> impl Widget<UISett
     let rules_list = List::new(move || create_rule(&browsers_arc))
         .lens(UISettings::rules)
         .scroll()
-        .vertical();
-    //.content_must_fill(true);
+        .vertical()
+        .content_must_fill(true);
 
     // viewport size is fixed, while scrollable are is full size
     let rules_list = Container::new(rules_list).expand_height();
@@ -35,12 +37,14 @@ pub(crate) fn rules_content(browsers: Arc<Vec<UIBrowser>>) -> impl Widget<UISett
     let col = Flex::column()
         .with_child(app_name_row)
         .with_flex_child(rules_list, 1.0)
-        .with_child(add_rule_button);
+        .with_child(add_rule_button)
+        .expand_height();
 
     return col;
 }
 
 fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettingsRule> {
+    info!("Recreating rule");
     let url_pattern_label = Label::new("If URL contains");
     let profile_label = Label::new("Open in");
 
