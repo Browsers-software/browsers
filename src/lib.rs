@@ -809,6 +809,8 @@ pub fn basically_main(
                         })
                         .collect();
 
+                    info!("Saving rules");
+
                     config.set_rules(&new_rules);
                     app_finder.save_config(&config);
 
