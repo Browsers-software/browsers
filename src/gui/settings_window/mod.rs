@@ -23,11 +23,15 @@ pub fn create_settings_window(
     monitor: Monitor,
     browsers: &Arc<Vec<UIBrowser>>,
 ) -> WindowDesc<UIState> {
-    let sidebar = Flex::column().with_child(sidebar_items());
+    let sidebar = Flex::column()
+        .with_flex_child(sidebar_items(), 1.0)
+        .padding(10.0);
+
     let content = Flex::column()
         .must_fill_main_axis(true)
         .cross_axis_alignment(CrossAxisAlignment::Fill)
-        .with_flex_child(view_switcher(browsers.clone()), 1.0);
+        .with_flex_child(view_switcher(browsers.clone()), 1.0)
+        .padding(10.0);
 
     let layout = Flex::row().with_child(sidebar).with_child(content);
 
@@ -37,14 +41,14 @@ pub fn create_settings_window(
         .with_flex_child(layout, 1.0)
         .lens(UIState::ui_settings);
 
-    let size = Size::new(500.0, 400.0);
+    let size = Size::new(550.0, 400.0);
     let screen_rect = monitor.virtual_work_rect();
 
     let x = screen_rect.x0 + (screen_rect.x1 - screen_rect.x0) / 2.0 - size.width / 2.0;
     let y = screen_rect.y0 + 190.0;
     let window_position = Point::new(x, y);
 
-    let new_win = WindowDesc::new(main_column)
+    return WindowDesc::new(main_column)
         .title("Settings")
         .window_size(size)
         // with_min_size helps on LXDE
@@ -65,7 +69,6 @@ pub fn create_settings_window(
         Should detect if pattern is yoo complex then only advanced.
         Maybe have the advanced/novice option per rule.
      */
-    return new_win;
 }
 
 fn view_switcher(browsers_arc: Arc<Vec<UIBrowser>>) -> ViewSwitcher<UISettings, SettingsTab> {
@@ -80,8 +83,10 @@ fn view_switcher(browsers_arc: Arc<Vec<UIBrowser>>) -> ViewSwitcher<UISettings, 
 
 fn sidebar_items() -> impl Widget<UISettings> {
     Flex::column()
+        .must_fill_main_axis(true)
         .with_child(tab_button("General", SettingsTab::GENERAL))
         .with_child(tab_button("Rules", SettingsTab::RULES))
+        .with_flex_spacer(1.0)
 }
 
 fn tabs_row() -> impl Widget<UISettings> {

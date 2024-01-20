@@ -45,6 +45,7 @@ impl UI {
             .enumerate()
             .map(|(i, rule)| UISettingsRule {
                 index: i,
+                saved: true,
                 deleted: false,
                 source_app: rule
                     .source_app
@@ -213,6 +214,7 @@ impl UISettings {
 
         let rule = UISettingsRule {
             index: next_index,
+            saved: false,
             deleted: false,
             source_app: "".to_string(),
             url_pattern: "".to_string(),
@@ -223,6 +225,15 @@ impl UISettings {
         let rules_mut = Arc::make_mut(&mut self.rules);
         rules_mut.push(rule);
         return rules_mut.last().unwrap();
+    }
+
+    pub fn mark_rules_as_saved(&mut self) {
+        let rules_mut = Arc::make_mut(&mut self.rules);
+        for rule in rules_mut.iter_mut() {
+            if !rule.deleted {
+                rule.saved = true
+            }
+        }
     }
 
     /*
@@ -243,6 +254,7 @@ impl UISettings {
 #[derive(Clone, Debug, Data, Lens)]
 pub struct UISettingsRule {
     pub index: usize,
+    pub saved: bool,   // useful to recognize if this is a new rule or not
     pub deleted: bool, // soft-deleting to avoid complex druid issues
 
     pub source_app: String,  // Optional in datamodel
@@ -636,9 +648,11 @@ impl AppDelegate<UIState> for UIDelegate {
             Handled::Yes
         } else if cmd.is(SAVE_RULES) {
             self.save_config_rules(&data.ui_settings.rules);
+            data.ui_settings.mark_rules_as_saved();
             Handled::Yes
         } else if cmd.is(SAVE_RULE) {
             self.save_config_rules(&data.ui_settings.rules);
+            data.ui_settings.mark_rules_as_saved();
             Handled::Yes
         } else {
             //println!("cmd forwarded: {:?}", cmd);

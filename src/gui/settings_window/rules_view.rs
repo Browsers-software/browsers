@@ -5,7 +5,8 @@ use druid::widget::{
     Button, Checkbox, Container, Controller, ControllerHost, Either, Flex, Label, List, TextBox,
 };
 use druid::{
-    Color, Data, Env, EventCtx, LensExt, Menu, MenuItem, Point, UpdateCtx, Widget, WidgetExt,
+    Color, Data, Env, EventCtx, LensExt, LifeCycle, LifeCycleCtx, Menu, MenuItem, Point, UpdateCtx,
+    Widget, WidgetExt,
 };
 use tracing::info;
 
@@ -28,11 +29,14 @@ pub(crate) fn rules_content(browsers: Arc<Vec<UIBrowser>>) -> impl Widget<UISett
     // viewport size is fixed, while scrollable are is full size
     let rules_list = Container::new(rules_list).expand_height();
 
-    let add_rule_button =
-        Button::new("Add rule").on_click(move |ctx, data: &mut UISettings, _env| {
-            let rule = data.add_empty_rule();
-            ctx.submit_command(SAVE_RULE.with(rule.index))
-        });
+    let add_rule_button = Button::new("Add rule")
+        .on_click(move |ctx, data: &mut UISettings, _env| {
+            // this will add new entry to data.rules
+            // and that triggers rules_list to add new child
+            // and that child uses AddRuleController which will then scroll to new rule and save it
+            data.add_empty_rule();
+        })
+        .padding(10.0);
 
     let col = Flex::column()
         .with_child(app_name_row)
@@ -43,8 +47,30 @@ pub(crate) fn rules_content(browsers: Arc<Vec<UIBrowser>>) -> impl Widget<UISett
     return col;
 }
 
+// handles scrolling and saving when Add Rule is pressed
+struct AddRuleController;
+
+impl<W: Widget<UISettingsRule>> Controller<UISettingsRule, W> for AddRuleController {
+    fn lifecycle(
+        &mut self,
+        child: &mut W,
+        ctx: &mut LifeCycleCtx,
+        event: &LifeCycle,
+        rule: &UISettingsRule,
+        env: &Env,
+    ) {
+        if let LifeCycle::ViewContextChanged(_) = event {
+            if !rule.deleted && !rule.saved {
+                ctx.scroll_to_view();
+                ctx.submit_command(SAVE_RULE.with(rule.index));
+            }
+        }
+        child.lifecycle(ctx, event, rule, env)
+    }
+}
+
 fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettingsRule> {
-    info!("Recreating rule");
+    info!("Creating rule");
     let url_pattern_label = Label::new("If URL contains");
     let profile_label = Label::new("Open in");
 
@@ -133,7 +159,8 @@ fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettingsRule> {
         .rounded(10.0)
         .border(Color::rgba(0.5, 0.5, 0.5, 0.9), 0.5)
         .padding(10.0)
-    });
+    })
+    .controller(AddRuleController);
 }
 fn find_browser(browsers: &Arc<Vec<UIBrowser>>, unique_id: String) -> Option<&UIBrowser> {
     let option = browsers.iter().filter(|b| b.unique_id == unique_id).next();
