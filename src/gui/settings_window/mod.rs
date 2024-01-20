@@ -9,24 +9,6 @@ use crate::gui::ui::{SettingsTab, UIBrowser, UISettings, UIState};
 mod general_view;
 mod rules_view;
 
-fn tabs_row() -> impl Widget<UISettings> {
-    Flex::row()
-        .must_fill_main_axis(true)
-        .main_axis_alignment(MainAxisAlignment::Center)
-        .with_child(tab_button("General", SettingsTab::GENERAL))
-        .with_default_spacer()
-        .with_child(tab_button("Rules", SettingsTab::RULES))
-}
-
-fn tab_button(text: &'static str, tab: SettingsTab) -> impl Widget<UISettings> {
-    Flex::column()
-        .with_default_spacer()
-        .with_child(Label::new(text))
-        .on_click(move |_ctx, data: &mut UISettings, _env| {
-            data.tab = tab;
-        })
-}
-
 pub fn show_settings_dialog(
     ctx: &mut DelegateCtx,
     monitor: Monitor,
@@ -87,4 +69,22 @@ pub fn create_settings_window(
         Maybe have the advanced/novice option per rule.
      */
     return new_win;
+}
+
+fn tabs_row() -> impl Widget<UISettings> {
+    Flex::row()
+        .must_fill_main_axis(true)
+        .main_axis_alignment(MainAxisAlignment::Center)
+        .with_child(tab_button("General", SettingsTab::GENERAL))
+        .with_default_spacer()
+        .with_child(tab_button("Rules", SettingsTab::RULES))
+}
+
+fn tab_button(text: &'static str, tab: SettingsTab) -> impl Widget<UISettings> {
+    Flex::column()
+        .with_default_spacer()
+        .with_child(Label::new(text))
+        .on_click(move |_ctx, data: &mut UISettings, _env| {
+            data.tab = tab;
+        })
 }
