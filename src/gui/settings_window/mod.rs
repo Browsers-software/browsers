@@ -23,21 +23,18 @@ pub fn create_settings_window(
     monitor: Monitor,
     browsers: &Arc<Vec<UIBrowser>>,
 ) -> WindowDesc<UIState> {
-    let browsers_arc = browsers.clone();
-
-    let view_switcher = ViewSwitcher::new(
-        |data: &UISettings, _env| data.tab.clone(),
-        move |selector, _data, _env| match selector {
-            SettingsTab::GENERAL => Box::new(general_view::general_content()),
-            SettingsTab::RULES => Box::new(rules_view::rules_content(browsers_arc.clone())),
-        },
-    );
-
-    let col = Flex::column()
+    let sidebar = Flex::column().with_child(sidebar_items());
+    let content = Flex::column()
         .must_fill_main_axis(true)
         .cross_axis_alignment(CrossAxisAlignment::Fill)
-        .with_child(tabs_row())
-        .with_flex_child(view_switcher, 1.0)
+        .with_flex_child(view_switcher(browsers.clone()), 1.0);
+
+    let layout = Flex::row().with_child(sidebar).with_child(content);
+
+    let main_column = Flex::column()
+        .must_fill_main_axis(true)
+        .cross_axis_alignment(CrossAxisAlignment::Fill)
+        .with_flex_child(layout, 1.0)
         .lens(UIState::ui_settings);
 
     let size = Size::new(500.0, 400.0);
@@ -47,7 +44,7 @@ pub fn create_settings_window(
     let y = screen_rect.y0 + 190.0;
     let window_position = Point::new(x, y);
 
-    let new_win = WindowDesc::new(col)
+    let new_win = WindowDesc::new(main_column)
         .title("Settings")
         .window_size(size)
         // with_min_size helps on LXDE
@@ -69,6 +66,22 @@ pub fn create_settings_window(
         Maybe have the advanced/novice option per rule.
      */
     return new_win;
+}
+
+fn view_switcher(browsers_arc: Arc<Vec<UIBrowser>>) -> ViewSwitcher<UISettings, SettingsTab> {
+    ViewSwitcher::new(
+        |data: &UISettings, _env| data.tab.clone(),
+        move |selector, _data, _env| match selector {
+            SettingsTab::GENERAL => Box::new(general_view::general_content()),
+            SettingsTab::RULES => Box::new(rules_view::rules_content(browsers_arc.clone())),
+        },
+    )
+}
+
+fn sidebar_items() -> impl Widget<UISettings> {
+    Flex::column()
+        .with_child(tab_button("General", SettingsTab::GENERAL))
+        .with_child(tab_button("Rules", SettingsTab::RULES))
 }
 
 fn tabs_row() -> impl Widget<UISettings> {
