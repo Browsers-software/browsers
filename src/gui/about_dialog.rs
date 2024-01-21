@@ -1,10 +1,11 @@
-use druid::widget::{Container, CrossAxisAlignment, Flex, Image, Label};
+use druid::widget::{Container, Flex, Image, Label};
 use druid::{
     Color, DelegateCtx, FontDescriptor, FontFamily, FontWeight, ImageBuf, Monitor, Point, Size,
     WidgetExt, WindowDesc, WindowLevel,
 };
 use tracing::info;
 
+use crate::gui::shared;
 use crate::gui::ui::UIState;
 use crate::paths;
 
@@ -38,36 +39,7 @@ pub fn show_about_dialog(ctx: &mut DelegateCtx, monitor: Monitor) {
         Label::new("© 2022-2023 Browsers.software team. \nVisit us at https://browsers.software.")
             .with_text_size(10.0);
 
-    // .join("") adds trailing "/", indicating for the user that it's a directory
-    let config_root_dir = paths::get_config_root_dir().join("");
-    let config_root_dir = config_root_dir.as_path().to_str().unwrap().to_string();
-
-    let cache_root_dir = paths::get_cache_root_dir().join("");
-    let cache_root_dir = cache_root_dir.as_path().to_str().unwrap().to_string();
-
-    let logs_root_dir = paths::get_logs_root_dir().join("");
-    let logs_root_dir = logs_root_dir.as_path().to_str().unwrap().to_string();
-
-    let resources_root_dir = paths::get_resources_basedir().join("");
-    let resources_root_dir = resources_root_dir.as_path().to_str().unwrap().to_string();
-
-    let paths_row = Flex::row()
-        .with_child(
-            Flex::column()
-                .cross_axis_alignment(CrossAxisAlignment::End)
-                .with_child(Label::new("Config").with_text_size(8.0))
-                .with_child(Label::new("Cache").with_text_size(8.0))
-                .with_child(Label::new("Logs").with_text_size(8.0))
-                .with_child(Label::new("Resources").with_text_size(8.0)),
-        )
-        .with_child(
-            Flex::column()
-                .cross_axis_alignment(CrossAxisAlignment::Start)
-                .with_child(Label::new(config_root_dir).with_text_size(8.0))
-                .with_child(Label::new(cache_root_dir).with_text_size(8.0))
-                .with_child(Label::new(logs_root_dir).with_text_size(8.0))
-                .with_child(Label::new(resources_root_dir).with_text_size(8.0)),
-        );
+    let paths_row = shared::directories_info::directories_info(8.0);
 
     let col: Container<UIState> = Flex::column()
         .with_spacer(10.0)
