@@ -22,7 +22,7 @@ use crate::MoveTo;
 
 pub const COPY_LINK_TO_CLIPBOARD: Selector<()> = Selector::new("browsers.copy_link");
 
-pub const REFRESH: Selector<usize> = Selector::new("browsers.refresh");
+pub const REFRESH: Selector<()> = Selector::new("browsers.refresh");
 
 pub const SET_FOCUSED_INDEX: Selector<Option<usize>> = Selector::new("browsers.hover");
 
@@ -648,7 +648,7 @@ fn make_options_menu(
 
     menu = menu.entry(MenuItem::new(LocalizedString::new("Refresh")).on_activate(
         |ctx, _data: &mut UIState, _env| {
-            ctx.submit_command(REFRESH.with(0));
+            ctx.submit_command(REFRESH);
         },
     ));
 

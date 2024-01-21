@@ -9,6 +9,7 @@ use tracing::info;
 
 use crate::gui::ui::{SettingsTab, UIBrowser, UISettings, UIState};
 
+mod advanced_view;
 mod general_view;
 mod rules_view;
 
@@ -85,6 +86,9 @@ fn view_switcher(browsers_arc: Arc<Vec<UIBrowser>>) -> ViewSwitcher<UISettings, 
                 "settings-tab-rules",
                 rules_view::rules_content(browsers_arc.clone()),
             ),
+            SettingsTab::ADVANCED => {
+                settings_view_container("settings-tab-advanced", advanced_view::advanced_content())
+            }
         },
     )
 }
@@ -115,6 +119,7 @@ fn sidebar_items() -> impl Widget<UISettings> {
         .cross_axis_alignment(CrossAxisAlignment::Fill)
         .with_child(tab_button("settings-tab-general", SettingsTab::GENERAL))
         .with_child(tab_button("settings-tab-rules", SettingsTab::RULES))
+        .with_child(tab_button("settings-tab-advanced", SettingsTab::ADVANCED))
         .with_flex_spacer(1.0)
         .fix_width(190.0)
 }
