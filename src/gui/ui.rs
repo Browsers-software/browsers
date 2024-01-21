@@ -204,6 +204,7 @@ pub struct UISettings {
 pub enum SettingsTab {
     GENERAL,
     RULES,
+    ADVANCED,
 }
 
 impl UISettings {
