@@ -148,6 +148,10 @@ impl Config {
         return &self.default_profile;
     }
 
+    pub fn set_default_profile(&mut self, default_profile: Option<ProfileAndOptions>) {
+        self.default_profile = default_profile.clone()
+    }
+
     pub fn get_ui_config(&self) -> &UIConfig {
         return &self.ui;
     }

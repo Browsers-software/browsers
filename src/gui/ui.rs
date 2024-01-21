@@ -60,8 +60,17 @@ impl UI {
             })
             .collect();
 
+        let default_opener = config
+            .get_default_profile()
+            .as_ref()
+            .map(|p| UIDefaultOpener {
+                profile: p.profile.clone(),
+                incognito: p.incognito,
+            });
+
         return UISettings {
             tab: GENERAL,
+            default_opener: default_opener,
             rules: Arc::new(ui_settings_rules),
         };
     }
@@ -197,7 +206,14 @@ pub struct UIState {
 #[derive(Clone, Data, Lens)]
 pub struct UISettings {
     pub tab: SettingsTab,
+    pub default_opener: Option<UIDefaultOpener>,
     pub rules: Arc<Vec<UISettingsRule>>,
+}
+
+#[derive(Clone, Debug, Data, Lens)]
+pub struct UIDefaultOpener {
+    pub profile: String,
+    pub incognito: bool,
 }
 
 #[derive(Clone, PartialEq, Data, Copy)]
@@ -325,6 +341,7 @@ pub const NEW_HIDDEN_BROWSERS_RECEIVED: Selector<Vec<UIBrowser>> =
 // or save rules, but allow "invalid" rules to be saved and handle them?
 pub const SAVE_RULES: Selector<()> = Selector::new("browsers.save_rules");
 pub const SAVE_RULE: Selector<usize> = Selector::new("browsers.save_rule");
+pub const SAVE_DEFAULT_RULE: Selector<()> = Selector::new("browsers.save_default_rule");
 
 pub struct UIDelegate {
     main_sender: Sender<MessageToMain>,
@@ -346,6 +363,12 @@ impl UIDelegate {
 
         self.main_sender
             .send(MessageToMain::SaveConfigRules(rules_vec))
+            .ok();
+    }
+
+    fn save_config_default_opener(&self, default_opener: &Option<UIDefaultOpener>) {
+        self.main_sender
+            .send(MessageToMain::SaveConfigDefaultOpener(default_opener.clone()))
             .ok();
     }
 
@@ -654,6 +677,9 @@ impl AppDelegate<UIState> for UIDelegate {
         } else if cmd.is(SAVE_RULE) {
             self.save_config_rules(&data.ui_settings.rules);
             data.ui_settings.mark_rules_as_saved();
+            Handled::Yes
+        } else if cmd.is(SAVE_DEFAULT_RULE) {
+            self.save_config_default_opener(&data.ui_settings.default_opener);
             Handled::Yes
         } else {
             //println!("cmd forwarded: {:?}", cmd);

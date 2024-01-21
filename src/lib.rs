@@ -14,8 +14,8 @@ use url::Url;
 use gui::ui;
 
 use crate::browser_repository::{SupportedApp, SupportedAppRepository};
-use crate::gui::ui::UISettingsRule;
 use crate::gui::ui::UI;
+use crate::gui::ui::{UIDefaultOpener, UISettingsRule};
 use crate::url_rule::UrlGlobMatcher;
 use crate::utils::{Config, ConfigRule, OSAppFinder, ProfileAndOptions};
 
@@ -798,6 +798,8 @@ pub fn basically_main(
                     &ui_event_sink,
                 ),
                 MessageToMain::SaveConfigRules(ui_rules) => {
+                    info!("Saving rules");
+
                     let mut config = app_finder.get_config();
                     let new_rules: Vec<ConfigRule> = ui_rules
                         .iter()
@@ -809,8 +811,6 @@ pub fn basically_main(
                         })
                         .collect();
 
-                    info!("Saving rules");
-
                     config.set_rules(&new_rules);
                     app_finder.save_config(&config);
 
@@ -820,6 +820,17 @@ pub fn basically_main(
                     let (new_opening_rules, new_default_profile) = load_opening_rules(&app_finder);
                     opening_rules = new_opening_rules;
                     default_profile = new_default_profile;
+                }
+                MessageToMain::SaveConfigDefaultOpener(default_opener) => {
+                    info!("Saving default opener");
+                    let default_profile = default_opener.map(|p| ProfileAndOptions {
+                        profile: p.profile,
+                        incognito: p.incognito,
+                    });
+
+                    let mut config = app_finder.get_config();
+                    config.set_default_profile(default_profile);
+                    app_finder.save_config(&config);
                 }
             }
         }
@@ -937,4 +948,5 @@ pub enum MessageToMain {
     RestoreAppProfile(String),
     MoveAppProfile(String, MoveTo),
     SaveConfigRules(Vec<UISettingsRule>),
+    SaveConfigDefaultOpener(Option<UIDefaultOpener>),
 }

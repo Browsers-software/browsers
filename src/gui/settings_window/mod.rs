@@ -13,6 +13,13 @@ mod advanced_view;
 mod general_view;
 mod rules_view;
 
+const SIDEBAR_ITEM_WIDTH: f64 = 190.0;
+const WINDOW_WIDTH: f64 = 714.0;
+const SIDEBAR_PADDING: f64 = 10.0;
+const CONTENT_PADDING: f64 = 10.0;
+const CONTENT_WIDTH: f64 =
+    WINDOW_WIDTH - SIDEBAR_PADDING - SIDEBAR_ITEM_WIDTH - CONTENT_PADDING - 10.0;
+
 pub fn show_settings_dialog(
     ctx: &mut DelegateCtx,
     monitor: Monitor,
@@ -27,25 +34,26 @@ pub fn create_settings_window(
     monitor: Monitor,
     browsers: &Arc<Vec<UIBrowser>>,
 ) -> WindowDesc<UIState> {
+    // 210 px
     let sidebar = Flex::column()
         .with_flex_child(sidebar_items(), 1.0)
-        .padding(10.0);
+        .padding(SIDEBAR_PADDING)
+        .lens(UIState::ui_settings);
 
     let content = Flex::column()
         .must_fill_main_axis(true)
         .cross_axis_alignment(CrossAxisAlignment::Fill)
         .with_flex_child(view_switcher(browsers.clone()), 1.0)
-        .padding(10.0);
+        .padding(CONTENT_PADDING);
 
     let layout = Flex::row().with_child(sidebar).with_child(content);
 
     let main_column = Flex::column()
         .must_fill_main_axis(true)
         .cross_axis_alignment(CrossAxisAlignment::Fill)
-        .with_flex_child(layout, 1.0)
-        .lens(UIState::ui_settings);
+        .with_flex_child(layout, 1.0);
 
-    let size = Size::new(714.0, 500.0);
+    let size = Size::new(WINDOW_WIDTH, 500.0);
     let screen_rect = monitor.virtual_work_rect();
 
     let x = screen_rect.x0 + (screen_rect.x1 - screen_rect.x0) / 2.0 - size.width / 2.0;
@@ -75,10 +83,10 @@ pub fn create_settings_window(
      */
 }
 
-fn view_switcher(browsers_arc: Arc<Vec<UIBrowser>>) -> ViewSwitcher<UISettings, SettingsTab> {
+fn view_switcher(browsers_arc: Arc<Vec<UIBrowser>>) -> ViewSwitcher<UIState, SettingsTab> {
     ViewSwitcher::new(
-        |data: &UISettings, _env| data.tab.clone(),
-        move |selector, _data, _env| match selector {
+        |data: &UIState, _env| data.ui_settings.tab.clone(),
+        move |selector, data, _env| match selector {
             SettingsTab::GENERAL => {
                 settings_view_container("settings-tab-general", general_view::general_content())
             }
@@ -95,14 +103,17 @@ fn view_switcher(browsers_arc: Arc<Vec<UIBrowser>>) -> ViewSwitcher<UISettings, 
 
 fn settings_view_container(
     title_key: &'static str,
-    content: impl Widget<UISettings> + 'static,
-) -> Box<dyn Widget<UISettings>> {
+    content: impl Widget<UIState> + 'static,
+) -> Box<dyn Widget<UIState>> {
     let font = FontDescriptor::new(FontFamily::SYSTEM_UI)
         .with_weight(FontWeight::BOLD)
         .with_size(16.0);
 
     let title = LocalizedString::new(title_key);
     let setting_name_label = Label::new(title).with_font(font).padding((0.0, 10.0));
+
+    // makes sure word-wrapping in content widget is respected
+    let content = content.fix_width(CONTENT_WIDTH);
 
     let col = Flex::column()
         .cross_axis_alignment(CrossAxisAlignment::Start)
@@ -121,7 +132,7 @@ fn sidebar_items() -> impl Widget<UISettings> {
         .with_child(tab_button("settings-tab-rules", SettingsTab::RULES))
         .with_child(tab_button("settings-tab-advanced", SettingsTab::ADVANCED))
         .with_flex_spacer(1.0)
-        .fix_width(190.0)
+        .fix_width(SIDEBAR_ITEM_WIDTH)
 }
 
 fn tab_button(key: &'static str, tab: SettingsTab) -> impl Widget<UISettings> {
