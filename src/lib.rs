@@ -15,7 +15,7 @@ use gui::ui;
 
 use crate::browser_repository::{SupportedApp, SupportedAppRepository};
 use crate::gui::ui::UI;
-use crate::gui::ui::{UIDefaultOpener, UISettingsRule};
+use crate::gui::ui::{UIProfileAndIncognito, UISettingsRule};
 use crate::url_rule::UrlGlobMatcher;
 use crate::utils::{Config, ConfigRule, OSAppFinder, ProfileAndOptions};
 
@@ -375,8 +375,7 @@ pub enum ProfileIcon {
 pub struct OpeningRule {
     source_app: Option<String>,
     url_pattern: Option<String>,
-    profile: String,
-    incognito: bool,
+    opener: Option<ProfileAndOptions>,
 }
 
 #[instrument(skip_all)]
@@ -393,8 +392,7 @@ fn get_opening_rules(config: &Config) -> (Vec<OpeningRule>, Option<ProfileAndOpt
         .map(|r| OpeningRule {
             source_app: r.source_app.clone(),
             url_pattern: r.url_pattern.clone(),
-            profile: r.profile.clone(),
-            incognito: r.incognito.clone(),
+            opener: r.get_opener().clone(),
         })
         .collect();
 
@@ -516,11 +514,7 @@ fn get_rule_for_source_app_and_url(
         }
 
         if url_match && source_app_match {
-            let profile_and_options = ProfileAndOptions {
-                profile: r.profile.clone(),
-                incognito: r.incognito.clone(),
-            };
-            return Some(profile_and_options);
+            return r.opener.clone();
         }
     }
 
@@ -806,8 +800,9 @@ pub fn basically_main(
                         .map(|ui_rule| ConfigRule {
                             source_app: None, // TODO
                             url_pattern: Some(ui_rule.url_pattern.clone()),
-                            profile: ui_rule.profile.clone(),
-                            incognito: ui_rule.incognito,
+                            opener: map_as_profile_and_options(&ui_rule.opener),
+                            profile: "".to_string(), // TODO: remove after most users have migrated
+                            incognito: false,        // TODO: remove after most users have migrated
                         })
                         .collect();
 
@@ -840,6 +835,13 @@ pub fn basically_main(
     if show_gui {
         launcher.launch(initial_ui_state).expect("error");
     }
+}
+
+fn map_as_profile_and_options(opener: &Option<UIProfileAndIncognito>) -> Option<ProfileAndOptions> {
+    return opener.as_ref().map(|p| ProfileAndOptions {
+        profile: p.profile.clone(),
+        incognito: p.incognito,
+    });
 }
 
 fn move_app_profile(
@@ -948,5 +950,5 @@ pub enum MessageToMain {
     RestoreAppProfile(String),
     MoveAppProfile(String, MoveTo),
     SaveConfigRules(Vec<UISettingsRule>),
-    SaveConfigDefaultOpener(Option<UIDefaultOpener>),
+    SaveConfigDefaultOpener(Option<UIProfileAndIncognito>),
 }
