@@ -84,8 +84,28 @@ pub struct ProfileAndOptions {
 pub struct ConfigRule {
     pub source_app: Option<String>,
     pub url_pattern: Option<String>,
+    pub opener: Option<ProfileAndOptions>,
+
+    // deprecated - user opener instead
     pub profile: String,
+    // deprecated - user opener instead
     pub incognito: bool,
+}
+
+impl ConfigRule {
+    // evolve from previous version of json structure
+    // TODO: profile and incognito will be removed in future
+    pub fn get_opener(&self) -> Option<ProfileAndOptions> {
+        if !self.opener.is_some() {
+            if !self.profile.is_empty() {
+                return Some(ProfileAndOptions {
+                    profile: self.profile.clone(),
+                    incognito: self.incognito,
+                });
+            }
+        }
+        return self.opener.clone();
+    }
 }
 
 impl Config {

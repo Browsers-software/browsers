@@ -20,7 +20,7 @@ use crate::gui::main_window::{
 use crate::gui::ui::SettingsTab::GENERAL;
 use crate::gui::{about_dialog, main_window, settings_window};
 use crate::url_rule::UrlGlobMatcher;
-use crate::utils::{Config, UIConfig};
+use crate::utils::{Config, ProfileAndOptions, UIConfig};
 use crate::{CommonBrowserProfile, MessageToMain};
 
 pub struct UI {
@@ -55,24 +55,26 @@ impl UI {
                     .url_pattern
                     .as_ref()
                     .map_or("".to_string(), |s| s.clone()),
-                profile: rule.profile.clone(),
-                incognito: rule.incognito,
+                opener: Self::map_as_ui_profile(&rule.get_opener()),
             })
             .collect();
 
-        let default_opener = config
-            .get_default_profile()
-            .as_ref()
-            .map(|p| UIDefaultOpener {
-                profile: p.profile.clone(),
-                incognito: p.incognito,
-            });
+        let default_opener = Self::map_as_ui_profile(config.get_default_profile());
 
         return UISettings {
             tab: GENERAL,
             default_opener: default_opener,
             rules: Arc::new(ui_settings_rules),
         };
+    }
+
+    fn map_as_ui_profile(
+        profile_and_options: &Option<ProfileAndOptions>,
+    ) -> Option<UIProfileAndIncognito> {
+        return profile_and_options.as_ref().map(|p| UIProfileAndIncognito {
+            profile: p.profile.clone(),
+            incognito: p.incognito,
+        });
     }
 
     pub fn real_to_ui_browsers(all_browser_profiles: &[CommonBrowserProfile]) -> Vec<UIBrowser> {
@@ -206,12 +208,12 @@ pub struct UIState {
 #[derive(Clone, Data, Lens)]
 pub struct UISettings {
     pub tab: SettingsTab,
-    pub default_opener: Option<UIDefaultOpener>,
+    pub default_opener: Option<UIProfileAndIncognito>,
     pub rules: Arc<Vec<UISettingsRule>>,
 }
 
 #[derive(Clone, Debug, Data, Lens)]
-pub struct UIDefaultOpener {
+pub struct UIProfileAndIncognito {
     pub profile: String,
     pub incognito: bool,
 }
@@ -235,8 +237,7 @@ impl UISettings {
             deleted: false,
             source_app: "".to_string(),
             url_pattern: "".to_string(),
-            profile: "".to_string(),
-            incognito: false,
+            opener: None,
         };
 
         let rules_mut = Arc::make_mut(&mut self.rules);
@@ -276,8 +277,8 @@ pub struct UISettingsRule {
 
     pub source_app: String,  // Optional in datamodel
     pub url_pattern: String, // Optional in datamodel
-    pub profile: String,
-    pub incognito: bool,
+
+    pub opener: Option<UIProfileAndIncognito>,
 }
 
 #[derive(Clone, Data, Lens)]
@@ -366,7 +367,7 @@ impl UIDelegate {
             .ok();
     }
 
-    fn save_config_default_opener(&self, default_opener: &Option<UIDefaultOpener>) {
+    fn save_config_default_opener(&self, default_opener: &Option<UIProfileAndIncognito>) {
         self.main_sender
             .send(MessageToMain::SaveConfigDefaultOpener(default_opener.clone()))
             .ok();
