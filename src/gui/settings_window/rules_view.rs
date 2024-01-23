@@ -21,6 +21,8 @@ const FONT: FontDescriptor = FontDescriptor::new(FontFamily::SYSTEM_UI).with_siz
 
 const RULE_INDEX_KEY: Key<u64> = Key::new("RULE_INDEX");
 
+const CHOOSE_EMPTY_LABEL: &str = "☰ List of Apps";
+
 pub(crate) fn rules_content(browsers: Arc<Vec<UIBrowser>>) -> impl Widget<UIState> {
     let browsers_arc = browsers.clone();
     let browsers_arc2 = browsers.clone();
@@ -51,7 +53,6 @@ See https://github.com/Browsers-software/browsers/wiki/Rules for all the details
         .cross_axis_alignment(CrossAxisAlignment::Start)
         .with_child(rules_list)
         .with_child(hint)
-        .with_child(default_app(&browsers_arc2))
         .scroll()
         .vertical()
         .content_must_fill(true);
@@ -71,6 +72,8 @@ See https://github.com/Browsers-software/browsers/wiki/Rules for all the details
 
     let col = Flex::column()
         .cross_axis_alignment(CrossAxisAlignment::Start)
+        .with_child(default_app(&browsers_arc2))
+        .with_default_spacer()
         .with_flex_child(rules_list, 1.0)
         .with_child(add_rule_button)
         .expand_height();
@@ -87,7 +90,7 @@ fn create_profile_pop_up_button(
 
     return Label::dynamic(move |opener: &Option<UIProfileAndIncognito>, _| {
         if opener.is_none() {
-            let profile_name = "<Prompt>";
+            let profile_name = CHOOSE_EMPTY_LABEL;
             format!("{profile_name} ▼")
         } else {
             let opener = opener.as_ref().unwrap();
@@ -144,8 +147,7 @@ fn create_incognito_checkbox(
                 },
                 {
                     let incognito_checkbox = ControllerHost::new(
-                        Checkbox::from_label(Label::new("Incognito").with_font(FONT)),
-                        // TODO: save default profile not rules!
+                        Checkbox::from_label(Label::new("In Incognito").with_font(FONT)),
                         SaveRulesOnDataChange {
                             save_rules_command: command1.clone(),
                         },
@@ -163,8 +165,19 @@ fn create_incognito_checkbox(
     );
 }
 
+fn create_profile_label() -> Label<Option<UIProfileAndIncognito>> {
+    let profile_label = Label::dynamic(|opener, _env| match opener {
+        None => "Show".to_string(),
+        _ => "Open in".to_string(),
+    })
+    .with_font(FONT);
+
+    return profile_label;
+}
+
 fn default_app(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettings> {
-    let profile_label = Label::new("Open in").with_font(FONT);
+    let profile_label = create_profile_label();
+
     let save_profile_command = SAVE_DEFAULT_RULE.with(());
     let selected_profile = create_profile_pop_up_button(browsers, save_profile_command);
 
@@ -177,11 +190,23 @@ fn default_app(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettings> {
         .with_child(incognito_maybe)
         .padding((0.0, 10.0, 0.0, 0.0));
 
-    return Flex::column()
-        .cross_axis_alignment(CrossAxisAlignment::Start)
-        .with_child(Label::new("If no rules match").with_font(FONT))
-        .with_child(profile_row)
-        .lens(UISettings::default_opener);
+    return Container::new(
+        Flex::row()
+            .cross_axis_alignment(CrossAxisAlignment::End)
+            .with_child(
+                Flex::column()
+                    .cross_axis_alignment(CrossAxisAlignment::Start)
+                    .with_child(Label::new("If no rules match").with_font(FONT))
+                    .with_child(profile_row)
+                    .lens(UISettings::default_opener),
+            ),
+    )
+    .padding(10.0)
+    .background(Color::rgba(0.1, 0.1, 0.1, 0.9))
+    .rounded(10.0)
+    .border(Color::rgba(0.5, 0.5, 0.5, 0.9), 0.5)
+    .padding((0.0, 5.0, 40.0, 5.0))
+    .expand_width();
 }
 
 // handles scrolling and saving when Add Rule is pressed
@@ -235,7 +260,7 @@ fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettingsRule> {
         .with_child(url_pattern_label)
         .with_child(url_pattern);
 
-    let profile_label = Label::new("Open in").with_font(FONT);
+    let profile_label = create_profile_label().lens(UISettingsRule::opener);
 
     let save_profile_command = SAVE_RULES.with(());
     let selected_profile = EnvScope::new(
@@ -301,7 +326,7 @@ impl<T: Data, W: Widget<T>> Controller<T, W> for SaveRulesOnDataChange {
 
 fn item_empty(save_command: Command) -> MenuItem<Option<UIProfileAndIncognito>> {
     let save_command_clone0 = save_command.clone();
-    let item = MenuItem::new("<Prompt>")
+    let item = MenuItem::new(CHOOSE_EMPTY_LABEL)
         .selected_if(|opener: &Option<UIProfileAndIncognito>, _env| opener.is_none())
         .on_activate(move |ctx, opener: &mut Option<UIProfileAndIncognito>, _env| {
             *opener = None;

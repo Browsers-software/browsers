@@ -68,17 +68,16 @@ pub fn create_settings_window(
         // make sure this window is on top of our main window, so using same window level
         // (except that it doesn't work on macOS)
         .set_level(WindowLevel::AppWindow)
+        .set_always_on_top(true)
         .show_titlebar(true)
         .resizable(true)
         .set_position(window_position);
 
     /*
-    Default browser : pick profile from dropdown or pick Prompt
-
-    Rules: url pattern, browser (profile) picker, incognito flag
+    Rules
         For url pattern could have fully gui options for wildcards (or allow user to use *).
         Maybe switch between advanced and novice.
-        Should detect if pattern is yoo complex then only advanced.
+        Should detect if pattern is too complex then only advanced.
         Maybe have the advanced/novice option per rule.
      */
 }
