@@ -17,7 +17,7 @@ use crate::gui::ui::{
     SAVE_RULE, SAVE_RULES,
 };
 
-const FONT: FontDescriptor = FontDescriptor::new(FontFamily::SYSTEM_UI).with_size(12.0);
+pub(crate) const FONT: FontDescriptor = FontDescriptor::new(FontFamily::SYSTEM_UI).with_size(12.0);
 
 const RULE_INDEX_KEY: Key<u64> = Key::new("RULE_INDEX");
 
@@ -311,8 +311,8 @@ fn find_browser(browsers: &Arc<Vec<UIBrowser>>, unique_id: String) -> Option<&UI
     return option;
 }
 
-struct SaveRulesOnDataChange {
-    save_rules_command: Command,
+pub(crate) struct SaveRulesOnDataChange {
+    pub(crate) save_rules_command: Command,
 }
 
 impl<T: Data, W: Widget<T>> Controller<T, W> for SaveRulesOnDataChange {

@@ -185,6 +185,10 @@ impl Config {
     pub fn get_ui_config(&self) -> &UIConfig {
         return &self.ui;
     }
+
+    pub fn set_ui_config(&mut self, ui_config: UIConfig) {
+        self.ui = ui_config
+    }
 }
 
 pub struct OSAppFinder {

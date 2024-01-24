@@ -8,8 +8,8 @@ use druid::widget::{
 };
 use druid::{
     Color, Env, Event, EventCtx, FontDescriptor, FontFamily, FontWeight, ImageBuf, Lens, LensExt,
-    LocalizedString, Menu, MenuItem, Monitor, Point, Rect, RenderContext, Selector, Size, Target,
-    TextAlignment, UnitPoint, Vec2, Widget, WidgetExt, WindowDesc, WindowInitialPosition,
+    LocalizedString, Menu, MenuItem, Monitor, Point, Rect, RenderContext, Selector, Size, SysMods,
+    Target, TextAlignment, UnitPoint, Vec2, Widget, WidgetExt, WindowDesc, WindowInitialPosition,
     WindowLevel, WindowSizePolicy,
 };
 use tracing::{debug, instrument};
@@ -17,7 +17,7 @@ use tracing::{debug, instrument};
 use crate::gui::focus_widget::{FocusData, FocusWidget};
 use crate::gui::image_controller::UIImageController;
 use crate::gui::shared;
-use crate::gui::ui::{UIBrowser, UIState, EXIT_APP};
+use crate::gui::ui::{UIBrowser, UISettings, UIState, EXIT_APP};
 use crate::gui::ui_util::ellipsize;
 use crate::MoveTo;
 
@@ -56,8 +56,8 @@ impl FocusData for UIState {
         return false;
     }
 }
-// need to implement this for the Widget<(bool, UIBrowser)> types we declared
-impl FocusData for (bool, UIBrowser) {
+// need to implement this for the Widget<((bool, UISettings), UIBrowser)> types we declared
+impl FocusData for ((bool, UISettings), UIBrowser) {
     fn has_autofocus(&self) -> bool {
         let browser = &self.1;
         return browser.filtered_index == 0;
@@ -67,7 +67,6 @@ impl FocusData for (bool, UIBrowser) {
 pub struct MainWindow {
     filtered_browsers: Arc<Vec<UIBrowser>>,
     show_set_as_default: bool,
-    show_hotkeys: bool,
     show_settings: bool,
 }
 
@@ -75,13 +74,11 @@ impl MainWindow {
     pub fn new(
         filtered_browsers: Arc<Vec<UIBrowser>>,
         show_set_as_default: bool,
-        show_hotkeys: bool,
         show_settings: bool,
     ) -> Self {
         Self {
             filtered_browsers: filtered_browsers,
             show_set_as_default: show_set_as_default,
-            show_hotkeys: show_hotkeys,
             show_settings: show_settings,
         }
     }
@@ -97,7 +94,8 @@ impl MainWindow {
             // add some spacing around screen
             .inflate(-5f64, -5f64);
 
-        let window_size = recalculate_window_size(&self.filtered_browsers);
+        let browser_count = (&self.filtered_browsers).len();
+        let window_size = recalculate_window_size(browser_count);
         let window_position =
             calculate_window_position(&mouse_position, &screen_rect, &window_size);
 
@@ -207,24 +205,13 @@ impl MainWindow {
             .with_flex_spacer(1.0)
             .with_child(options_button);
 
-        //let x2 = (UIState::incognito_mode, UIState::browsers);
-        //let lens = lens!(Arc<Vec<UIBrowser>>, x2);
-        //let then1 = lens.map(|a| a.1, |x, y| *x = y);
-
-        //let lens = lens!((bool, f64), 1);
-
-        //let then = lens.map(|x| x / 2.0, |x, y| *x = y * 2.0);
-        //let x1 = then.get(&(true, 2.0));
-        //assert_eq!(x1, 1.0);
-
-        //LensWrap::new(self, then1);
-
-        let show_hotkeys = self.show_hotkeys;
-        let browsers_list =
-            List::new(move || create_browser(ImageBuf::empty(), ImageBuf::empty(), show_hotkeys))
-                .with_spacing(0.0)
-                .lens((UIState::incognito_mode, UIState::filtered_browsers))
-                .scroll();
+        let browsers_list = List::new(move || create_browser(ImageBuf::empty(), ImageBuf::empty()))
+            .with_spacing(0.0)
+            .lens((
+                (UIState::incognito_mode, UIState::ui_settings),
+                UIState::filtered_browsers,
+            ))
+            .scroll();
 
         // viewport size is fixed, while scrollable are is full size
         let browsers_list = Container::new(browsers_list).expand_height();
@@ -281,9 +268,8 @@ const fn get_icon_padding() -> f64 {
     }
 }
 
-pub(crate) fn recalculate_window_size(filtered_browsers: &Arc<Vec<UIBrowser>>) -> Size {
-    let filtered_browsers_total = filtered_browsers.len();
-    let item_count = calculate_visible_browser_count(filtered_browsers_total);
+pub(crate) fn recalculate_window_size(browser_count: usize) -> Size {
+    let item_count = calculate_visible_browser_count(browser_count);
     let window_size = calculate_window_size(item_count);
 
     debug!(
@@ -348,14 +334,16 @@ pub(crate) fn calculate_window_position(
     return Point::new(x, y);
 }
 
-fn create_browser_label() -> Label<(bool, UIBrowser)> {
-    let browser_label = Label::dynamic(|(incognito_mode, item): &(bool, UIBrowser), _env| {
-        let mut name = item.browser_name.clone();
-        if item.supports_incognito && *incognito_mode {
-            name += " 👓";
-        }
-        name
-    })
+fn create_browser_label() -> Label<((bool, UISettings), UIBrowser)> {
+    let browser_label = Label::dynamic(
+        |((incognito_mode, _), item): &((bool, UISettings), UIBrowser), _env| {
+            let mut name = item.browser_name.clone();
+            if item.supports_incognito && *incognito_mode {
+                name += " 👓";
+            }
+            name
+        },
+    )
     .with_text_size(12.0)
     .with_line_break_mode(LineBreaking::Clip)
     .with_text_alignment(TextAlignment::Start)
@@ -367,8 +355,7 @@ fn create_browser_label() -> Label<(bool, UIBrowser)> {
 fn create_browser(
     app_icon_buf: ImageBuf,
     profile_img_buf: ImageBuf,
-    show_hotkeys: bool,
-) -> impl Widget<(bool, UIBrowser)> {
+) -> impl Widget<((bool, UISettings), UIBrowser)> {
     let icon_size = get_icon_size();
     let icon_padding = get_icon_padding();
 
@@ -395,10 +382,10 @@ fn create_browser(
         .lens(BrowserLens.then(UIBrowser::profile_icon_path));
 
     let item_label = Either::new(
-        |(_incognito_mode, item): &(bool, UIBrowser), _env| item.supports_profiles,
+        |(_, item): &((bool, UISettings), UIBrowser), _env| item.supports_profiles,
         {
             let profile_label =
-                Label::dynamic(|(_incognito_mode, item): &(bool, UIBrowser), _env: &_| {
+                Label::dynamic(|(_, item): &((bool, UISettings), UIBrowser), _env: &_| {
                     item.profile_name.clone()
                 })
                 .with_text_size(11.0)
@@ -436,12 +423,12 @@ fn create_browser(
         .with_size(text_size);
 
     let hotkey_label = Either::new(
-        move |(_incognito_mode, item): &(bool, UIBrowser), _env| {
-            show_hotkeys && item.filtered_index < 9
+        move |((_, ui_settings), item): &((bool, UISettings), UIBrowser), _env| {
+            ui_settings.visual_settings.show_hotkeys && item.filtered_index < 9
         },
         {
             let hotkey_label =
-                Label::dynamic(|(_incognito_mode, item): &(bool, UIBrowser), _env: &_| {
+                Label::dynamic(|(_, item): &((bool, UISettings), UIBrowser), _env: &_| {
                     let hotkey_number = item.filtered_index + 1;
                     let hotkey = hotkey_number.to_string();
                     hotkey
@@ -470,21 +457,27 @@ fn create_browser(
 
     let container = Container::new(icon_and_label)
         .fix_size(ITEM_WIDTH, ITEM_HEIGHT)
-        .on_click(move |_ctx, (_, data): &mut (bool, UIBrowser), _env| {
-            _ctx.get_external_handle()
-                .submit_command(OPEN_LINK_IN_BROWSER, data.browser_profile_index, Target::Global)
-                .ok();
-        });
+        .on_click(
+            move |_ctx, (_, data): &mut ((bool, UISettings), UIBrowser), _env| {
+                _ctx.get_external_handle()
+                    .submit_command(
+                        OPEN_LINK_IN_BROWSER,
+                        data.browser_profile_index,
+                        Target::Global,
+                    )
+                    .ok();
+            },
+        );
 
     let container = FocusWidget::new(
         container,
-        |ctx, _: &(bool, UIBrowser), _env| {
+        |ctx, _: &((bool, UISettings), UIBrowser), _env| {
             let size = ctx.size();
             let rounded_rect = size.to_rounded_rect(5.0);
             let color = Color::rgba(1.0, 1.0, 1.0, 0.25);
             ctx.fill(rounded_rect, &color);
         },
-        |ctx, (_, data): &(bool, UIBrowser), _env| {
+        |ctx, (_, data): &((bool, UISettings), UIBrowser), _env| {
             if ctx.has_focus() {
                 ctx.get_external_handle()
                     .submit_command(
@@ -511,13 +504,15 @@ fn create_browser(
 
 struct ContextMenuController;
 
-impl<W: Widget<(bool, UIBrowser)>> Controller<(bool, UIBrowser), W> for ContextMenuController {
+impl<W: Widget<((bool, UISettings), UIBrowser)>> Controller<((bool, UISettings), UIBrowser), W>
+    for ContextMenuController
+{
     fn event(
         &mut self,
         child: &mut W,
         ctx: &mut EventCtx,
         event: &Event,
-        data: &mut (bool, UIBrowser),
+        data: &mut ((bool, UISettings), UIBrowser),
         env: &Env,
     ) {
         match event {
@@ -625,15 +620,23 @@ fn make_context_menu(browser: &UIBrowser) -> Menu<UIState> {
     menu
 }
 
-/* Extracts browser from the (bool, UIBrowser) tuple*/
+/* Extracts browser from the ((bool, UISettings), UIBrowser) tuple*/
 struct BrowserLens;
 
-impl Lens<(bool, UIBrowser), UIBrowser> for BrowserLens {
-    fn with<R, F: FnOnce(&UIBrowser) -> R>(&self, data: &(bool, UIBrowser), f: F) -> R {
+impl Lens<((bool, UISettings), UIBrowser), UIBrowser> for BrowserLens {
+    fn with<R, F: FnOnce(&UIBrowser) -> R>(
+        &self,
+        data: &((bool, UISettings), UIBrowser),
+        f: F,
+    ) -> R {
         f(&data.1)
     }
 
-    fn with_mut<R, F: FnOnce(&mut UIBrowser) -> R>(&self, data: &mut (bool, UIBrowser), f: F) -> R {
+    fn with_mut<R, F: FnOnce(&mut UIBrowser) -> R>(
+        &self,
+        data: &mut ((bool, UISettings), UIBrowser),
+        f: F,
+    ) -> R {
         f(&mut data.1)
     }
 }
@@ -666,11 +669,12 @@ fn make_options_menu(
     menu = menu.entry(submenu_hidden_apps);
 
     if show_settings {
-        menu = menu.entry(MenuItem::new(LocalizedString::new("Settings...")).on_activate(
-            |ctx, _data: &mut UIState, _env| {
-                ctx.submit_command(SHOW_SETTINGS_DIALOG);
-            },
-        ))
+        menu = menu.entry(
+            MenuItem::new(LocalizedString::new("Settings..."))
+                .command(SHOW_SETTINGS_DIALOG)
+                // Command on macOS, and Ctrl on Windows/Linux/OpenBSD/FreeBSD
+                .hotkey(SysMods::Cmd, ","),
+        )
     }
 
     menu = menu

@@ -14,10 +14,10 @@ use url::Url;
 use gui::ui;
 
 use crate::browser_repository::{SupportedApp, SupportedAppRepository};
-use crate::gui::ui::UI;
 use crate::gui::ui::{UIProfileAndIncognito, UISettingsRule};
+use crate::gui::ui::{UIVisualSettings, UI};
 use crate::url_rule::UrlGlobMatcher;
-use crate::utils::{Config, ConfigRule, OSAppFinder, ProfileAndOptions};
+use crate::utils::{Config, ConfigRule, OSAppFinder, ProfileAndOptions, UIConfig};
 
 mod gui;
 
@@ -601,7 +601,6 @@ pub fn basically_main(
     let localizations_basedir = paths::get_localizations_basedir();
 
     let config = app_finder.get_config();
-    let ui_config = config.get_ui_config();
 
     let ui2 = UI::new(
         localizations_basedir,
@@ -610,7 +609,6 @@ pub fn basically_main(
         UI::real_to_ui_browsers(visible_browser_profiles.as_slice()),
         UI::real_to_ui_browsers(hidden_browser_profiles.as_slice()),
         show_set_as_default,
-        ui_config,
         UI::config_to_ui_settings(&config),
     );
     let initial_ui_state = ui2.create_initial_ui_state();
@@ -829,13 +827,32 @@ pub fn basically_main(
                 }
                 MessageToMain::SaveConfigDefaultOpener(default_opener) => {
                     info!("Saving default opener");
-                    let default_profile = default_opener.map(|p| ProfileAndOptions {
+                    let new_default_profile = default_opener.map(|p| ProfileAndOptions {
                         profile: p.profile,
                         incognito: p.incognito,
                     });
 
                     let mut config = app_finder.get_config();
-                    config.set_default_profile(default_profile);
+                    config.set_default_profile(new_default_profile);
+                    app_finder.save_config(&config);
+
+                    // refresh opening rules immediately
+                    // so that if same Browsers instance stays open,
+                    // it will already work with the new rule without restarting Browsers
+                    let (new_opening_rules, new_default_profile) = load_opening_rules(&app_finder);
+                    opening_rules = new_opening_rules;
+                    default_profile = new_default_profile;
+                }
+                MessageToMain::SaveConfigUISettings(settings) => {
+                    info!("Saving UI settings");
+                    let ui_config = UIConfig {
+                        show_settings: settings.show_settings,
+                        show_hotkeys: settings.show_hotkeys,
+                        quit_on_lost_focus: settings.quit_on_lost_focus,
+                    };
+
+                    let mut config = app_finder.get_config();
+                    config.set_ui_config(ui_config);
                     app_finder.save_config(&config);
                 }
             }
@@ -962,4 +979,5 @@ pub enum MessageToMain {
     MoveAppProfile(String, MoveTo),
     SaveConfigRules(Vec<UISettingsRule>),
     SaveConfigDefaultOpener(Option<UIProfileAndIncognito>),
+    SaveConfigUISettings(UIVisualSettings),
 }

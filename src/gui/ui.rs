@@ -32,9 +32,6 @@ pub struct UI {
     filtered_browsers: Arc<Vec<UIBrowser>>,
     restorable_app_profiles: Arc<Vec<UIBrowser>>,
     show_set_as_default: bool,
-    show_hotkeys: bool,
-    quit_on_lost_focus: bool,
-    show_settings: bool,
     ui_settings: UISettings,
 }
 
@@ -66,7 +63,15 @@ impl UI {
             tab: GENERAL,
             default_opener: default_opener,
             rules: Arc::new(ui_settings_rules),
+            visual_settings: Self::map_as_visual_settings(config.get_ui_config()),
         };
+    }
+    fn map_as_visual_settings(ui_config: &UIConfig) -> UIVisualSettings {
+        UIVisualSettings {
+            show_settings: ui_config.show_settings,
+            show_hotkeys: ui_config.show_hotkeys,
+            quit_on_lost_focus: ui_config.quit_on_lost_focus,
+        }
     }
 
     fn map_as_ui_profile(
@@ -127,7 +132,6 @@ impl UI {
         ui_browsers: Vec<UIBrowser>,
         restorable_app_profiles: Vec<UIBrowser>,
         show_set_as_default: bool,
-        ui_config: &UIConfig,
         ui_settings: UISettings,
     ) -> Self {
         let ui_browsers = Arc::new(ui_browsers);
@@ -141,9 +145,6 @@ impl UI {
             filtered_browsers: Arc::new(filtered_browsers),
             restorable_app_profiles: Arc::new(restorable_app_profiles),
             show_set_as_default: show_set_as_default,
-            show_hotkeys: ui_config.show_hotkeys,
-            quit_on_lost_focus: ui_config.quit_on_lost_focus,
-            show_settings: ui_config.show_settings,
             ui_settings: ui_settings,
         }
     }
@@ -156,8 +157,7 @@ impl UI {
         let main_window1 = main_window::MainWindow::new(
             self.filtered_browsers.clone(),
             self.show_set_as_default,
-            self.show_hotkeys,
-            self.show_settings,
+            self.ui_settings.visual_settings.show_settings,
         );
         let main_window = main_window1.create_main_window(&mouse_position, &monitor);
 
@@ -169,7 +169,7 @@ impl UI {
                 main_window_id: main_window_id,
                 mouse_position: mouse_position.clone(),
                 monitor: monitor.clone(),
-                quit_on_lost_focus: self.quit_on_lost_focus,
+                quit_on_lost_focus: self.ui_settings.visual_settings.quit_on_lost_focus,
             })
             .localization_resources(vec!["builtin.ftl".to_string()], basedir);
     }
@@ -211,6 +211,14 @@ pub struct UISettings {
     pub tab: SettingsTab,
     pub default_opener: Option<UIProfileAndIncognito>,
     pub rules: Arc<Vec<UISettingsRule>>,
+    pub visual_settings: UIVisualSettings,
+}
+
+#[derive(Clone, Debug, Data, Lens)]
+pub struct UIVisualSettings {
+    pub show_settings: bool,
+    pub show_hotkeys: bool,
+    pub quit_on_lost_focus: bool,
 }
 
 #[derive(Clone, Debug, Data, Lens)]
@@ -368,6 +376,7 @@ pub const NEW_HIDDEN_BROWSERS_RECEIVED: Selector<Vec<UIBrowser>> =
 pub const SAVE_RULES: Selector<()> = Selector::new("browsers.save_rules");
 pub const SAVE_RULE: Selector<usize> = Selector::new("browsers.save_rule");
 pub const SAVE_DEFAULT_RULE: Selector<()> = Selector::new("browsers.save_default_rule");
+pub const SAVE_UI_SETTINGS: Selector<()> = Selector::new("browsers.save_ui_settings");
 
 pub struct UIDelegate {
     main_sender: Sender<MessageToMain>,
@@ -395,6 +404,12 @@ impl UIDelegate {
     fn save_config_default_opener(&self, default_opener: &Option<UIProfileAndIncognito>) {
         self.main_sender
             .send(MessageToMain::SaveConfigDefaultOpener(default_opener.clone()))
+            .ok();
+    }
+
+    fn save_ui_settings(&self, ui_settings: &UIVisualSettings) {
+        self.main_sender
+            .send(MessageToMain::SaveConfigUISettings(ui_settings.clone()))
             .ok();
     }
 
@@ -480,8 +495,6 @@ impl AppDelegate<UIState> for UIDelegate {
         #[cfg(not(target_os = "macos"))]
         let copy_key_mod = Modifiers::CONTROL;
 
-        // TODO: disable if settings dialog is up
-        // TODO: disable if main dialog is not focused
         match event {
             Event::KeyDown(KeyEvent {
                 key: KbKey::Character(ref key),
@@ -491,6 +504,17 @@ impl AppDelegate<UIState> for UIDelegate {
                 debug!("Cmd/Ctrl+C caught in delegate");
                 ctx.get_external_handle()
                     .submit_command(COPY_LINK_TO_CLIPBOARD, {}, Target::Global)
+                    .ok();
+            }
+
+            Event::KeyDown(KeyEvent {
+                key: KbKey::Character(ref key),
+                ref mods,
+                ..
+            }) if key == "," && mods == &copy_key_mod => {
+                debug!("Cmd/Ctrl+, caught in delegate");
+                ctx.get_external_handle()
+                    .submit_command(SHOW_SETTINGS_DIALOG, {}, Target::Global)
                     .ok();
             }
 
@@ -572,7 +596,8 @@ impl AppDelegate<UIState> for UIDelegate {
                 // add some spacing around screen
                 .inflate(-5f64, -5f64);
 
-            let window_size = recalculate_window_size(&data.filtered_browsers);
+            let browser_count = (&data.filtered_browsers).len();
+            let window_size = recalculate_window_size(browser_count);
             let window_position =
                 calculate_window_position(&self.mouse_position, &screen_rect, &window_size);
 
@@ -637,7 +662,8 @@ impl AppDelegate<UIState> for UIDelegate {
                 // add some spacing around screen
                 .inflate(-5f64, -5f64);
 
-            let window_size = recalculate_window_size(&data.filtered_browsers);
+            let browser_count = (&data.filtered_browsers).len();
+            let window_size = recalculate_window_size(browser_count);
             let window_position =
                 calculate_window_position(&mouse_position, &screen_rect, &window_size);
 
@@ -706,6 +732,9 @@ impl AppDelegate<UIState> for UIDelegate {
             Handled::Yes
         } else if cmd.is(SAVE_DEFAULT_RULE) {
             self.save_config_default_opener(&data.ui_settings.default_opener);
+            Handled::Yes
+        } else if cmd.is(SAVE_UI_SETTINGS) {
+            self.save_ui_settings(&data.ui_settings.visual_settings);
             Handled::Yes
         } else {
             //println!("cmd forwarded: {:?}", cmd);
