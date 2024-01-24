@@ -106,6 +106,16 @@ impl ConfigRule {
         }
         return self.opener.clone();
     }
+
+    // converts empty string to None, so it's nicer to consume
+    pub fn get_source_app(&self) -> Option<String> {
+        return self.source_app.clone().filter(|v| !v.is_empty());
+    }
+
+    // converts empty string to None, so it's nicer to consume
+    pub fn get_url_pattern(&self) -> Option<String> {
+        return self.url_pattern.clone().filter(|v| !v.is_empty());
+    }
 }
 
 impl Config {

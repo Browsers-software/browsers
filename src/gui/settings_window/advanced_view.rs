@@ -1,5 +1,5 @@
 use druid::widget::{Button, CrossAxisAlignment, Flex, Label};
-use druid::{Widget, WidgetExt};
+use druid::Widget;
 
 use crate::gui::main_window::{REFRESH, SET_BROWSERS_AS_DEFAULT_BROWSER};
 use crate::gui::shared;

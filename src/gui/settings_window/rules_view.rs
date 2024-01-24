@@ -8,7 +8,7 @@ use druid::widget::{
     Flex, Label, LineBreaking, List, Maybe, TextBox,
 };
 use druid::{
-    Color, Command, Data, Env, EventCtx, FontDescriptor, FontFamily, Key, Lens, LensExt, LifeCycle,
+    Color, Command, Data, Env, EventCtx, FontDescriptor, FontFamily, Key, LensExt, LifeCycle,
     LifeCycleCtx, Menu, MenuItem, Point, UpdateCtx, Widget, WidgetExt,
 };
 
@@ -61,7 +61,7 @@ See https://github.com/Browsers-software/browsers/wiki/Rules for all the details
     let rules_list = Container::new(rules_list).expand_height();
 
     let add_rule_button = Button::from_label(Label::new("Add Rule"))
-        .on_click(move |ctx, data: &mut UISettings, _env| {
+        .on_click(move |_ctx, data: &mut UISettings, _env| {
             // this will add new entry to data.rules
             // and that triggers rules_list to add new child
             // and that child uses AddRuleController which will then scroll to new rule and save it
@@ -104,7 +104,7 @@ fn create_profile_pop_up_button(
     .with_font(FONT)
     .border(Color::rgba(0.5, 0.5, 0.5, 0.9), 0.5)
     .on_click(
-        move |ctx: &mut EventCtx, opener: &mut Option<UIProfileAndIncognito>, env: &Env| {
+        move |ctx: &mut EventCtx, _opener: &mut Option<UIProfileAndIncognito>, env: &Env| {
             // Windows requires exact position relative to the window
             /*let position = Point::new(
                 window_size.width

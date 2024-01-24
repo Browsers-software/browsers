@@ -390,8 +390,8 @@ fn get_opening_rules(config: &Config) -> (Vec<OpeningRule>, Option<ProfileAndOpt
     let opening_rules = config_rules
         .iter()
         .map(|r| OpeningRule {
-            source_app: r.source_app.clone(),
-            url_pattern: r.url_pattern.clone(),
+            source_app: r.get_source_app(),
+            url_pattern: r.get_url_pattern().clone(),
             opener: r.get_opener().clone(),
         })
         .collect();
@@ -492,26 +492,8 @@ fn get_rule_for_source_app_and_url(
     let given_url = url_result.unwrap();
 
     for r in opening_rules {
-        let mut source_app_match = false;
-        let url_match = if let Some(ref url_pattern) = r.url_pattern {
-            let url_matches = url_rule::to_url_matcher(url_pattern.as_str())
-                .to_glob_matcher()
-                .url_matches(&given_url);
-
-            url_matches
-        } else {
-            true
-        };
-
-        if let Some(ref source_app) = r.source_app {
-            let source_app_rule = source_app.clone();
-            if let Some(ref source_app) = source_app_maybe {
-                let source_app = source_app.clone();
-                source_app_match = source_app_rule == source_app;
-            }
-        } else {
-            source_app_match = true;
-        }
+        let url_match = url_matches(r, &given_url);
+        let source_app_match = source_app_matches(r, source_app_maybe.as_ref());
 
         if url_match && source_app_match {
             return r.opener.clone();
@@ -523,6 +505,35 @@ fn get_rule_for_source_app_and_url(
     }
 
     return None;
+}
+
+fn url_matches(r: &OpeningRule, given_url: &Url) -> bool {
+    let url_match = if let Some(ref url_pattern) = r.url_pattern {
+        let url_matches = url_rule::to_url_matcher(url_pattern.as_str())
+            .to_glob_matcher()
+            .url_matches(&given_url);
+
+        url_matches
+    } else {
+        true
+    };
+
+    return url_match;
+}
+
+fn source_app_matches(r: &OpeningRule, actual_source_app: Option<&String>) -> bool {
+    let mut source_app_match = false;
+    if let Some(ref source_app) = r.source_app {
+        let source_app_rule = source_app.clone();
+        if let Some(source_app) = actual_source_app {
+            let source_app = source_app.clone();
+            source_app_match = source_app_rule == source_app;
+        }
+    } else {
+        source_app_match = true;
+    }
+
+    return source_app_match;
 }
 
 fn get_browser_profile_by_id<'a>(
@@ -798,8 +809,8 @@ pub fn basically_main(
                     let new_rules: Vec<ConfigRule> = ui_rules
                         .iter()
                         .map(|ui_rule| ConfigRule {
-                            source_app: None, // TODO
-                            url_pattern: Some(ui_rule.url_pattern.clone()),
+                            source_app: ui_rule.get_source_app(),
+                            url_pattern: ui_rule.get_url_pattern(),
                             opener: map_as_profile_and_options(&ui_rule.opener),
                             profile: "".to_string(), // TODO: remove after most users have migrated
                             incognito: false,        // TODO: remove after most users have migrated

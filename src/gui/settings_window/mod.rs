@@ -85,7 +85,7 @@ pub fn create_settings_window(
 fn view_switcher(browsers_arc: Arc<Vec<UIBrowser>>) -> ViewSwitcher<UIState, SettingsTab> {
     ViewSwitcher::new(
         |data: &UIState, _env| data.ui_settings.tab.clone(),
-        move |selector, data, _env| match selector {
+        move |selector, _data, _env| match selector {
             SettingsTab::GENERAL => {
                 settings_view_container("settings-tab-general", general_view::general_content())
             }
@@ -137,7 +137,7 @@ fn sidebar_items() -> impl Widget<UISettings> {
 fn tab_button(key: &'static str, tab: SettingsTab) -> impl Widget<UISettings> {
     let string = LocalizedString::new(key);
 
-    let painter = Painter::new(move |ctx, active_tab, env| {
+    let painter = Painter::new(move |ctx, active_tab, _env| {
         if *active_tab == tab {
             let bounds = ctx.size().to_rect();
             ctx.fill(bounds, &Color::rgb8(25, 90, 194));
