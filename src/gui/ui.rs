@@ -1,3 +1,4 @@
+use std::ops::Not;
 use std::path::PathBuf;
 use std::process::exit;
 use std::sync::mpsc::Sender;
@@ -272,13 +273,37 @@ impl UISettings {
 #[derive(Clone, Debug, Data, Lens)]
 pub struct UISettingsRule {
     pub index: usize,
-    pub saved: bool,   // useful to recognize if this is a new rule or not
-    pub deleted: bool, // soft-deleting to avoid complex druid issues
+    // useful to recognize if this is a new rule or not,
+    // so we can autoscroll to a new rule when it was added
+    pub saved: bool,
+
+    // soft-deleting to avoid complex druid issues when reducing array length
+    pub deleted: bool,
 
     pub source_app: String,  // Optional in datamodel
     pub url_pattern: String, // Optional in datamodel
 
     pub opener: Option<UIProfileAndIncognito>,
+}
+
+impl UISettingsRule {
+    // converts empty string to None
+    pub(crate) fn get_source_app(&self) -> Option<String> {
+        return self
+            .source_app
+            .is_empty()
+            .not()
+            .then(|| self.source_app.clone());
+    }
+
+    // converts empty string to None
+    pub(crate) fn get_url_pattern(&self) -> Option<String> {
+        return self
+            .url_pattern
+            .is_empty()
+            .not()
+            .then(|| self.url_pattern.clone());
+    }
 }
 
 #[derive(Clone, Data, Lens)]
