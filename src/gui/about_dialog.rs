@@ -36,7 +36,7 @@ pub fn show_about_dialog(ctx: &mut DelegateCtx, monitor: Monitor) {
         Label::new(format!("Version {}", VERSION)).with_text_size(10.0);
 
     let copyright_row: Label<UIState> =
-        Label::new("© 2022-2023 Browsers.software team. \nVisit us at https://browsers.software.")
+        Label::new("© 2022-2024 Browsers.software team. \nVisit us at https://browsers.software.")
             .with_text_size(10.0);
 
     let paths_row = shared::directories_info::directories_info(8.0);
