@@ -14,8 +14,8 @@ pub(crate) fn general_content() -> impl Widget<UIState> {
                 .then(UISettings::visual_settings)
                 .then(UIVisualSettings::show_hotkeys),
         ),
-        rules_view::SaveRulesOnDataChange {
-            save_rules_command: save_command.clone(),
+        rules_view::SubmitCommandOnDataChange {
+            command: save_command.clone(),
         },
     );
 
@@ -33,9 +33,33 @@ pub(crate) fn general_content() -> impl Widget<UIState> {
             ctx.show_context_menu(submenu_hidden_apps, point);
         });
 
-    return Flex::column()
+    let mut col = Flex::column()
         .cross_axis_alignment(CrossAxisAlignment::Start)
         .with_child(hotkeys_row)
-        .with_default_spacer()
-        .with_child(restore_app_button);
+        .with_default_spacer();
+
+    // Showing this option only for macOS right now,
+    // because linux calls this even when just opening a context menu
+    // mac is handled by application event instead now, which is fired when all windows of app loose focus
+    let is_mac = cfg!(target_os = "macos");
+    if is_mac {
+        let quit_on_lost_focus_switch = ControllerHost::new(
+            Switch::new().lens(
+                UIState::ui_settings
+                    .then(UISettings::visual_settings)
+                    .then(UIVisualSettings::quit_on_lost_focus),
+            ),
+            rules_view::SubmitCommandOnDataChange {
+                command: save_command.clone(),
+            },
+        );
+
+        let quit_on_lost_focus_row = Flex::row()
+            .with_child(Label::new("Quit when Focus is Lost"))
+            .with_child(quit_on_lost_focus_switch);
+
+        col = col.with_child(quit_on_lost_focus_row).with_default_spacer()
+    }
+
+    return col.with_child(restore_app_button);
 }

@@ -148,8 +148,8 @@ fn create_incognito_checkbox(
                 {
                     let incognito_checkbox = ControllerHost::new(
                         Checkbox::from_label(Label::new("In Incognito").with_font(FONT)),
-                        SaveRulesOnDataChange {
-                            save_rules_command: command1.clone(),
+                        SubmitCommandOnDataChange {
+                            command: command1.clone(),
                         },
                     )
                     .lens(UIProfileAndIncognito::incognito)
@@ -247,8 +247,8 @@ fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettingsRule> {
     //let value_text_box = ValueTextBox::new(text_box, formatter).update_data_while_editing(true);
     let value_text_box = ControllerHost::new(
         text_box,
-        SaveRulesOnDataChange {
-            save_rules_command: SAVE_RULES.with(()),
+        SubmitCommandOnDataChange {
+            command: SAVE_RULES.with(()),
         },
     );
 
@@ -311,15 +311,15 @@ fn find_browser(browsers: &Arc<Vec<UIBrowser>>, unique_id: String) -> Option<&UI
     return option;
 }
 
-pub(crate) struct SaveRulesOnDataChange {
-    pub(crate) save_rules_command: Command,
+pub(crate) struct SubmitCommandOnDataChange {
+    pub(crate) command: Command,
 }
 
-impl<T: Data, W: Widget<T>> Controller<T, W> for SaveRulesOnDataChange {
+impl<T: Data, W: Widget<T>> Controller<T, W> for SubmitCommandOnDataChange {
     fn update(&mut self, child: &mut W, ctx: &mut UpdateCtx, old_data: &T, data: &T, env: &Env) {
         child.update(ctx, old_data, data, env);
         if !old_data.same(data) {
-            ctx.submit_command(self.save_rules_command.clone());
+            ctx.submit_command(self.command.clone());
         }
     }
 }
