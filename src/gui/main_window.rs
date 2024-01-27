@@ -67,19 +67,13 @@ impl FocusData for ((bool, UISettings), UIBrowser) {
 pub struct MainWindow {
     filtered_browsers: Arc<Vec<UIBrowser>>,
     show_set_as_default: bool,
-    show_settings: bool,
 }
 
 impl MainWindow {
-    pub fn new(
-        filtered_browsers: Arc<Vec<UIBrowser>>,
-        show_set_as_default: bool,
-        show_settings: bool,
-    ) -> Self {
+    pub fn new(filtered_browsers: Arc<Vec<UIBrowser>>, show_set_as_default: bool) -> Self {
         Self {
             filtered_browsers: filtered_browsers,
             show_set_as_default: show_set_as_default,
-            show_settings: show_settings,
         }
     }
 
@@ -161,7 +155,6 @@ impl MainWindow {
             .fix_height(OPTIONS_LABEL_SIZE);
 
         let show_set_as_default = self.show_set_as_default;
-        let show_settings = self.show_settings;
 
         let options_button = FocusWidget::new(
             options_label,
@@ -190,11 +183,7 @@ impl MainWindow {
             );
 
             ctx.show_context_menu(
-                make_options_menu(
-                    show_set_as_default,
-                    data.restorable_app_profiles.clone(),
-                    show_settings,
-                ),
+                make_options_menu(show_set_as_default, data.restorable_app_profiles.clone()),
                 position,
             );
         })
@@ -644,7 +633,6 @@ impl Lens<((bool, UISettings), UIBrowser), UIBrowser> for BrowserLens {
 fn make_options_menu(
     show_set_as_default: bool,
     hidden_browsers: Arc<Vec<UIBrowser>>,
-    show_settings: bool,
 ) -> Menu<UIState> {
     let submenu_hidden_apps = shared::restore_apps::make_hidden_apps_menu(hidden_browsers);
 
@@ -668,14 +656,12 @@ fn make_options_menu(
 
     menu = menu.entry(submenu_hidden_apps);
 
-    if show_settings {
-        menu = menu.entry(
-            MenuItem::new(LocalizedString::new("Settings..."))
-                .command(SHOW_SETTINGS_DIALOG)
-                // Command on macOS, and Ctrl on Windows/Linux/OpenBSD/FreeBSD
-                .hotkey(SysMods::Cmd, ","),
-        )
-    }
+    menu = menu.entry(
+        MenuItem::new(LocalizedString::new("Settings..."))
+            .command(SHOW_SETTINGS_DIALOG)
+            // Command on macOS, and Ctrl on Windows/Linux/OpenBSD/FreeBSD
+            .hotkey(SysMods::Cmd, ","),
+    );
 
     menu = menu
         .entry(MenuItem::new(LocalizedString::new("About")).on_activate(

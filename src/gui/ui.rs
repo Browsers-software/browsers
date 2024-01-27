@@ -68,7 +68,6 @@ impl UI {
     }
     fn map_as_visual_settings(ui_config: &UIConfig) -> UIVisualSettings {
         UIVisualSettings {
-            show_settings: ui_config.show_settings,
             show_hotkeys: ui_config.show_hotkeys,
             quit_on_lost_focus: ui_config.quit_on_lost_focus,
         }
@@ -154,11 +153,8 @@ impl UI {
         let basedir = self.localizations_basedir.to_str().unwrap().to_string();
         let (mouse_position, monitor) = druid::Screen::get_mouse_position();
 
-        let main_window1 = main_window::MainWindow::new(
-            self.filtered_browsers.clone(),
-            self.show_set_as_default,
-            self.ui_settings.visual_settings.show_settings,
-        );
+        let main_window1 =
+            main_window::MainWindow::new(self.filtered_browsers.clone(), self.show_set_as_default);
         let main_window = main_window1.create_main_window(&mouse_position, &monitor);
 
         let main_window_id = main_window.id.clone();
@@ -216,7 +212,6 @@ pub struct UISettings {
 
 #[derive(Clone, Debug, Data, Lens)]
 pub struct UIVisualSettings {
-    pub show_settings: bool,
     pub show_hotkeys: bool,
     pub quit_on_lost_focus: bool,
 }

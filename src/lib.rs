@@ -846,7 +846,6 @@ pub fn basically_main(
                 MessageToMain::SaveConfigUISettings(settings) => {
                     info!("Saving UI settings");
                     let ui_config = UIConfig {
-                        show_settings: settings.show_settings,
                         show_hotkeys: settings.show_hotkeys,
                         quit_on_lost_focus: settings.quit_on_lost_focus,
                     };
