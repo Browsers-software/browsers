@@ -455,7 +455,7 @@ impl SupportedAppRepository {
             profile_args_fn: |profile_cli_arg_value| {
                 vec![format!("--profile-directory={}", profile_cli_arg_value)]
             },
-            incognito_args: vec!["-incognito".to_string()],
+            incognito_args: vec!["--incognito".to_string()],
             url_transform_fn: chromium_url_transform_fn,
             url_as_first_arg: true,
         }
@@ -493,7 +493,7 @@ impl SupportedAppRepository {
             profile_args_fn: |profile_cli_arg_value| {
                 vec!["-P".to_string(), profile_cli_arg_value.to_string()]
             },
-            incognito_args: vec!["-private".to_string()],
+            incognito_args: vec!["--private-window".to_string()],
             url_transform_fn: firefox_url_transform_fn,
             url_as_first_arg: true,
         }
