@@ -165,7 +165,6 @@ impl UI {
                 main_window_id: main_window_id,
                 mouse_position: mouse_position.clone(),
                 monitor: monitor.clone(),
-                quit_on_lost_focus: self.ui_settings.visual_settings.quit_on_lost_focus,
             })
             .localization_resources(vec!["builtin.ftl".to_string()], basedir);
     }
@@ -379,7 +378,6 @@ pub struct UIDelegate {
     windows: Vec<WindowId>,
     mouse_position: Point,
     monitor: Monitor,
-    quit_on_lost_focus: bool,
 }
 
 impl UIDelegate {
@@ -448,7 +446,7 @@ impl AppDelegate<UIState> for UIDelegate {
         // mac calls this when opening About window
         // mac is handled by application event instead now, which is fired
         // when all windows of app loose focus
-        let quit_on_lost_focus = !is_mac && self.quit_on_lost_focus;
+        let quit_on_lost_focus = !is_mac && data.ui_settings.visual_settings.quit_on_lost_focus;
 
         let should_exit = match event {
             Event::KeyDown(KeyEvent {
@@ -568,7 +566,7 @@ impl AppDelegate<UIState> for UIDelegate {
             // Handled::Yes
         } else if cmd.is(APP_LOST_FOCUS) {
             info!("App lost focus");
-            if self.quit_on_lost_focus {
+            if data.ui_settings.visual_settings.quit_on_lost_focus {
                 let sink = ctx.get_external_handle();
                 sink.submit_command(EXIT_APP, "".to_string(), Target::Global)
                     .unwrap();
