@@ -68,7 +68,7 @@ See https://github.com/Browsers-software/browsers/wiki/Rules for all the details
             data.add_empty_rule();
         })
         .align_right()
-        .padding(10.0);
+        .padding((10.0, 10.0, 40.0, 0.0));
 
     let col = Flex::column()
         .cross_axis_alignment(CrossAxisAlignment::Start)

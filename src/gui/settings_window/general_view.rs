@@ -1,5 +1,5 @@
 use druid::widget::{Button, ControllerHost, CrossAxisAlignment, Flex, Label, Switch};
-use druid::{LensExt, TextAlignment, Widget, WidgetExt};
+use druid::{LensExt, Widget, WidgetExt};
 
 use crate::gui::settings_window::rules_view;
 use crate::gui::shared;
@@ -23,9 +23,7 @@ pub(crate) fn general_content() -> impl Widget<UIState> {
         .with_child(Label::new("Show Hotkeys"))
         .with_child(hotkeys_switch);
 
-    let label = Label::new("Restore App  ⌄")
-        .with_text_size(13.0)
-        .with_text_alignment(TextAlignment::Center);
+    let label = Label::new("Restore App...").with_text_size(13.0);
 
     let restore_app_button =
         Button::from_label(label).on_click(move |ctx, data: &mut UIState, _env| {
