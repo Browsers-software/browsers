@@ -23,7 +23,7 @@ unsafe impl Send for OsHelper {}
 impl OsHelper {
     // must be initialized in main thread (because of gtk requirements)
     pub fn new() -> OsHelper {
-        let _result = gtk::init();
+        let _result = gtk::init().expect("Could not initialize gtk");
         let icon_theme = gtk::IconTheme::default().unwrap();
         let app_repository = SupportedAppRepository::new();
         Self {

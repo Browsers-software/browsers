@@ -61,8 +61,8 @@ create_package_content() {
   mkdir -p "$package_data_dir/resources/icons/512x512"
   cp "$project_resources_dir/icons/512x512/software.Browsers.png" "$package_data_dir/resources/icons/512x512/software.Browsers.png"
 
-  mkdir -p "$package_data_dir/resources/lib"
-  cp "$project_resources_dir/lib/application-repository.toml" "$package_data_dir/resources/lib/application-repository.toml"
+  mkdir -p "$package_data_dir/resources/repository"
+  cp "$project_resources_dir/repository/application-repository.toml" "$package_data_dir/resources/repository/application-repository.toml"
 
   mkdir -p "$package_data_dir/bin"
 

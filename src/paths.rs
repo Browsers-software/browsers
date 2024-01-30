@@ -38,7 +38,7 @@ pub fn get_logs_root_dir() -> PathBuf {
 }
 
 pub fn get_repository_toml_path() -> PathBuf {
-    return get_lib_basedir().join("application-repository.toml");
+    return get_repository_basedir().join("application-repository.toml");
 }
 
 pub fn get_config_json_path() -> PathBuf {
@@ -147,8 +147,8 @@ pub fn get_localizations_basedir() -> PathBuf {
     return get_resources_basedir().join("i18n");
 }
 
-pub fn get_lib_basedir() -> PathBuf {
-    return get_resources_basedir().join("lib");
+pub fn get_repository_basedir() -> PathBuf {
+    return get_resources_basedir().join("repository");
 }
 
 // on macOS basedir should be "/Applications/Browsers.app/Contents/Resources/"

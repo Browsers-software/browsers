@@ -36,7 +36,7 @@ build_app_bundle() {
   mkdir -p "$target_dir/Browsers.app/Contents/Resources/i18n/en-US"
   mkdir -p "$target_dir/Browsers.app/Contents/Resources/icons"
   mkdir -p "$target_dir/Browsers.app/Contents/Resources/icons/512x512"
-  mkdir -p "$target_dir/Browsers.app/Contents/Resources/lib"
+  mkdir -p "$target_dir/Browsers.app/Contents/Resources/repository"
   # FYI: extra/macos/Info.plist is copied
   #      to target/universal-apple-darwin/meta/Info.plist
   #      by build.rs (because it also sets version from Cargo.toml)
@@ -44,7 +44,7 @@ build_app_bundle() {
   cp extra/macos/icons/Browsers.icns "$target_dir/Browsers.app/Contents/Resources/Browsers.icns"
   cp resources/icons/512x512/software.Browsers.png "$target_dir/Browsers.app/Contents/Resources/icons/512x512/software.Browsers.png"
   cp resources/i18n/en-US/builtin.ftl "$target_dir/Browsers.app/Contents/Resources/i18n/en-US/builtin.ftl"
-  cp resources/lib/application-repository.toml "$target_dir/Browsers.app/Contents/Resources/lib/application-repository.toml"
+  cp resources/repository/application-repository.toml "$target_dir/Browsers.app/Contents/Resources/repository/application-repository.toml"
   cp target/universal-apple-darwin/release/Browsers "$target_dir/Browsers.app/Contents/MacOS/Browsers"
 }
 

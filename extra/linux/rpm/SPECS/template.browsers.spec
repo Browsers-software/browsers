@@ -39,7 +39,7 @@ mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{_datadir}/software.Browsers/bin
 mkdir -p %{buildroot}%{_datadir}/software.Browsers/resources/i18n/en-US
 mkdir -p %{buildroot}%{_datadir}/software.Browsers/resources/icons/512x512
-mkdir -p %{buildroot}%{_datadir}/software.Browsers/resources/lib
+mkdir -p %{buildroot}%{_datadir}/software.Browsers/resources/repository
 mkdir -p %{buildroot}%{_datadir}/applications/xfce4/helpers
 mkdir -p %{buildroot}%{_datadir}/icons/hicolor/512x512/apps
 mkdir -p %{buildroot}%{_datadir}/icons/hicolor/256x256/apps
@@ -70,7 +70,7 @@ cp -a %{_tree}%{_datadir}/icons/hicolor/16x16/apps/software.Browsers.png %{build
 cp -a %{_tree}%{_datadir}/software.Browsers/bin/browsers %{buildroot}%{_datadir}/software.Browsers/bin/browsers
 cp -a %{_tree}%{_datadir}/software.Browsers/resources/i18n/en-US/builtin.ftl %{buildroot}%{_datadir}/software.Browsers/resources/i18n/en-US/builtin.ftl
 cp -a %{_tree}%{_datadir}/software.Browsers/resources/icons/512x512/software.Browsers.png %{buildroot}%{_datadir}/software.Browsers/resources/icons/512x512/software.Browsers.png
-cp -a %{_tree}%{_datadir}/software.Browsers/resources/lib/application-repository.toml %{buildroot}%{_datadir}/software.Browsers/resources/lib/application-repository.toml
+cp -a %{_tree}%{_datadir}/software.Browsers/resources/repository/application-repository.toml %{buildroot}%{_datadir}/software.Browsers/resources/repository/application-repository.toml
 
 cp -a %{_tree}%{_bindir}/browsers %{buildroot}%{_bindir}/browsers
 
@@ -88,7 +88,7 @@ cp -a %{_tree}%{_bindir}/browsers %{buildroot}%{_bindir}/browsers
 %{_datadir}/software.Browsers/bin/browsers
 %{_datadir}/software.Browsers/resources/i18n/en-US/builtin.ftl
 %{_datadir}/software.Browsers/resources/icons/512x512/software.Browsers.png
-%{_datadir}/software.Browsers/resources/lib/application-repository.toml
+%{_datadir}/software.Browsers/resources/repository/application-repository.toml
 
 %changelog
 # let's skip this for now

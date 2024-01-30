@@ -21,10 +21,11 @@ fltmc >nul 2>&1 && (
   set is_admin=false
 )
 
-if "%~1"=="--system" (
-  set is_explicitly_requested_system=true
-) else (
-  set is_explicitly_requested_system=false
+set is_explicitly_requested_system=false
+for %%A in (%*) do (
+    if "%%A"=="--system" (
+        set is_explicitly_requested_system=true
+    )
 )
 
 if %is_explicitly_requested_system% == true (
@@ -41,10 +42,18 @@ if %is_explicitly_requested_system% == true (
   set is_local_install=true
 )
 
-if "%~1"=="--user" (
-  set is_explicitly_requested_user=true
-) else (
-  set is_explicitly_requested_user=false
+set is_silent=false
+for %%A in (%*) do (
+    if "%%A"=="--silent" (
+        set is_silent=true
+    )
+)
+
+set is_explicitly_requested_user=false
+for %%A in (%*) do (
+    if "%%A"=="--user" (
+        set is_explicitly_requested_user=true
+    )
 )
 
 REM Default to system-wide install if running with admin rights and
@@ -97,18 +106,18 @@ if not exist "%ProgramDir%\resources\icons\512x512\" (
   mkdir "%ProgramDir%\resources\icons\512x512" || exit /b
 )
 
-copy "%THIS_DIR%icons\512x512\software.Browsers.png" "%ProgramDir%\resources\icons\512x512\software.Browsers.png" 1>nul
+copy "%THIS_DIR%resources\icons\512x512\software.Browsers.png" "%ProgramDir%\resources\icons\512x512\software.Browsers.png" 1>nul
 
 if not exist "%ProgramDir%\resources\i18n\en-US\" (
   mkdir "%ProgramDir%\resources\i18n\en-US" || exit /b
 )
 
-copy "%THIS_DIR%i18n\en-US\builtin.ftl" "%ProgramDir%\resources\i18n\en-US\builtin.ftl" 1>nul
+copy "%THIS_DIR%resources\i18n\en-US\builtin.ftl" "%ProgramDir%\resources\i18n\en-US\builtin.ftl" 1>nul
 
-if not exist "%ProgramDir%\resources\lib\" (
-  mkdir "%ProgramDir%\resources\lib" || exit /b
+if not exist "%ProgramDir%\resources\repository\" (
+  mkdir "%ProgramDir%\resources\repository" || exit /b
 )
-copy "%THIS_DIR%lib\application-repository.toml" "%ProgramDir%\resources\lib\application-repository.toml" 1>nul
+copy "%THIS_DIR%resources\repository\application-repository.toml" "%ProgramDir%\resources\repository\application-repository.toml" 1>nul
 
 REM C:\Users\x\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Browsers\Browsers.lnk
 
@@ -197,5 +206,7 @@ powershell -ExecutionPolicy Bypass -File "%THIS_DIR%announce_default.ps1" || exi
 echo Browsers has been installed. Enjoy!
 echo Please report any issues at https://github.com/Browsers-software/browsers/issues
 
-echo You can now press Enter to exit this installer.
-set /p input=
+if not %is_silent% == true (
+    echo You can now press Enter to exit this installer.
+    set /p input=
+)
