@@ -112,7 +112,9 @@ fn settings_view_container(
     let setting_name_label = Label::new(title).with_font(font).padding((0.0, 10.0));
 
     // makes sure word-wrapping in content widget is respected
-    let content = content.fix_width(CONTENT_WIDTH);
+    let content = content
+        .padding((0.0, 0.0, 20.0, 0.0))
+        .fix_width(CONTENT_WIDTH);
 
     let col = Flex::column()
         .cross_axis_alignment(CrossAxisAlignment::Start)

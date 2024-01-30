@@ -68,7 +68,7 @@ See https://github.com/Browsers-software/browsers/wiki/Rules for all the details
             data.add_empty_rule();
         })
         .align_right()
-        .padding((10.0, 10.0, 40.0, 0.0));
+        .padding((10.0, 10.0, 20.0, 0.0));
 
     let col = Flex::column()
         .cross_axis_alignment(CrossAxisAlignment::Start)
@@ -205,7 +205,7 @@ fn default_app(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettings> {
     .background(Color::rgba(0.1, 0.1, 0.1, 0.9))
     .rounded(10.0)
     .border(Color::rgba(0.5, 0.5, 0.5, 0.9), 0.5)
-    .padding((0.0, 5.0, 40.0, 5.0))
+    .padding((0.0, 5.0, 20.0, 5.0))
     .expand_width();
 }
 
