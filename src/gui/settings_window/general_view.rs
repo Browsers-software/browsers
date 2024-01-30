@@ -6,6 +6,8 @@ use crate::gui::shared;
 use crate::gui::ui::{UISettings, UIState, UIVisualSettings, SAVE_UI_SETTINGS};
 
 pub(crate) fn general_content() -> impl Widget<UIState> {
+    const TEXT_SIZE: f64 = 13.0;
+
     let save_command = SAVE_UI_SETTINGS.with(());
 
     let hotkeys_switch = ControllerHost::new(
@@ -20,10 +22,11 @@ pub(crate) fn general_content() -> impl Widget<UIState> {
     );
 
     let hotkeys_row = Flex::row()
-        .with_child(Label::new("Show Hotkeys"))
+        .with_child(Label::new("Show hotkeys").with_text_size(TEXT_SIZE))
+        .with_flex_spacer(1.0)
         .with_child(hotkeys_switch);
 
-    let label = Label::new("Restore App...").with_text_size(13.0);
+    let label = Label::new("Restore App...").with_text_size(TEXT_SIZE);
 
     let restore_app_button =
         Button::from_label(label).on_click(move |ctx, data: &mut UIState, _env| {
@@ -55,7 +58,8 @@ pub(crate) fn general_content() -> impl Widget<UIState> {
         );
 
         let quit_on_lost_focus_row = Flex::row()
-            .with_child(Label::new("Quit when Focus is Lost"))
+            .with_child(Label::new("Quit when focus is lost").with_text_size(TEXT_SIZE))
+            .with_flex_spacer(1.0)
             .with_child(quit_on_lost_focus_switch);
 
         col = col.with_child(quit_on_lost_focus_row).with_default_spacer()
