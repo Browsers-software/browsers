@@ -25,29 +25,29 @@ build_binary() {
 }
 
 build_app_bundle() {
-  mkdir -p "$target_dir/icons/"
-  mkdir -p "$target_dir/icons/16x16"
-  mkdir -p "$target_dir/icons/32x32"
-  mkdir -p "$target_dir/icons/64x64"
-  mkdir -p "$target_dir/icons/128x128"
-  mkdir -p "$target_dir/icons/256x256"
-  mkdir -p "$target_dir/icons/512x512"
-  mkdir -p "$target_dir/i18n"
-  mkdir -p "$target_dir/i18n/en-US"
-  mkdir -p "$target_dir/lib"
+  mkdir -p "$target_dir/resources/icons/"
+  mkdir -p "$target_dir/resources/icons/16x16"
+  mkdir -p "$target_dir/resources/icons/32x32"
+  mkdir -p "$target_dir/resources/icons/64x64"
+  mkdir -p "$target_dir/resources/icons/128x128"
+  mkdir -p "$target_dir/resources/icons/256x256"
+  mkdir -p "$target_dir/resources/icons/512x512"
+  mkdir -p "$target_dir/resources/i18n"
+  mkdir -p "$target_dir/resources/i18n/en-US"
+  mkdir -p "$target_dir/resources/repository"
 
   mkdir -p "$target_dir/startmenu"
   mkdir -p "$target_dir/startmenu/user"
   mkdir -p "$target_dir/startmenu/system"
 
-  cp "resources/icons/16x16/software.Browsers.png" "$target_dir/icons/16x16/software.Browsers.png"
-  cp "resources/icons/32x32/software.Browsers.png" "$target_dir/icons/32x32/software.Browsers.png"
-  cp "resources/icons/64x64/software.Browsers.png" "$target_dir/icons/64x64/software.Browsers.png"
-  cp "resources/icons/128x128/software.Browsers.png" "$target_dir/icons/128x128/software.Browsers.png"
-  cp "resources/icons/256x256/software.Browsers.png" "$target_dir/icons/256x256/software.Browsers.png"
-  cp "resources/icons/512x512/software.Browsers.png" "$target_dir/icons/512x512/software.Browsers.png"
-  cp "resources/i18n/en-US/builtin.ftl" "$target_dir/i18n/en-US/builtin.ftl"
-  cp "resources/lib/application-repository.toml" "$target_dir/lib/application-repository.toml"
+  cp "resources/icons/16x16/software.Browsers.png" "$target_dir/resources/icons/16x16/software.Browsers.png"
+  cp "resources/icons/32x32/software.Browsers.png" "$target_dir/resources/icons/32x32/software.Browsers.png"
+  cp "resources/icons/64x64/software.Browsers.png" "$target_dir/resources/icons/64x64/software.Browsers.png"
+  cp "resources/icons/128x128/software.Browsers.png" "$target_dir/resources/icons/128x128/software.Browsers.png"
+  cp "resources/icons/256x256/software.Browsers.png" "$target_dir/resources/icons/256x256/software.Browsers.png"
+  cp "resources/icons/512x512/software.Browsers.png" "$target_dir/resources/icons/512x512/software.Browsers.png"
+  cp "resources/i18n/en-US/builtin.ftl" "$target_dir/resources/i18n/en-US/builtin.ftl"
+  cp "resources/repository/application-repository.toml" "$target_dir/resources/repository/application-repository.toml"
 
   cp "extra/windows/dist/install.bat" "$target_dir/install.bat"
   cp "extra/windows/dist/uninstall.bat" "$target_dir/uninstall.bat"
@@ -70,14 +70,14 @@ make_archives() {
     local filelist=(
       './x86_64/browsers.exe'
       './aarch64/browsers.exe'
-      './icons/16x16/software.Browsers.png'
-      './icons/32x32/software.Browsers.png'
-      './icons/64x64/software.Browsers.png'
-      './icons/128x128/software.Browsers.png'
-      './icons/256x256/software.Browsers.png'
-      './icons/512x512/software.Browsers.png'
-      './i18n/en-US/builtin.ftl'
-      './lib/application-repository.toml'
+      './resources/icons/16x16/software.Browsers.png'
+      './resources/icons/32x32/software.Browsers.png'
+      './resources/icons/64x64/software.Browsers.png'
+      './resources/icons/128x128/software.Browsers.png'
+      './resources/icons/256x256/software.Browsers.png'
+      './resources/icons/512x512/software.Browsers.png'
+      './resources/i18n/en-US/builtin.ftl'
+      './resources/repository/application-repository.toml'
       './install.bat'
       './uninstall.bat'
       './announce_default.ps1'

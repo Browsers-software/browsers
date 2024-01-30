@@ -91,6 +91,21 @@ jobs:
           export APPCAST_SECRET_KEY_FILE="${GITHUB_WORKSPACE}/secrets/appcast_seckey"
           ./build-linux.sh
         shell: bash
+      - name: Test installer
+        run: |
+          # desktop-file-utils is required for running install.sh (desktop-file-install and update-desktop-database)
+          sudo apt-get install -y --no-install-recommends desktop-file-utils
+          target_dir='target/universal-unknown-linux-gnu/release'
+          cd "$target_dir"
+          set -x
+          ./install.sh
+        shell: bash
+      #- name: End-to-end test - run Browsers
+      #  run: |
+      #    install_dir="$HOME/.local/bin"
+      #    cd "$install_dir"
+      #    ./browsers --no-gui https://browsers.software
+      #  shell: bash
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
@@ -171,6 +186,22 @@ jobs:
           echo "1. P12_FILE=$P12_FILE"
           ./build-mac.sh
         shell: bash
+      - name: Test app dir
+        run: |
+          target_dir='target/universal-apple-darwin/release'
+          cd "$target_dir"
+          cd "./Browsers.app/"
+          set -x
+          ls -altrh .
+          ls -altrh ./Contents/Resources/
+        shell: bash
+      - name: End-to-end test - run Browsers
+        run: |
+          target_dir='target/universal-apple-darwin/release'
+          cd "$target_dir"
+          set -x
+          open ./Browsers.app -u https://browsers.software --stdout /tmp/my-stdout --args --no-gui && cat /tmp/my-stdout
+        shell: bash
       - name: Upload mac artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -235,6 +266,13 @@ jobs:
           echo $APPCAST_SECRET_KEY_BASE64 | base64 --decode > secrets/appcast_seckey
           export APPCAST_SECRET_KEY_FILE="${GITHUB_WORKSPACE}/secrets/appcast_seckey"
           ./build-windows.sh
+        shell: bash
+      - name: Test installer
+        run: |
+          target_dir='target/universal-pc-windows-msvc/release'
+          cd "$target_dir"
+          set -x
+          ./install.bat --silent
         shell: bash
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
