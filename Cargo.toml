@@ -27,7 +27,7 @@ rolling-file = { git = "https://github.com/browsers-software/rolling-file-rs.git
 
 dirs = "5.0.1"
 
-toml = "0.8.8"
+toml = "0.8.9"
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 
