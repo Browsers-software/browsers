@@ -143,16 +143,15 @@ impl BrowserCommon {
             }
 
             arguments.arg("--args");
-            if !profile_args.is_empty() {
-                arguments.args(profile_args);
-            }
-            if self.supported_app.is_url_as_first_arg() {
-                arguments.arg(app_url.clone());
-            }
+            arguments.args(profile_args);
 
             if incognito_mode && self.supported_app.supports_incognito() {
                 let incognito_args = self.supported_app.get_incognito_args();
                 arguments.args(incognito_args);
+            }
+
+            if self.supported_app.is_url_as_first_arg() {
+                arguments.arg(app_url.clone());
             }
 
             debug!("Launching: {:?}", cmd);
@@ -178,13 +177,14 @@ impl BrowserCommon {
 
             let mut cmd = Command::new(main_command.to_string());
 
-            cmd.args(arguments);
             cmd.args(profile_args);
 
             if incognito_mode && self.supported_app.supports_incognito() {
                 let incognito_args = self.supported_app.get_incognito_args();
                 cmd.args(incognito_args);
             }
+
+            cmd.args(arguments);
 
             // Non-browser apps don't have the placeholder
             if !has_url_placeholder {
