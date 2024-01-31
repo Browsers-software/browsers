@@ -207,8 +207,13 @@ install_binary
 install_icons
 install_xfce4_desktop_file
 install_desktop_file
-# Refresh desktop database
-update-desktop-database "$TARGET_DESKTOP_DIR_PATH"
+
+
+if [[ $* != *--skip-desktop-database* ]]; then
+  # The update-desktop-database program is a tool to build a cache database of the MIME types handled by desktop files.
+  # Refresh desktop database
+  update-desktop-database "$TARGET_DESKTOP_DIR_PATH"
+fi
 
 echo "Browsers has been installed. Enjoy!"
 echo "Please report any issues at https://github.com/Browsers-software/browsers/issues"
