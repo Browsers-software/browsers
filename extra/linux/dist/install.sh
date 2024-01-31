@@ -166,7 +166,7 @@ install_desktop_file() {
   fi
 
   # Copy .desktop file to $HOME/.local/share/applications/ or /usr/share/applications
-  desktop-file-install --dir="$TARGET_DESKTOP_DIR_PATH" --rebuild-mime-info-cache "$SRC_DESKTOP_FILE_PATH"
+  desktop-file-install --dir="$TARGET_DESKTOP_DIR_PATH" "$SRC_DESKTOP_FILE_PATH"
 }
 
 install_xfce4_desktop_file() {
@@ -207,7 +207,6 @@ install_binary
 install_icons
 install_xfce4_desktop_file
 install_desktop_file
-
 
 if [[ $* != *--skip-desktop-database* ]]; then
   # The update-desktop-database program is a tool to build a cache database of the MIME types handled by desktop files.
