@@ -123,7 +123,7 @@ impl BrowserCommon {
             .supported_app
             .get_transformed_url(common_browser_profile, url);
 
-        let (main_command, arguments) = self.command.split_at(1);
+        let (main_command, command_arguments) = self.command.split_at(1);
         let main_command = main_command.first().unwrap(); // guaranteed to not be empty
 
         // TODO: support BSD - https://doc.rust-lang.org/reference/conditional-compilation.html
@@ -143,48 +143,42 @@ impl BrowserCommon {
             }
 
             arguments.arg("--args");
-            if !profile_args.is_empty() {
-                arguments.args(profile_args);
-            }
-            if self.supported_app.is_url_as_first_arg() {
-                arguments.arg(app_url.clone());
-            }
+            arguments.args(profile_args);
 
             if incognito_mode && self.supported_app.supports_incognito() {
                 let incognito_args = self.supported_app.get_incognito_args();
                 arguments.args(incognito_args);
             }
 
+            if self.supported_app.is_url_as_first_arg() {
+                arguments.arg(app_url.clone());
+            }
+
             debug!("Launching: {:?}", cmd);
             return cmd;
         } else if cfg!(target_os = "linux") {
-            let has_url_placeholder = arguments.iter().any(|arg| arg.eq_ignore_ascii_case("%u"));
+            let has_url_placeholder = command_arguments
+                .iter()
+                .any(|arg| arg.eq_ignore_ascii_case("%u"));
 
-            let arguments: Vec<String> = if has_url_placeholder {
-                let arguments: Vec<String> = arguments
-                    .iter()
-                    .map(|arg| {
-                        if arg.eq_ignore_ascii_case("%u") {
-                            app_url.clone()
-                        } else {
-                            arg.to_string()
-                        }
-                    })
-                    .collect();
-                arguments
+            let arguments = if has_url_placeholder {
+                replace_url_placeholder(command_arguments, app_url.as_str())
             } else {
-                arguments.to_vec()
+                command_arguments.to_vec()
             };
 
             let mut cmd = Command::new(main_command.to_string());
 
-            cmd.args(arguments);
-            cmd.args(profile_args);
-
+            // this might mess up the command,
+            // if `main_command` is not yet the actual program that takes the incognito argument;
+            // that's because the actual program might be in `arguments` (depends what's in the .desktop file)
             if incognito_mode && self.supported_app.supports_incognito() {
                 let incognito_args = self.supported_app.get_incognito_args();
                 cmd.args(incognito_args);
             }
+
+            cmd.args(arguments);
+            cmd.args(profile_args);
 
             // Non-browser apps don't have the placeholder
             if !has_url_placeholder {
@@ -208,6 +202,19 @@ impl BrowserCommon {
 
         unimplemented!("platform is not supported yet");
     }
+}
+
+fn replace_url_placeholder(command_arguments: &[String], app_url: &str) -> Vec<String> {
+    return command_arguments
+        .iter()
+        .map(|arg| {
+            if arg.eq_ignore_ascii_case("%u") {
+                app_url.to_string()
+            } else {
+                arg.to_string()
+            }
+        })
+        .collect();
 }
 
 #[derive(Clone)]
