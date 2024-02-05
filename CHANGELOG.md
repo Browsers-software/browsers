@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Disable support for profiles in Arc. See #94
 - Really fix opening Private window in Firefox. Thanks to @mpsijm for fix #134
+- macOS: Don't exit on lost focus if Settings or About dialog are still open
 
 ## [0.5.1] - 2024-01-31
 

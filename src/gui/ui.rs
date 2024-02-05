@@ -180,6 +180,7 @@ impl UI {
             filtered_browsers: self.filtered_browsers.clone(),
             restorable_app_profiles: self.restorable_app_profiles.clone(),
             ui_settings: self.ui_settings.clone(),
+            has_non_main_window_open: false,
         };
         return initial_ui_state;
     }
@@ -199,6 +200,9 @@ pub struct UIState {
     pub(crate) restorable_app_profiles: Arc<Vec<UIBrowser>>,
 
     pub ui_settings: UISettings,
+
+    // Has About or Settings dialog or a context menu open (e.g right click or 3-dot menu)
+    pub has_non_main_window_open: bool,
 }
 
 #[derive(Clone, Data, Lens)]
@@ -567,9 +571,11 @@ impl AppDelegate<UIState> for UIDelegate {
         } else if cmd.is(APP_LOST_FOCUS) {
             info!("App lost focus");
             if data.ui_settings.visual_settings.quit_on_lost_focus {
-                let sink = ctx.get_external_handle();
-                sink.submit_command(EXIT_APP, "".to_string(), Target::Global)
-                    .unwrap();
+                if !data.has_non_main_window_open {
+                    let sink = ctx.get_external_handle();
+                    sink.submit_command(EXIT_APP, "".to_string(), Target::Global)
+                        .unwrap();
+                }
             }
             Handled::Yes
         } else if cmd.is(URL_OPENED) {
@@ -739,25 +745,33 @@ impl AppDelegate<UIState> for UIDelegate {
         &mut self,
         id: WindowId,
         _handle: WindowHandle,
-        _data: &mut UIState,
+        data: &mut UIState,
         _env: &Env,
         _ctx: &mut DelegateCtx,
     ) {
         debug!("Window added, id: {:?}", id);
         self.windows.push(id);
+        data.has_non_main_window_open = self.has_non_main_window_open()
     }
 
     fn window_removed(
         &mut self,
         id: WindowId,
-        _data: &mut UIState,
+        data: &mut UIState,
         _env: &Env,
         _ctx: &mut DelegateCtx,
     ) {
         debug!("Window removed, id: {:?}", id);
         if let Some(pos) = self.windows.iter().position(|x| *x == id) {
             self.windows.remove(pos);
+            data.has_non_main_window_open = self.has_non_main_window_open()
         }
+    }
+}
+
+impl UIDelegate {
+    fn has_non_main_window_open(&self) -> bool {
+        return self.windows.iter().any(|x| *x != self.main_window_id);
     }
 }
 
