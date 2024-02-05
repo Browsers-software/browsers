@@ -1,10 +1,4 @@
 [[apps]]
-id = "company.thebrowser.Browser"
-config_dir_relative = "Arc/User Data"
-kind = "CHROMIUM"
-os = "MAC"
-
-[[apps]]
 id = "com.google.Chrome"
 config_dir_relative = "Google/Chrome"
 kind = "CHROMIUM"
