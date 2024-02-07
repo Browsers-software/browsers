@@ -378,3 +378,8 @@ os = "MAC"
 id = "Zoom.desktop"
 kind = "ZOOM"
 os = "LINUX"
+
+[[apps]]
+id = "URL:Zoom Launcher"
+kind = "ZOOM"
+os = "WINDOWS"
