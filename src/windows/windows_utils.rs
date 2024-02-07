@@ -339,14 +339,16 @@ pub fn create_icon_for_app(full_path_and_index: &str, icon_path: &str) {
         let total = ret as usize;
         info!("ret is {}", ret);
 
-        let a = *array_pointer;
+        //let a = *array_pointer;
         let b = std::slice::from_raw_parts(array_pointer, total);
-        let c = b[0];
-
-        let image_buffer = convert_icon_to_image(c);
-        let result = image_buffer.save_with_format(icon_path, ImageFormat::Png);
-        if result.is_err() {
-            warn!("Could not save image to {}", icon_path);
+        let c_maybe = b.get(0);
+        if c_maybe.is_some() {
+            let c = c_maybe.unwrap();
+            let image_buffer = convert_icon_to_image(c);
+            let result = image_buffer.save_with_format(icon_path, ImageFormat::Png);
+            if result.is_err() {
+                warn!("Could not save image to {}", icon_path);
+            }
         }
     }
 }
