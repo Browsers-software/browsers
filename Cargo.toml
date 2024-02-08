@@ -78,6 +78,12 @@ xdg-mime = "^0.3.3"
 # to find default registered icons
 glib = { version = "0.16.6", package = "gio" }
 
+# to find application .desktop files
+freedesktop-desktop-entry = "0.5.0"
+
+# to find icon theme and icon;
+freedesktop-icons = "0.2.5"
+
 # to find icon theme and icon; (should be same version of gtk as druid is using)
 gtk = { version = "0.16.2" }
 
