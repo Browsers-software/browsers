@@ -1,4 +1,6 @@
-use druid::widget::{Button, ControllerHost, CrossAxisAlignment, Flex, Label, Switch};
+use druid::widget::{
+    Button, ControllerHost, CrossAxisAlignment, Flex, Label, LineBreaking, Switch,
+};
 use druid::{LensExt, Widget, WidgetExt};
 
 use crate::gui::settings_window::rules_view;
@@ -11,14 +13,15 @@ pub(crate) fn general_content() -> impl Widget<UIState> {
     let save_command = SAVE_UI_SETTINGS.with(());
 
     let hotkeys_switch = ControllerHost::new(
-        Switch::new().lens(
-            UIState::ui_settings
-                .then(UISettings::visual_settings)
-                .then(UIVisualSettings::show_hotkeys),
-        ),
+        Switch::new(),
         rules_view::SubmitCommandOnDataChange {
             command: save_command.clone(),
         },
+    )
+    .lens(
+        UIState::ui_settings
+            .then(UISettings::visual_settings)
+            .then(UIVisualSettings::show_hotkeys),
     );
 
     let hotkeys_row = Flex::row()
@@ -47,14 +50,15 @@ pub(crate) fn general_content() -> impl Widget<UIState> {
     let is_mac = cfg!(target_os = "macos");
     if is_mac {
         let quit_on_lost_focus_switch = ControllerHost::new(
-            Switch::new().lens(
-                UIState::ui_settings
-                    .then(UISettings::visual_settings)
-                    .then(UIVisualSettings::quit_on_lost_focus),
-            ),
+            Switch::new(),
             rules_view::SubmitCommandOnDataChange {
                 command: save_command.clone(),
             },
+        )
+        .lens(
+            UIState::ui_settings
+                .then(UISettings::visual_settings)
+                .then(UIVisualSettings::quit_on_lost_focus),
         );
 
         let quit_on_lost_focus_row = Flex::row()
@@ -65,5 +69,16 @@ pub(crate) fn general_content() -> impl Widget<UIState> {
         col = col.with_child(quit_on_lost_focus_row).with_default_spacer()
     }
 
-    return col.with_child(restore_app_button);
+    let tooltip = Label::new(
+        "To hide and move applications/profiles, close settings and just right-click on the application in the main dialog"
+    )
+        .with_text_size(11.0)
+        .with_line_break_mode(LineBreaking::WordWrap);
+
+    return col
+        .with_child(Label::new("Applications and Profiles"))
+        .with_default_spacer()
+        .with_child(restore_app_button)
+        .with_default_spacer()
+        .with_child(tooltip);
 }

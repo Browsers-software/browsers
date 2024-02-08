@@ -56,6 +56,7 @@ impl FocusData for UIState {
         return false;
     }
 }
+
 // need to implement this for the Widget<((bool, UISettings), UIBrowser)> types we declared
 impl FocusData for ((bool, UISettings), UIBrowser) {
     fn has_autofocus(&self) -> bool {
@@ -527,12 +528,11 @@ fn make_context_menu(browser: &UIBrowser) -> Menu<UIState> {
             .with_arg("item-name", move |_, _| item_name.clone().into());
 
         let this_id = id.clone();
+        let move_profile_top_command = MOVE_PROFILE.with((this_id.clone(), MoveTo::TOP));
+
         menu = menu.entry(
             MenuItem::new(move_profile_to_top_label)
-                .on_activate(move |ctx, _data: &mut UIState, _env| {
-                    let command = MOVE_PROFILE.with((this_id.clone(), MoveTo::TOP));
-                    ctx.submit_command(command);
-                })
+                .command(move_profile_top_command)
                 .enabled_if(move |_, _| is_visible),
         );
 
@@ -541,12 +541,11 @@ fn make_context_menu(browser: &UIBrowser) -> Menu<UIState> {
             .with_arg("item-name", move |_, _| item_name.clone().into());
 
         let this_id = id.clone();
+        let move_profile_up_command = MOVE_PROFILE.with((this_id.clone(), MoveTo::UP));
+
         menu = menu.entry(
             MenuItem::new(move_profile_higher_label)
-                .on_activate(move |ctx, _data: &mut UIState, _env| {
-                    let command = MOVE_PROFILE.with((this_id.clone(), MoveTo::UP));
-                    ctx.submit_command(command);
-                })
+                .command(move_profile_up_command)
                 .enabled_if(move |_, _| is_visible),
         );
 
@@ -556,25 +555,24 @@ fn make_context_menu(browser: &UIBrowser) -> Menu<UIState> {
             .with_arg("item-name", move |_, _| item_name.to_string().into());
 
         let this_id = id.clone();
+        let move_profile_down_command = MOVE_PROFILE.with((this_id.clone(), MoveTo::DOWN));
+
         menu = menu.entry(
             MenuItem::new(move_profile_lower_label)
-                .on_activate(move |ctx, _data: &mut UIState, _env| {
-                    let command = MOVE_PROFILE.with((this_id.clone(), MoveTo::DOWN));
-                    ctx.submit_command(command);
-                })
+                .command(move_profile_down_command)
                 .enabled_if(move |_, _| is_visible),
         );
 
-        let this_id = id.clone();
         let item_name = browser.get_full_name();
         let move_profile_bottom_label = LocalizedString::new("move-profile-to-bottom")
             .with_arg("item-name", move |_, _| item_name.to_string().into());
+
+        let this_id = id.clone();
+        let move_profile_bottom_command = MOVE_PROFILE.with((this_id.clone(), MoveTo::BOTTOM));
+
         menu = menu.entry(
             MenuItem::new(move_profile_bottom_label)
-                .on_activate(move |ctx, _data: &mut UIState, _env| {
-                    let command = MOVE_PROFILE.with((this_id.clone(), MoveTo::BOTTOM));
-                    ctx.submit_command(command);
-                })
+                .command(move_profile_bottom_command)
                 .enabled_if(move |_, _| is_visible),
         );
     }
@@ -585,25 +583,18 @@ fn make_context_menu(browser: &UIBrowser) -> Menu<UIState> {
         .with_arg("item-name", move |_, _| item_name.clone().into());
 
     let this_id = id.clone();
-    menu = menu.entry(MenuItem::new(hide_profile_label).on_activate(
-        move |ctx, _data: &mut UIState, _env| {
-            let command = HIDE_PROFILE.with(this_id.clone());
-            ctx.submit_command(command);
-        },
-    ));
+    let hide_profile_command = HIDE_PROFILE.with(this_id.clone());
+
+    menu = menu.entry(MenuItem::new(hide_profile_label).command(hide_profile_command));
 
     if browser.supports_profiles {
-        let app_id = browser.unique_app_id.clone();
-
         let hide_app_label = LocalizedString::new("hide-app")
             .with_arg("app-name", move |_, _| app_name.clone().into());
 
-        menu = menu.entry(MenuItem::new(hide_app_label).on_activate(
-            move |ctx, _data: &mut UIState, _env| {
-                let command = HIDE_ALL_PROFILES.with(app_id.clone());
-                ctx.submit_command(command);
-            },
-        ));
+        let app_id = browser.unique_app_id.clone();
+        let hide_all_profiles_command = HIDE_ALL_PROFILES.with(app_id.clone());
+
+        menu = menu.entry(MenuItem::new(hide_app_label).command(hide_all_profiles_command));
     }
 
     menu
