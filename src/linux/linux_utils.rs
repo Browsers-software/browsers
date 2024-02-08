@@ -1,21 +1,35 @@
 use std::fs;
+use std::fs::File;
+use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
-use tracing::{info, warn};
-
+use druid::image;
+use druid::image::ImageFormat;
+use freedesktop_desktop_entry::DesktopEntry;
+use freedesktop_icons;
 use glib::prelude::AppInfoExt;
 use glib::AppInfo;
 use gtk::prelude::*;
 use gtk::{gio, IconLookupFlags, IconTheme};
+use tracing::{info, warn};
 
 use crate::{InstalledBrowser, SupportedAppRepository};
 
 const XDG_NAME: &'static str = "software.Browsers";
 
+#[derive(Clone)]
+struct DesktopEntryHolder {
+    app_id: String,
+    display_name: String,
+    icon: Option<String>,
+
+    // uses %u or %U, see https://specifications.freedesktop.org/desktop-entry-spec/latest/ar01s07.html
+    exec: String,
+}
+
 pub struct OsHelper {
     app_repository: SupportedAppRepository,
-    icon_theme: Arc<Mutex<IconTheme>>,
 }
 
 unsafe impl Send for OsHelper {}
@@ -24,11 +38,9 @@ impl OsHelper {
     // must be initialized in main thread (because of gtk requirements)
     pub fn new() -> OsHelper {
         let _result = gtk::init().expect("Could not initialize gtk");
-        let icon_theme = gtk::IconTheme::default().unwrap();
         let app_repository = SupportedAppRepository::new();
         Self {
             app_repository: app_repository,
-            icon_theme: Arc::new(Mutex::new(icon_theme)),
             // unsandboxed_home_dir: unsandboxed_home_dir().unwrap(), probably needed if snap pkg
         }
     }
@@ -47,16 +59,19 @@ impl OsHelper {
         let icons_root_dir = cache_root_dir.join("icons");
         fs::create_dir_all(icons_root_dir.as_path()).unwrap();
 
-        let app_infos: Vec<(AppInfo, Vec<String>)> = schemes
+        let desktop_entry_holders: Vec<(DesktopEntryHolder, Vec<String>)> = schemes
             .iter()
             .map(|(scheme, domains)| {
-                (
-                    AppInfo::all_for_type(format!("x-scheme-handler/{scheme}").as_str()),
-                    domains,
-                )
+                let content_type = format!("x-scheme-handler/{scheme}").as_str();
+                let desktop_entry_holders =
+                    Self::freedesktop_find_all_desktop_entries(content_type);
+
+                //let desktop_entry_holders = Self::glib_find_all_desktop_entries(content_type);
+
+                (desktop_entry_holders, domains)
             })
-            .flat_map(|(app_infos, domains)| {
-                let app_info_and_domains: Vec<(AppInfo, Vec<String>)> = app_infos
+            .flat_map(|(desktop_entry_holders, domains)| {
+                let app_info_and_domains: Vec<(AppInfo, Vec<String>)> = desktop_entry_holders
                     .iter()
                     .map(|app_info| (app_info.clone(), domains.clone()))
                     .collect();
@@ -64,9 +79,9 @@ impl OsHelper {
             })
             .collect();
 
-        for (app_info, domains) in app_infos {
+        for (desktop_entry_holder, domains) in desktop_entry_holders {
             let browser_maybe =
-                self.to_installed_browser(app_info, icons_root_dir.as_path(), domains);
+                self.to_installed_browser(&desktop_entry_holder, icons_root_dir.as_path(), domains);
             if let Some(browser) = browser_maybe {
                 browsers.push(browser);
             }
@@ -75,19 +90,127 @@ impl OsHelper {
         return browsers;
     }
 
-    fn to_installed_browser(
-        &self,
-        app_info: AppInfo,
-        icons_root_dir: &Path,
-        restricted_domains: Vec<String>,
-    ) -> Option<InstalledBrowser> {
+    fn freedesktop_find_all_desktop_entries(content_type: &str) -> Vec<DesktopEntryHolder> {
+        let entry_holders: Vec<DesktopEntryHolder> =
+            freedesktop_desktop_entry::Iter::new(freedesktop_desktop_entry::default_paths())
+                .filter_map(|desktop_file_path| {
+                    if let Ok(bytes) = fs::read_to_string(&desktop_file_path) {
+                        if let Ok(entry) = DesktopEntry::decode(&desktop_file_path, &bytes) {
+                            if let Some(mime_type_str) = entry.mime_type() {
+                                // e.g "text/html;text/xml;application/xhtml+xml;application/vnd.mozilla.xul+xml;text/mml;x-scheme-handler/http;x-scheme-handler/https;"
+                                let mime_types: Vec<&str> = mime_type_str.split(";").collect();
+                                if mime_types.contains(&content_type) {
+                                    let desktop_entry_holder_maybe =
+                                        Self::freedesktop_desktop_entry_to_desktop_entry_holder(
+                                            &entry,
+                                        );
+                                    desktop_entry_holder_maybe
+                                }
+                            }
+                        }
+                    }
+                    None
+                })
+                .collect();
+
+        return entry_holders;
+    }
+
+    fn freedesktop_desktop_entry_to_desktop_entry_holder(
+        desktop_entry: &DesktopEntry,
+    ) -> Option<DesktopEntryHolder> {
+        let app_id = desktop_entry.id();
+
+        let name_maybe = desktop_entry.name(None);
+        if name_maybe.is_none() {
+            warn!("no name found for {}", app_id);
+            return None;
+        }
+        let display_name = name_maybe.unwrap().to_string();
+
+        let exec = match desktop_entry.exec() {
+            Some(b) => b,
+            None => {
+                return None;
+            }
+        };
+
+        let icon_maybe = desktop_entry.icon().map(|icon| icon.to_string());
+
+        return Some(DesktopEntryHolder {
+            app_id: app_id.to_string(),
+            display_name: display_name,
+            icon: icon_maybe,
+            exec: exec.to_string(),
+        });
+    }
+
+    fn glib_find_all_desktop_entries(content_type: &str) -> Vec<DesktopEntryHolder> {
+        let glib_app_infos = AppInfo::all_for_type(content_type);
+
+        /*let app_ids: Vec<String> = glib_app_infos.iter()
+        .filter_map(|app_info| app_info.id())
+        .map(|id_gstring| id_gstring.as_str().to_string())
+        .collect();*/
+
+        let desktop_entry_holders: Vec<DesktopEntryHolder> = glib_app_infos
+            .iter()
+            .map(|glib_app_info| Self::glib_app_info_to_desktop_entry_holder(glib_app_info))
+            .collect();
+
+        return desktop_entry_holders;
+    }
+
+    fn glib_app_info_to_desktop_entry_holder(app_info: &AppInfo) -> Option<DesktopEntryHolder> {
         let option = app_info.commandline();
         // uses %u or %U, see https://specifications.freedesktop.org/desktop-entry-spec/latest/ar01s07.html
         // need to use command(), because executable() is not fine, as snap apps just have "env" there
         let command_with_field_codes = option.unwrap();
         let command_str = command_with_field_codes.to_str().unwrap();
 
-        let command_parts: Vec<String> = shell_words::split(&command_str)
+        let name = app_info.name().to_string();
+        let id_maybe = app_info.id();
+        if id_maybe.is_none() {
+            warn!("no id found for {}", name);
+            return None;
+        }
+
+        let id_gstring = id_maybe.unwrap();
+        let id = id_gstring.as_str().to_string();
+        // "google-chrome-beta.desktop"
+        // "software.Browsers.desktop"
+
+        let icon_maybe = app_info
+            .icon()
+            .and_then(|gio_icon| gio_icon_to_string(&gio_icon));
+
+        let string1 = app_info.display_name();
+        let display_name = string1.as_str();
+        //let _string = app_info.to_string();
+        //println!("app_info: {}", id);
+
+        return Some(DesktopEntryHolder {
+            app_id: id,
+            display_name: display_name.to_string(),
+            icon: icon_maybe,
+            exec: command_str.to_string(),
+        });
+    }
+
+    fn to_installed_browser(
+        &self,
+        desktop_entry_holder: &DesktopEntryHolder,
+        icons_root_dir: &Path,
+        restricted_domains: Vec<String>,
+    ) -> Option<InstalledBrowser> {
+        let id = desktop_entry_holder.app_id.as_str();
+        if id == "software.Browsers.desktop" {
+            // this is us, skip
+            return None;
+        }
+
+        let command_str = desktop_entry_holder.exec.as_str();
+        let command_parts: Vec<String> = shell_words::split(command_str)
             .expect("failed to parse Exec value in the .desktop file");
 
         if command_parts.is_empty() {
@@ -122,39 +245,22 @@ impl OsHelper {
 
         // env BAMF_DESKTOP_FILE_HINT=/var/lib/snapd/desktop/applications/firefox_firefox.desktop
 
-        let name = app_info.name().to_string();
+        //let name = app_info.name().to_string();
         /*let icon_maybe = app_info.icon();
         let icon: Icon = icon_maybe.unwrap();*/
 
-        let id_maybe = app_info.id();
-        if id_maybe.is_none() {
-            println!("no id found for {}", name);
-            return None;
-        }
-
-        let id_gstring = id_maybe.unwrap();
-        let id = id_gstring.as_str().to_string();
-        // "google-chrome-beta.desktop"
-
-        if id == "software.Browsers.desktop" {
-            // this is us, skip
-            return None;
-        }
-
-        let supported_app = self
-            .app_repository
-            .get_or_generate(id.as_str(), &restricted_domains);
+        let supported_app = self.app_repository.get_or_generate(id, &restricted_domains);
 
         let icon_filename = id.to_string() + ".png";
         let full_stored_icon_path = icons_root_dir.join(icon_filename);
         let icon_path_str = full_stored_icon_path.display().to_string();
-        if let Some(icon) = app_info.icon() {
-            create_icon_for_app(&self.icon_theme, &icon, icon_path_str.as_str())
+
+        if let Some(icon_str) = desktop_entry_holder.icon.as_ref() {
+            create_icon_for_app(icon_str.as_str(), icon_path_str.as_str())
         }
 
-        let string1 = app_info.display_name();
-        let display_name = string1.as_str();
-        let _string = app_info.to_string();
+        let display_name = desktop_entry_holder.display_name.as_str();
+        //let _string = app_info.to_string();
         //println!("app_info: {}", id);
 
         // new firefox actually doesn't refer to the snap binary in the desktop file,
@@ -183,61 +289,83 @@ impl OsHelper {
     }
 }
 
-fn create_icon_for_app(
-    icon_theme: &Arc<Mutex<IconTheme>>,
-    icon: &impl IsA<gio::Icon>,
-    to_icon_path: &str,
-) {
+fn gio_icon_to_string(icon: &impl IsA<gio::Icon>) -> Option<String> {
     // icon.to_string() returns either file path or icon name in theme
-    // so not using that
     // https://lazka.github.io/pgi-docs/Gio-2.0/interfaces/Icon.html#Gio.Icon.to_string
-    //let icon_str = IconExt::to_string(&icon);
-    //let icon_gstr = icon_str.unwrap();
-    //let string2 = icon_gstr.to_string();
+    let icon_gstr_maybe = IconExt::to_string(&icon);
+    if icon_gstr_maybe.is_none() {
+        warn!("Could not get filename string representation from icon",);
+        return None;
+    }
+    let icon_gstr = icon_gstr_maybe.unwrap();
 
-    let icon_theme = Arc::clone(&icon_theme);
-    let icon_theme2 = icon_theme.lock().unwrap();
+    let icon_str = icon_gstr.to_string();
+    return Some(icon_str);
+}
 
-    let icon_info_option = icon_theme2.lookup_by_gicon(icon, 48, IconLookupFlags::USE_BUILTIN);
-    if icon_info_option.is_none() {
+fn create_icon_for_app(icon_str: &str, to_icon_path: &str) {
+    let icon_path_maybe = find_icon_path_from_desktop_icon_value(icon_str);
+    if icon_path_maybe.is_none() {
         warn!(
-            "Could not load icon from active icon theme (destination icon={})",
+            "Could not get icon path from icon (destination icon={})",
             to_icon_path
         );
         return;
     }
-    let icon_info = icon_info_option.unwrap();
-
-    // to support scaled resolutions
-    //let icon_info = icon_theme.lookup_by_gicon_for_scale(&icon, 128, 1,IconLookupFlags::USE_BUILTIN).unwrap();
-
-    // or load_icon() to get PixBuf
-    let original_icon_filepath_option = icon_info.filename();
-    if original_icon_filepath_option.is_none() {
+    let image_file_path = icon_path_maybe.unwrap();
+    let image_file_name_maybe = image_file_path
+        .file_name()
+        .map(|file_name| file_name.to_str().unwrap().to_string());
+    if image_file_name_maybe.is_none() {
+        warn!("File does not exist (destination icon={})", to_icon_path);
+        return;
+    }
+    let image_file_name = image_file_name_maybe.unwrap();
+    if !image_file_name.to_lowercase().ends_with(".png") {
         warn!(
-            "Could not get filename from icon (destination icon={})",
+            "Filename does not have .png extension: {} (destination icon={})",
+            image_file_name.as_str(),
             to_icon_path
         );
         return;
     }
-    let original_icon_filepath = original_icon_filepath_option.unwrap();
-    let original_icon_path_str = original_icon_filepath
-        .as_path()
-        .to_str()
-        .unwrap()
-        .to_string();
 
-    let icon_pixbuf_result = icon_info.load_icon();
-    if icon_pixbuf_result.is_err() {
+    let original_icon_path_str = image_file_path.as_path().to_str().unwrap().to_string();
+    if !image_file_path.exists() {
+        warn!(
+            "File does not exist: {} (destination icon={})",
+            original_icon_path_str, to_icon_path
+        );
         return;
     }
-    let pixbuf = icon_pixbuf_result.unwrap();
-    let result = pixbuf.savev(to_icon_path, "png", &[]);
-    if result.is_err() {
+
+    let result1 = image::open(image_file_path);
+    if result1.is_err() {
+        warn!(
+            "File could not be read {} (destination icon={})",
+            original_icon_path_str, to_icon_path
+        );
+        return;
+    }
+    let dynamic_image = result1.unwrap();
+
+    let result2 = dynamic_image.save_with_format(to_icon_path, ImageFormat::Png);
+    if result2.is_err() {
         return;
     }
 
     info!("icon: from {} to {}", original_icon_path_str, to_icon_path);
+}
+
+fn find_icon_path_from_desktop_icon_value(icon_str: &str) -> Option<PathBuf> {
+    // Icon in .desktop file is either:
+    return if icon_str.starts_with("/") {
+        // 1) absolute path to a file
+        Some(PathBuf::from(icon_str))
+    } else {
+        // 2) or name of icon in icon theme
+        freedesktop_icons::lookup(icon_str).with_size(48).find()
+    };
 }
 
 // $HOME/.config/software.Browsers
