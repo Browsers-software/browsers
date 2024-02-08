@@ -117,7 +117,12 @@ pub fn find_firefox_profiles(
         if let Some(profile_hash) = profile_hash_maybe {
             // if this profile has some other hash than current firefox, then skip the profile
             if profile_hash.to_string() != install_dir_hash {
-                continue;
+                // `install_dir_hash`, that we calculate based on binary path,
+                // is not always correct, e.g in case of snap package in linux,
+                // so, let's not use it yet to exclude profiles.
+                // Users can always manually hide these profiles instead.
+                // TODO: https://github.com/Browsers-software/barowsers/issues/81
+                //continue;
             }
         }
 
@@ -254,7 +259,8 @@ fn containers_json_map(containers_json_file_path: &Path) -> Vec<FirefoxContainer
 }
 
 struct FirefoxContainer {
-    id: String, // aka cookie store id in Firefox
+    id: String,
+    // aka cookie store id in Firefox
     name: String,
 }
 
