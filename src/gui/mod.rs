@@ -6,4 +6,7 @@ pub mod settings_window;
 pub mod ui;
 pub mod ui_util;
 
+#[cfg(target_os = "linux")]
+pub mod linux_ui;
+
 pub mod shared;

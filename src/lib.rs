@@ -1,9 +1,9 @@
 use std::borrow::Borrow;
 use std::fmt::Debug;
-use std::process::{exit, Command};
+use std::process::{Command, exit};
 use std::str::FromStr;
-use std::sync::mpsc::{Receiver, Sender};
 use std::sync::Arc;
+use std::sync::mpsc::{Receiver, Sender};
 use std::thread;
 
 use druid::{ExtEventSink, Target, UrlOpenInfo};
@@ -15,7 +15,7 @@ use gui::ui;
 
 use crate::browser_repository::{SupportedApp, SupportedAppRepository};
 use crate::gui::ui::{UIProfileAndIncognito, UISettingsRule};
-use crate::gui::ui::{UIVisualSettings, UI};
+use crate::gui::ui::{UI, UIVisualSettings};
 use crate::url_rule::UrlGlobMatcher;
 use crate::utils::{Config, ConfigRule, OSAppFinder, ProfileAndOptions, UIConfig};
 
@@ -405,6 +405,7 @@ fn get_opening_rules(config: &Config) -> (Vec<OpeningRule>, Option<ProfileAndOpt
 
     return (opening_rules, default_profile.clone());
 }
+
 #[instrument(skip_all)]
 fn generate_all_browser_profiles(
     app_finder: &OSAppFinder,
@@ -619,6 +620,11 @@ pub fn basically_main(
         UI::config_to_ui_settings(&config),
     );
     let initial_ui_state = ui2.create_initial_ui_state();
+
+    // must be initialized in main thread (because of gtk requirements)
+    #[cfg(target_os = "linux")]
+    gui::linux_ui::init_gtk();
+
     let launcher = ui2.create_app_launcher();
     let ui_event_sink = launcher.get_external_handle();
 
@@ -976,7 +982,8 @@ pub enum MoveTo {
 pub enum MessageToMain {
     Refresh,
     OpenLink(usize, bool, String),
-    UrlOpenRequest(String, String), // almost as LinkOpenedFromBundle, but triggers gui, not from gui
+    // UrlOpenRequest is almost like LinkOpenedFromBundle, but triggers gui, not from gui
+    UrlOpenRequest(String, String),
     LinkOpenedFromBundle(String, String),
     SetBrowsersAsDefaultBrowser,
     HideAppProfile(String),
