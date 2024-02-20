@@ -11,6 +11,7 @@ use druid::{
 };
 use druid::{Application, Code, Modifiers, Monitor, WindowHandle};
 use tracing::{debug, info, instrument};
+use tracing_subscriber::fmt::format;
 use url::Url;
 
 use crate::gui::main_window::{
@@ -149,13 +150,13 @@ impl UI {
     }
 
     #[instrument(skip_all)]
-    pub fn create_app_launcher(self) -> AppLauncher<UIState> {
+    pub fn create_app_launcher(&self) -> AppLauncher<UIState> {
         let basedir = self.localizations_basedir.to_str().unwrap().to_string();
         let (mouse_position, monitor) = druid::Screen::get_mouse_position();
 
-        let main_window1 =
-            main_window::MainWindow::new(self.filtered_browsers.clone(), self.show_set_as_default);
-        let main_window = main_window1.create_main_window(&mouse_position, &monitor);
+        let browser_count = (&self.filtered_browsers).len();
+        let main_window1 = main_window::MainWindow::new();
+        let main_window = main_window1.create_main_window(browser_count, &mouse_position, &monitor);
 
         let main_window_id = main_window.id.clone();
         return AppLauncher::with_window(main_window)
@@ -179,10 +180,20 @@ impl UI {
             browsers: self.ui_browsers.clone(),
             filtered_browsers: self.filtered_browsers.clone(),
             restorable_app_profiles: self.restorable_app_profiles.clone(),
+            show_set_as_default: self.show_set_as_default,
             ui_settings: self.ui_settings.clone(),
             has_non_main_window_open: false,
         };
         return initial_ui_state;
+    }
+
+    pub fn print_visible_options(&self) {
+        println!("BROWSERS");
+        println!();
+
+        for ui_browser in self.filtered_browsers.iter() {
+            println!("{}", ui_browser.get_full_name())
+        }
     }
 }
 
@@ -198,6 +209,8 @@ pub struct UIState {
     // same as browsers, but filtered view - only the ones matching current url
     filtered_browsers: Arc<Vec<UIBrowser>>,
     pub(crate) restorable_app_profiles: Arc<Vec<UIBrowser>>,
+
+    pub(crate) show_set_as_default: bool,
 
     pub ui_settings: UISettings,
 
@@ -286,8 +299,11 @@ pub struct UISettingsRule {
     // soft-deleting to avoid complex druid issues when reducing array length
     pub deleted: bool,
 
-    pub source_app: String,  // Optional in datamodel
-    pub url_pattern: String, // Optional in datamodel
+    // Optional in datamodel
+    pub source_app: String,
+
+    // Optional in datamodel
+    pub url_pattern: String,
 
     pub opener: Option<UIProfileAndIncognito>,
 }
@@ -343,13 +359,15 @@ impl UIBrowser {
 
     /// Returns app name + optionally profile name if app supports multiple profiles
     pub fn get_full_name(&self) -> String {
-        let mut full_name = self.browser_name.to_string();
-
-        if self.supports_profiles {
-            full_name = full_name + " " + self.profile_name.as_str()
-        }
-
-        return full_name;
+        return if self.supports_profiles {
+            format!(
+                "{} {}",
+                self.browser_name.to_string(),
+                self.profile_name.as_str()
+            )
+        } else {
+            self.browser_name.to_string()
+        };
     }
 }
 

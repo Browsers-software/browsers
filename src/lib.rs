@@ -623,7 +623,9 @@ pub fn basically_main(
 
     // must be initialized in main thread (because of gtk requirements)
     #[cfg(target_os = "linux")]
-    gui::linux_ui::init_gtk();
+    if show_gui {
+        gui::linux_ui::init_gtk();
+    }
 
     let launcher = ui2.create_app_launcher();
     let ui_event_sink = launcher.get_external_handle();
@@ -874,6 +876,8 @@ pub fn basically_main(
 
     if show_gui {
         launcher.launch(initial_ui_state).expect("error");
+    } else {
+        ui2.print_visible_options();
     }
 }
 

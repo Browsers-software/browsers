@@ -65,21 +65,16 @@ impl FocusData for ((bool, UISettings), UIBrowser) {
     }
 }
 
-pub struct MainWindow {
-    filtered_browsers: Arc<Vec<UIBrowser>>,
-    show_set_as_default: bool,
-}
+pub struct MainWindow {}
 
 impl MainWindow {
-    pub fn new(filtered_browsers: Arc<Vec<UIBrowser>>, show_set_as_default: bool) -> Self {
-        Self {
-            filtered_browsers: filtered_browsers,
-            show_set_as_default: show_set_as_default,
-        }
+    pub fn new() -> Self {
+        Self {}
     }
 
     pub fn create_main_window(
         self,
+        browser_count: usize,
         mouse_position: &Point,
         monitor: &Monitor,
     ) -> WindowDesc<UIState> {
@@ -89,7 +84,6 @@ impl MainWindow {
             // add some spacing around screen
             .inflate(-5f64, -5f64);
 
-        let browser_count = (&self.filtered_browsers).len();
         let window_size = recalculate_window_size(browser_count);
         let window_position =
             calculate_window_position(&mouse_position, &screen_rect, &window_size);
@@ -155,8 +149,6 @@ impl MainWindow {
             .fix_width(OPTIONS_LABEL_SIZE)
             .fix_height(OPTIONS_LABEL_SIZE);
 
-        let show_set_as_default = self.show_set_as_default;
-
         let options_button = FocusWidget::new(
             options_label,
             |ctx, _data: &UIState, _env| {
@@ -184,7 +176,7 @@ impl MainWindow {
             );
 
             ctx.show_context_menu(
-                make_options_menu(show_set_as_default, data.restorable_app_profiles.clone()),
+                make_options_menu(data.show_set_as_default, data.restorable_app_profiles.clone()),
                 position,
             );
         })
