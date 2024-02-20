@@ -102,12 +102,12 @@ jobs:
           set -x
           ./install.sh
         shell: bash
-      #- name: End-to-end test - run Browsers
-      #  run: |
-      #    install_dir="$HOME/.local/bin"
-      #    cd "$install_dir"
-      #    ./browsers --no-gui https://browsers.software
-      #  shell: bash
+      - name: End-to-end test - run Browsers
+        run: |
+          install_dir="$HOME/.local/bin"
+          cd "$install_dir"
+          ./browsers --no-gui https://browsers.software
+        shell: bash
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
