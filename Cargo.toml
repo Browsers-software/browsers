@@ -84,9 +84,6 @@ freedesktop-desktop-entry = "0.5.0"
 # to find icon theme and icon;
 freedesktop-icons = "0.2.5"
 
-# to find icon theme and icon; (should be same version of gtk as druid is using)
-gtk = { version = "0.16.2" }
-
 # Helps parsing commands that are in Exec field in .desktop files
 shell-words = "1.1.0"
 
