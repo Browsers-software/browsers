@@ -5,7 +5,7 @@ kind = "CHROMIUM"
 os = "MAC"
 
 [[apps]]
-id = "google-chrome.desktop"
+id = "google-chrome"
 config_dir_relative = "google-chrome"
 kind = "CHROMIUM"
 os = "LINUX"
@@ -23,7 +23,7 @@ kind = "CHROMIUM"
 os = "MAC"
 
 [[apps]]
-id = "google-chrome-beta.desktop"
+id = "google-chrome-beta"
 config_dir_relative = "google-chrome-beta"
 kind = "CHROMIUM"
 os = "LINUX"
@@ -35,7 +35,7 @@ kind = "CHROMIUM"
 os = "MAC"
 
 [[apps]]
-id = "google-chrome-dev.desktop"
+id = "google-chrome-dev"
 config_dir_relative = "google-chrome-dev"
 kind = "CHROMIUM"
 os = "LINUX"
@@ -47,7 +47,7 @@ kind = "CHROMIUM"
 os = "MAC"
 
 [[apps]]
-id = "google-chrome-canary.desktop"
+id = "google-chrome-canary"
 config_dir_relative = "google-chrome-canary"
 kind = "CHROMIUM"
 os = "LINUX"
@@ -59,21 +59,21 @@ kind = "CHROMIUM"
 os = "MAC"
 
 [[apps]]
-id = "chromium.desktop"
+id = "chromium"
 config_dir_relative = "google-chrome-canary"
 snap_dir = "chromium"
 kind = "CHROMIUM"
 os = "LINUX"
 
 [[apps]]
-id = "chromium_chromium.desktop"
+id = "chromium_chromium"
 config_dir_relative = "google-chrome-canary"
 snap_dir = "chromium"
 kind = "CHROMIUM"
 os = "LINUX"
 
 [[apps]]
-id = "chromium-browser.desktop"
+id = "chromium-browser"
 config_dir_relative = "google-chrome-canary"
 snap_dir = "chromium"
 kind = "CHROMIUM"
@@ -152,7 +152,7 @@ kind = "CHROMIUM"
 os = "WINDOWS"
 
 [[apps]]
-id = "microsoft-edge-dev.desktop"
+id = "microsoft-edge-dev"
 config_dir_relative = "microsoft-edge-dev"
 kind = "CHROMIUM"
 os = "LINUX"
@@ -176,7 +176,7 @@ kind = "CHROMIUM"
 os = "MAC"
 
 [[apps]]
-id = "brave-browser.desktop"
+id = "brave-browser"
 config_dir_relative = "BraveSoftware/Brave-Browser"
 snap_dir = "brave"
 kind = "CHROMIUM"
@@ -207,7 +207,7 @@ kind = "CHROMIUM"
 os = "MAC"
 
 [[apps]]
-id = "vivaldi-stable.desktop"
+id = "vivaldi-stable"
 config_dir_relative = "vivaldi"
 kind = "CHROMIUM"
 os = "MAC"
@@ -237,21 +237,21 @@ kind = "FIREFOX"
 os = "MAC"
 
 [[apps]]
-id = "firefox.desktop"
+id = "firefox"
 config_dir_relative = ".mozilla/firefox"
 snap_dir = "firefox"
 kind = "FIREFOX"
 os = "LINUX"
 
 [[apps]]
-id = "firefox_firefox.desktop"
+id = "firefox_firefox"
 config_dir_relative = ".mozilla/firefox"
 snap_dir = "firefox"
 kind = "FIREFOX"
 os = "LINUX"
 
 [[apps]]
-id = "firefox-esr.desktop"
+id = "firefox-esr"
 config_dir_relative = ".mozilla/firefox"
 snap_dir = "firefox"
 kind = "FIREFOX"
@@ -322,7 +322,7 @@ kind = "SLACK"
 os = "MAC"
 
 [[apps]]
-id = "slack.desktop"
+id = "slack"
 config_dir_relative = "Slack"
 snap_dir = "slack"
 kind = "SLACK"
@@ -340,7 +340,7 @@ kind = "SPOTIFY"
 os = "MAC"
 
 [[apps]]
-id = "spotify_spotify.desktop"
+id = "spotify_spotify"
 kind = "SPOTIFY"
 os = "LINUX"
 
@@ -355,12 +355,12 @@ kind = "TELEGRAM"
 os = "MAC"
 
 [[apps]]
-id = "telegram-desktop_telegram-desktop.desktop"
+id = "telegram-desktop_telegram-desktop"
 kind = "TELEGRAM"
 os = "LINUX"
 
 [[apps]]
-id = "com.workflowy.desktop"
+id = "com.workflowy"
 kind = "WORKFLOWY"
 os = "MAC"
 
@@ -375,7 +375,7 @@ kind = "ZOOM"
 os = "MAC"
 
 [[apps]]
-id = "Zoom.desktop"
+id = "Zoom"
 kind = "ZOOM"
 os = "LINUX"
 

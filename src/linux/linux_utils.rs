@@ -153,7 +153,7 @@ impl OsHelper {
         restricted_domains: Vec<String>,
     ) -> Option<InstalledBrowser> {
         let id = desktop_entry_holder.app_id.as_str();
-        if id == "software.Browsers.desktop" {
+        if id == "software.Browsers" {
             // this is us, skip
             return None;
         }
