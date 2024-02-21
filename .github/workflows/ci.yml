@@ -5,6 +5,8 @@ jobs:
   build-linux:
     environment: PROD_2028
     runs-on: ubuntu-latest
+    env:
+      CROSS_NO_WARNINGS: 0
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
