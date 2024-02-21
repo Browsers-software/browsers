@@ -120,9 +120,14 @@ impl OsHelper {
         scheme: &str,
         root: RegKey,
     ) -> Vec<AppInfoHolder> {
-        let start_menu_internet = root
-            .open_subkey("SOFTWARE\\Clients\\StartMenuInternet")
-            .unwrap();
+        let start_menu_internet_result = root
+            .open_subkey("SOFTWARE\\Clients\\StartMenuInternet");
+
+        if start_menu_internet_result.is_err() {
+            return vec![];
+        }
+
+        let start_menu_internet = start_menu_internet_result.unwrap();
         let bundle_ids = start_menu_internet.enum_keys();
 
         let apps: Vec<AppInfoHolder> = bundle_ids
