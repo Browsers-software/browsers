@@ -279,7 +279,7 @@ jobs:
       - name: End-to-end test - run Browsers
         run: |
           set
-          install_dir="$ProgramFiles/software.Browsers"
+          install_dir="$PROGRAMFILES/software.Browsers"
           cd "$install_dir"
           ./browsers.exe --no-gui https://browsers.software
         shell: bash
