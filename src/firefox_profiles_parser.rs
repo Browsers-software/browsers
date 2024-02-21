@@ -162,6 +162,10 @@ pub fn find_firefox_profiles(
             );
             } else {
                 // containers for this profile
+                info!(
+                    "Checking containers from {}",
+                    containers_json_file.as_path().to_str().unwrap()
+                );
                 containers = containers_json_map(containers_json_file.as_path());
             }
         }
@@ -235,8 +239,8 @@ fn containers_json_map(containers_json_file_path: &Path) -> Vec<FirefoxContainer
     for identity in identities_arr {
         let is_public = identity["public"].as_bool().unwrap();
         if is_public {
-            let l10n_id_maybe = identity["l10nID"].as_str();
-            let name = if let Some(l10n_id) = l10n_id_maybe {
+            let name = if let Some(l10n_id) = identity["l10nID"].as_str() {
+                // old ones
                 match l10n_id {
                     "userContextPersonal.label" => "Personal",
                     "userContextWork.label" => "Work",
@@ -244,8 +248,18 @@ fn containers_json_map(containers_json_file_path: &Path) -> Vec<FirefoxContainer
                     "userContextShopping.label" => "Shopping",
                     _ => "Unknown",
                 }
+            } else if let Some(l10n_id) = identity["l10nId"].as_str() {
+                // new ones
+                // https://github.com/mozilla/gecko-dev/commit/94b1ab321c1d5c4552716a7f3e7446f0bee28db9
+                match l10n_id {
+                    "user-context-personal" => "Personal",
+                    "user-context-work" => "Work",
+                    "user-context-banking" => "Banking",
+                    "user-context-shopping" => "Shopping",
+                    _ => "Unknown",
+                }
             } else {
-                identity["name"].as_str().unwrap()
+                identity["name"].as_str().unwrap_or("Unknown")
             };
 
             let container = FirefoxContainer {
