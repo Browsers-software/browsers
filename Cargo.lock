@@ -204,7 +204,6 @@ dependencies = [
  "freedesktop-icons",
  "gio",
  "globset",
- "gtk",
  "interprocess",
  "lazy_static",
  "libc",
