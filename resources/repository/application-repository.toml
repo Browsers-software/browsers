@@ -60,21 +60,21 @@ os = "MAC"
 
 [[apps]]
 id = "chromium"
-config_dir_relative = "google-chrome-canary"
+config_dir_relative = "chromium"
 snap_dir = "chromium"
 kind = "CHROMIUM"
 os = "LINUX"
 
 [[apps]]
 id = "chromium_chromium"
-config_dir_relative = "google-chrome-canary"
+config_dir_relative = "chromium"
 snap_dir = "chromium"
 kind = "CHROMIUM"
 os = "LINUX"
 
 [[apps]]
 id = "chromium-browser"
-config_dir_relative = "google-chrome-canary"
+config_dir_relative = "chromium"
 snap_dir = "chromium"
 kind = "CHROMIUM"
 os = "LINUX"
