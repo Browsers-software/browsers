@@ -11,7 +11,8 @@ use url::Url;
 use crate::url_rule::UrlGlobMatcher;
 use crate::{
     chromium_profiles_parser, firefox_profiles_parser, paths, slack_profiles_parser,
-    slack_url_parser, url_rule, CommonBrowserProfile, InstalledBrowserProfile,
+    slack_url_parser, url_rule, CommonBrowserProfile, InstalledAppProfiles,
+    InstalledBrowserProfile,
 };
 
 // Holds list of custom SupportedApp configurations
@@ -52,8 +53,10 @@ struct AppConfigRepository {
 #[derive(Deserialize, Debug, Clone)]
 #[serde(default)]
 struct AppConfig {
-    os: AppOS,     // linux, etc
-    kind: AppKind, // chromium, etc
+    // linux, etc
+    os: AppOS,
+    // chromium, etc
+    kind: AppKind,
     id: String,
     config_dir_relative: String,
     snap_id: Option<String>,
@@ -660,30 +663,20 @@ impl SupportedApp {
         &self,
         binary_path: &Path,
         app_config_dir_abs: &Path,
-    ) -> Vec<InstalledBrowserProfile> {
+    ) -> InstalledAppProfiles {
         return if let Some(find_profiles_fn) = self.find_profiles_fn {
             let mut browser_profiles: Vec<InstalledBrowserProfile> =
                 find_profiles_fn(app_config_dir_abs, binary_path, self.get_app_id());
 
             browser_profiles.sort_by_key(|p| p.profile_name.clone());
-            browser_profiles
+            if browser_profiles.is_empty() {
+                InstalledAppProfiles::new_placeholder()
+            } else {
+                InstalledAppProfiles::new_real(browser_profiles)
+            }
         } else {
-            Self::find_placeholder_profiles()
+            InstalledAppProfiles::new_placeholder()
         };
-    }
-
-    fn find_placeholder_profiles() -> Vec<InstalledBrowserProfile> {
-        let mut browser_profiles: Vec<InstalledBrowserProfile> = Vec::new();
-
-        browser_profiles.push(InstalledBrowserProfile {
-            profile_cli_arg_value: "".to_string(),
-            profile_cli_container_name: None,
-            profile_name: "".to_string(),
-            profile_icon: None,
-            profile_restricted_url_patterns: vec![],
-        });
-
-        return browser_profiles;
     }
 
     pub fn supports_profiles(&self) -> bool {

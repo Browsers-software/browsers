@@ -1,9 +1,9 @@
 use std::borrow::Borrow;
 use std::fmt::Debug;
-use std::process::{Command, exit};
+use std::process::{exit, Command};
 use std::str::FromStr;
-use std::sync::Arc;
 use std::sync::mpsc::{Receiver, Sender};
+use std::sync::Arc;
 use std::thread;
 
 use druid::{ExtEventSink, Target, UrlOpenInfo};
@@ -15,7 +15,7 @@ use gui::ui;
 
 use crate::browser_repository::{SupportedApp, SupportedAppRepository};
 use crate::gui::ui::{UIProfileAndIncognito, UISettingsRule};
-use crate::gui::ui::{UI, UIVisualSettings};
+use crate::gui::ui::{UIVisualSettings, UI};
 use crate::url_rule::UrlGlobMatcher;
 use crate::utils::{Config, ConfigRule, OSAppFinder, ProfileAndOptions, UIConfig};
 
@@ -61,11 +61,12 @@ impl GenericApp {
             executable_path: installed_browser.executable_path.to_string(),
             display_name: installed_browser.display_name.to_string(),
             icon_path: installed_browser.icon_path.to_string(),
+            profiles_type: installed_browser.profiles.profiles_type.clone(),
         };
 
         let arc = Arc::new(app.clone());
         let mut profiles: Vec<CommonBrowserProfile> = Vec::new();
-        for installed_profile in &installed_browser.profiles {
+        for installed_profile in &installed_browser.profiles.profiles {
             profiles.push(CommonBrowserProfile::new(&installed_profile, arc.clone()));
         }
 
@@ -87,6 +88,7 @@ pub struct BrowserCommon {
     display_name: String,
     icon_path: String,
     supported_app: SupportedApp,
+    profiles_type: InstalledAppProfilesType,
 }
 
 impl BrowserCommon {
@@ -354,10 +356,52 @@ pub struct InstalledBrowser {
 
     icon_path: String,
 
-    profiles: Vec<InstalledBrowserProfile>,
+    profiles: InstalledAppProfiles,
 
     #[serde(default)]
     restricted_domains: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct InstalledAppProfiles {
+    pub(crate) profiles_type: InstalledAppProfilesType,
+    pub(crate) profiles: Vec<InstalledBrowserProfile>,
+}
+
+impl InstalledAppProfiles {
+    pub fn new_real(profiles: Vec<InstalledBrowserProfile>) -> InstalledAppProfiles {
+        Self {
+            profiles_type: InstalledAppProfilesType::RealProfiles,
+            profiles,
+        }
+    }
+
+    pub fn new_placeholder() -> InstalledAppProfiles {
+        Self {
+            profiles_type: InstalledAppProfilesType::PlaceholderProfiles,
+            profiles: Self::find_placeholder_profiles(),
+        }
+    }
+
+    fn find_placeholder_profiles() -> Vec<InstalledBrowserProfile> {
+        let mut browser_profiles: Vec<InstalledBrowserProfile> = Vec::new();
+
+        browser_profiles.push(InstalledBrowserProfile {
+            profile_cli_arg_value: "".to_string(),
+            profile_cli_container_name: None,
+            profile_name: "".to_string(),
+            profile_icon: None,
+            profile_restricted_url_patterns: vec![],
+        });
+
+        return browser_profiles;
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+enum InstalledAppProfilesType {
+    RealProfiles,
+    PlaceholderProfiles,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
