@@ -97,8 +97,8 @@ impl BrowserCommon {
         return self.executable_path.to_string();
     }
 
-    fn supports_profiles(&self) -> bool {
-        return self.supported_app.supports_profiles();
+    fn has_real_profiles(&self) -> bool {
+        self.profiles_type == InstalledAppProfilesType::RealProfiles
     }
 
     fn supports_incognito(&self) -> bool {
@@ -398,7 +398,7 @@ impl InstalledAppProfiles {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 enum InstalledAppProfilesType {
     RealProfiles,
     PlaceholderProfiles,

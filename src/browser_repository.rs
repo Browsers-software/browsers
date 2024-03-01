@@ -679,10 +679,6 @@ impl SupportedApp {
         };
     }
 
-    pub fn supports_profiles(&self) -> bool {
-        return self.find_profiles_fn.is_some();
-    }
-
     pub fn get_profile_args(&self, profile_cli_arg_value: &str) -> Vec<String> {
         return (self.profile_args_fn)(profile_cli_arg_value);
     }
