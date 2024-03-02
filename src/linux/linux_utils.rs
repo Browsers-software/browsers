@@ -1,3 +1,4 @@
+use std::collections::{BTreeMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -80,13 +81,27 @@ impl OsHelper {
     }
 
     fn freedesktop_find_all_desktop_entries(content_type: &str) -> Vec<DesktopEntryHolder> {
-        let all_search_paths = default_paths();
+        let mut all_search_paths = default_paths();
 
-        return Iter::new(all_search_paths)
+        // remove duplicate entries (e.g XDG_DATA_DIRS sometimes has every path twice)
+        let set: HashSet<_> = all_search_paths.drain(..).collect();
+        all_search_paths.extend(set.into_iter());
+
+        // collect all .desktop file paths and map them by file name to remove duplicate files,
+        // even if they exist in different directories
+        let mut desktop_file_paths_by_filename: BTreeMap<_, _> = Iter::new(all_search_paths)
+            .map(|file_path| (file_path.file_name(), file_path))
+            .collect();
+
+        let cleaned_desktop_file_paths = desktop_file_paths_by_filename.into_values().collect();
+
+        let vec = Iter::new(cleaned_desktop_file_paths)
             .filter_map(|desktop_file_path| {
                 Self::read_desktop_entry_matching(&desktop_file_path.as_path(), content_type)
             })
             .collect();
+
+        return vec;
     }
 
     fn read_desktop_entry_matching(

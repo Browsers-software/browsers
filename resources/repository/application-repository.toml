@@ -210,7 +210,7 @@ os = "MAC"
 id = "vivaldi-stable"
 config_dir_relative = "vivaldi"
 kind = "CHROMIUM"
-os = "MAC"
+os = "LINUX"
 
 [[apps]]
 id = "com.vivaldi.Vivaldi.snapshot"
@@ -360,7 +360,7 @@ kind = "TELEGRAM"
 os = "LINUX"
 
 [[apps]]
-id = "com.workflowy"
+id = "com.workflowy.desktop"
 kind = "WORKFLOWY"
 os = "MAC"
 
