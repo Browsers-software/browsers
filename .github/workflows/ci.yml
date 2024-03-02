@@ -202,7 +202,7 @@ jobs:
           target_dir='target/universal-apple-darwin/release'
           cd "$target_dir"
           set -x
-          open ./Browsers.app -u https://browsers.software --stdout /tmp/my-stdout --args --no-gui && cat /tmp/my-stdout
+          open ./Browsers.app --stdout /tmp/my-stdout --stderr /tmp/my-stderr --args --no-gui https://browsers.software && cat /tmp/my-stdout && cat /tmp/my-stderr
         shell: bash
       - name: Upload mac artifacts
         uses: actions/upload-artifact@v4
