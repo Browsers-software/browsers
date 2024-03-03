@@ -81,7 +81,7 @@ pub fn create_icon_for_app(full_path: id, icon_path: &str) {
 }
 
 // returns nsstring
-pub fn get_bundle_url(bundle_id: &str) -> id {
+pub fn get_bundle_url(bundle_id: &str) -> Option<id> {
     debug!("Getting url for bundle: {}", bundle_id);
 
     let bundle_id_nsstring = make_nsstring(bundle_id);
@@ -92,19 +92,20 @@ pub fn get_bundle_url(bundle_id: &str) -> id {
 
         //let _: () = msg_send![obj, setArg1:1 arg2:2];
 
+        // The URL of the app, or nil if no app has the bundle identifier.
         let url: id = msg_send![
             shared,
             URLForApplicationWithBundleIdentifier: bundle_id_nsstring
         ];
 
-        // fileSystemRepresentation is commented out :S
-        let url_str = url.path();
-        let path = from_nsstring(url_str);
-        debug!("App path: {}", path);
-
-        return url_str;
-
-        //let url_string = from_nsstring(url_str);
+        if url == nil {
+            None
+        } else {
+            // fileSystemRepresentation is commented out :S
+            let url_str = url.path();
+            let path = from_nsstring(url_str);
+            Some(url_str)
+        }
     }
 }
 
@@ -278,6 +279,7 @@ fn has_sandbox_entitlement2(bundle_url: id) -> bool {
     </plist>
      */
 }
+
 fn get_app_name(bundle_path: id) -> String {
     let bundle = get_bundle(bundle_path);
     //bundleWithURL
@@ -391,7 +393,11 @@ impl OsHelper {
         let icon_filename = bundle_id.to_string() + ".png";
         let full_stored_icon_path = icons_root_dir.join(icon_filename);
 
-        let bundle_url = get_bundle_url(bundle_id);
+        let bundle_url_maybe = get_bundle_url(bundle_id);
+        if bundle_url_maybe.is_none() {
+            return None;
+        }
+        let bundle_url = bundle_url_maybe.unwrap();
 
         let bundle_path = from_nsstring(bundle_url);
         let display_name = get_app_name(bundle_url);
@@ -428,14 +434,32 @@ impl OsHelper {
 
 // e.g /Applications/Browsers.app/
 pub fn get_this_app_bundle_dir() -> PathBuf {
-    get_bundle_path(APP_BUNDLE_ID)
+    get_bundle_path(APP_BUNDLE_ID).unwrap_or_else(|| get_this_app_bundle_dir_fallback())
+}
+
+fn get_this_app_bundle_dir_fallback() -> PathBuf {
+    // .../Browsers.app/Contents/MacOS/browsers
+    let binary_file_path =
+        fs::canonicalize(std::env::current_exe().expect("Can't find current executable"))
+            .expect("Can't canonicalize current executable path");
+
+    // .../Browsers.app/Contents/MacOS/
+    let binary_dir_path = binary_file_path.parent().unwrap();
+
+    // .../Browsers.app/Contents/
+    let contents_dir_path = binary_dir_path.parent().unwrap();
+
+    // .../Browsers.app/
+    let bundle_dir_path = contents_dir_path.parent().unwrap();
+
+    return bundle_dir_path.to_path_buf();
 }
 
 // e.g /Applications/<bundle>/
-fn get_bundle_path(bundle_id: &str) -> PathBuf {
-    let bundle_url = get_bundle_url(bundle_id);
-    let bundle_path = from_nsstring(bundle_url);
-    return PathBuf::from(bundle_path.as_str());
+fn get_bundle_path(bundle_id: &str) -> Option<PathBuf> {
+    return get_bundle_url(bundle_id)
+        .map(|bundle_url| from_nsstring(bundle_url))
+        .map(|bundle_path| PathBuf::from(bundle_path.as_str()));
 }
 
 // ~/Library/Caches/software.Browsers/runtime/
