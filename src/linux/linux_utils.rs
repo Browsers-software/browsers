@@ -89,17 +89,20 @@ impl OsHelper {
 
         // collect all .desktop file paths and map them by file name to remove duplicate files,
         // even if they exist in different directories
-        let mut desktop_file_paths_by_filename: BTreeMap<_, _> = Iter::new(all_search_paths)
-            .map(|file_path| {
-                let option1 = file_path.file_name();
-                let option = option1.map(|a| a.to_owned());
-                (option, file_path)
+        let mut desktop_file_paths_by_filename: BTreeMap<_, PathBuf> = Iter::new(all_search_paths)
+            .filter_map(|file_path| {
+                file_path
+                    .file_name()
+                    .map(|a| a.to_owned())
+                    .map(|file_name| (file_name, file_path))
             })
             .collect();
 
-        let cleaned_desktop_file_paths = desktop_file_paths_by_filename.into_values().collect();
+        let cleaned_desktop_file_paths: Vec<PathBuf> =
+            desktop_file_paths_by_filename.into_values().collect();
 
-        let vec = Iter::new(cleaned_desktop_file_paths)
+        let vec = cleaned_desktop_file_paths
+            .iter()
             .filter_map(|desktop_file_path| {
                 Self::read_desktop_entry_matching(&desktop_file_path.as_path(), content_type)
             })
