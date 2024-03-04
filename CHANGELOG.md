@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.4]
+
+### Fixed
+- Linux: fix detecting Chromium and Vivaldi
+- macOS: Fix detecting Workflowy
+
+### Changed
+- Linux - use alternative freedesktop implementation to find installed applications and icons
+- If browsers which support profiles don't have valid profiles, still show the browser itself. **Requires Refresh**
+
 ## [0.5.3] - 2024-02-21
 
 ### Fixed
@@ -247,7 +257,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial Release
 
-[unreleased]: https://github.com/Browsers-software/browsers/compare/0.5.3...HEAD
+[unreleased]: https://github.com/Browsers-software/browsers/compare/0.5.4...HEAD
+[0.5.4]: https://github.com/Browsers-software/browsers/releases/tag/0.5.4
 [0.5.3]: https://github.com/Browsers-software/browsers/releases/tag/0.5.3
 [0.5.2]: https://github.com/Browsers-software/browsers/releases/tag/0.5.2
 [0.5.1]: https://github.com/Browsers-software/browsers/releases/tag/0.5.1
