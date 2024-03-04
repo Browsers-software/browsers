@@ -82,7 +82,7 @@ glib = { version = "0.16.6", package = "gio" }
 freedesktop-desktop-entry = "0.5.0"
 
 # to find icon theme and icon;
-freedesktop-icons = "0.2.5"
+freedesktop-icons = "0.2.6"
 
 # Helps parsing commands that are in Exec field in .desktop files
 shell-words = "1.1.0"
