@@ -317,7 +317,7 @@ jobs:
           [ -e "browsers-windows-artifacts" ]
         shell: bash
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           body_path: ${{ github.workspace }}-RELEASE_NOTES.md
