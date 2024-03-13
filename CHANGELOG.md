@@ -5,24 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.4]
+## [0.5.4] - 2024-03-13
 
 ### Fixed
+
 - Linux: fix detecting Chromium and Vivaldi
 - macOS: Fix detecting Workflowy
 
 ### Changed
+
 - Linux - use alternative freedesktop implementation to find installed applications and icons
 - If browsers which support profiles don't have valid profiles, still show the browser itself. **Requires Refresh**
 
 ## [0.5.3] - 2024-02-21
 
 ### Fixed
+
 - Fix parsing Firefox containers for latest Firefox version
 
 ## [0.5.2] - 2024-02-08
 
 ### Fixed
+
 - Disable support for profiles in Arc. See #94
 - Really fix opening Private window in Firefox. Thanks to @mpsijm for fix #134
 - macOS: Don't exit on lost focus if Settings or About dialog are still open
@@ -32,82 +36,98 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.5.1] - 2024-01-31
 
 ### Fixed
+
 - Opening Private window in Firefox. Thanks to @mpsijm for fix #129
 
 ## [0.5.0] - 2024-01-27
 
 ### Added
+
 - Add Settings dialog for configuring opening rules.
 - Add Edge (stable, dev, beta, canary) profile support for Windows. Fixes #88
 
 ## [0.4.5] - 2024-01-11
 
 ### Fixed
+
 - Disable keyboard shortcuts if About dialog is focused
 
 ## [0.4.4] - 2023-12-29
 
 ### Fixed
+
 - Windows: Fix various installer issues. Thanks to @Erquint for thorough report #116
 - Windows: Don't require "Microsoft Visual C++ Redistributable" to be installed
 
 ### Added
+
 - Windows: Add uninstaller to Installed Apps
 
 ## [0.4.3] - 2023-10-24
 
 ### Fixed
+
 - macOS: Exit on lost focus when application looses focus not the window. #95
 
 ## [0.4.2] - 2023-09-25
 
 ### Fixed
+
 - Linux: Fix opening Browsers on top of a Snap application window Contribution by @tommoyer. #87
 - Linux: Handle more errors when loading app icons. #90
 - Linux: Fix initial position in Wayland
 - Windows: Fix shortcut in system-wide installation
 
 ### Added
+
 - Support deeplink for a Slack canvas
 - Linux: uninstall.sh script in the archive
 
 ## [0.4.1] - 2023-08-01
 
 ### Fixed
+
 - Fix all urls when using Firefox containers #73. Contribution by @blandir.
 - macOS: Don't prompt to be default browser on launch. There is an option to set it via default via options menu. #76
 - macOS: Workaround for Safari bug where Safari launches Browsers on hard launch. #79
 
 ### Added
+
 - Beta configuration to enable for Browsers to quit when clicking outside the Browsers dialog. #77
 
 ## [0.4.0] - 2023-07-15
 
 ### Fixed
+
 - Windows: Fix install script
 - Firefox Containers: Fix urls with `&` and `+` #73
 
 ### Added
+
 - Linux: provide rpm package
 
 ## [0.3.9] - 2023-06-19
 
 ### Fixed:
+
 - Opening browser in private in Linux and Windows when shift + mouse click
 - Opening browser in private mode with shift + <number key>
 
 ## [0.3.8] - 2023-06-17
 
 ### Added
+
 - Linux: provide deb package
 
 ## [0.3.7] - 2023-06-16
 
 ### Added
+
 - Support Slack desktop app for `<team>.slack.com` urls
 - Allow opening browser by numerical key 1, 2, ..., 9, 0
 
 ### Fixed:
+
 - Windows: Fix install script
 - Windows: Fix shortcut when installing for all users
 
@@ -258,35 +278,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Initial Release
 
 [unreleased]: https://github.com/Browsers-software/browsers/compare/0.5.4...HEAD
+
 [0.5.4]: https://github.com/Browsers-software/browsers/releases/tag/0.5.4
+
 [0.5.3]: https://github.com/Browsers-software/browsers/releases/tag/0.5.3
+
 [0.5.2]: https://github.com/Browsers-software/browsers/releases/tag/0.5.2
+
 [0.5.1]: https://github.com/Browsers-software/browsers/releases/tag/0.5.1
+
 [0.5.0]: https://github.com/Browsers-software/browsers/releases/tag/0.5.0
+
 [0.4.5]: https://github.com/Browsers-software/browsers/releases/tag/0.4.5
+
 [0.4.4]: https://github.com/Browsers-software/browsers/releases/tag/0.4.4
+
 [0.4.3]: https://github.com/Browsers-software/browsers/releases/tag/0.4.3
+
 [0.4.2]: https://github.com/Browsers-software/browsers/releases/tag/0.4.2
+
 [0.4.1]: https://github.com/Browsers-software/browsers/releases/tag/0.4.1
+
 [0.4.0]: https://github.com/Browsers-software/browsers/releases/tag/0.4.0
+
 [0.3.9]: https://github.com/Browsers-software/browsers/releases/tag/0.3.9
+
 [0.3.8]: https://github.com/Browsers-software/browsers/releases/tag/0.3.8
+
 [0.3.7]: https://github.com/Browsers-software/browsers/releases/tag/0.3.7
+
 [0.3.6]: https://github.com/Browsers-software/browsers/releases/tag/0.3.6
+
 [0.3.5]: https://github.com/Browsers-software/browsers/releases/tag/0.3.5
+
 [0.3.4]: https://github.com/Browsers-software/browsers/releases/tag/0.3.4
+
 [0.3.3]: https://github.com/Browsers-software/browsers/releases/tag/0.3.3
+
 [0.3.2]: https://github.com/Browsers-software/browsers/releases/tag/0.3.2
+
 [0.3.1]: https://github.com/Browsers-software/browsers/releases/tag/0.3.1
+
 [0.3.0]: https://github.com/Browsers-software/browsers/releases/tag/0.3.0
+
 [0.2.9]: https://github.com/Browsers-software/browsers/releases/tag/0.2.9
+
 [0.2.8]: https://github.com/Browsers-software/browsers/releases/tag/0.2.8
+
 [0.2.7]: https://github.com/Browsers-software/browsers/releases/tag/0.2.7
+
 [0.2.6]: https://github.com/Browsers-software/browsers/releases/tag/0.2.6
+
 [0.2.5]: https://github.com/Browsers-software/browsers/releases/tag/0.2.5
+
 [0.2.4]: https://github.com/Browsers-software/browsers/releases/tag/0.2.4
+
 [0.2.3]: https://github.com/Browsers-software/browsers/releases/tag/0.2.3
+
 [0.2.2]: https://github.com/Browsers-software/browsers/releases/tag/0.2.2
+
 [0.2.1]: https://github.com/Browsers-software/browsers/releases/tag/0.2.1
+
 [0.2.0]: https://github.com/Browsers-software/browsers/releases/tag/0.2.0
+
 [0.1.0]: https://github.com/Browsers-software/browsers/releases/tag/0.1.0-rc25
