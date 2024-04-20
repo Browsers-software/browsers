@@ -298,6 +298,12 @@ kind = "FIREFOX"
 os = "MAC"
 
 [[apps]]
+id = "floorp"
+config_dir_relative = ".floorp"
+kind = "FIREFOX"
+os = "LINUX"
+
+[[apps]]
 id = "org.torproject.torbrowser"
 config_dir_relative = "TorBrowser-Data/Browser"
 kind = "FIREFOX"
