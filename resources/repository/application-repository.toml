@@ -1,3 +1,7 @@
+# List of:
+# - applications that support profiles
+# - applications supporting special protocols (e.g zoommtg://)
+
 [[apps]]
 id = "com.google.Chrome"
 config_dir_relative = "Google/Chrome"
@@ -283,6 +287,12 @@ os = "MAC"
 
 [[apps]]
 id = "org.mozilla.floorp"
+config_dir_relative = "Floorp"
+kind = "FIREFOX"
+os = "MAC"
+
+[[apps]]
+id = "org.mozilla.floorpdaylight"
 config_dir_relative = "Floorp"
 kind = "FIREFOX"
 os = "MAC"
