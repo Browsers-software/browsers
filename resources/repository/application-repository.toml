@@ -327,6 +327,11 @@ kind = "LINEAR"
 os = "MAC"
 
 [[apps]]
+id = "com.mimestream.Mimestream"
+kind = "MIMESTREAM"
+os = "MAC"
+
+[[apps]]
 id = "notion.id"
 kind = "NOTION"
 os = "MAC"

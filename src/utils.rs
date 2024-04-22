@@ -224,6 +224,7 @@ impl OSAppFinder {
         let schemes = vec![
             ("figma", vec!["figma.com", "www.figma.com"]),
             ("linear", vec!["linear.app"]),
+            ("mimestream", vec!["links.mimestream.com"]),
             ("notion", vec!["notion.so", "www.notion.so"]),
             ("slack", vec!["*.slack.com", "*.enterprise.slack.com"]),
             ("spotify", vec!["open.spotify.com"]),

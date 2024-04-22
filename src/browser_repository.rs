@@ -38,6 +38,7 @@ enum AppKind {
     FIREFOX,
     SLACK,
     LINEAR,
+    MIMESTREAM,
     NOTION,
     SPOTIFY,
     TELEGRAM,
@@ -236,6 +237,10 @@ impl SupportedAppRepository {
             },
             AppKind::LINEAR => {
                 let restricted_domain_patterns = vec!["linear.app".to_string()];
+                Self::create_generic_app(app_config.os, app_id, restricted_domain_patterns)
+            }
+            AppKind::MIMESTREAM => {
+                let restricted_domain_patterns = vec!["links.mimestream.com".to_string()];
                 Self::create_generic_app(app_config.os, app_id, restricted_domain_patterns)
             }
             AppKind::NOTION => {
@@ -816,6 +821,21 @@ impl AppConfigDir {
     fn config_dir_absolute(&self) -> PathBuf {
         return self.root_path.join(self.config_dir_relative());
     }
+}
+
+// TODO: support
+// "https://links.mimestream.com/g/madis@qminderapp.com/t/18f06bace4319301"
+// "mimestream:///open/g/madis@qminderapp.com/t/18f06bace4319301"
+// "https://links.mimestream.com/LINK" to "mimestream:///open/LINK"
+fn convert_mimestream_uri(_: &CommonBrowserProfile, url_str: &str) -> String {
+    let result = Url::parse(url_str);
+    if result.is_err() {
+        return "".to_string();
+    }
+    let mut url = result.unwrap();
+    let _ = url.set_scheme("mimestream");
+
+    return url.as_str().to_string();
 }
 
 fn convert_slack_uri(common_browser_profile: &CommonBrowserProfile, url_str: &str) -> String {
