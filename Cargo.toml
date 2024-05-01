@@ -70,7 +70,7 @@ interprocess = "1.2.1"
 core-foundation = "0.9.4"
 cocoa-foundation = "0.1.2"
 objc = "0.2.7"
-libc = "0.2"
+libc = "0.2.154"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 xdg-mime = "^0.4.0"
