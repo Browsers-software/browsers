@@ -15,9 +15,9 @@ build = "build.rs"
 clap = "4.5.4"
 
 # logging library
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["fmt", "std", "time", "local-time"] }
-tracing-appender = "0.2"
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["fmt", "std", "time", "local-time"] }
+tracing-appender = "0.2.3"
 
 # Official remote
 #rolling-file = "0.2.0"
