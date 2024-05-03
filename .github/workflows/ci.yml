@@ -127,7 +127,7 @@ jobs:
             target/universal-unknown-linux-gnu/release/armv7l/browsers.armhfp.rpm
   build-macos:
     environment: PROD_2028
-    runs-on: macos-13
+    runs-on: macos-14
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
