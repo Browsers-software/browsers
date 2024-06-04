@@ -79,7 +79,7 @@ xdg-mime = "^0.4.0"
 glib = { version = "0.16.6", package = "gio" }
 
 # to find application .desktop files
-freedesktop-desktop-entry = "0.5.2"
+freedesktop-desktop-entry = "0.6.0"
 
 # to find icon theme and icon;
 freedesktop-icons = "0.2.6"
