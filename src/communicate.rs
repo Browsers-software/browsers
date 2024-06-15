@@ -2,7 +2,9 @@ use std::io::{BufRead, BufReader, Write};
 use std::sync::mpsc::Sender;
 use std::{fs, io, thread};
 
-use interprocess::local_socket::{LocalSocketListener, LocalSocketStream};
+use interprocess::local_socket::prelude::{LocalSocketListener, LocalSocketStream};
+use interprocess::local_socket::traits::{ListenerExt, Stream};
+use interprocess::local_socket::{GenericFilePath, ListenerOptions, Name, ToFsName};
 use serde::{Deserialize, Serialize};
 use single_instance::SingleInstance;
 use tracing::{info, warn};
@@ -36,25 +38,47 @@ pub fn check_single_instance(
     url: &str,
     main_sender: Sender<MessageToMain>,
 ) -> (bool, SingleInstance) {
-    let runtime_dir = paths::get_runtime_dir();
-    fs::create_dir_all(runtime_dir.as_path()).unwrap();
-    let local_socket_path = runtime_dir.join("software.Browsers.socket");
-
     let lock_name = lock_name_or_path();
 
+    let runtime_dir = paths::get_runtime_dir();
+    fs::create_dir_all(runtime_dir.as_path()).unwrap();
     let single_instance = SingleInstance::new(lock_name.as_str()).unwrap();
+
+    let local_socket_path_buf = runtime_dir.join("software.Browsers.socket");
+    let local_socket_path = local_socket_path_buf.as_path();
+    let pipe_name_result = local_socket_path.to_fs_name::<GenericFilePath>();
+
+    if pipe_name_result.is_err() {
+        warn!("Could not parse pipe name as valid name for GenericFilePath");
+        warn!("{}", pipe_name_result.unwrap_err());
+        return (true, single_instance);
+    }
+    let pipe_name: Name = pipe_name_result.unwrap();
+
+    /*
+    let pipe_name = if GenericNamespaced::is_supported() {
+        "example.sock".to_ns_name::<GenericNamespaced>()?
+    } else {
+        "/tmp/example.sock".to_fs_name::<GenericFilePath>()?
+    };
+    */
+
     return if single_instance.is_single() {
         info!("No other instance of Browsers was running");
         // another process is not running, so this is first
 
         if local_socket_path.exists() {
             info!("Cleaning up previous local socket file");
-            let result1 = fs::remove_file(local_socket_path.as_path());
+            let result1 = fs::remove_file(local_socket_path);
             if result1.is_err() {
                 warn!("Could not remove local socket file")
             }
         }
-        let listener_result = LocalSocketListener::bind(local_socket_path);
+
+        let listener_result = ListenerOptions::new()
+            .name(pipe_name)
+            .create_sync_as::<LocalSocketListener>();
+
         if listener_result.is_err() {
             warn!("Could not run single instance socket server");
             warn!("{}", listener_result.unwrap_err());
@@ -100,7 +124,7 @@ pub fn check_single_instance(
     } else {
         info!("Other Browsers instance is already running");
         // another process is running, so this is not first
-        let result = LocalSocketStream::connect(local_socket_path);
+        let result = LocalSocketStream::connect(pipe_name);
         if result.is_err() {
             warn!("Could not connect to single instance socket server");
             return (true, single_instance);
