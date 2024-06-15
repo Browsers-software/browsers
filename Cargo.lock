@@ -523,6 +523,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "doctest-file"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aac81fa3e28d21450aa4d2ac065992ba96a1d7303efbce51a95f4fd175b67562"
+
+[[package]]
 name = "druid"
 version = "0.8.3"
 source = "git+https://github.com/browsers-software/druid.git?branch=browsers#ac62c2457375a11ebb31aa993f3eac93446eb7a2"
@@ -1112,10 +1118,11 @@ dependencies = [
 
 [[package]]
 name = "interprocess"
-version = "2.0.0"
+version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d5f0e3c218e7a86a6712fd3adc84672304f9e839402b866685b9117a077c37f"
+checksum = "67bafc2f5dbdad79a6d925649758d5472647b416028099f0b829d1b67fdd47d3"
 dependencies = [
+ "doctest-file",
  "libc",
  "recvmsg",
  "widestring 1.1.0",
