@@ -144,7 +144,7 @@ impl OsHelper {
     ) -> Option<DesktopEntryHolder> {
         let app_id = desktop_entry.id();
 
-        let name_maybe = desktop_entry.name(None);
+        let name_maybe = desktop_entry.name(&[] as &[&str]);
         if name_maybe.is_none() {
             warn!("no name found for {}", app_id);
             return None;
