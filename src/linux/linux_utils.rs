@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 use druid::image;
 use druid::image::ImageFormat;
-use freedesktop_desktop_entry::{default_paths, DesktopEntry, Iter};
+use freedesktop_desktop_entry::{default_paths, get_languages_from_env, DesktopEntry, Iter};
 use freedesktop_icons;
 use tracing::{info, warn};
 
@@ -101,10 +101,16 @@ impl OsHelper {
         let cleaned_desktop_file_paths: Vec<PathBuf> =
             desktop_file_paths_by_filename.into_values().collect();
 
+        let locales = get_languages_from_env();
+
         let vec = cleaned_desktop_file_paths
             .iter()
             .filter_map(|desktop_file_path| {
-                Self::read_desktop_entry_matching(&desktop_file_path.as_path(), content_type)
+                Self::read_desktop_entry_matching(
+                    &desktop_file_path.as_path(),
+                    content_type,
+                    &locales,
+                )
             })
             .collect();
 
@@ -114,11 +120,12 @@ impl OsHelper {
     fn read_desktop_entry_matching(
         desktop_file_path: &Path,
         content_type: &str,
+        locales: &Vec<String>,
     ) -> Option<DesktopEntryHolder> {
         return fs::read_to_string(&desktop_file_path)
             .ok()
             .and_then(|file_content| {
-                DesktopEntry::decode(&desktop_file_path, &file_content)
+                DesktopEntry::from_str(&desktop_file_path, &file_content, locales)
                     .ok()
                     .and_then(|entry| {
                         let contains_mime_type = entry
@@ -131,7 +138,7 @@ impl OsHelper {
                             .is_some();
 
                         if contains_mime_type {
-                            Self::freedesktop_desktop_entry_to_desktop_entry_holder(&entry)
+                            Self::freedesktop_desktop_entry_to_desktop_entry_holder(&entry, locales)
                         } else {
                             None
                         }
@@ -141,10 +148,11 @@ impl OsHelper {
 
     fn freedesktop_desktop_entry_to_desktop_entry_holder(
         desktop_entry: &DesktopEntry,
+        locales: &Vec<String>,
     ) -> Option<DesktopEntryHolder> {
         let app_id = desktop_entry.id();
 
-        let name_maybe = desktop_entry.name(&[] as &[&str]);
+        let name_maybe = desktop_entry.name(locales);
         if name_maybe.is_none() {
             warn!("no name found for {}", app_id);
             return None;
