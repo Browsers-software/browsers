@@ -20,7 +20,7 @@ jobs:
         with:
           install: true
       - name: Build cross builder image for x86_64
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./cross/
           builder: ${{ steps.buildx.outputs.name }}
@@ -31,7 +31,7 @@ jobs:
           cache-to: type=gha,scope=x86_64,mode=max
           load: true # load the created image into docker, so cross can find it
       - name: Build cross builder image for aarch64
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./cross/
           builder: ${{ steps.buildx.outputs.name }}
@@ -42,7 +42,7 @@ jobs:
           cache-to: type=gha,scope=aarch64,mode=max
           load: true # load the created image into docker, so cross can find it
       - name: Build cross builder image for armv7
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./cross/
           builder: ${{ steps.buildx.outputs.name }}
