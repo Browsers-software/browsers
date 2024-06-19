@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::slice::Split;
 
 use druid::image;
 use druid::image::ImageFormat;
@@ -130,11 +131,7 @@ impl OsHelper {
                     .and_then(|entry| {
                         let contains_mime_type = entry
                             .mime_type()
-                            .filter(|mime_type_str| {
-                                // e.g "text/html;text/xml;application/xhtml+xml;application/vnd.mozilla.xul+xml;text/mml;x-scheme-handler/http;x-scheme-handler/https;"
-                                let mime_types: Vec<&str> = mime_type_str.split(";").collect();
-                                mime_types.contains(&content_type)
-                            })
+                            .filter(|mime_types| mime_types.contains(&content_type))
                             .is_some();
 
                         if contains_mime_type {
