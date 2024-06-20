@@ -4,6 +4,8 @@
 
 [[apps]]
 id = "com.google.Chrome"
+# about:version Profile Path
+# /Users/xyz/Library/Application Support/<config_dir_relative>/Default
 config_dir_relative = "Google/Chrome"
 kind = "CHROMIUM"
 os = "MAC"
@@ -231,6 +233,12 @@ os = "MAC"
 [[apps]]
 id = "de.iridiumbrowser"
 config_dir_relative = "Iridium"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "org.flashpeak.Slimjet"
+config_dir_relative = "Slimjet"
 kind = "CHROMIUM"
 os = "MAC"
 
