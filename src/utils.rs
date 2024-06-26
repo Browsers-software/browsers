@@ -57,6 +57,15 @@ pub struct UIConfig {
     // quit_on_lost_focus works OK only in macOS
     // linux calls this even when just opening a context menu (e.g the 3-dot menu)
     pub quit_on_lost_focus: bool,
+
+    pub theme: ConfiguredTheme,
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq)]
+pub enum ConfiguredTheme {
+    Auto,
+    Light,
+    Dark,
 }
 
 impl Default for UIConfig {
@@ -64,6 +73,7 @@ impl Default for UIConfig {
         UIConfig {
             show_hotkeys: true,
             quit_on_lost_focus: false,
+            theme: ConfiguredTheme::Auto,
         }
     }
 }

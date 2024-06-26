@@ -11,7 +11,6 @@ use druid::{
 };
 use druid::{Application, Code, Modifiers, Monitor, WindowHandle};
 use tracing::{debug, info, instrument};
-use tracing_subscriber::fmt::format;
 use url::Url;
 
 use crate::gui::main_window::{
@@ -22,7 +21,7 @@ use crate::gui::main_window::{
 use crate::gui::ui::SettingsTab::GENERAL;
 use crate::gui::{about_dialog, main_window, settings_window};
 use crate::url_rule::UrlGlobMatcher;
-use crate::utils::{Config, ProfileAndOptions, UIConfig};
+use crate::utils::{Config, ConfiguredTheme, ProfileAndOptions, UIConfig};
 use crate::{CommonBrowserProfile, MessageToMain};
 
 pub struct UI {
@@ -71,6 +70,7 @@ impl UI {
         UIVisualSettings {
             show_hotkeys: ui_config.show_hotkeys,
             quit_on_lost_focus: ui_config.quit_on_lost_focus,
+            theme: ui_config.theme,
         }
     }
 
@@ -230,6 +230,8 @@ pub struct UISettings {
 pub struct UIVisualSettings {
     pub show_hotkeys: bool,
     pub quit_on_lost_focus: bool,
+    #[data(eq)]
+    pub theme: ConfiguredTheme,
 }
 
 #[derive(Clone, Debug, Data, Lens)]
