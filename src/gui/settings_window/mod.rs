@@ -2,12 +2,14 @@ use std::sync::Arc;
 
 use druid::widget::{CrossAxisAlignment, Flex, Label, Painter, ViewSwitcher};
 use druid::{
-    Color, DelegateCtx, FontDescriptor, FontFamily, FontWeight, LocalizedString, Monitor, Point,
+    DelegateCtx, FontDescriptor, FontFamily, FontWeight, LocalizedString, Monitor, Point,
     RenderContext, Size, Widget, WidgetExt, WindowDesc, WindowLevel,
 };
 use tracing::info;
 
 use crate::gui::ui::{SettingsTab, UIBrowser, UISettings, UIState};
+use crate::gui::ui_theme;
+use crate::gui::ui_theme::{GeneralTheme, SettingsWindowTheme};
 
 mod advanced_view;
 mod general_view;
@@ -51,7 +53,11 @@ pub fn create_settings_window(
     let main_column = Flex::column()
         .must_fill_main_axis(true)
         .cross_axis_alignment(CrossAxisAlignment::Fill)
-        .with_flex_child(layout, 1.0);
+        .with_flex_child(layout, 1.0)
+        .background(GeneralTheme::ENV_WINDOW_BACKGROUND_COLOR)
+        .env_scope(|env, data| {
+            ui_theme::initialize_theme(env, data);
+        });
 
     let size = Size::new(WINDOW_WIDTH, 500.0);
     let screen_rect = monitor.virtual_work_rect();
@@ -139,10 +145,13 @@ fn sidebar_items() -> impl Widget<UISettings> {
 fn tab_button(key: &'static str, tab: SettingsTab) -> impl Widget<UISettings> {
     let string = LocalizedString::new(key);
 
-    let painter = Painter::new(move |ctx, active_tab, _env| {
+    let painter = Painter::new(move |ctx, active_tab, env| {
         if *active_tab == tab {
             let bounds = ctx.size().to_rect();
-            ctx.fill(bounds, &Color::rgb8(25, 90, 194));
+            ctx.fill(
+                bounds,
+                &env.get(SettingsWindowTheme::ENV_ACTIVE_TAB_BACKGROUND_COLOR),
+            );
         }
     });
 

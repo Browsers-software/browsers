@@ -14,11 +14,13 @@ use druid::{
 };
 use tracing::{debug, instrument};
 
+use ui_theme::MainWindowTheme;
+
 use crate::gui::focus_widget::{FocusData, FocusWidget};
 use crate::gui::image_controller::UIImageController;
-use crate::gui::shared;
 use crate::gui::ui::{UIBrowser, UISettings, UIState, EXIT_APP};
 use crate::gui::ui_util::ellipsize;
+use crate::gui::{shared, ui_theme};
 use crate::MoveTo;
 
 pub const COPY_LINK_TO_CLIPBOARD: Selector<()> = Selector::new("browsers.copy_link");
@@ -144,6 +146,7 @@ impl MainWindow {
             // with_text_alignment messes up in Windows
             //.with_text_alignment(TextAlignment::Center)
             .with_text_size(OPTIONS_LABEL_TEXT_SIZE)
+            .with_text_color(MainWindowTheme::ENV_OPTIONS_BUTTON_TEXT_COLOR)
             .padding((0.0, OPTIONS_LABEL_TEXT_PADDING_TOP, 0.0, 0.0))
             .center()
             .fix_width(OPTIONS_LABEL_SIZE)
@@ -205,10 +208,13 @@ impl MainWindow {
             .padding((PADDING_X, PADDING_Y));
 
         return Container::new(col)
-            .background(Color::rgba(0.15, 0.15, 0.15, 0.9))
+            .background(MainWindowTheme::ENV_WINDOW_BACKGROUND_COLOR)
             .rounded(10.0)
-            .border(Color::rgba(0.5, 0.5, 0.5, 0.9), 0.5)
-            .expand_height();
+            .border(MainWindowTheme::ENV_WINDOW_BORDER_COLOR, 0.5)
+            .expand_height()
+            .env_scope(|env, data| {
+                ui_theme::initialize_theme(env, data);
+            });
     }
 }
 
@@ -329,7 +335,7 @@ fn create_browser_label() -> Label<((bool, UISettings), UIBrowser)> {
     .with_text_size(12.0)
     .with_line_break_mode(LineBreaking::Clip)
     .with_text_alignment(TextAlignment::Start)
-    .with_text_color(Color::from_hex_str("ffffff").unwrap());
+    .with_text_color(MainWindowTheme::ENV_BROWSER_LABEL_COLOR);
 
     browser_label
 }
@@ -373,7 +379,7 @@ fn create_browser(
                 .with_text_size(11.0)
                 .with_line_break_mode(LineBreaking::Clip)
                 .with_text_alignment(TextAlignment::Start)
-                .with_text_color(Color::from_hex_str("BEBEBE").unwrap());
+                .with_text_color(MainWindowTheme::ENV_PROFILE_LABEL_COLOR);
 
             let profile_row = Flex::row()
                 //.with_child(profile_icon)
@@ -416,14 +422,14 @@ fn create_browser(
                     hotkey
                 })
                 .with_font(font)
-                .with_text_color(Color::from_hex_str("808080").unwrap())
+                .with_text_color(MainWindowTheme::ENV_HOTKEY_TEXT_COLOR)
                 .fix_size(text_size, text_size)
                 .padding(4.0);
 
             let hotkey_label = Container::new(hotkey_label)
-                .background(Color::rgba(0.15, 0.15, 0.15, 1.0))
+                .background(MainWindowTheme::ENV_HOTKEY_BACKGROUND_COLOR)
                 .rounded(5.0)
-                .border(Color::rgba(0.4, 0.4, 0.4, 0.9), 0.5);
+                .border(MainWindowTheme::ENV_HOTKEY_BORDER_COLOR, 0.5);
 
             hotkey_label
         },

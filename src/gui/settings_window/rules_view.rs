@@ -16,6 +16,7 @@ use crate::gui::ui::{
     UIBrowser, UIProfileAndIncognito, UISettings, UISettingsRule, UIState, SAVE_DEFAULT_RULE,
     SAVE_RULE, SAVE_RULES,
 };
+use crate::gui::ui_theme::SettingsWindowTheme;
 
 pub(crate) const FONT: FontDescriptor = FontDescriptor::new(FontFamily::SYSTEM_UI).with_size(12.0);
 
@@ -202,9 +203,9 @@ fn default_app(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettings> {
             ),
     )
     .padding(10.0)
-    .background(Color::rgba(0.1, 0.1, 0.1, 0.9))
+    .background(SettingsWindowTheme::ENV_RULE_BACKGROUND_COLOR)
     .rounded(10.0)
-    .border(Color::rgba(0.5, 0.5, 0.5, 0.9), 0.5)
+    .border(SettingsWindowTheme::ENV_RULE_BORDER_COLOR, 0.5)
     .padding((0.0, 5.0, 20.0, 5.0))
     .expand_width();
 }
@@ -298,9 +299,9 @@ fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettingsRule> {
                 .with_child(remove_rule_button),
         )
         .padding(10.0)
-        .background(Color::rgba(0.1, 0.1, 0.1, 0.9))
+        .background(SettingsWindowTheme::ENV_RULE_BACKGROUND_COLOR)
         .rounded(10.0)
-        .border(Color::rgba(0.5, 0.5, 0.5, 0.9), 0.5)
+        .border(SettingsWindowTheme::ENV_RULE_BORDER_COLOR, 0.5)
         .padding((0.0, 5.0))
     })
     .controller(AddRuleController);

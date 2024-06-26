@@ -11,7 +11,6 @@ use druid::{
 };
 use druid::{Application, Code, Modifiers, Monitor, WindowHandle};
 use tracing::{debug, info, instrument};
-use tracing_subscriber::fmt::format;
 use url::Url;
 
 use crate::gui::main_window::{
@@ -20,9 +19,9 @@ use crate::gui::main_window::{
     SET_BROWSERS_AS_DEFAULT_BROWSER, SET_FOCUSED_INDEX, SHOW_ABOUT_DIALOG, SHOW_SETTINGS_DIALOG,
 };
 use crate::gui::ui::SettingsTab::GENERAL;
-use crate::gui::{about_dialog, main_window, settings_window};
+use crate::gui::{about_dialog, main_window, settings_window, ui_theme};
 use crate::url_rule::UrlGlobMatcher;
-use crate::utils::{Config, ProfileAndOptions, UIConfig};
+use crate::utils::{Config, ConfiguredTheme, ProfileAndOptions, UIConfig};
 use crate::{CommonBrowserProfile, MessageToMain};
 
 pub struct UI {
@@ -71,6 +70,7 @@ impl UI {
         UIVisualSettings {
             show_hotkeys: ui_config.show_hotkeys,
             quit_on_lost_focus: ui_config.quit_on_lost_focus,
+            theme: ui_config.theme,
         }
     }
 
@@ -167,7 +167,8 @@ impl UI {
                 mouse_position: mouse_position.clone(),
                 monitor: monitor.clone(),
             })
-            .localization_resources(vec!["builtin.ftl".to_string()], basedir);
+            .localization_resources(vec!["builtin.ftl".to_string()], basedir)
+            .configure_env(ui_theme::initialize_theme);
     }
 
     #[instrument(skip_all)]
@@ -230,6 +231,7 @@ pub struct UISettings {
 pub struct UIVisualSettings {
     pub show_hotkeys: bool,
     pub quit_on_lost_focus: bool,
+    pub theme: ConfiguredTheme,
 }
 
 #[derive(Clone, Debug, Data, Lens)]
@@ -472,8 +474,8 @@ impl AppDelegate<UIState> for UIDelegate {
 
         let should_exit = match event {
             Event::KeyDown(KeyEvent {
-                               key: KbKey::Escape, ..
-                           }) => true,
+                key: KbKey::Escape, ..
+            }) => true,
             Event::WindowLostFocus => quit_on_lost_focus,
             _ => false,
         };
@@ -505,17 +507,17 @@ impl AppDelegate<UIState> for UIDelegate {
 
         // Cmd+C on macOS, Ctrl+C on windows/linux/OpenBSD
         #[cfg(target_os = "macos")]
-            let copy_key_mod = Modifiers::META;
+        let copy_key_mod = Modifiers::META;
 
         #[cfg(not(target_os = "macos"))]
-            let copy_key_mod = Modifiers::CONTROL;
+        let copy_key_mod = Modifiers::CONTROL;
 
         match event {
             Event::KeyDown(KeyEvent {
-                               key: KbKey::Character(ref key),
-                               ref mods,
-                               ..
-                           }) if key == "c" && mods == &copy_key_mod => {
+                key: KbKey::Character(ref key),
+                ref mods,
+                ..
+            }) if key == "c" && mods == &copy_key_mod => {
                 debug!("Cmd/Ctrl+C caught in delegate");
                 ctx.get_external_handle()
                     .submit_command(COPY_LINK_TO_CLIPBOARD, {}, Target::Global)
@@ -523,10 +525,10 @@ impl AppDelegate<UIState> for UIDelegate {
             }
 
             Event::KeyDown(KeyEvent {
-                               key: KbKey::Character(ref key),
-                               ref mods,
-                               ..
-                           }) if key == "," && mods == &copy_key_mod => {
+                key: KbKey::Character(ref key),
+                ref mods,
+                ..
+            }) if key == "," && mods == &copy_key_mod => {
                 debug!("Cmd/Ctrl+, caught in delegate");
                 ctx.get_external_handle()
                     .submit_command(SHOW_SETTINGS_DIALOG, {}, Target::Global)
@@ -626,7 +628,7 @@ impl AppDelegate<UIState> for UIDelegate {
                 (window_size, window_position),
                 target_window,
             )
-                .unwrap();
+            .unwrap();
 
             // After current event has been handled, bring the window to the front, and give it focus.
             // Normally not needed, but if About menu was opened, then window would not have appeared
@@ -692,7 +694,7 @@ impl AppDelegate<UIState> for UIDelegate {
                 (window_size, window_position),
                 target_window,
             )
-                .unwrap();
+            .unwrap();
 
             Handled::Yes
         } else if cmd.is(NEW_HIDDEN_BROWSERS_RECEIVED) {
