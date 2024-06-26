@@ -474,8 +474,8 @@ impl AppDelegate<UIState> for UIDelegate {
 
         let should_exit = match event {
             Event::KeyDown(KeyEvent {
-                               key: KbKey::Escape, ..
-                           }) => true,
+                key: KbKey::Escape, ..
+            }) => true,
             Event::WindowLostFocus => quit_on_lost_focus,
             _ => false,
         };
@@ -507,17 +507,17 @@ impl AppDelegate<UIState> for UIDelegate {
 
         // Cmd+C on macOS, Ctrl+C on windows/linux/OpenBSD
         #[cfg(target_os = "macos")]
-            let copy_key_mod = Modifiers::META;
+        let copy_key_mod = Modifiers::META;
 
         #[cfg(not(target_os = "macos"))]
-            let copy_key_mod = Modifiers::CONTROL;
+        let copy_key_mod = Modifiers::CONTROL;
 
         match event {
             Event::KeyDown(KeyEvent {
-                               key: KbKey::Character(ref key),
-                               ref mods,
-                               ..
-                           }) if key == "c" && mods == &copy_key_mod => {
+                key: KbKey::Character(ref key),
+                ref mods,
+                ..
+            }) if key == "c" && mods == &copy_key_mod => {
                 debug!("Cmd/Ctrl+C caught in delegate");
                 ctx.get_external_handle()
                     .submit_command(COPY_LINK_TO_CLIPBOARD, {}, Target::Global)
@@ -525,10 +525,10 @@ impl AppDelegate<UIState> for UIDelegate {
             }
 
             Event::KeyDown(KeyEvent {
-                               key: KbKey::Character(ref key),
-                               ref mods,
-                               ..
-                           }) if key == "," && mods == &copy_key_mod => {
+                key: KbKey::Character(ref key),
+                ref mods,
+                ..
+            }) if key == "," && mods == &copy_key_mod => {
                 debug!("Cmd/Ctrl+, caught in delegate");
                 ctx.get_external_handle()
                     .submit_command(SHOW_SETTINGS_DIALOG, {}, Target::Global)
@@ -628,7 +628,7 @@ impl AppDelegate<UIState> for UIDelegate {
                 (window_size, window_position),
                 target_window,
             )
-                .unwrap();
+            .unwrap();
 
             // After current event has been handled, bring the window to the front, and give it focus.
             // Normally not needed, but if About menu was opened, then window would not have appeared
@@ -694,7 +694,7 @@ impl AppDelegate<UIState> for UIDelegate {
                 (window_size, window_position),
                 target_window,
             )
-                .unwrap();
+            .unwrap();
 
             Handled::Yes
         } else if cmd.is(NEW_HIDDEN_BROWSERS_RECEIVED) {
