@@ -907,6 +907,7 @@ pub fn basically_main(
                     let ui_config = UIConfig {
                         show_hotkeys: settings.show_hotkeys,
                         quit_on_lost_focus: settings.quit_on_lost_focus,
+                        theme: settings.theme,
                     };
 
                     let mut config = app_finder.get_config();

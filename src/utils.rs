@@ -3,9 +3,9 @@ use std::io::BufReader;
 use std::path::Path;
 use std::{fs, u32};
 
-use druid::image;
 use druid::image::imageops::FilterType;
 use druid::image::{ImageFormat, Rgba};
+use druid::{image, Data};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
@@ -57,6 +57,15 @@ pub struct UIConfig {
     // quit_on_lost_focus works OK only in macOS
     // linux calls this even when just opening a context menu (e.g the 3-dot menu)
     pub quit_on_lost_focus: bool,
+
+    pub theme: ConfiguredTheme,
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, Data, PartialEq)]
+pub enum ConfiguredTheme {
+    Auto,
+    Light,
+    Dark,
 }
 
 impl Default for UIConfig {
@@ -64,6 +73,7 @@ impl Default for UIConfig {
         UIConfig {
             show_hotkeys: true,
             quit_on_lost_focus: false,
+            theme: ConfiguredTheme::Auto,
         }
     }
 }
