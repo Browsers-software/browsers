@@ -12,7 +12,7 @@ build = "build.rs"
 [dependencies]
 
 # command-line argument parser
-clap = "4.5.4"
+clap = "4.5.7"
 
 # logging library
 tracing = "0.1.40"
@@ -27,9 +27,9 @@ rolling-file = { git = "https://github.com/browsers-software/rolling-file-rs.git
 
 dirs = "5.0.1"
 
-toml = "0.8.12"
-serde_json = "1.0.116"
-serde = { version = "1.0.200", features = ["derive"] }
+toml = "0.8.14"
+serde_json = "1.0.118"
+serde = { version = "1.0.203", features = ["derive"] }
 
 # UI library
 # official remote
@@ -42,27 +42,27 @@ serde = { version = "1.0.200", features = ["derive"] }
 druid = { git = "https://github.com/browsers-software/druid.git", branch = "browsers", features = ["png", "jpeg", "image"] }
 
 # parse urls
-url = "2.5.0"
+url = "2.5.2"
 
 # parse url rules
 globset = "0.4.14"
 
 # Parse .ini files (e.g Firefox profiles.ini)
-configparser = "3.0.4"
+configparser = "3.1.0"
 
 # Hash Firefox path with cityhash64, to map it to
 # locked installation in profiles.ini
 naive-cityhash = "0.2.0"
 
 # To create lazy static variables
-lazy_static = "1.4.0"
+lazy_static = "1.5.0"
 
 # When running a new instance of Browsers, new instances will check if existing instance is already running
 single-instance = "0.3.3"
 
 # When running a new instance of Browsers, new instances will send arguments
 # to existing process via this library (and then close itself)
-interprocess = "2.1.1"
+interprocess = "2.2.0"
 
 # macOS Core Foundation bindings
 # small selection of Core Foundation libs I happen to need
@@ -75,7 +75,7 @@ libc = "0.2.154"
 [target.'cfg(target_os = "linux")'.dependencies]
 xdg-mime = "^0.4.0"
 
-# to find default registered icons
+# to find default registered icons, same version as in druid
 glib = { version = "0.16.6", package = "gio" }
 
 # to find application .desktop files
