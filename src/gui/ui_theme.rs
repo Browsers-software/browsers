@@ -10,11 +10,17 @@ pub enum UITheme {
     Dark,
 }
 
-pub const ENV_WINDOW_BACKGROUND_COLOR: Key<Color> =
-    Key::new("software.browsers.theme.window_background_color");
+pub const ENV_GENERAL_WINDOW_BACKGROUND_COLOR: Key<Color> =
+    Key::new("software.browsers.theme.general.window_background_color");
 
-pub const ENV_WINDOW_BORDER_COLOR: Key<Color> =
-    Key::new("software.browsers.theme.window_border_color");
+pub const ENV_GENERAL_WINDOW_BORDER_COLOR: Key<Color> =
+    Key::new("software.browsers.theme.general.window_border_color");
+
+pub const ENV_MAIN_WINDOW_BACKGROUND_COLOR: Key<Color> =
+    Key::new("software.browsers.theme.main.window_background_color");
+
+pub const ENV_MAIN_WINDOW_BORDER_COLOR: Key<Color> =
+    Key::new("software.browsers.theme.main.window_border_color");
 
 //pub const GREY_000: Key<Color> = Key::new("app.grey_000");
 
@@ -38,13 +44,25 @@ pub fn initialize_theme(env: &mut Env, ui_state: &UIState) {
 
 pub fn setup_theme(env: &mut Env, ui_theme: UITheme) {
     let dark_theme = Theme {
-        window_background_color: Color::rgba(0.15, 0.15, 0.15, 0.9),
-        window_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
+        general: GeneralTheme {
+            window_background_color: Color::rgba(0.15, 0.15, 0.15, 0.9),
+            window_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
+        },
+        main: MainWindowTheme {
+            window_background_color: Color::rgba(0.15, 0.15, 0.15, 0.9),
+            window_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
+        },
     };
 
     let light_theme = Theme {
-        window_background_color: Color::rgba(0.85, 0.85, 0.85, 0.9),
-        window_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
+        general: GeneralTheme {
+            window_background_color: Color::rgba(0.85, 0.85, 0.85, 0.9),
+            window_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
+        },
+        main: MainWindowTheme {
+            window_background_color: Color::rgba(0.85, 0.85, 0.85, 0.9),
+            window_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
+        },
     };
 
     let theme = match ui_theme {
@@ -60,11 +78,33 @@ pub fn setup_theme(env: &mut Env, ui_theme: UITheme) {
 }
 
 fn set_env_to_theme(env: &mut Env, theme: Theme) {
-    env.set(ENV_WINDOW_BACKGROUND_COLOR, theme.window_background_color);
-    env.set(ENV_WINDOW_BORDER_COLOR, theme.window_border_color);
+    env.set(
+        ENV_GENERAL_WINDOW_BACKGROUND_COLOR,
+        theme.general.window_background_color,
+    );
+    env.set(
+        ENV_GENERAL_WINDOW_BORDER_COLOR,
+        theme.general.window_border_color,
+    );
+
+    env.set(
+        ENV_MAIN_WINDOW_BACKGROUND_COLOR,
+        theme.main.window_background_color,
+    );
+    env.set(ENV_MAIN_WINDOW_BORDER_COLOR, theme.main.window_border_color);
 }
 
 struct Theme {
+    general: GeneralTheme,
+    main: MainWindowTheme,
+}
+
+struct MainWindowTheme {
+    window_background_color: Color,
+    window_border_color: Color,
+}
+
+struct GeneralTheme {
     window_background_color: Color,
     window_border_color: Color,
 }

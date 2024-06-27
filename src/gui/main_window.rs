@@ -205,9 +205,9 @@ impl MainWindow {
             .padding((PADDING_X, PADDING_Y));
 
         return Container::new(col)
-            .background(ui_theme::ENV_WINDOW_BACKGROUND_COLOR)
+            .background(ui_theme::ENV_MAIN_WINDOW_BACKGROUND_COLOR)
             .rounded(10.0)
-            .border(ui_theme::ENV_WINDOW_BORDER_COLOR, 0.5)
+            .border(ui_theme::ENV_MAIN_WINDOW_BORDER_COLOR, 0.5)
             .expand_height()
             .env_scope(|env, data| {
                 ui_theme::initialize_theme(env, data);
