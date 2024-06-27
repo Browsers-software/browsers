@@ -60,31 +60,41 @@ pub fn setup_theme(env: &mut Env, ui_theme: UITheme) {
 }
 
 fn set_env_to_theme(env: &mut Env, theme: Theme) {
+    set_env_to_theme_general(env, theme.general);
+    set_env_to_theme_main(env, theme.main);
+    set_env_to_theme_about(env, theme.about);
+}
+
+fn set_env_to_theme_general(env: &mut Env, general: GeneralTheme) {
     env.set(
         GeneralTheme::ENV_WINDOW_BACKGROUND_COLOR,
-        theme.general.window_background_color,
+        general.window_background_color,
     );
     env.set(
         GeneralTheme::ENV_WINDOW_BORDER_COLOR,
-        theme.general.window_border_color,
+        general.window_border_color,
     );
+}
 
+fn set_env_to_theme_main(env: &mut Env, main: MainWindowTheme) {
     env.set(
         MainWindowTheme::ENV_WINDOW_BACKGROUND_COLOR,
-        theme.main.window_background_color,
+        main.window_background_color,
     );
     env.set(
         MainWindowTheme::ENV_WINDOW_BORDER_COLOR,
-        theme.main.window_border_color,
+        main.window_border_color,
     );
     env.set(
         MainWindowTheme::ENV_PROFILE_LABEL_COLOR,
-        theme.main.profile_label_color,
+        main.profile_label_color,
     );
+}
 
+fn set_env_to_theme_about(env: &mut Env, about: AboutWindowTheme) {
     env.set(
         AboutWindowTheme::ENV_WINDOW_BACKGROUND_COLOR,
-        theme.about.window_background_color,
+        about.window_background_color,
     );
 }
 
