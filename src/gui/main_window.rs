@@ -16,9 +16,9 @@ use tracing::{debug, instrument};
 
 use crate::gui::focus_widget::{FocusData, FocusWidget};
 use crate::gui::image_controller::UIImageController;
-use crate::gui::shared;
 use crate::gui::ui::{UIBrowser, UISettings, UIState, EXIT_APP};
 use crate::gui::ui_util::ellipsize;
+use crate::gui::{shared, ui_theme};
 use crate::MoveTo;
 
 pub const COPY_LINK_TO_CLIPBOARD: Selector<()> = Selector::new("browsers.copy_link");
@@ -205,10 +205,13 @@ impl MainWindow {
             .padding((PADDING_X, PADDING_Y));
 
         return Container::new(col)
-            .background(Color::rgba(0.15, 0.15, 0.15, 0.9))
+            .background(ui_theme::ENV_WINDOW_BACKGROUND_COLOR)
             .rounded(10.0)
-            .border(Color::rgba(0.5, 0.5, 0.5, 0.9), 0.5)
-            .expand_height();
+            .border(ui_theme::ENV_WINDOW_BORDER_COLOR, 0.5)
+            .expand_height()
+            .env_scope(|env, data| {
+                ui_theme::initialize_theme(env, data);
+            });
     }
 }
 

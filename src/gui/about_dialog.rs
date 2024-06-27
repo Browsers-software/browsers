@@ -1,12 +1,12 @@
-use druid::widget::{Container, Flex, Image, Label};
+use druid::widget::{Flex, Image, Label};
 use druid::{
     Color, DelegateCtx, FontDescriptor, FontFamily, FontWeight, ImageBuf, Monitor, Point, Size,
     WidgetExt, WindowDesc, WindowLevel,
 };
 use tracing::info;
 
-use crate::gui::shared;
 use crate::gui::ui::UIState;
+use crate::gui::{shared, ui_theme};
 use crate::paths;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -41,7 +41,7 @@ pub fn show_about_dialog(ctx: &mut DelegateCtx, monitor: Monitor) {
 
     let paths_row = shared::directories_info::directories_info(8.0);
 
-    let col: Container<UIState> = Flex::column()
+    let col = Flex::column()
         .with_spacer(10.0)
         .with_child(app_icon_row)
         .with_spacer(10.0)
@@ -53,7 +53,10 @@ pub fn show_about_dialog(ctx: &mut DelegateCtx, monitor: Monitor) {
         .with_spacer(6.0)
         .with_child(paths_row)
         .with_flex_spacer(1.0)
-        .background(Color::from_hex_str("1b2020").unwrap());
+        .background(Color::from_hex_str("1b2020").unwrap())
+        .env_scope(|env, data| {
+            ui_theme::initialize_theme(env, data);
+        });
 
     let size = Size::new(340.0, 260.0);
     //let (_, monitor) = druid::Screen::get_mouse_position();

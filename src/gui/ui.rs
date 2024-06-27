@@ -19,7 +19,7 @@ use crate::gui::main_window::{
     SET_BROWSERS_AS_DEFAULT_BROWSER, SET_FOCUSED_INDEX, SHOW_ABOUT_DIALOG, SHOW_SETTINGS_DIALOG,
 };
 use crate::gui::ui::SettingsTab::GENERAL;
-use crate::gui::{about_dialog, main_window, settings_window};
+use crate::gui::{about_dialog, main_window, settings_window, ui_theme};
 use crate::url_rule::UrlGlobMatcher;
 use crate::utils::{Config, ConfiguredTheme, ProfileAndOptions, UIConfig};
 use crate::{CommonBrowserProfile, MessageToMain};
@@ -167,7 +167,8 @@ impl UI {
                 mouse_position: mouse_position.clone(),
                 monitor: monitor.clone(),
             })
-            .localization_resources(vec!["builtin.ftl".to_string()], basedir);
+            .localization_resources(vec!["builtin.ftl".to_string()], basedir)
+            .configure_env(ui_theme::initialize_theme);
     }
 
     #[instrument(skip_all)]
@@ -230,7 +231,6 @@ pub struct UISettings {
 pub struct UIVisualSettings {
     pub show_hotkeys: bool,
     pub quit_on_lost_focus: bool,
-    #[data(eq)]
     pub theme: ConfiguredTheme,
 }
 

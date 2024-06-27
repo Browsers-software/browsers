@@ -8,6 +8,7 @@ use druid::{
 use tracing::info;
 
 use crate::gui::ui::{SettingsTab, UIBrowser, UISettings, UIState};
+use crate::gui::ui_theme;
 
 mod advanced_view;
 mod general_view;
@@ -51,7 +52,10 @@ pub fn create_settings_window(
     let main_column = Flex::column()
         .must_fill_main_axis(true)
         .cross_axis_alignment(CrossAxisAlignment::Fill)
-        .with_flex_child(layout, 1.0);
+        .with_flex_child(layout, 1.0)
+        .env_scope(|env, data| {
+            ui_theme::initialize_theme(env, data);
+        });
 
     let size = Size::new(WINDOW_WIDTH, 500.0);
     let screen_rect = monitor.virtual_work_rect();
