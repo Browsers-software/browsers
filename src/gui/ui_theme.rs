@@ -10,26 +10,6 @@ pub enum UITheme {
     Dark,
 }
 
-pub const ENV_GENERAL_WINDOW_BACKGROUND_COLOR: Key<Color> =
-    Key::new("software.browsers.theme.general.window_background_color");
-
-pub const ENV_GENERAL_WINDOW_BORDER_COLOR: Key<Color> =
-    Key::new("software.browsers.theme.general.window_border_color");
-
-pub const ENV_MAIN_WINDOW_BACKGROUND_COLOR: Key<Color> =
-    Key::new("software.browsers.theme.main.window_background_color");
-
-pub const ENV_MAIN_WINDOW_BORDER_COLOR: Key<Color> =
-    Key::new("software.browsers.theme.main.window_border_color");
-
-//pub const GREY_000: Key<Color> = Key::new("app.grey_000");
-
-//pub const WINDOW_BACKGROUND_COLOR2: Key<Color> =
-//    Key::new("org.linebender.druid.theme.window_background_color");
-
-// A widget can retrieve theme parameters (colors, dimensions, etc.). In addition, it can pass custom data down to all descendants. An important example of the latter is setting a value for enabled/ disabled status so that an entire subtree can be disabled ("grayed out") with one setting.
-// EnvScope can be used to override parts of Env for its descendants.
-
 pub fn initialize_theme(env: &mut Env, ui_state: &UIState) {
     let ui_theme: UITheme = match ui_state.ui_settings.visual_settings.theme {
         ConfiguredTheme::Auto => UITheme::Dark,
@@ -79,19 +59,22 @@ pub fn setup_theme(env: &mut Env, ui_theme: UITheme) {
 
 fn set_env_to_theme(env: &mut Env, theme: Theme) {
     env.set(
-        ENV_GENERAL_WINDOW_BACKGROUND_COLOR,
+        GeneralTheme::ENV_WINDOW_BACKGROUND_COLOR,
         theme.general.window_background_color,
     );
     env.set(
-        ENV_GENERAL_WINDOW_BORDER_COLOR,
+        GeneralTheme::ENV_WINDOW_BORDER_COLOR,
         theme.general.window_border_color,
     );
 
     env.set(
-        ENV_MAIN_WINDOW_BACKGROUND_COLOR,
+        MainWindowTheme::ENV_WINDOW_BACKGROUND_COLOR,
         theme.main.window_background_color,
     );
-    env.set(ENV_MAIN_WINDOW_BORDER_COLOR, theme.main.window_border_color);
+    env.set(
+        MainWindowTheme::ENV_WINDOW_BORDER_COLOR,
+        theme.main.window_border_color,
+    );
 }
 
 struct Theme {
@@ -99,14 +82,29 @@ struct Theme {
     main: MainWindowTheme,
 }
 
-struct MainWindowTheme {
+struct GeneralTheme {
     window_background_color: Color,
     window_border_color: Color,
 }
 
-struct GeneralTheme {
+impl GeneralTheme {
+    pub const ENV_WINDOW_BACKGROUND_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.general.window_background_color");
+    pub const ENV_WINDOW_BORDER_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.general.window_border_color");
+}
+
+pub(crate) struct MainWindowTheme {
     window_background_color: Color,
     window_border_color: Color,
+}
+
+impl MainWindowTheme {
+    pub const ENV_WINDOW_BACKGROUND_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.main.window_background_color");
+
+    pub const ENV_WINDOW_BORDER_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.main.window_border_color");
 }
 
 struct Palette {}

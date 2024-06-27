@@ -14,6 +14,8 @@ use druid::{
 };
 use tracing::{debug, instrument};
 
+use ui_theme::MainWindowTheme;
+
 use crate::gui::focus_widget::{FocusData, FocusWidget};
 use crate::gui::image_controller::UIImageController;
 use crate::gui::ui::{UIBrowser, UISettings, UIState, EXIT_APP};
@@ -205,9 +207,9 @@ impl MainWindow {
             .padding((PADDING_X, PADDING_Y));
 
         return Container::new(col)
-            .background(ui_theme::ENV_MAIN_WINDOW_BACKGROUND_COLOR)
+            .background(MainWindowTheme::ENV_WINDOW_BACKGROUND_COLOR)
             .rounded(10.0)
-            .border(ui_theme::ENV_MAIN_WINDOW_BORDER_COLOR, 0.5)
+            .border(MainWindowTheme::ENV_WINDOW_BORDER_COLOR, 0.5)
             .expand_height()
             .env_scope(|env, data| {
                 ui_theme::initialize_theme(env, data);
