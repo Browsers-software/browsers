@@ -6,6 +6,7 @@ use druid::{
 use tracing::info;
 
 use crate::gui::ui::UIState;
+use crate::gui::ui_theme::AboutWindowTheme;
 use crate::gui::{shared, ui_theme};
 use crate::paths;
 
@@ -53,7 +54,7 @@ pub fn show_about_dialog(ctx: &mut DelegateCtx, monitor: Monitor) {
         .with_spacer(6.0)
         .with_child(paths_row)
         .with_flex_spacer(1.0)
-        .background(Color::from_hex_str("1b2020").unwrap())
+        .background(AboutWindowTheme::ENV_WINDOW_BACKGROUND_COLOR)
         .env_scope(|env, data| {
             ui_theme::initialize_theme(env, data);
         });

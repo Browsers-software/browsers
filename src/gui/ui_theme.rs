@@ -20,8 +20,6 @@ pub fn initialize_theme(env: &mut Env, ui_state: &UIState) {
     setup_theme(env, ui_theme);
 }
 
-// mingit eventi veel kus me uuendame env-i
-
 pub fn setup_theme(env: &mut Env, ui_theme: UITheme) {
     let dark_theme = Theme {
         general: GeneralTheme {
@@ -32,6 +30,9 @@ pub fn setup_theme(env: &mut Env, ui_theme: UITheme) {
             window_background_color: Color::rgba(0.15, 0.15, 0.15, 0.9),
             window_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
         },
+        about: AboutWindowTheme {
+            window_background_color: Color::rgb8(27, 32, 32),
+        },
     };
 
     let light_theme = Theme {
@@ -40,8 +41,11 @@ pub fn setup_theme(env: &mut Env, ui_theme: UITheme) {
             window_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
         },
         main: MainWindowTheme {
-            window_background_color: Color::rgba(0.85, 0.85, 0.85, 0.9),
+            window_background_color: Color::rgba8(215, 215, 215, 230),
             window_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
+        },
+        about: AboutWindowTheme {
+            window_background_color: Color::rgb8(236, 236, 236),
         },
     };
 
@@ -51,10 +55,6 @@ pub fn setup_theme(env: &mut Env, ui_theme: UITheme) {
     };
 
     set_env_to_theme(env, theme);
-
-    // set color palette
-
-    //env.set(druid::theme::WINDOW_BACKGROUND_COLOR, env.get(GREY_700));
 }
 
 fn set_env_to_theme(env: &mut Env, theme: Theme) {
@@ -75,11 +75,17 @@ fn set_env_to_theme(env: &mut Env, theme: Theme) {
         MainWindowTheme::ENV_WINDOW_BORDER_COLOR,
         theme.main.window_border_color,
     );
+
+    env.set(
+        AboutWindowTheme::ENV_WINDOW_BACKGROUND_COLOR,
+        theme.about.window_background_color,
+    );
 }
 
 struct Theme {
     general: GeneralTheme,
     main: MainWindowTheme,
+    about: AboutWindowTheme,
 }
 
 struct GeneralTheme {
@@ -105,6 +111,15 @@ impl MainWindowTheme {
 
     pub const ENV_WINDOW_BORDER_COLOR: Key<Color> =
         Key::new("software.browsers.theme.main.window_border_color");
+}
+
+pub(crate) struct AboutWindowTheme {
+    window_background_color: Color,
+}
+
+impl AboutWindowTheme {
+    pub const ENV_WINDOW_BACKGROUND_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.about.window_background_color");
 }
 
 struct Palette {}
