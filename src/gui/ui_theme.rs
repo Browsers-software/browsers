@@ -60,42 +60,9 @@ pub fn setup_theme(env: &mut Env, ui_theme: UITheme) {
 }
 
 fn set_env_to_theme(env: &mut Env, theme: Theme) {
-    set_env_to_theme_general(env, theme.general);
-    set_env_to_theme_main(env, theme.main);
-    set_env_to_theme_about(env, theme.about);
-}
-
-fn set_env_to_theme_general(env: &mut Env, general: GeneralTheme) {
-    env.set(
-        GeneralTheme::ENV_WINDOW_BACKGROUND_COLOR,
-        general.window_background_color,
-    );
-    env.set(
-        GeneralTheme::ENV_WINDOW_BORDER_COLOR,
-        general.window_border_color,
-    );
-}
-
-fn set_env_to_theme_main(env: &mut Env, main: MainWindowTheme) {
-    env.set(
-        MainWindowTheme::ENV_WINDOW_BACKGROUND_COLOR,
-        main.window_background_color,
-    );
-    env.set(
-        MainWindowTheme::ENV_WINDOW_BORDER_COLOR,
-        main.window_border_color,
-    );
-    env.set(
-        MainWindowTheme::ENV_PROFILE_LABEL_COLOR,
-        main.profile_label_color,
-    );
-}
-
-fn set_env_to_theme_about(env: &mut Env, about: AboutWindowTheme) {
-    env.set(
-        AboutWindowTheme::ENV_WINDOW_BACKGROUND_COLOR,
-        about.window_background_color,
-    );
+    theme.general.set_env_to_theme(env);
+    theme.main.set_env_to_theme(env);
+    theme.about.set_env_to_theme(env);
 }
 
 struct Theme {
@@ -114,6 +81,14 @@ impl GeneralTheme {
         Key::new("software.browsers.theme.general.window_background_color");
     pub const ENV_WINDOW_BORDER_COLOR: Key<Color> =
         Key::new("software.browsers.theme.general.window_border_color");
+
+    fn set_env_to_theme(&self, env: &mut Env) {
+        env.set(
+            GeneralTheme::ENV_WINDOW_BACKGROUND_COLOR,
+            self.window_background_color,
+        );
+        env.set(GeneralTheme::ENV_WINDOW_BORDER_COLOR, self.window_border_color);
+    }
 }
 
 pub(crate) struct MainWindowTheme {
@@ -131,6 +106,21 @@ impl MainWindowTheme {
 
     pub const ENV_PROFILE_LABEL_COLOR: Key<Color> =
         Key::new("software.browsers.theme.main.profile_label_color");
+
+    fn set_env_to_theme(&self, env: &mut Env) {
+        env.set(
+            MainWindowTheme::ENV_WINDOW_BACKGROUND_COLOR,
+            self.window_background_color,
+        );
+        env.set(
+            MainWindowTheme::ENV_WINDOW_BORDER_COLOR,
+            self.window_border_color,
+        );
+        env.set(
+            MainWindowTheme::ENV_PROFILE_LABEL_COLOR,
+            self.profile_label_color,
+        );
+    }
 }
 
 pub(crate) struct AboutWindowTheme {
@@ -140,6 +130,13 @@ pub(crate) struct AboutWindowTheme {
 impl AboutWindowTheme {
     pub const ENV_WINDOW_BACKGROUND_COLOR: Key<Color> =
         Key::new("software.browsers.theme.about.window_background_color");
+
+    fn set_env_to_theme(&self, env: &mut Env) {
+        env.set(
+            AboutWindowTheme::ENV_WINDOW_BACKGROUND_COLOR,
+            self.window_background_color,
+        );
+    }
 }
 
 struct Palette {}
