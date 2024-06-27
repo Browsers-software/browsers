@@ -88,7 +88,7 @@ struct Theme {
     about: AboutWindowTheme,
 }
 
-struct GeneralTheme {
+pub(crate) struct GeneralTheme {
     window_background_color: Color,
     window_border_color: Color,
 }
