@@ -13,11 +13,16 @@ pub(crate) fn general_content() -> impl Widget<UIState> {
 
     let save_command = SAVE_UI_SETTINGS.with(());
 
-    let theme_radio_group = RadioGroup::column(vec![
-        ("Match system", ConfiguredTheme::Auto),
-        ("Light", ConfiguredTheme::Light),
-        ("Dark", ConfiguredTheme::Dark),
-    ])
+    let theme_radio_group = ControllerHost::new(
+        RadioGroup::column(vec![
+            ("Match system", ConfiguredTheme::Auto),
+            ("Light", ConfiguredTheme::Light),
+            ("Dark", ConfiguredTheme::Dark),
+        ]),
+        rules_view::SubmitCommandOnDataChange {
+            command: save_command.clone(),
+        },
+    )
     .lens(
         UIState::ui_settings
             .then(UISettings::visual_settings)
