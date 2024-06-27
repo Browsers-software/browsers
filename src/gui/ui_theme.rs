@@ -29,6 +29,7 @@ pub fn setup_theme(env: &mut Env, ui_theme: UITheme) {
         main: MainWindowTheme {
             window_background_color: Color::rgba(0.15, 0.15, 0.15, 0.9),
             window_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
+            profile_label_color: Color::rgb8(190, 190, 190),
         },
         about: AboutWindowTheme {
             window_background_color: Color::rgb8(27, 32, 32),
@@ -43,6 +44,7 @@ pub fn setup_theme(env: &mut Env, ui_theme: UITheme) {
         main: MainWindowTheme {
             window_background_color: Color::rgba8(215, 215, 215, 230),
             window_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
+            profile_label_color: Color::rgb8(190, 190, 190),
         },
         about: AboutWindowTheme {
             window_background_color: Color::rgb8(236, 236, 236),
@@ -75,6 +77,10 @@ fn set_env_to_theme(env: &mut Env, theme: Theme) {
         MainWindowTheme::ENV_WINDOW_BORDER_COLOR,
         theme.main.window_border_color,
     );
+    env.set(
+        MainWindowTheme::ENV_PROFILE_LABEL_COLOR,
+        theme.main.profile_label_color,
+    );
 
     env.set(
         AboutWindowTheme::ENV_WINDOW_BACKGROUND_COLOR,
@@ -103,6 +109,7 @@ impl GeneralTheme {
 pub(crate) struct MainWindowTheme {
     window_background_color: Color,
     window_border_color: Color,
+    profile_label_color: Color,
 }
 
 impl MainWindowTheme {
@@ -111,6 +118,9 @@ impl MainWindowTheme {
 
     pub const ENV_WINDOW_BORDER_COLOR: Key<Color> =
         Key::new("software.browsers.theme.main.window_border_color");
+
+    pub const ENV_PROFILE_LABEL_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.main.profile_label_color");
 }
 
 pub(crate) struct AboutWindowTheme {

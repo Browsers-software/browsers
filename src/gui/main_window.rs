@@ -378,7 +378,7 @@ fn create_browser(
                 .with_text_size(11.0)
                 .with_line_break_mode(LineBreaking::Clip)
                 .with_text_alignment(TextAlignment::Start)
-                .with_text_color(Color::from_hex_str("BEBEBE").unwrap());
+                .with_text_color(MainWindowTheme::ENV_PROFILE_LABEL_COLOR);
 
             let profile_row = Flex::row()
                 //.with_child(profile_icon)
