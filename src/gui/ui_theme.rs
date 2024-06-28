@@ -21,6 +21,11 @@ pub fn initialize_theme(env: &mut Env, ui_state: &UIState) {
 }
 
 pub fn setup_theme(env: &mut Env, ui_theme: UITheme) {
+    let theme = get_theme(ui_theme);
+    theme.set_env_to_theme(env);
+}
+
+fn get_theme(ui_theme: UITheme) -> Theme {
     let dark_theme = Theme {
         general: GeneralTheme {
             window_background_color: Color::rgba(0.15, 0.15, 0.15, 0.9),
@@ -44,7 +49,7 @@ pub fn setup_theme(env: &mut Env, ui_theme: UITheme) {
         main: MainWindowTheme {
             window_background_color: Color::rgba8(215, 215, 215, 230),
             window_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
-            profile_label_color: Color::rgb8(190, 190, 190),
+            profile_label_color: Color::rgb8(30, 30, 30),
         },
         about: AboutWindowTheme {
             window_background_color: Color::rgb8(236, 236, 236),
@@ -56,7 +61,7 @@ pub fn setup_theme(env: &mut Env, ui_theme: UITheme) {
         UITheme::Dark => dark_theme,
     };
 
-    theme.set_env_to_theme(env);
+    return theme;
 }
 
 struct Theme {
