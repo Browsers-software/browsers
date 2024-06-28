@@ -35,6 +35,10 @@ fn get_theme(ui_theme: UITheme) -> Theme {
             window_background_color: Color::rgba(0.15, 0.15, 0.15, 0.9),
             window_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
             profile_label_color: Color::rgb8(190, 190, 190),
+            browser_label_color: Color::rgb8(255, 255, 255),
+            hotkey_background_color: Color::rgba(0.15, 0.15, 0.15, 1.0),
+            hotkey_border_color: Color::rgba(0.4, 0.4, 0.4, 0.9),
+            hotkey_text_color: Color::rgb8(128, 128, 128),
         },
         about: AboutWindowTheme {
             window_background_color: Color::rgb8(27, 32, 32),
@@ -50,6 +54,10 @@ fn get_theme(ui_theme: UITheme) -> Theme {
             window_background_color: Color::rgba8(215, 215, 215, 230),
             window_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
             profile_label_color: Color::rgb8(30, 30, 30),
+            browser_label_color: Color::rgb8(0, 0, 0),
+            hotkey_background_color: Color::rgb8(215, 215, 215),
+            hotkey_border_color: Color::rgba(0.4, 0.4, 0.4, 0.9),
+            hotkey_text_color: Color::rgb8(128, 128, 128),
         },
         about: AboutWindowTheme {
             window_background_color: Color::rgb8(236, 236, 236),
@@ -90,11 +98,8 @@ impl GeneralTheme {
         Key::new("software.browsers.theme.general.window_border_color");
 
     fn set_env_to_theme(&self, env: &mut Env) {
-        env.set(
-            GeneralTheme::ENV_WINDOW_BACKGROUND_COLOR,
-            self.window_background_color,
-        );
-        env.set(GeneralTheme::ENV_WINDOW_BORDER_COLOR, self.window_border_color);
+        env.set(Self::ENV_WINDOW_BACKGROUND_COLOR, self.window_background_color);
+        env.set(Self::ENV_WINDOW_BORDER_COLOR, self.window_border_color);
     }
 }
 
@@ -102,6 +107,10 @@ pub(crate) struct MainWindowTheme {
     window_background_color: Color,
     window_border_color: Color,
     profile_label_color: Color,
+    browser_label_color: Color,
+    hotkey_background_color: Color,
+    hotkey_border_color: Color,
+    hotkey_text_color: Color,
 }
 
 impl MainWindowTheme {
@@ -114,19 +123,26 @@ impl MainWindowTheme {
     pub const ENV_PROFILE_LABEL_COLOR: Key<Color> =
         Key::new("software.browsers.theme.main.profile_label_color");
 
+    pub const ENV_BROWSER_LABEL_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.main.browser_label_color");
+
+    pub const ENV_HOTKEY_BACKGROUND_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.main.hotkey_background_color");
+
+    pub const ENV_HOTKEY_BORDER_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.main.hotkey_border_color");
+
+    pub const ENV_HOTKEY_TEXT_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.main.hotkey_text_color");
+
     fn set_env_to_theme(&self, env: &mut Env) {
-        env.set(
-            MainWindowTheme::ENV_WINDOW_BACKGROUND_COLOR,
-            self.window_background_color,
-        );
-        env.set(
-            MainWindowTheme::ENV_WINDOW_BORDER_COLOR,
-            self.window_border_color,
-        );
-        env.set(
-            MainWindowTheme::ENV_PROFILE_LABEL_COLOR,
-            self.profile_label_color,
-        );
+        env.set(Self::ENV_WINDOW_BACKGROUND_COLOR, self.window_background_color);
+        env.set(Self::ENV_WINDOW_BORDER_COLOR, self.window_border_color);
+        env.set(Self::ENV_PROFILE_LABEL_COLOR, self.profile_label_color);
+        env.set(Self::ENV_BROWSER_LABEL_COLOR, self.browser_label_color);
+        env.set(Self::ENV_HOTKEY_BACKGROUND_COLOR, self.hotkey_background_color);
+        env.set(Self::ENV_HOTKEY_BORDER_COLOR, self.hotkey_border_color);
+        env.set(Self::ENV_HOTKEY_TEXT_COLOR, self.hotkey_text_color);
     }
 }
 
@@ -139,10 +155,7 @@ impl AboutWindowTheme {
         Key::new("software.browsers.theme.about.window_background_color");
 
     fn set_env_to_theme(&self, env: &mut Env) {
-        env.set(
-            AboutWindowTheme::ENV_WINDOW_BACKGROUND_COLOR,
-            self.window_background_color,
-        );
+        env.set(Self::ENV_WINDOW_BACKGROUND_COLOR, self.window_background_color);
     }
 }
 

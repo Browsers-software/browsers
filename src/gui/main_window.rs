@@ -334,7 +334,7 @@ fn create_browser_label() -> Label<((bool, UISettings), UIBrowser)> {
     .with_text_size(12.0)
     .with_line_break_mode(LineBreaking::Clip)
     .with_text_alignment(TextAlignment::Start)
-    .with_text_color(Color::from_hex_str("ffffff").unwrap());
+    .with_text_color(MainWindowTheme::ENV_BROWSER_LABEL_COLOR);
 
     browser_label
 }
@@ -421,14 +421,14 @@ fn create_browser(
                     hotkey
                 })
                 .with_font(font)
-                .with_text_color(Color::from_hex_str("808080").unwrap())
+                .with_text_color(MainWindowTheme::ENV_HOTKEY_TEXT_COLOR)
                 .fix_size(text_size, text_size)
                 .padding(4.0);
 
             let hotkey_label = Container::new(hotkey_label)
-                .background(Color::rgba(0.15, 0.15, 0.15, 1.0))
+                .background(MainWindowTheme::ENV_HOTKEY_BACKGROUND_COLOR)
                 .rounded(5.0)
-                .border(Color::rgba(0.4, 0.4, 0.4, 0.9), 0.5);
+                .border(MainWindowTheme::ENV_HOTKEY_BORDER_COLOR, 0.5);
 
             hotkey_label
         },
