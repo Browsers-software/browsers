@@ -56,19 +56,21 @@ pub fn setup_theme(env: &mut Env, ui_theme: UITheme) {
         UITheme::Dark => dark_theme,
     };
 
-    set_env_to_theme(env, theme);
-}
-
-fn set_env_to_theme(env: &mut Env, theme: Theme) {
-    theme.general.set_env_to_theme(env);
-    theme.main.set_env_to_theme(env);
-    theme.about.set_env_to_theme(env);
+    theme.set_env_to_theme(env);
 }
 
 struct Theme {
     general: GeneralTheme,
     main: MainWindowTheme,
     about: AboutWindowTheme,
+}
+
+impl Theme {
+    fn set_env_to_theme(&self, env: &mut Env) {
+        self.general.set_env_to_theme(env);
+        self.main.set_env_to_theme(env);
+        self.about.set_env_to_theme(env);
+    }
 }
 
 pub(crate) struct GeneralTheme {
