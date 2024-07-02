@@ -39,6 +39,7 @@ fn get_theme(ui_theme: UITheme) -> Theme {
             hotkey_background_color: Color::rgba(0.15, 0.15, 0.15, 1.0),
             hotkey_border_color: Color::rgba(0.4, 0.4, 0.4, 0.9),
             hotkey_text_color: Color::rgb8(128, 128, 128),
+            options_button_text_color: Color::rgb8(128, 128, 128),
         },
         about: AboutWindowTheme {
             window_background_color: Color::rgb8(27, 32, 32),
@@ -58,6 +59,7 @@ fn get_theme(ui_theme: UITheme) -> Theme {
             hotkey_background_color: Color::rgb8(215, 215, 215),
             hotkey_border_color: Color::rgba(0.4, 0.4, 0.4, 0.9),
             hotkey_text_color: Color::rgb8(128, 128, 128),
+            options_button_text_color: Color::rgb8(128, 128, 128),
         },
         about: AboutWindowTheme {
             window_background_color: Color::rgb8(236, 236, 236),
@@ -111,6 +113,7 @@ pub(crate) struct MainWindowTheme {
     hotkey_background_color: Color,
     hotkey_border_color: Color,
     hotkey_text_color: Color,
+    options_button_text_color: Color,
 }
 
 impl MainWindowTheme {
@@ -135,6 +138,9 @@ impl MainWindowTheme {
     pub const ENV_HOTKEY_TEXT_COLOR: Key<Color> =
         Key::new("software.browsers.theme.main.hotkey_text_color");
 
+    pub const ENV_OPTIONS_BUTTON_TEXT_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.main.options_button_text_color");
+
     fn set_env_to_theme(&self, env: &mut Env) {
         env.set(Self::ENV_WINDOW_BACKGROUND_COLOR, self.window_background_color);
         env.set(Self::ENV_WINDOW_BORDER_COLOR, self.window_border_color);
@@ -143,6 +149,10 @@ impl MainWindowTheme {
         env.set(Self::ENV_HOTKEY_BACKGROUND_COLOR, self.hotkey_background_color);
         env.set(Self::ENV_HOTKEY_BORDER_COLOR, self.hotkey_border_color);
         env.set(Self::ENV_HOTKEY_TEXT_COLOR, self.hotkey_text_color);
+        env.set(
+            Self::ENV_OPTIONS_BUTTON_TEXT_COLOR,
+            self.options_button_text_color,
+        );
     }
 }
 

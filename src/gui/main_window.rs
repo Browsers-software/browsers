@@ -146,6 +146,7 @@ impl MainWindow {
             // with_text_alignment messes up in Windows
             //.with_text_alignment(TextAlignment::Center)
             .with_text_size(OPTIONS_LABEL_TEXT_SIZE)
+            .with_text_color(MainWindowTheme::ENV_OPTIONS_BUTTON_TEXT_COLOR)
             .padding((0.0, OPTIONS_LABEL_TEXT_PADDING_TOP, 0.0, 0.0))
             .center()
             .fix_width(OPTIONS_LABEL_SIZE)
