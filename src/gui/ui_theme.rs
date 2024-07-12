@@ -83,6 +83,8 @@ fn get_theme(ui_theme: UITheme) -> Theme {
         },
         settings: SettingsWindowTheme {
             active_tab_background_color: Color::rgb8(25, 90, 194),
+            active_tab_text_color: Color::rgb8(255, 255, 255),
+            inactive_tab_text_color: Color::rgb8(255, 255, 255),
             rule_background_color: Color::rgba(0.1, 0.1, 0.1, 0.9),
             rule_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
         },
@@ -134,6 +136,8 @@ fn get_theme(ui_theme: UITheme) -> Theme {
         },
         settings: SettingsWindowTheme {
             active_tab_background_color: Color::rgb8(25, 90, 194),
+            active_tab_text_color: Color::rgb8(255, 255, 255),
+            inactive_tab_text_color: Color::rgb8(0, 0, 0),
             rule_background_color: Color::rgba(0.8, 0.8, 0.8, 0.9),
             rule_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
         },
@@ -238,6 +242,8 @@ impl MainWindowTheme {
 
 pub(crate) struct SettingsWindowTheme {
     active_tab_background_color: Color,
+    active_tab_text_color: Color,
+    inactive_tab_text_color: Color,
     rule_background_color: Color,
     rule_border_color: Color,
 }
@@ -245,6 +251,12 @@ pub(crate) struct SettingsWindowTheme {
 impl SettingsWindowTheme {
     pub const ENV_ACTIVE_TAB_BACKGROUND_COLOR: Key<Color> =
         Key::new("software.browsers.theme.settings.active_tab_background_color");
+
+    pub const ENV_ACTIVE_TAB_TEXT_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.settings.active_tab_text_color");
+
+    pub const ENV_INACTIVE_TAB_TEXT_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.settings.inactive_tab_text_color");
 
     pub const ENV_RULE_BACKGROUND_COLOR: Key<Color> =
         Key::new("software.browsers.theme.settings.rule_background_color");
@@ -257,6 +269,9 @@ impl SettingsWindowTheme {
             Self::ENV_ACTIVE_TAB_BACKGROUND_COLOR,
             self.active_tab_background_color,
         );
+
+        env.set(Self::ENV_ACTIVE_TAB_TEXT_COLOR, self.active_tab_text_color);
+        env.set(Self::ENV_INACTIVE_TAB_TEXT_COLOR, self.inactive_tab_text_color);
 
         env.set(Self::ENV_RULE_BACKGROUND_COLOR, self.rule_background_color);
         env.set(Self::ENV_RULE_BORDER_COLOR, self.rule_border_color);

@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use druid::widget::{CrossAxisAlignment, Flex, Label, Painter, ViewSwitcher};
 use druid::{
-    DelegateCtx, FontDescriptor, FontFamily, FontWeight, LocalizedString, Monitor, Point,
-    RenderContext, Size, Widget, WidgetExt, WindowDesc, WindowLevel,
+    Color, DelegateCtx, FontDescriptor, FontFamily, FontWeight, Key, LocalizedString, Monitor,
+    Point, RenderContext, Size, Widget, WidgetExt, WindowDesc, WindowLevel,
 };
 use tracing::info;
 
@@ -155,14 +155,43 @@ fn tab_button(key: &'static str, tab: SettingsTab) -> impl Widget<UISettings> {
         }
     });
 
+    // This is a custom key we'll use with Env to set and get our font.
+    const TAB_TEXT_COLOR: Key<Color> =
+        Key::new("software.browsers.current.settings.tab_text_color");
+
     Flex::column()
         .cross_axis_alignment(CrossAxisAlignment::Start)
-        .with_child(Label::new(string).with_text_size(14.0))
+        .with_child(
+            Label::new(string)
+                .with_text_size(14.0)
+                .with_text_color(TAB_TEXT_COLOR),
+        )
         .on_click(move |_ctx, active_tab: &mut SettingsTab, _env| {
             *active_tab = tab;
         })
         .padding(5.0)
         .background(painter)
         .rounded(5.0)
+        .env_scope(move |env: &mut druid::Env, active_tab: &SettingsTab| {
+            if tab == *active_tab {
+                env.set(
+                    TAB_TEXT_COLOR,
+                    env.get(SettingsWindowTheme::ENV_ACTIVE_TAB_TEXT_COLOR),
+                );
+
+                //env.set(MY_CUSTOM_FONT, new_font);
+            } else {
+                env.set(
+                    TAB_TEXT_COLOR,
+                    env.get(SettingsWindowTheme::ENV_INACTIVE_TAB_TEXT_COLOR),
+                );
+            }
+            /* let new_font = if data.mono {
+                FontDescriptor::new(FontFamily::MONOSPACE)
+            } else {
+                FontDescriptor::new(FontFamily::SYSTEM_UI)
+            }
+            .with_size(data.size);*/
+        })
         .lens(UISettings::tab)
 }
