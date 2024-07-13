@@ -5,9 +5,10 @@ use std::slice::Split;
 
 use druid::image;
 use druid::image::ImageFormat;
+use tracing::{info, warn};
+
 use freedesktop_desktop_entry::{default_paths, get_languages_from_env, DesktopEntry, Iter};
 use freedesktop_icons;
-use tracing::{info, warn};
 
 use crate::{InstalledBrowser, SupportedAppRepository};
 
@@ -211,7 +212,11 @@ impl OsHelper {
         //  - to identify which Firefox profiles are allowed for firefox instance, they hash the binary path
         let executable_path_best_guess = command_parts
             .iter()
-            .rfind(|component| !component.starts_with("%") && !component.starts_with("-"))
+            .rfind(|component| {
+                !component.starts_with("%")
+                    && !component.starts_with("-")
+                    && !component.starts_with("@")
+            })
             .map(|path_perhaps| Path::new(path_perhaps))
             .unwrap_or(Path::new("unknown"));
 
