@@ -59,13 +59,9 @@ mkdir -p %{buildroot}%{_datadir}/icons/hicolor/16x16/apps
 cp -a %{_tree}%{_datadir}/applications/software.Browsers.desktop %{buildroot}%{_datadir}/applications/software.Browsers.desktop
 cp -a %{_tree}%{_datadir}/applications/xfce4/helpers/software.Browsers.desktop %{buildroot}%{_datadir}/applications/xfce4/helpers/software.Browsers.desktop
 
-
-cp -a %{_tree}%{_datadir}/icons/hicolor/512x512/apps/software.Browsers.png %{buildroot}%{_datadir}/icons/hicolor/512x512/apps/software.Browsers.png
-cp -a %{_tree}%{_datadir}/icons/hicolor/256x256/apps/software.Browsers.png %{buildroot}%{_datadir}/icons/hicolor/256x256/apps/software.Browsers.png
-cp -a %{_tree}%{_datadir}/icons/hicolor/128x128/apps/software.Browsers.png %{buildroot}%{_datadir}/icons/hicolor/128x128/apps/software.Browsers.png
-cp -a %{_tree}%{_datadir}/icons/hicolor/64x64/apps/software.Browsers.png %{buildroot}%{_datadir}/icons/hicolor/64x64/apps/software.Browsers.png
-cp -a %{_tree}%{_datadir}/icons/hicolor/32x32/apps/software.Browsers.png %{buildroot}%{_datadir}/icons/hicolor/32x32/apps/software.Browsers.png
-cp -a %{_tree}%{_datadir}/icons/hicolor/16x16/apps/software.Browsers.png %{buildroot}%{_datadir}/icons/hicolor/16x16/apps/software.Browsers.png
+for size in 16 32 64 128 256 512; do
+    cp -a %{_tree}%{_datadir}/icons/hicolor/${size}x${size}/apps/software.Browsers.png %{buildroot}%{_datadir}/icons/hicolor/${size}x${size}/apps/software.Browsers.png
+done
 
 cp -a %{_tree}%{_datadir}/software.Browsers/bin/browsers %{buildroot}%{_datadir}/software.Browsers/bin/browsers
 cp -a %{_tree}%{_datadir}/software.Browsers/resources/i18n/en-US/builtin.ftl %{buildroot}%{_datadir}/software.Browsers/resources/i18n/en-US/builtin.ftl

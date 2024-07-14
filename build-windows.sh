@@ -25,34 +25,29 @@ build_binary() {
 }
 
 build_app_bundle() {
+  cp "extra/windows/dist/install.bat" "$target_dir/install.bat"
+  cp "extra/windows/dist/announce_default.ps1" "$target_dir/announce_default.ps1"
+  cp "extra/windows/dist/uninstall.bat" "$target_dir/uninstall.bat"
+
   mkdir -p "$target_dir/resources/icons/"
-  mkdir -p "$target_dir/resources/icons/16x16"
-  mkdir -p "$target_dir/resources/icons/32x32"
-  mkdir -p "$target_dir/resources/icons/64x64"
-  mkdir -p "$target_dir/resources/icons/128x128"
-  mkdir -p "$target_dir/resources/icons/256x256"
-  mkdir -p "$target_dir/resources/icons/512x512"
+
+  for size in 16 32 64 128 256 512; do
+    mkdir -p "$target_dir/resources/icons/${size}x${size}"
+    cp "resources/icons/${size}x${size}/software.Browsers.png" "$target_dir/resources/icons/${size}x${size}/software.Browsers.png"
+  done
+
   mkdir -p "$target_dir/resources/i18n"
   mkdir -p "$target_dir/resources/i18n/en-US"
+  cp "resources/i18n/en-US/builtin.ftl" "$target_dir/resources/i18n/en-US/builtin.ftl"
+
   mkdir -p "$target_dir/resources/repository"
+  cp "resources/repository/application-repository.toml" "$target_dir/resources/repository/application-repository.toml"
 
   mkdir -p "$target_dir/startmenu"
   mkdir -p "$target_dir/startmenu/user"
-  mkdir -p "$target_dir/startmenu/system"
-
-  cp "resources/icons/16x16/software.Browsers.png" "$target_dir/resources/icons/16x16/software.Browsers.png"
-  cp "resources/icons/32x32/software.Browsers.png" "$target_dir/resources/icons/32x32/software.Browsers.png"
-  cp "resources/icons/64x64/software.Browsers.png" "$target_dir/resources/icons/64x64/software.Browsers.png"
-  cp "resources/icons/128x128/software.Browsers.png" "$target_dir/resources/icons/128x128/software.Browsers.png"
-  cp "resources/icons/256x256/software.Browsers.png" "$target_dir/resources/icons/256x256/software.Browsers.png"
-  cp "resources/icons/512x512/software.Browsers.png" "$target_dir/resources/icons/512x512/software.Browsers.png"
-  cp "resources/i18n/en-US/builtin.ftl" "$target_dir/resources/i18n/en-US/builtin.ftl"
-  cp "resources/repository/application-repository.toml" "$target_dir/resources/repository/application-repository.toml"
-
-  cp "extra/windows/dist/install.bat" "$target_dir/install.bat"
-  cp "extra/windows/dist/uninstall.bat" "$target_dir/uninstall.bat"
-  cp "extra/windows/dist/announce_default.ps1" "$target_dir/announce_default.ps1"
   cp "extra/windows/dist/startmenu/user/Browsers.lnk" "$target_dir/startmenu/user/Browsers.lnk"
+
+  mkdir -p "$target_dir/startmenu/system"
   cp "extra/windows/dist/startmenu/system/Browsers.lnk" "$target_dir/startmenu/system/Browsers.lnk"
 }
 
