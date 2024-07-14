@@ -52,6 +52,8 @@ Download for your platform
     - [**browsers.aarch64.rpm**](https://github.com/Browsers-software/browsers/releases/latest/download/browsers_aarch64.deb) (arm64)
     - [**browsers.armhfp.rpm**](https://github.com/Browsers-software/browsers/releases/latest/download/browsers_armhfp.deb) (armv7l)
   - Universal - [**browsers_linux.tar.gz**](https://github.com/Browsers-software/browsers/releases/latest/download/browsers_linux.tar.gz) (x86_64, arm64 and armv7l)
+  - Nix - [#130](https://github.com/Browsers-software/browsers/issues/130)
+  - AUR - [browsers-bin](https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=browsers-bin) and [browsers-git](https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=browsers-git)
 - Windows - [**Browsers_windows.zip**](https://github.com/Browsers-software/browsers/releases/latest/download/Browsers_windows.zip) (x86_64 and arm64)
 
 ## Social
