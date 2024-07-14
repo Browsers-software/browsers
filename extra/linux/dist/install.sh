@@ -193,12 +193,9 @@ install_icons() {
   # when called by a non-root user.
   # Could also consider symlinking from application directory
   # (but we don't need all those icons for the app itself)
-  xdg-icon-resource install --novendor --size 16 "$SRC_ICONS_DIR/16x16/software.Browsers.png"
-  xdg-icon-resource install --novendor --size 32 "$SRC_ICONS_DIR/32x32/software.Browsers.png"
-  xdg-icon-resource install --novendor --size 64 "$SRC_ICONS_DIR/64x64/software.Browsers.png"
-  xdg-icon-resource install --novendor --size 128 "$SRC_ICONS_DIR/128x128/software.Browsers.png"
-  xdg-icon-resource install --novendor --size 256 "$SRC_ICONS_DIR/256x256/software.Browsers.png"
-  xdg-icon-resource install --novendor --size 512 "$SRC_ICONS_DIR/512x512/software.Browsers.png"
+  for size in 16 32 64 128 256 512; do
+    xdg-icon-resource install --novendor --size ${size} "$SRC_ICONS_DIR/${size}x${size}/software.Browsers.png"
+  done
 }
 
 prepare_desktop_file

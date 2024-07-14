@@ -71,12 +71,9 @@ rm -f "$INSTALL_DIR/browsers"
 rm -rf "$DATA_PARENT_DIR/software.Browsers/"
 rm -f "$TARGET_XFCE4_HELPERS_DIR/software.Browsers.desktop"
 
-rm -f "$ICONS_DIR/hicolor/16x16/apps/software.Browsers.png"
-rm -f "$ICONS_DIR/hicolor/32x32/apps/software.Browsers.png"
-rm -f "$ICONS_DIR/hicolor/64x64/apps/software.Browsers.png"
-rm -f "$ICONS_DIR/hicolor/128x128/apps/software.Browsers.png"
-rm -f "$ICONS_DIR/hicolor/256x256/apps/software.Browsers.png"
-rm -f "$ICONS_DIR/hicolor/512x512/apps/software.Browsers.png"
+for size in 16 32 64 128 256 512; do
+  rm -f "$ICONS_DIR/hicolor/${size}x${size}/apps/software.Browsers.png"
+done
 
 rm -f "$TARGET_DESKTOP_DIR_PATH/software.Browsers.desktop"
 

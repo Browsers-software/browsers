@@ -26,11 +26,9 @@ create_package_content() {
   mkdir -p "$package_src_dir/usr/share/icons/hicolor"
 
   # /usr/share/icons/hicolor/512x512/apps/software.Browsers.png
-  local sizes=("16x16" "32x32" "64x64" "128x128" "256x256" "512x512")
-
-  for size in "${sizes[@]}"; do
-    mkdir -p "$package_src_dir/usr/share/icons/hicolor/$size/apps"
-    cp "$project_resources_dir/icons/$size/software.Browsers.png" "$package_src_dir/usr/share/icons/hicolor/$size/apps/software.Browsers.png"
+  for size in 16 32 64 128 256 512; do
+    mkdir -p "$package_src_dir/usr/share/icons/hicolor/${size}x${size}/apps"
+    cp "$project_resources_dir/icons/${size}x${size}/software.Browsers.png" "$package_src_dir/usr/share/icons/hicolor/${size}x${size}/apps/software.Browsers.png"
   done
 
   mkdir -p "$package_src_dir/usr/share/applications"
