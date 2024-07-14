@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add light theme support
-- macOS: Support profiles for Slimjet browser
+- macOS: Support profiles for Slimjet and Mullvad browsers
 - Linux: fix having multiple Flatpak applications. Thanks to @ptillemans for contribution #188
 
 ## [0.5.5] - 2024-04-23

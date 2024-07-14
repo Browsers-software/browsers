@@ -2,10 +2,19 @@
 # - applications that support profiles
 # - applications supporting special protocols (e.g zoommtg://)
 
+
+# How to find `id` option under macOS:
+#  In Finder, right click the .app file and "Show Package Contents".
+#  Open in Contents/Info.plist in any text editor and copy the <string> value after `CFBundleIdentifier` key.
+
+# How to find `config_dir_relative` options under macOS:
+# - CHROMIUM: Go to "about:version" in the browser and look for "Profile Path"
+#             then extract the part from /Users/xyz/Library/Application Support/<config_dir_relative>/Default
+# - FIREFOX: Go to "about:profiles" in the browser and look for "Root Directory"
+#            then extract the part from /Users/xyz/Library/Application Support/<config_dir_relative>/Profiles/...
+
 [[apps]]
 id = "com.google.Chrome"
-# about:version Profile Path
-# /Users/xyz/Library/Application Support/<config_dir_relative>/Default
 config_dir_relative = "Google/Chrome"
 kind = "CHROMIUM"
 os = "MAC"
@@ -310,6 +319,12 @@ id = "floorp"
 config_dir_relative = ".floorp"
 kind = "FIREFOX"
 os = "LINUX"
+
+[[apps]]
+id = "net.mullvad.mullvadbrowser"
+config_dir_relative = "MullvadBrowser"
+kind = "FIREFOX"
+os = "MAC"
 
 [[apps]]
 id = "org.torproject.torbrowser"
