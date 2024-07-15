@@ -309,6 +309,8 @@ jobs:
         shell: bash
       - name: Download release artifacts
         uses: actions/download-artifact@v4
+        with:
+          pattern: browsers-*-artifacts
       - name: Verify directories exist
         run: |
           [ -e "browsers-linux-artifacts" ]
