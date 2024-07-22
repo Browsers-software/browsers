@@ -127,7 +127,7 @@ impl OsHelper {
         return fs::read_to_string(&desktop_file_path)
             .ok()
             .and_then(|file_content| {
-                DesktopEntry::from_str(&desktop_file_path, &file_content, locales)
+                DesktopEntry::from_str(&desktop_file_path, &file_content, Some(locales))
                     .ok()
                     .and_then(|entry| {
                         let contains_mime_type = entry
