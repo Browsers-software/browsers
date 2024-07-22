@@ -371,8 +371,23 @@ fn make_profiles_menu(
     save_command: Command,
     rule_index_maybe: Option<usize>,
 ) -> Menu<UIState> {
-    let menu_item_empty = item_empty(save_command.clone())
-        .lens(UIState::ui_settings.then(UISettings::default_opener));
+    let empty_item = item_empty(save_command.clone());
+
+    let menu_item_empty = match rule_index_maybe.is_some() {
+        true => {
+            let rule_index = rule_index_maybe.unwrap();
+            let ok = UIState::ui_settings
+                .then(UISettings::rules)
+                .then(Identity.index(rule_index).in_arc())
+                .then(UISettingsRule::opener);
+            empty_item.lens(ok)
+        }
+        false => {
+            let ok = UIState::ui_settings.then(UISettings::default_opener);
+            empty_item.lens(ok)
+        }
+    };
+
     let menu_initial = Menu::empty().entry(menu_item_empty);
 
     let save_command_clone1 = save_command.clone();
