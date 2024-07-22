@@ -869,8 +869,6 @@ pub fn basically_main(
                             source_app: ui_rule.get_source_app(),
                             url_pattern: ui_rule.get_url_pattern(),
                             opener: map_as_profile_and_options(&ui_rule.opener),
-                            profile: "".to_string(), // TODO: remove after most users have migrated
-                            incognito: false,        // TODO: remove after most users have migrated
                         })
                         .collect();
 
