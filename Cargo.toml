@@ -76,9 +76,6 @@ libc = "0.2.154"
 [target.'cfg(target_os = "linux")'.dependencies]
 xdg-mime = "^0.4.0"
 
-# to find default registered icons, same version as in druid
-glib = { version = "0.16.6", package = "gio" }
-
 # to find application .desktop files
 freedesktop-desktop-entry = "0.6.0"
 

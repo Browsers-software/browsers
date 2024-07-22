@@ -329,7 +329,6 @@ dependencies = [
  "dunce",
  "freedesktop-desktop-entry",
  "freedesktop-icons",
- "gio",
  "globset",
  "interprocess",
  "lazy_static",
