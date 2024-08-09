@@ -610,6 +610,10 @@ fn get_browser_profile_by_id<'a>(
     return None;
 }
 
+pub fn unredirect_url(url: &str) -> String {
+    return url.to_string();
+}
+
 #[instrument(skip_all)]
 pub fn basically_main(
     url: &str,
@@ -630,10 +634,16 @@ pub fn basically_main(
         mut hidden_browser_profiles,
     ) = generate_all_browser_profiles(&app_finder, force_reload);
 
+    let modified_url = unredirect_url(url);
+
     // TODO: url should not be considered here in case of macos
     //       and only the one in LinkOpenedFromBundle should be considered
-    let opening_profile_maybe =
-        get_rule_for_source_app_and_url(&opening_rules, default_profile.clone(), url, None);
+    let opening_profile_maybe = get_rule_for_source_app_and_url(
+        &opening_rules,
+        default_profile.clone(),
+        modified_url.as_str(),
+        None,
+    );
     if let Some(opening_profile_id) = opening_profile_maybe {
         let profile_and_options = opening_profile_id.clone();
         let profile_id = profile_and_options.profile;
@@ -645,7 +655,7 @@ pub fn basically_main(
             profile_id.as_str(),
         );
         if let Some(profile) = profile_maybe {
-            profile.open_link(url, incognito);
+            profile.open_link(modified_url.as_str(), incognito);
             return;
         }
     }
@@ -657,7 +667,7 @@ pub fn basically_main(
     let ui2 = UI::new(
         localizations_basedir,
         main_sender.clone(),
-        url,
+        modified_url.as_str(),
         UI::real_to_ui_browsers(visible_browser_profiles.as_slice()),
         UI::real_to_ui_browsers(hidden_browser_profiles.as_slice()),
         show_set_as_default,
@@ -722,10 +732,12 @@ pub fn basically_main(
                         exit(0x0100);
                     }
                     debug!("url: {}", url);
+
+                    let modified_url = unredirect_url(url.as_str());
                     let opening_profile_id_maybe = get_rule_for_source_app_and_url(
                         &opening_rules,
                         default_profile.clone(),
-                        url.as_str(),
+                        modified_url.as_str(),
                         Some(from_bundle_id.clone()),
                     );
                     if let Some(opening_profile_id) = opening_profile_id_maybe {
@@ -739,7 +751,7 @@ pub fn basically_main(
                             profile_id.as_str(),
                         );
                         if let Some(profile) = profile_maybe {
-                            profile.open_link(url.as_str(), incognito);
+                            profile.open_link(modified_url.as_str(), incognito);
                             ui_event_sink
                                 .submit_command(
                                     ui::OPEN_LINK_IN_BROWSER_COMPLETED,
