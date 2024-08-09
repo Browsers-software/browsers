@@ -9,6 +9,7 @@ use std::thread;
 use druid::{ExtEventSink, Target, UrlOpenInfo};
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info, instrument, warn};
+use url::form_urlencoded::Parse;
 use url::Url;
 
 use gui::ui;
@@ -610,8 +611,32 @@ fn get_browser_profile_by_id<'a>(
     return None;
 }
 
-pub fn unredirect_url(url: &str) -> String {
-    return url.to_string();
+pub fn unredirect_url(url_str: &str) -> String {
+    let url_maybe = Url::from_str(url_str).ok();
+    if url_maybe.is_none() {
+        return url_str.to_string();
+    }
+    let url = url_maybe.unwrap();
+
+    let transformed_url = url.domain().and_then(|domain| {
+        let is_safelinks = domain
+            .to_lowercase()
+            .ends_with("safelinks.protection.outlook.com");
+        return if is_safelinks {
+            let query_pairs: Parse = url.query_pairs();
+
+            let target_url_maybe: Option<String> = query_pairs
+                .into_iter()
+                .find(|(key, _)| key == "url")
+                .map(|(_, value)| value.to_string());
+
+            target_url_maybe
+        } else {
+            None
+        };
+    });
+
+    return transformed_url.unwrap_or(url_str.to_string());
 }
 
 #[instrument(skip_all)]
@@ -634,17 +659,18 @@ pub fn basically_main(
         mut hidden_browser_profiles,
     ) = generate_all_browser_profiles(&app_finder, force_reload);
 
-    let modified_url = unredirect_url(url);
-
     // TODO: url should not be considered here in case of macos
     //       and only the one in LinkOpenedFromBundle should be considered
-    let opening_profile_maybe = get_rule_for_source_app_and_url(
+    let modified_url = unredirect_url(url);
+
+    let opening_profile_id_maybe = get_rule_for_source_app_and_url(
         &opening_rules,
         default_profile.clone(),
         modified_url.as_str(),
         None,
     );
-    if let Some(opening_profile_id) = opening_profile_maybe {
+
+    if let Some(opening_profile_id) = opening_profile_id_maybe {
         let profile_and_options = opening_profile_id.clone();
         let profile_id = profile_and_options.profile;
         let incognito = profile_and_options.incognito;
@@ -715,7 +741,19 @@ pub fn basically_main(
                         source_bundle_id: from_bundle_id,
                     };
                     ui_event_sink
-                        .submit_command(ui::URL_OPENED, url_open_info, Target::Global)
+                        .submit_command(ui::FIXED_URL_OPENED, url_open_info, Target::Global)
+                        .ok();
+                }
+                MessageToMain::UrlPassedToMain(from_bundle_id, url) => {
+                    let new_modified_url = unredirect_url(url.as_str());
+
+                    let url_open_info = UrlOpenInfo {
+                        url: new_modified_url,
+                        source_bundle_id: from_bundle_id,
+                    };
+
+                    ui_event_sink
+                        .submit_command(ui::FIXED_URL_OPENED, url_open_info, Target::Global)
                         .ok();
                 }
                 MessageToMain::LinkOpenedFromBundle(from_bundle_id, url) => {
@@ -733,13 +771,15 @@ pub fn basically_main(
                     }
                     debug!("url: {}", url);
 
-                    let modified_url = unredirect_url(url.as_str());
+                    let new_modified_url = unredirect_url(url.as_str());
+
                     let opening_profile_id_maybe = get_rule_for_source_app_and_url(
                         &opening_rules,
                         default_profile.clone(),
-                        modified_url.as_str(),
+                        &new_modified_url,
                         Some(from_bundle_id.clone()),
                     );
+
                     if let Some(opening_profile_id) = opening_profile_id_maybe {
                         let profile_and_options = opening_profile_id.clone();
                         let profile_id = profile_and_options.profile;
@@ -751,7 +791,7 @@ pub fn basically_main(
                             profile_id.as_str(),
                         );
                         if let Some(profile) = profile_maybe {
-                            profile.open_link(modified_url.as_str(), incognito);
+                            profile.open_link(new_modified_url.as_str(), incognito);
                             ui_event_sink
                                 .submit_command(
                                     ui::OPEN_LINK_IN_BROWSER_COMPLETED,
@@ -1043,6 +1083,7 @@ pub enum MessageToMain {
     OpenLink(usize, bool, String),
     // UrlOpenRequest is almost like LinkOpenedFromBundle, but triggers gui, not from gui
     UrlOpenRequest(String, String),
+    UrlPassedToMain(String, String),
     LinkOpenedFromBundle(String, String),
     SetBrowsersAsDefaultBrowser,
     HideAppProfile(String),

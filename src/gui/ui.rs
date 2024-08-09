@@ -375,7 +375,11 @@ impl UIBrowser {
 
 impl UIState {}
 
+// "url_opened" is automatically triggered in macOS
 pub const URL_OPENED: Selector<druid::UrlOpenInfo> = Selector::new("url_opened");
+
+// fixed_url_opened is always triggered by Browsers
+pub const FIXED_URL_OPENED: Selector<druid::UrlOpenInfo> = Selector::new("fixed_url_opened");
 pub const APP_LOST_FOCUS: Selector<druid::ApplicationLostFocus> = Selector::new("app_lost_focus");
 
 pub const EXIT_APP: Selector<String> = Selector::new("browsers.exit_app");
@@ -600,6 +604,16 @@ impl AppDelegate<UIState> for UIDelegate {
             Handled::Yes
         } else if cmd.is(URL_OPENED) {
             let url_open_info = cmd.get_unchecked(URL_OPENED);
+
+            self.main_sender
+                .send(MessageToMain::UrlPassedToMain(
+                    url_open_info.source_bundle_id.clone(),
+                    url_open_info.url.clone(),
+                ))
+                .ok();
+            Handled::Yes
+        } else if cmd.is(FIXED_URL_OPENED) {
+            let url_open_info = cmd.get_unchecked(FIXED_URL_OPENED);
             data.url = url_open_info.url.clone();
 
             let filtered_browsers = get_filtered_browsers(&data.url, &data.browsers);
