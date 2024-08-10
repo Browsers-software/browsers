@@ -15,10 +15,12 @@ use url::Url;
 use gui::ui;
 
 use crate::browser_repository::{SupportedApp, SupportedAppRepository};
-use crate::gui::ui::{UIProfileAndIncognito, UISettingsRule};
+use crate::gui::ui::{UIBehavioralSettings, UIProfileAndIncognito, UISettingsRule};
 use crate::gui::ui::{UIVisualSettings, UI};
 use crate::url_rule::UrlGlobMatcher;
-use crate::utils::{Config, ConfigRule, OSAppFinder, ProfileAndOptions, UIConfig};
+use crate::utils::{
+    BehavioralConfig, Config, ConfigRule, OSAppFinder, ProfileAndOptions, UIConfig,
+};
 
 mod gui;
 
@@ -611,7 +613,7 @@ fn get_browser_profile_by_id<'a>(
     return None;
 }
 
-pub fn unredirect_url(url_str: &str) -> String {
+pub fn unwrap_url(url_str: &str) -> String {
     let url_maybe = Url::from_str(url_str).ok();
     if url_maybe.is_none() {
         return url_str.to_string();
@@ -661,7 +663,7 @@ pub fn basically_main(
 
     // TODO: url should not be considered here in case of macos
     //       and only the one in LinkOpenedFromBundle should be considered
-    let modified_url = unredirect_url(url);
+    let modified_url = unwrap_url(url);
 
     let opening_profile_id_maybe = get_rule_for_source_app_and_url(
         &opening_rules,
@@ -745,7 +747,7 @@ pub fn basically_main(
                         .ok();
                 }
                 MessageToMain::UrlPassedToMain(from_bundle_id, url) => {
-                    let new_modified_url = unredirect_url(url.as_str());
+                    let new_modified_url = unwrap_url(url.as_str());
 
                     let url_open_info = UrlOpenInfo {
                         url: new_modified_url,
@@ -771,7 +773,7 @@ pub fn basically_main(
                     }
                     debug!("url: {}", url);
 
-                    let new_modified_url = unredirect_url(url.as_str());
+                    let new_modified_url = unwrap_url(url.as_str());
 
                     let opening_profile_id_maybe = get_rule_for_source_app_and_url(
                         &opening_rules,
@@ -964,6 +966,16 @@ pub fn basically_main(
                     config.set_ui_config(ui_config);
                     app_finder.save_config(&config);
                 }
+                MessageToMain::SaveConfigUIBehavioralSettings(settings) => {
+                    info!("Saving Behavioral settings");
+                    let behavioral_config = BehavioralConfig {
+                        unwrap_urls: settings.unwrap_urls,
+                    };
+
+                    let mut config = app_finder.get_config();
+                    config.set_behavior(behavioral_config);
+                    app_finder.save_config(&config);
+                }
             }
         }
         info!("Exiting waiting thread");
@@ -1093,4 +1105,5 @@ pub enum MessageToMain {
     SaveConfigRules(Vec<UISettingsRule>),
     SaveConfigDefaultOpener(Option<UIProfileAndIncognito>),
     SaveConfigUISettings(UIVisualSettings),
+    SaveConfigUIBehavioralSettings(UIBehavioralSettings),
 }

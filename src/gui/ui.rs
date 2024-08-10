@@ -21,7 +21,7 @@ use crate::gui::main_window::{
 use crate::gui::ui::SettingsTab::GENERAL;
 use crate::gui::{about_dialog, main_window, settings_window, ui_theme};
 use crate::url_rule::UrlGlobMatcher;
-use crate::utils::{Config, ConfiguredTheme, ProfileAndOptions, UIConfig};
+use crate::utils::{BehavioralConfig, Config, ConfiguredTheme, ProfileAndOptions, UIConfig};
 use crate::{CommonBrowserProfile, MessageToMain};
 
 pub struct UI {
@@ -64,6 +64,7 @@ impl UI {
             default_opener: default_opener,
             rules: Arc::new(ui_settings_rules),
             visual_settings: Self::map_as_visual_settings(config.get_ui_config()),
+            behavioral_settings: Self::map_as_ui_behavioural_settings(config.get_behavior()),
         };
     }
     fn map_as_visual_settings(ui_config: &UIConfig) -> UIVisualSettings {
@@ -71,6 +72,12 @@ impl UI {
             show_hotkeys: ui_config.show_hotkeys,
             quit_on_lost_focus: ui_config.quit_on_lost_focus,
             theme: ui_config.theme,
+        }
+    }
+
+    fn map_as_ui_behavioural_settings(behavior: &BehavioralConfig) -> UIBehavioralSettings {
+        UIBehavioralSettings {
+            unwrap_urls: behavior.unwrap_urls,
         }
     }
 
@@ -225,6 +232,7 @@ pub struct UISettings {
     pub default_opener: Option<UIProfileAndIncognito>,
     pub rules: Arc<Vec<UISettingsRule>>,
     pub visual_settings: UIVisualSettings,
+    pub behavioral_settings: UIBehavioralSettings,
 }
 
 #[derive(Clone, Debug, Data, Lens)]
@@ -232,6 +240,11 @@ pub struct UIVisualSettings {
     pub show_hotkeys: bool,
     pub quit_on_lost_focus: bool,
     pub theme: ConfiguredTheme,
+}
+
+#[derive(Clone, Debug, Data, Lens)]
+pub struct UIBehavioralSettings {
+    pub unwrap_urls: bool,
 }
 
 #[derive(Clone, Debug, Data, Lens)]
@@ -399,6 +412,8 @@ pub const SAVE_RULES: Selector<()> = Selector::new("browsers.save_rules");
 pub const SAVE_RULE: Selector<usize> = Selector::new("browsers.save_rule");
 pub const SAVE_DEFAULT_RULE: Selector<()> = Selector::new("browsers.save_default_rule");
 pub const SAVE_UI_SETTINGS: Selector<()> = Selector::new("browsers.save_ui_settings");
+pub const SAVE_BEHAVIORAL_SETTINGS: Selector<()> =
+    Selector::new("browsers.save_behavioral_settings");
 
 pub struct UIDelegate {
     main_sender: Sender<MessageToMain>,
@@ -431,6 +446,14 @@ impl UIDelegate {
     fn save_ui_settings(&self, ui_settings: &UIVisualSettings) {
         self.main_sender
             .send(MessageToMain::SaveConfigUISettings(ui_settings.clone()))
+            .ok();
+    }
+
+    fn save_behavioral_settings(&self, ui_behavioral_settings: &UIBehavioralSettings) {
+        self.main_sender
+            .send(MessageToMain::SaveConfigUIBehavioralSettings(
+                ui_behavioral_settings.clone(),
+            ))
             .ok();
     }
 
@@ -768,6 +791,9 @@ impl AppDelegate<UIState> for UIDelegate {
             Handled::Yes
         } else if cmd.is(SAVE_UI_SETTINGS) {
             self.save_ui_settings(&data.ui_settings.visual_settings);
+            Handled::Yes
+        } else if cmd.is(SAVE_BEHAVIORAL_SETTINGS) {
+            self.save_behavioral_settings(&data.ui_settings.behavioral_settings);
             Handled::Yes
         } else {
             //println!("cmd forwarded: {:?}", cmd);

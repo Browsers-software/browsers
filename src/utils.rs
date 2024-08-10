@@ -47,6 +47,13 @@ pub struct Config {
     default_profile: Option<ProfileAndOptions>,
     rules: Vec<ConfigRule>,
     ui: UIConfig,
+    behavior: BehavioralConfig,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[serde(default)]
+pub struct BehavioralConfig {
+    pub unwrap_urls: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -61,13 +68,6 @@ pub struct UIConfig {
     pub theme: ConfiguredTheme,
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, Data, PartialEq)]
-pub enum ConfiguredTheme {
-    Auto,
-    Light,
-    Dark,
-}
-
 impl Default for UIConfig {
     fn default() -> Self {
         UIConfig {
@@ -76,6 +76,13 @@ impl Default for UIConfig {
             theme: ConfiguredTheme::Auto,
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, Data, PartialEq)]
+pub enum ConfiguredTheme {
+    Auto,
+    Light,
+    Dark,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
@@ -179,6 +186,14 @@ impl Config {
 
     pub fn set_ui_config(&mut self, ui_config: UIConfig) {
         self.ui = ui_config
+    }
+
+    pub fn get_behavior(&self) -> &BehavioralConfig {
+        return &self.behavior;
+    }
+
+    pub fn set_behavior(&mut self, behavior: BehavioralConfig) {
+        self.behavior = behavior;
     }
 }
 
