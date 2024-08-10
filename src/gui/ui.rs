@@ -628,10 +628,16 @@ impl AppDelegate<UIState> for UIDelegate {
         } else if cmd.is(URL_OPENED) {
             let url_open_info = cmd.get_unchecked(URL_OPENED);
 
+            let settings = &data.ui_settings.behavioral_settings;
+            let behavioral_config = BehavioralConfig {
+                unwrap_urls: settings.unwrap_urls,
+            };
+
             self.main_sender
                 .send(MessageToMain::UrlPassedToMain(
                     url_open_info.source_bundle_id.clone(),
                     url_open_info.url.clone(),
+                    behavioral_config,
                 ))
                 .ok();
             Handled::Yes
