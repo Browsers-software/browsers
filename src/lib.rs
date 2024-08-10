@@ -613,7 +613,11 @@ fn get_browser_profile_by_id<'a>(
     return None;
 }
 
-pub fn unwrap_url(url_str: &str) -> String {
+pub fn unwrap_url(url_str: &str, behavioral_settings: &BehavioralConfig) -> String {
+    if !behavioral_settings.unwrap_urls {
+        return url_str.to_string();
+    }
+
     let url_maybe = Url::from_str(url_str).ok();
     if url_maybe.is_none() {
         return url_str.to_string();
@@ -663,9 +667,10 @@ pub fn basically_main(
         mut hidden_browser_profiles,
     ) = generate_all_browser_profiles(&config, &app_finder, force_reload);
 
+    let behavioral_settings = config.get_behavior();
     // TODO: url should not be considered here in case of macos
     //       and only the one in LinkOpenedFromBundle should be considered
-    let modified_url = unwrap_url(url);
+    let modified_url = unwrap_url(url, behavioral_settings);
 
     let opening_profile_id_maybe = get_rule_for_source_app_and_url(
         &opening_rules,
@@ -751,8 +756,8 @@ pub fn basically_main(
                         .submit_command(ui::FIXED_URL_OPENED, url_open_info, Target::Global)
                         .ok();
                 }
-                MessageToMain::UrlPassedToMain(from_bundle_id, url) => {
-                    let new_modified_url = unwrap_url(url.as_str());
+                MessageToMain::UrlPassedToMain(from_bundle_id, url, behavioral_config) => {
+                    let new_modified_url = unwrap_url(url.as_str(), &behavioral_config);
 
                     let url_open_info = UrlOpenInfo {
                         url: new_modified_url,
@@ -778,7 +783,8 @@ pub fn basically_main(
                     }
                     debug!("url: {}", url);
 
-                    let new_modified_url = unwrap_url(url.as_str());
+                    let new_modified_url = url;
+                    //let new_modified_url = unwrap_url(url.as_str());
 
                     let opening_profile_id_maybe = get_rule_for_source_app_and_url(
                         &opening_rules,
@@ -1100,7 +1106,7 @@ pub enum MessageToMain {
     OpenLink(usize, bool, String),
     // UrlOpenRequest is almost like LinkOpenedFromBundle, but triggers gui, not from gui
     UrlOpenRequest(String, String),
-    UrlPassedToMain(String, String),
+    UrlPassedToMain(String, String, BehavioralConfig),
     LinkOpenedFromBundle(String, String),
     SetBrowsersAsDefaultBrowser,
     HideAppProfile(String),
