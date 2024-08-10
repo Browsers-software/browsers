@@ -455,6 +455,7 @@ fn get_opening_rules(config: &Config) -> (Vec<OpeningRule>, Option<ProfileAndOpt
 
 #[instrument(skip_all)]
 fn generate_all_browser_profiles(
+    config: &Config,
     app_finder: &OSAppFinder,
     force_reload: bool,
 ) -> (
@@ -464,7 +465,6 @@ fn generate_all_browser_profiles(
     Vec<CommonBrowserProfile>,
 ) {
     let installed_browsers = app_finder.get_installed_browsers_cached(force_reload);
-    let config = app_finder.get_config();
     let hidden_apps = config.get_hidden_apps();
     let hidden_profiles = config.get_hidden_profiles();
 
@@ -654,12 +654,14 @@ pub fn basically_main(
     let is_default = utils::is_default_web_browser();
     let show_set_as_default = !is_default;
 
+    let config = app_finder.get_config();
+
     let (
         mut opening_rules,
         mut default_profile,
         mut visible_browser_profiles,
         mut hidden_browser_profiles,
-    ) = generate_all_browser_profiles(&app_finder, force_reload);
+    ) = generate_all_browser_profiles(&config, &app_finder, force_reload);
 
     // TODO: url should not be considered here in case of macos
     //       and only the one in LinkOpenedFromBundle should be considered
@@ -717,8 +719,11 @@ pub fn basically_main(
             match message {
                 MessageToMain::Refresh => {
                     info!("refresh called");
+
+                    let config = app_finder.get_config();
+
                     let (_, _, visible_browser_profiles, _) =
-                        generate_all_browser_profiles(&app_finder, true);
+                        generate_all_browser_profiles(&config, &app_finder, true);
 
                     let ui_browsers = UI::real_to_ui_browsers(&visible_browser_profiles);
                     ui_event_sink
