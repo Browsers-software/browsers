@@ -5,7 +5,10 @@ use druid::{LensExt, Widget, WidgetExt};
 
 use crate::gui::settings_window::rules_view;
 use crate::gui::shared;
-use crate::gui::ui::{UISettings, UIState, UIVisualSettings, SAVE_UI_SETTINGS};
+use crate::gui::ui::{
+    UIBehavioralSettings, UISettings, UIState, UIVisualSettings, SAVE_BEHAVIORAL_SETTINGS,
+    SAVE_UI_SETTINGS,
+};
 use crate::utils::ConfiguredTheme;
 
 pub(crate) fn general_content() -> impl Widget<UIState> {
@@ -92,6 +95,24 @@ pub(crate) fn general_content() -> impl Widget<UIState> {
 
         col = col.with_child(quit_on_lost_focus_row).with_default_spacer()
     }
+
+    let unwrap_urls_switch = ControllerHost::new(
+        Switch::new(),
+        rules_view::SubmitCommandOnDataChange {
+            command: SAVE_BEHAVIORAL_SETTINGS.with(()),
+        },
+    )
+    .lens(
+        UIState::ui_settings
+            .then(UISettings::behavioral_settings)
+            .then(UIBehavioralSettings::unwrap_urls),
+    );
+
+    let unwrap_urls_row = Flex::row()
+        .with_child(Label::new("Unwrap URLs").with_text_size(TEXT_SIZE))
+        .with_flex_spacer(1.0)
+        .with_child(unwrap_urls_switch);
+    col = col.with_child(unwrap_urls_row).with_default_spacer();
 
     let tooltip = Label::new(
         "To hide and move applications/profiles, close settings and just right-click on the application in the main dialog"
