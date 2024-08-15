@@ -625,15 +625,23 @@ pub fn unwrap_url(url_str: &str, behavioral_settings: &BehavioralConfig) -> Stri
     let url = url_maybe.unwrap();
 
     let transformed_url = url.domain().and_then(|domain| {
-        let is_safelinks = domain
-            .to_lowercase()
-            .ends_with("safelinks.protection.outlook.com");
-        return if is_safelinks {
+        let domain_lowercase = domain.to_lowercase();
+
+        return if domain_lowercase.ends_with("safelinks.protection.outlook.com") {
             let query_pairs: Parse = url.query_pairs();
 
             let target_url_maybe: Option<String> = query_pairs
                 .into_iter()
                 .find(|(key, _)| key == "url")
+                .map(|(_, value)| value.to_string());
+
+            target_url_maybe
+        } else if domain_lowercase.ends_with("l.messenger.com") {
+            let query_pairs: Parse = url.query_pairs();
+
+            let target_url_maybe: Option<String> = query_pairs
+                .into_iter()
+                .find(|(key, _)| key == "u")
                 .map(|(_, value)| value.to_string());
 
             target_url_maybe
