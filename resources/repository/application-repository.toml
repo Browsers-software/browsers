@@ -252,6 +252,12 @@ kind = "CHROMIUM"
 os = "MAC"
 
 [[apps]]
+id = "com.primeum.Browser"
+config_dir_relative = "Zoho/Ulaa"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
 id = "org.mozilla.firefox"
 config_dir_relative = "Firefox"
 kind = "FIREFOX"
