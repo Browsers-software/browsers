@@ -151,21 +151,16 @@ pub fn get_repository_basedir() -> PathBuf {
     return get_resources_basedir().join("repository");
 }
 
-// on macOS basedir should be "/Applications/Browsers.app/Contents/Resources/"
-#[cfg(target_os = "macos")]
 pub fn get_resources_basedir() -> PathBuf {
-    let app_bundle_dir = macos_utils::get_this_app_bundle_dir();
-    return app_bundle_dir.join("Contents").join("Resources");
-}
+    #[cfg(target_os = "macos")]
+    // /Applications/Browsers.app/Contents/Resources/
+    return macos_utils::get_this_app_resources_dir();
 
-// $HOME/.local/share/software.Browsers/resources
-#[cfg(target_os = "linux")]
-pub fn get_resources_basedir() -> PathBuf {
+    #[cfg(target_os = "linux")]
+    // $HOME/.local/share/software.Browsers/resources
     return linux_utils::get_this_app_resources_dir();
-}
 
-#[cfg(target_os = "windows")]
-pub fn get_resources_basedir() -> PathBuf {
+    #[cfg(target_os = "windows")]
     return windows_utils::get_this_app_resources_dir();
 }
 

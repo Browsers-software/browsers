@@ -432,6 +432,12 @@ impl OsHelper {
     }
 }
 
+// e.g /Applications/Browsers.app/Contents/Resources/
+pub fn get_this_app_resources_dir() -> PathBuf {
+    let app_bundle_dir = get_this_app_bundle_dir();
+    return app_bundle_dir.join("Contents").join("Resources");
+}
+
 // e.g /Applications/Browsers.app/
 pub fn get_this_app_bundle_dir() -> PathBuf {
     get_bundle_path(APP_BUNDLE_ID).unwrap_or_else(|| get_this_app_bundle_dir_fallback())
