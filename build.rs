@@ -91,7 +91,8 @@ fn main() {
 
     // e.g target/
     //  or target/aarch64-unknown-linux-gnu/
-    let arch_target_dir = get_target_build_path().parent().unwrap();
+    let target_build_path = get_target_build_path();
+    let arch_target_dir = target_build_path.parent().unwrap();
 
     create_deb_control(rust_target_arch.as_str(), arch_target_dir);
     create_rpm_spec(rust_target_arch.as_str(), arch_target_dir);
