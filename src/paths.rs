@@ -152,6 +152,10 @@ pub fn get_repository_basedir() -> PathBuf {
 }
 
 pub fn get_resources_basedir() -> PathBuf {
+    #[cfg(debug_assertions)]
+    // if running Browsers in debug mode
+    return PathBuf::from("./resources");
+
     #[cfg(target_os = "macos")]
     // /Applications/Browsers.app/Contents/Resources/
     return macos_utils::get_this_app_resources_dir();
