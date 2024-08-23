@@ -6,8 +6,42 @@ use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+fn copy_file_to_target_dir(target_build_path: &Path, file_path_relative: &str) {
+    let to_file_path = target_build_path.join(file_path_relative);
+    let to_dir_path = to_file_path.parent().unwrap();
+    fs::create_dir_all(to_dir_path).unwrap();
+
+    let from_file_path = file_path_relative.to_string();
+
+    match fs::copy(from_file_path.as_str(), to_file_path.as_path()) {
+        Ok(file) => file,
+        Err(error) => panic!(
+            "Problem copying the file {} to {}: {:?}",
+            from_file_path.as_str(),
+            to_file_path.as_path().to_str().unwrap(),
+            error
+        ),
+    };
+}
+
+fn copy_resource(target_build_path: &Path, file_path_relative: &str) {
+    let file_path_relative = format!("resources/{file_path_relative}");
+    copy_file_to_target_dir(target_build_path, file_path_relative.as_str());
+}
+
+fn copy_resources() {
+    let target_build_path = get_target_build_path();
+    let to_dir = target_build_path.as_path();
+
+    copy_resource(to_dir, "i18n/en-US/builtin.ftl");
+    copy_resource(to_dir, "icons/512x512/software.Browsers.png");
+    copy_resource(to_dir, "repository/application-repository.toml");
+}
+
 #[cfg(target_os = "macos")]
 fn main() {
+    copy_resources();
+
     const VERSION: &str = env!("CARGO_PKG_VERSION");
     const ROOT_DIR: &str = env!("CARGO_MANIFEST_DIR");
     let template_info_plist_path: PathBuf = Path::new(ROOT_DIR)
@@ -55,6 +89,17 @@ fn main() {
     // https://doc.rust-lang.org/reference/conditional-compilation.html#target_arch
     let rust_target_arch = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap();
 
+    // e.g target/
+    //  or target/aarch64-unknown-linux-gnu/
+    let arch_target_dir = get_target_build_path().parent().unwrap();
+
+    create_deb_control(rust_target_arch.as_str(), arch_target_dir);
+    create_rpm_spec(rust_target_arch.as_str(), arch_target_dir);
+}
+
+// e.g target/release/
+//  or target/aarch64-unknown-linux-gnu/release/
+fn get_target_build_path() -> PathBuf {
     // e.g "/target/aarch64-unknown-linux-gnu/release/build/browsers-f4fff742057613df/out"
     //  or "/target/release/build/browsers-f4fff742057613df/out"
     let out_dir = std::env::var("OUT_DIR").unwrap();
@@ -67,12 +112,9 @@ fn main() {
         .flatten()
         .map(|a| a.parent()) // target/.../release/
         .flatten()
-        .map(|a| a.parent()) // target/
-        .flatten()
         .unwrap();
 
-    create_deb_control(rust_target_arch.as_str(), arch_target_dir);
-    create_rpm_spec(rust_target_arch.as_str(), arch_target_dir);
+    return arch_target_dir.to_path_buf();
 }
 
 #[cfg(target_os = "linux")]
