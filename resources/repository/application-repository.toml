@@ -258,6 +258,12 @@ kind = "CHROMIUM"
 os = "MAC"
 
 [[apps]]
+id = "com.alohabrowser.alohabrowser"
+config_dir_relative = "Aloha"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
 id = "org.mozilla.firefox"
 config_dir_relative = "Firefox"
 kind = "FIREFOX"
