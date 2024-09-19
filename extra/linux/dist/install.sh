@@ -209,6 +209,9 @@ if [[ $* != *--skip-desktop-database* ]]; then
   # The update-desktop-database program is a tool to build a cache database of the MIME types handled by desktop files.
   # Refresh desktop database
   update-desktop-database "$TARGET_DESKTOP_DIR_PATH"
+
+  # Sets Browsers as default application for https and http mimetypes
+  xdg-mime default "software.Browsers.desktop" https http || echo "Could not make Browsers as default web link opener"
 fi
 
 echo "Browsers has been installed. Enjoy!"
