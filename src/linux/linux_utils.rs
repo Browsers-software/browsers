@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::{Command, Stdio};
 use std::slice::Split;
 
 use druid::image;
@@ -428,4 +429,54 @@ pub fn get_snap_root_dir() -> PathBuf {
 pub fn linux_get_unsandboxed_home_dir() -> PathBuf {
     // TODO: escape sandbox if in snap/flatpak
     return dirs::home_dir().unwrap();
+}
+
+// returns true if it was already default web browser (then nothing was done)
+pub fn set_default_web_browser() -> bool {
+    if is_default_web_browser() {
+        return true;
+    }
+
+    let desktop_file_name = format!("{}.desktop", XDG_NAME);
+
+    let result = Command::new("xdg-mime")
+        .arg("default")
+        .arg(desktop_file_name.as_str())
+        .arg("https http")
+        .status();
+
+    if result.is_err() {
+        warn!("Could not set Browsers as default app");
+    }
+
+    return false;
+}
+
+pub fn is_default_web_browser() -> bool {
+    let desktop_file_name = format!("{}.desktop", XDG_NAME);
+
+    let https_default_app = query_default_app("https").unwrap_or("".to_string());
+    let http_default_app = query_default_app("http").unwrap_or("".to_string());
+
+    return https_default_app == desktop_file_name && http_default_app == desktop_file_name;
+}
+
+fn query_default_app(scheme: &str) -> Option<String> {
+    let result = Command::new("xdg-mime")
+        .arg("query")
+        .arg("default")
+        .arg(scheme)
+        .stdout(Stdio::piped())
+        .output();
+
+    if result.is_err() {
+        warn!("Could not query default app for scheme {}", scheme);
+        return None;
+    }
+
+    let output = result.unwrap();
+
+    // extract the raw bytes that we captured and interpret them as a string
+    let default_app = String::from_utf8(output.stdout).unwrap();
+    return Some(default_app);
 }

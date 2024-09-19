@@ -18,14 +18,24 @@ use crate::macos::macos_utils;
 use crate::windows::windows_utils;
 use crate::{paths, InstalledBrowser, SupportedAppRepository};
 
+#[cfg(target_os = "linux")]
+pub fn is_default_web_browser() -> bool {
+    return linux_utils::is_default_web_browser();
+}
+
 #[cfg(target_os = "macos")]
 pub fn is_default_web_browser() -> bool {
     return macos_utils::is_default_web_browser();
 }
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(target_os = "windows")]
 pub fn is_default_web_browser() -> bool {
     return true;
+}
+
+#[cfg(target_os = "linux")]
+pub fn set_as_default_web_browser() -> bool {
+    return linux_utils::set_default_web_browser();
 }
 
 #[cfg(target_os = "macos")]
@@ -33,7 +43,7 @@ pub fn set_as_default_web_browser() -> bool {
     return macos_utils::set_default_web_browser();
 }
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(target_os = "windows")]
 pub fn set_as_default_web_browser() -> bool {
     return true;
 }
