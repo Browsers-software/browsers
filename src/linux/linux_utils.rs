@@ -442,7 +442,8 @@ pub fn set_default_web_browser() -> bool {
     let result = Command::new("xdg-mime")
         .arg("default")
         .arg(desktop_file_name.as_str())
-        .arg("https http")
+        .arg("x-scheme-handler/https")
+        .arg("x-scheme-handler/http")
         .status();
 
     if result.is_err() {
@@ -455,8 +456,8 @@ pub fn set_default_web_browser() -> bool {
 pub fn is_default_web_browser() -> bool {
     let desktop_file_name = format!("{}.desktop", XDG_NAME);
 
-    let https_default_app = query_default_app("https").unwrap_or("".to_string());
-    let http_default_app = query_default_app("http").unwrap_or("".to_string());
+    let https_default_app = query_default_app("x-scheme-handler/https").unwrap_or("".to_string());
+    let http_default_app = query_default_app("x-scheme-handler/http").unwrap_or("".to_string());
 
     return https_default_app == desktop_file_name && http_default_app == desktop_file_name;
 }
@@ -477,6 +478,7 @@ fn query_default_app(scheme: &str) -> Option<String> {
     let output = result.unwrap();
 
     // extract the raw bytes that we captured and interpret them as a string
-    let default_app = String::from_utf8(output.stdout).unwrap();
+    let default_app = String::from_utf8(output.stdout).unwrap().trim().to_string();
+    info!("Default for {scheme} is '{default_app}'");
     return Some(default_app);
 }

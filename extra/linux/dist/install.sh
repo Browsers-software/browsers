@@ -211,7 +211,7 @@ if [[ $* != *--skip-desktop-database* ]]; then
   update-desktop-database "$TARGET_DESKTOP_DIR_PATH"
 
   # Sets Browsers as default application for https and http mimetypes
-  xdg-mime default "software.Browsers.desktop" https http || echo "Could not make Browsers as default web link opener"
+  xdg-mime default "software.Browsers.desktop" x-scheme-handler/https x-scheme-handler/http || echo "Could not make Browsers as default web link opener"
 fi
 
 echo "Browsers has been installed. Enjoy!"
