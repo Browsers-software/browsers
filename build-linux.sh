@@ -6,6 +6,8 @@ set -e
 target_dir='target/universal-unknown-linux-gnu/release'
 
 build_binary() {
+  export CROSS_NO_WARNINGS=0
+
   cross build --target x86_64-unknown-linux-gnu --release
   cross build --target aarch64-unknown-linux-gnu --release
   cross build --target armv7-unknown-linux-gnueabihf --release
@@ -98,7 +100,7 @@ create_signatures() {
   local file_name="$2"
 
   # creates $filename.sha256
-  shasum --algorithm 256 "./$target_dir/$file_name" | cut -f1 -d' ' > "./$target_dir/$file_name.sha256"
+  shasum --algorithm 256 "./$target_dir/$file_name" | cut -f1 -d' ' >"./$target_dir/$file_name.sha256"
 
   # creates $filename.sig
   signify -S -s "$APPCAST_SECRET_KEY_FILE" -m "./$target_dir/$file_name"
