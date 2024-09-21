@@ -209,8 +209,8 @@ impl MainWindow {
 
         return Container::new(col)
             .background(MainWindowTheme::ENV_WINDOW_BACKGROUND_COLOR)
-            .rounded(10.0)
-            .border(MainWindowTheme::ENV_WINDOW_BORDER_COLOR, 0.5)
+            .rounded(7.0)
+            .border(MainWindowTheme::ENV_WINDOW_BORDER_COLOR, 0.3)
             .expand_height()
             .env_scope(|env, data| {
                 ui_theme::initialize_theme(env, data);
@@ -332,7 +332,7 @@ fn create_browser_label() -> Label<((bool, UISettings), UIBrowser)> {
             name
         },
     )
-    .with_text_size(12.0)
+    .with_text_size(MainWindowTheme::ENV_BROWSER_LABEL_SIZE)
     .with_line_break_mode(LineBreaking::Clip)
     .with_text_alignment(TextAlignment::Start)
     .with_text_color(MainWindowTheme::ENV_BROWSER_LABEL_COLOR);
@@ -376,7 +376,7 @@ fn create_browser(
                 Label::dynamic(|(_, item): &((bool, UISettings), UIBrowser), _env: &_| {
                     item.profile_name.clone()
                 })
-                .with_text_size(11.0)
+                .with_text_size(MainWindowTheme::ENV_PROFILE_LABEL_SIZE)
                 .with_line_break_mode(LineBreaking::Clip)
                 .with_text_alignment(TextAlignment::Start)
                 .with_text_color(MainWindowTheme::ENV_PROFILE_LABEL_COLOR);
