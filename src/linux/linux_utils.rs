@@ -87,7 +87,7 @@ impl OsHelper {
         let mut all_search_paths = default_paths();
 
         // remove duplicate entries (e.g XDG_DATA_DIRS sometimes has every path twice)
-        let set: HashSet<_> = all_search_paths.drain(..).collect();
+        let set: HashSet<_> = all_search_paths.drain().collect();
         all_search_paths.extend(set.into_iter());
 
         // collect all .desktop file paths and map them by file name to remove duplicate files,
