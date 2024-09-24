@@ -202,8 +202,7 @@ jobs:
           target_dir='target/universal-apple-darwin/release'
           cd "$target_dir"
           set -x
-          dev=$(tty)
-          open ./Browsers.app -W --stdout $dev --stderr $dev --args --no-gui https://browsers.software
+          open ./Browsers.app -W --stdout $(tty) --stderr $(tty) --args --no-gui https://browsers.software
         shell: bash
       - name: Upload mac artifacts
         uses: actions/upload-artifact@v4
