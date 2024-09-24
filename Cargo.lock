@@ -322,7 +322,7 @@ dependencies = [
 
 [[package]]
 name = "browsers"
-version = "0.5.9"
+version = "0.6.0"
 dependencies = [
  "clap",
  "cocoa-foundation 0.2.0",
