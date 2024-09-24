@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2024-09-24
+
+### Fixed
+
+- Linux: fix detecting installed browsers. Fixes #226
+
+### Added
+
+- macOS: Support profiles for Ulaa browser by Zoho
+- Linux: Allow setting Browsers as system default browser straight from context menu
+- Linux: Set Browsers as system default browser when running install.sh script
+
 ## [0.5.9] - 2024-09-21
 
 ### Added
