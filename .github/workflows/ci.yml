@@ -203,7 +203,8 @@ jobs:
           cd "$target_dir"
           set -x
           open ./Browsers.app -W --stdout $(tty) --stderr $(tty) --args --no-gui https://browsers.software
-        shell: bash
+        # special shell script to make tty working
+        shell: 'script -q /dev/null bash -e {0}'
       - name: Upload mac artifacts
         uses: actions/upload-artifact@v4
         with:
