@@ -84,22 +84,23 @@ impl OsHelper {
     }
 
     fn freedesktop_find_all_desktop_entries(content_type: &str) -> Vec<DesktopEntryHolder> {
-        let all_search_paths = default_paths();
-
-        // remove duplicate entries (e.g XDG_DATA_DIRS sometimes has every path twice)
-        let set: HashSet<PathBuf> = all_search_paths.into_iter().collect();
+        let unique_search_paths = default_paths()
+            .into_iter()
+            // remove duplicate entries (e.g XDG_DATA_DIRS sometimes has every path twice)
+            .collect::<HashSet<PathBuf>>()
+            .into_iter();
 
         // collect all .desktop file paths and map them by file name to remove duplicate files,
         // even if they exist in different directories
-        let mut desktop_file_paths_by_filename: BTreeMap<_, PathBuf> = set
-            .into_iter()
-            .filter_map(|file_path| {
-                file_path
-                    .file_name()
-                    .map(|a| a.to_owned())
-                    .map(|file_name| (file_name, file_path))
-            })
-            .collect();
+        let mut desktop_file_paths_by_filename: BTreeMap<_, PathBuf> =
+            Iter::new(unique_search_paths)
+                .filter_map(|file_path| {
+                    file_path
+                        .file_name()
+                        .map(|a| a.to_owned())
+                        .map(|file_name| (file_name, file_path))
+                })
+                .collect();
 
         let cleaned_desktop_file_paths: Vec<PathBuf> =
             desktop_file_paths_by_filename.into_values().collect();
