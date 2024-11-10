@@ -218,7 +218,7 @@ jobs:
           cd "$target_dir"
           set -x
 
-          command_output="$(./Browsers.app -W --stdout $(tty) --stderr $(tty) --args --no-gui https://browsers.software)"
+          command_output="$(open ./Browsers.app -W --stdout $(tty) --stderr $(tty) --args --no-gui https://browsers.software)"          
           echo "$command_output"
           
           if "$command_output" | grep -q 'Safari'; then
