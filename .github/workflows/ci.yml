@@ -106,8 +106,10 @@ jobs:
         run: |
           install_dir="$HOME/.local/bin"
           cd "$install_dir"
+          set -x
+          
           command_output=$(./browsers --no-gui https://browsers.software)
-          echo $command_output
+          echo "$command_output"
           
           if $command_output | grep -q 'Firefox Web Browser'; then
             echo "matched Firefox Web Browser"
@@ -217,8 +219,8 @@ jobs:
           set -x
 
           command_output=$(./Browsers.app -W --stdout $(tty) --stderr $(tty) --args --no-gui https://browsers.software)
+          echo "$command_output"
           
-          echo $command_output
           if $command_output | grep -q 'Safari'; then
             echo "matched Safari"
           fi
@@ -308,9 +310,10 @@ jobs:
         run: |
           install_dir="$PROGRAMFILES/software.Browsers"
           cd "$install_dir"
-          command_output=$(./browsers.exe --no-gui https://browsers.software)
+          set -x
           
-          echo $command_output
+          command_output=$(./browsers.exe --no-gui https://browsers.software)
+          echo "$command_output"
           
           if $command_output | grep -q 'Mozilla Firefox'; then
             echo "matched Mozilla Firefox"
