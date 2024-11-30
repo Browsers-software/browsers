@@ -330,8 +330,8 @@ jobs:
             echo "matched Internet Explorer"
           fi
           
-          if echo "$command_output" | grep -q ' Microsoft Edge Profile 1'; then
-            echo "matched  Microsoft Edge (Profile 1)"
+          if echo "$command_output" | grep -q ' Microsoft Edge (Profile 1)'; then
+            echo "matched Microsoft Edge (Profile 1)"
           fi
         shell: bash
       - name: Upload release artifact
