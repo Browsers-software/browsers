@@ -376,7 +376,7 @@ impl UIBrowser {
     pub fn get_full_name(&self) -> String {
         return if self.supports_profiles {
             format!(
-                "{} {}",
+                "{} ({})",
                 self.browser_name.to_string(),
                 self.profile_name.as_str()
             )

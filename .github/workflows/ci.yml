@@ -106,7 +106,22 @@ jobs:
         run: |
           install_dir="$HOME/.local/bin"
           cd "$install_dir"
-          ./browsers --no-gui https://browsers.software
+          #set -x
+          
+          command_output="$(./browsers --no-gui https://browsers.software)"
+          echo "$command_output"
+          
+          if echo "$command_output" | grep -q 'Firefox Web Browser'; then
+            echo "matched Firefox Web Browser"
+          fi
+          
+          if echo "$command_output" | grep -q 'Google Chrome'; then
+            echo "matched Google Chrome"
+          fi
+          
+          if echo "$command_output" | grep -q 'Microsoft Edge'; then
+            echo "matched Microsoft Edge"
+          fi
         shell: bash
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
@@ -201,9 +216,27 @@ jobs:
         run: |
           target_dir='target/universal-apple-darwin/release'
           cd "$target_dir"
-          set -x
-          open ./Browsers.app --env BROWSERS_LOG_LEVEL=DEBUG --stdout /tmp/my-stdout --stderr /tmp/my-stderr --args --no-gui https://browsers.software && cat /tmp/my-stdout && cat /tmp/my-stderr
-        shell: bash
+          #set -x
+
+          touch ./output_file
+          open ./Browsers.app -W --stdout output_file --stderr output_file --args --no-gui https://browsers.software
+          
+          command_output=`cat ./output_file`
+          echo "$command_output"
+          
+          if echo "$command_output" | grep -q 'Safari'; then
+            echo "matched Safari"
+          fi
+          
+          if echo "$command_output" | grep -q 'Chrome'; then
+            echo "matched Chrome"
+          fi
+          
+          if echo "$command_output" | grep -q 'Google Chrome for Testing'; then
+            echo "matched Google Chrome for Testing"
+          fi
+        # special shell script to make tty working
+        shell: 'script -q /dev/null bash -e {0}'
       - name: Upload mac artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -280,7 +313,26 @@ jobs:
         run: |
           install_dir="$PROGRAMFILES/software.Browsers"
           cd "$install_dir"
-          ./browsers.exe --no-gui https://browsers.software
+          #set -x
+          
+          command_output="$(./browsers.exe --no-gui https://browsers.software)"
+          echo "$command_output"
+          
+          if echo "$command_output" | grep -q 'Mozilla Firefox'; then
+            echo "matched Mozilla Firefox"
+          fi
+          
+          if echo "$command_output" | grep -q 'Google Chrome'; then
+            echo "matched Google Chrome"
+          fi
+          
+          if echo "$command_output" | grep -q 'Internet Explorer'; then
+            echo "matched Internet Explorer"
+          fi
+          
+          if echo "$command_output" | grep -q ' Microsoft Edge (Profile 1)'; then
+            echo "matched Microsoft Edge (Profile 1)"
+          fi
         shell: bash
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
