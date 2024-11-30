@@ -216,9 +216,12 @@ jobs:
         run: |
           target_dir='target/universal-apple-darwin/release'
           cd "$target_dir"
-          set -x
+          #set -x
 
-          command_output="$(open ./Browsers.app -W --stdout $(tty) --stderr $(tty) --args --no-gui https://browsers.software)"          
+          touch ./output_file
+          open ./Browsers.app -W --stdout output_file --stderr output_file --args --no-gui https://browsers.software
+          
+          command_output=`cat ./output_file`
           echo "$command_output"
           
           if "$command_output" | grep -q 'Safari'; then
