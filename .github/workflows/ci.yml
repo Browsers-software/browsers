@@ -106,7 +106,7 @@ jobs:
         run: |
           install_dir="$HOME/.local/bin"
           cd "$install_dir"
-          set -x
+          #set -x
           
           command_output="$(./browsers --no-gui https://browsers.software)"
           echo "$command_output"
@@ -313,7 +313,7 @@ jobs:
         run: |
           install_dir="$PROGRAMFILES/software.Browsers"
           cd "$install_dir"
-          set -x
+          #set -x
           
           command_output="$(./browsers.exe --no-gui https://browsers.software)"
           echo "$command_output"
