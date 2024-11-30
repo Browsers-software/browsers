@@ -111,15 +111,15 @@ jobs:
           command_output="$(./browsers --no-gui https://browsers.software)"
           echo "$command_output"
           
-          if "$command_output" | grep -q 'Firefox Web Browser'; then
+          if echo "$command_output" | grep -q 'Firefox Web Browser'; then
             echo "matched Firefox Web Browser"
           fi
           
-          if "$command_output" | grep -q 'Google Chrome'; then
+          if echo "$command_output" | grep -q 'Google Chrome'; then
             echo "matched Google Chrome"
           fi
           
-          if "$command_output" | grep -q 'Microsoft Edge'; then
+          if echo "$command_output" | grep -q 'Microsoft Edge'; then
             echo "matched Microsoft Edge"
           fi
         shell: bash
@@ -224,15 +224,15 @@ jobs:
           command_output=`cat ./output_file`
           echo "$command_output"
           
-          if "$command_output" | grep -q 'Safari'; then
+          if echo "$command_output" | grep -q 'Safari'; then
             echo "matched Safari"
           fi
           
-          if "$command_output" | grep -q 'Chrome'; then
+          if echo "$command_output" | grep -q 'Chrome'; then
             echo "matched Chrome"
           fi
           
-          if "$command_output" | grep -q 'Google Chrome for Testing'; then
+          if echo "$command_output" | grep -q 'Google Chrome for Testing'; then
             echo "matched Google Chrome for Testing"
           fi
         # special shell script to make tty working
@@ -318,19 +318,19 @@ jobs:
           command_output="$(./browsers.exe --no-gui https://browsers.software)"
           echo "$command_output"
           
-          if "$command_output" | grep -q 'Mozilla Firefox'; then
+          if echo "$command_output" | grep -q 'Mozilla Firefox'; then
             echo "matched Mozilla Firefox"
           fi
           
-          if "$command_output" | grep -q 'Google Chrome'; then
+          if echo "$command_output" | grep -q 'Google Chrome'; then
             echo "matched Google Chrome"
           fi
           
-          if "$command_output" | grep -q 'Internet Explorer'; then
+          if echo "$command_output" | grep -q 'Internet Explorer'; then
             echo "matched Internet Explorer"
           fi
           
-          if "$command_output" | grep -q ' Microsoft Edge Profile 1'; then
+          if echo "$command_output" | grep -q ' Microsoft Edge Profile 1'; then
             echo "matched  Microsoft Edge (Profile 1)"
           fi
         shell: bash
