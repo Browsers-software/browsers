@@ -80,7 +80,7 @@ xdg-mime = "^0.4.0"
 freedesktop-desktop-entry = "0.7.0"
 
 # to find icon theme and icon;
-freedesktop-icons = "0.2.6"
+freedesktop-icons = "0.3.0"
 
 # Helps parsing commands that are in Exec field in .desktop files
 shell-words = "1.1.0"
