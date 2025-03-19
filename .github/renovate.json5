@@ -1,12 +1,12 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:base"
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  extends: [
+    'config:recommended',
   ],
-  "ignoreDeps": [
-    // we use older version, because it should be the same version of glib as druid is using
-    "glib",
-    // we use older version, because it should be the same version of gtk as druid is using
-    "gtk"
-  ]
+  ignoreDeps: [
+    // we use older version, because glib should be the same version as druid is using
+    'glib',
+    // we use older version, because gtk should be the same version as druid is using
+    'gtk',
+  ],
 }
