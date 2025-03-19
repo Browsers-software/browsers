@@ -400,24 +400,24 @@ checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 
 [[package]]
 name = "cached"
-version = "0.54.0"
+version = "0.55.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9718806c4a2fe9e8a56fd736f97b340dd10ed1be8ed733ed50449f351dc33cae"
+checksum = "b0839c297f8783316fcca9d90344424e968395413f0662a5481f79c6648bbc14"
 dependencies = [
  "ahash 0.8.11",
  "cached_proc_macro",
  "cached_proc_macro_types",
  "hashbrown 0.14.5",
  "once_cell",
- "thiserror 1.0.69",
+ "thiserror 2.0.11",
  "web-time",
 ]
 
 [[package]]
 name = "cached_proc_macro"
-version = "0.23.0"
+version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f42a145ed2d10dce2191e1dcf30cfccfea9026660e143662ba5eec4017d5daa"
+checksum = "673992d934f0711b68ebb3e1b79cdc4be31634b37c98f26867ced0438ca5c603"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -1124,17 +1124,15 @@ dependencies = [
 
 [[package]]
 name = "freedesktop-desktop-entry"
-version = "0.7.7"
+version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "016f6ee9509f11c985aa402451f4ee900d1fafeb501a4c3d734ebecfc1130e05"
+checksum = "e6a4cdc5571033a6a329b9e8a8430594d1e3b60f42bb79e79686cadef34740ea"
 dependencies = [
  "cached",
- "dirs 5.0.1",
  "gettext-rs",
  "log",
  "memchr",
  "strsim",
- "textdistance",
  "thiserror 2.0.11",
  "xdg",
 ]
@@ -2735,12 +2733,6 @@ dependencies = [
  "rustix",
  "windows-sys 0.52.0",
 ]
-
-[[package]]
-name = "textdistance"
-version = "1.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aa672c55ab69f787dbc9126cc387dbe57fdd595f585e4524cf89018fa44ab819"
 
 [[package]]
 name = "thiserror"
