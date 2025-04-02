@@ -54,12 +54,7 @@ naive-cityhash = "0.2.0"
 # To create lazy static variables
 lazy_static = "1.5.0"
 
-# When running a new instance of Browsers, new instances will check if existing instance is already running
-single-instance = "0.3.3"
-
-# When running a new instance of Browsers, new instances will send arguments
-# to existing process via this library (and then close itself)
-interprocess = "2.2.3"
+# Dark-light system theme detection
 dark-light = "2.0.0"
 
 # macOS Core Foundation bindings
@@ -72,6 +67,9 @@ libc = "0.2.154"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 xdg-mime = "^0.4.0"
+
+# eagerly init gtk (should be same version of gtk as druid is using)
+#gtk = { version = "0.16.2" }
 
 # to find application .desktop files
 freedesktop-desktop-entry = "0.7.0"

@@ -111,16 +111,31 @@ jobs:
           command_output="$(./browsers --no-gui https://browsers.software)"
           echo "$command_output"
           
+          failed=false
+          
           if echo "$command_output" | grep -q 'Firefox Web Browser'; then
             echo "matched Firefox Web Browser"
+          else
+            echo "did NOT match Firefox Web Browser"
+            failed=true
           fi
           
           if echo "$command_output" | grep -q 'Google Chrome'; then
             echo "matched Google Chrome"
+          else
+            echo "did NOT match Google Chrome"
+            failed=true
           fi
           
           if echo "$command_output" | grep -q 'Microsoft Edge'; then
             echo "matched Microsoft Edge"
+          else
+            echo "did NOT match Google Chrome"
+            failed=true
+          fi
+          
+          if [ "$failed" = true ]; then
+            exit 1
           fi
         shell: bash
       - name: Upload release artifact
@@ -224,16 +239,30 @@ jobs:
           command_output=`cat ./output_file`
           echo "$command_output"
           
+          failed=false
           if echo "$command_output" | grep -q 'Safari'; then
             echo "matched Safari"
+          else
+            echo "did NOT match Safari"
+            failed=true
           fi
           
           if echo "$command_output" | grep -q 'Chrome'; then
             echo "matched Chrome"
+          else
+            echo "did NOT match Chrome"
+            failed=true
           fi
           
           if echo "$command_output" | grep -q 'Google Chrome for Testing'; then
             echo "matched Google Chrome for Testing"
+          else
+            echo "did NOT match Google Chrome for Testing"
+            failed=true
+          fi
+          
+          if [ "$failed" = true ]; then
+            exit 1
           fi
         # special shell script to make tty working
         shell: 'script -q /dev/null bash -e {0}'
@@ -318,20 +347,37 @@ jobs:
           command_output="$(./browsers.exe --no-gui https://browsers.software)"
           echo "$command_output"
           
+          failed=false
           if echo "$command_output" | grep -q 'Mozilla Firefox'; then
             echo "matched Mozilla Firefox"
+          else
+            echo "did NOT match Mozilla Firefox"
+            failed=true
           fi
           
           if echo "$command_output" | grep -q 'Google Chrome'; then
             echo "matched Google Chrome"
+          else
+            echo "did NOT match Google Chrome"
+            failed=true
           fi
           
           if echo "$command_output" | grep -q 'Internet Explorer'; then
             echo "matched Internet Explorer"
+          else
+            echo "did NOT match Internet Explorer"
+            failed=true
           fi
           
-          if echo "$command_output" | grep -q ' Microsoft Edge (Profile 1)'; then
+          if echo "$command_output" | grep -q 'Microsoft Edge (Profile 1)'; then
             echo "matched Microsoft Edge (Profile 1)"
+          else
+            echo "did NOT match Microsoft Edge (Profile 1)"
+            failed=true
+          fi
+
+          if [ "$failed" = true ]; then
+            exit 1
           fi
         shell: bash
       - name: Upload release artifact
