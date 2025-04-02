@@ -38,8 +38,6 @@ mod linux;
 #[cfg(target_os = "windows")]
 mod windows;
 
-pub mod communicate;
-
 mod chromium_profiles_parser;
 mod firefox_profiles_parser;
 mod slack_profiles_parser;

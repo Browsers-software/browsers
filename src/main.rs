@@ -11,7 +11,6 @@ use tracing_subscriber;
 use tracing_subscriber::fmt::time::OffsetTime;
 use tracing_subscriber::fmt::writer::MakeWriterExt;
 
-use browsers::communicate;
 use browsers::paths;
 use browsers::{basically_main, MessageToMain};
 
@@ -66,12 +65,14 @@ fn main() {
 
     let (main_sender, main_receiver) = mpsc::channel::<MessageToMain>();
 
+    /*
     let (is_first_instance, single_instance) =
         communicate::check_single_instance(url.as_str(), main_sender.clone());
     if !is_first_instance {
         info!("Exiting, because another instance is running");
         return;
     }
+    */
 
     basically_main(
         url.as_str(),
@@ -80,5 +81,5 @@ fn main() {
         main_sender.clone(),
         main_receiver,
     );
-    single_instance.is_single(); // dummy as guard
+    //single_instance.is_single(); // dummy as guard
 }
