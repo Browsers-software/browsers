@@ -59,7 +59,7 @@ single-instance = "0.3.3"
 
 # When running a new instance of Browsers, new instances will send arguments
 # to existing process via this library (and then close itself)
-interprocess = "2.2.0"
+interprocess = "2.2.3"
 dark-light = "2.0.0"
 
 # macOS Core Foundation bindings
