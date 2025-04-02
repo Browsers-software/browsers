@@ -1,9 +1,9 @@
+use crate::gui::ui::UIState;
+use crate::utils::ConfiguredTheme;
 use dark_light::Mode;
 use druid::{Color, Data, Env, Key};
 use serde::{Deserialize, Serialize};
-
-use crate::gui::ui::UIState;
-use crate::utils::ConfiguredTheme;
+use tracing::warn;
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Data)]
 pub enum UITheme {
@@ -26,11 +26,14 @@ fn get_active_ui_theme(ui_state: &UIState) -> UITheme {
 }
 
 fn detect_system_theme() -> UITheme {
-    let system_dark_light_mode: Mode = dark_light::detect();
-    return match system_dark_light_mode {
-        Mode::Dark => UITheme::Dark,
-        Mode::Light => UITheme::Light,
-        Mode::Default => UITheme::Dark,
+    return match dark_light::detect() {
+        Ok(Mode::Dark) => UITheme::Dark,
+        Ok(Mode::Light) => UITheme::Light,
+        Ok(Mode::Unspecified) => UITheme::Dark,
+        Err(error) => {
+            warn!("{}", error);
+            UITheme::Dark
+        }
     };
 }
 
