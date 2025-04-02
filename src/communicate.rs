@@ -4,7 +4,9 @@ use std::{fs, io, thread};
 
 use interprocess::local_socket::prelude::{LocalSocketListener, LocalSocketStream};
 use interprocess::local_socket::traits::{ListenerExt, Stream};
-use interprocess::local_socket::{GenericFilePath, ListenerOptions, Name, ToFsName};
+use interprocess::local_socket::{
+    GenericFilePath, GenericNamespaced, ListenerOptions, Name, NameType, ToFsName, ToNsName,
+};
 use serde::{Deserialize, Serialize};
 use single_instance::SingleInstance;
 use tracing::{info, warn};
@@ -44,36 +46,26 @@ pub fn check_single_instance(
     fs::create_dir_all(runtime_dir.as_path()).unwrap();
     let single_instance = SingleInstance::new(lock_name.as_str()).unwrap();
 
-    let local_socket_path_buf = runtime_dir.join("software.Browsers.socket");
-    let local_socket_path = local_socket_path_buf.as_path();
-    let pipe_name_result = local_socket_path.to_fs_name::<GenericFilePath>();
+    let pipe_name_result = if GenericNamespaced::is_supported() {
+        // interprocess calls namespaced pipe:
+        // Windows named pipes
+        // Unix domain sockets
+        "software.Browsers.socket".to_ns_name::<GenericNamespaced>()
+    } else {
+        warn!("GenericNamespaced type is not supported or support could not be queried");
+        return (true, single_instance);
+    };
 
     if pipe_name_result.is_err() {
-        warn!("Could not parse pipe name as valid name for GenericFilePath");
+        warn!("Could not parse pipe name as valid name for GenericNamespaced");
         warn!("{}", pipe_name_result.unwrap_err());
         return (true, single_instance);
     }
     let pipe_name: Name = pipe_name_result.unwrap();
 
-    /*
-    let pipe_name = if GenericNamespaced::is_supported() {
-        "example.sock".to_ns_name::<GenericNamespaced>()?
-    } else {
-        "/tmp/example.sock".to_fs_name::<GenericFilePath>()?
-    };
-    */
-
     return if single_instance.is_single() {
         info!("No other instance of Browsers was running");
         // another process is not running, so this is first
-
-        if local_socket_path.exists() {
-            info!("Cleaning up previous local socket file");
-            let result1 = fs::remove_file(local_socket_path);
-            if result1.is_err() {
-                warn!("Could not remove local socket file")
-            }
-        }
 
         let listener_result = ListenerOptions::new()
             .name(pipe_name)
