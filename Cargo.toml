@@ -11,9 +11,6 @@ build = "build.rs"
 
 [dependencies]
 
-# command-line argument parser
-clap = "4.5.7"
-
 # logging library
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["fmt", "std", "time", "local-time"] }
