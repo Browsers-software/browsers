@@ -22,7 +22,7 @@ use crate::gui::ui::SettingsTab::GENERAL;
 use crate::gui::{about_dialog, main_window, settings_window, ui_theme};
 use crate::url_rule::UrlGlobMatcher;
 use crate::utils::{BehavioralConfig, Config, ConfiguredTheme, ProfileAndOptions, UIConfig};
-use crate::{gui, CommonBrowserProfile, MessageToMain};
+use crate::{CommonBrowserProfile, MessageToMain};
 
 pub struct UI {
     localizations_basedir: PathBuf,
@@ -192,13 +192,6 @@ impl UI {
             ui_settings: self.ui_settings.clone(),
             has_non_main_window_open: false,
         };
-    }
-
-    #[instrument(skip_all)]
-    pub fn init_gtk_if_linux(&self) {
-        // gtk must be initialized in main thread (because of gtk requirements)
-        #[cfg(target_os = "linux")]
-        gui::linux_ui::init_gtk();
     }
 
     pub fn print_visible_options(&self) {

@@ -124,6 +124,5 @@ fn main() {
     });
 
     let initial_ui_state = ui.create_initial_ui_state();
-    ui.init_gtk_if_linux();
     launcher.launch(initial_ui_state).expect("error");
 }
