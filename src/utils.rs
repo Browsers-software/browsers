@@ -186,7 +186,7 @@ impl Config {
         return &self.default_profile;
     }
 
-    pub fn set_default_profile(&mut self, default_profile: Option<ProfileAndOptions>) {
+    pub fn set_default_profile(&mut self, default_profile: &Option<ProfileAndOptions>) {
         self.default_profile = default_profile.clone()
     }
 
@@ -290,7 +290,7 @@ impl OSAppFinder {
         serde_json::to_writer_pretty(buffer, config).unwrap();
     }
 
-    pub(crate) fn get_config(&self) -> Config {
+    pub fn load_config(&self) -> Config {
         let config_root_dir = paths::get_config_root_dir();
         fs::create_dir_all(config_root_dir.as_path()).unwrap();
         let config_json_path = paths::get_config_json_path();

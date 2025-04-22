@@ -22,7 +22,7 @@ use crate::gui::ui::SettingsTab::GENERAL;
 use crate::gui::{about_dialog, main_window, settings_window, ui_theme};
 use crate::url_rule::UrlGlobMatcher;
 use crate::utils::{BehavioralConfig, Config, ConfiguredTheme, ProfileAndOptions, UIConfig};
-use crate::{CommonBrowserProfile, MessageToMain};
+use crate::{gui, CommonBrowserProfile, MessageToMain};
 
 pub struct UI {
     localizations_basedir: PathBuf,
@@ -180,7 +180,7 @@ impl UI {
 
     #[instrument(skip_all)]
     pub fn create_initial_ui_state(&self) -> UIState {
-        let initial_ui_state = UIState {
+        return UIState {
             url: self.url.to_string(),
             selected_browser: "".to_string(),
             focused_index: None,
@@ -192,7 +192,13 @@ impl UI {
             ui_settings: self.ui_settings.clone(),
             has_non_main_window_open: false,
         };
-        return initial_ui_state;
+    }
+
+    #[instrument(skip_all)]
+    pub fn init_gtk_if_linux(&self) {
+        // gtk must be initialized in main thread (because of gtk requirements)
+        #[cfg(target_os = "linux")]
+        gui::linux_ui::init_gtk();
     }
 
     pub fn print_visible_options(&self) {
@@ -389,10 +395,10 @@ impl UIBrowser {
 impl UIState {}
 
 // "url_opened" is automatically triggered in macOS
-pub const URL_OPENED: Selector<druid::UrlOpenInfo> = Selector::new("url_opened");
+pub const OS_URL_OPENED: Selector<druid::UrlOpenInfo> = Selector::new("url_opened");
 
-// fixed_url_opened is always triggered by Browsers
-pub const FIXED_URL_OPENED: Selector<druid::UrlOpenInfo> = Selector::new("fixed_url_opened");
+// cleaned_url_opened is always triggered by Browsers
+pub const CLEANED_URL_OPENED: Selector<druid::UrlOpenInfo> = Selector::new("cleaned_url_opened");
 pub const APP_LOST_FOCUS: Selector<druid::ApplicationLostFocus> = Selector::new("app_lost_focus");
 
 pub const EXIT_APP: Selector<String> = Selector::new("browsers.exit_app");
@@ -625,8 +631,8 @@ impl AppDelegate<UIState> for UIDelegate {
                 }
             }
             Handled::Yes
-        } else if cmd.is(URL_OPENED) {
-            let url_open_info = cmd.get_unchecked(URL_OPENED);
+        } else if cmd.is(OS_URL_OPENED) {
+            let url_open_info = cmd.get_unchecked(OS_URL_OPENED);
 
             let settings = &data.ui_settings.behavioral_settings;
             let behavioral_config = BehavioralConfig {
@@ -641,8 +647,8 @@ impl AppDelegate<UIState> for UIDelegate {
                 ))
                 .ok();
             Handled::Yes
-        } else if cmd.is(FIXED_URL_OPENED) {
-            let url_open_info = cmd.get_unchecked(FIXED_URL_OPENED);
+        } else if cmd.is(CLEANED_URL_OPENED) {
+            let url_open_info = cmd.get_unchecked(CLEANED_URL_OPENED);
             data.url = url_open_info.url.clone();
 
             let filtered_browsers = get_filtered_browsers(&data.url, &data.browsers);
