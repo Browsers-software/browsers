@@ -347,7 +347,7 @@ dependencies = [
 
 [[package]]
 name = "browsers"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "configparser",
  "dark-light",
