@@ -1,18 +1,35 @@
+use objc2::{AnyThread, Message};
+use std::any::Any;
 use std::collections::HashSet;
 use std::fs;
+use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+/*
 use cocoa_foundation::base::{id, nil};
+
 use cocoa_foundation::foundation::{NSAutoreleasePool, NSPoint, NSRect, NSSize, NSString, NSURL};
 use core_foundation::array::{CFArray, CFArrayRef};
 use core_foundation::base::TCFType;
 use core_foundation::string::CFString;
 use core_foundation::string::CFStringRef;
-use objc::runtime::Object;
-use objc::runtime::YES;
-use objc::{class, msg_send, sel, sel_impl};
+ */
+
 use tracing::{debug, info, warn};
+
+use objc2::__framework_prelude::Retained;
+use objc2::{DefinedClass, MainThreadMarker, MainThreadOnly, define_class, msg_send};
+use objc2_app_kit::{
+    NSApplication, NSApplicationActivationPolicy, NSApplicationDelegate, NSBitmapImageFileType,
+    NSBitmapImageRep, NSObjectNSAccessibility, NSWorkspace,
+};
+use objc2_foundation::{
+    NSArray, NSBundle, NSCopying, NSDictionary, NSMetadataItemCFBundleIdentifierKey,
+    NSNotification, NSObject, NSObjectProtocol, NSPoint, NSRect, NSSearchPathDirectory,
+    NSSearchPathDomainMask, NSSearchPathForDirectoriesInDomains, NSSize, NSStream, NSString,
+    ns_string,
+};
 
 use crate::browser_repository::SupportedAppRepository;
 use crate::{InstalledBrowser, macos};
@@ -20,169 +37,101 @@ use crate::{InstalledBrowser, macos};
 const APP_DIR_NAME: &'static str = "software.Browsers";
 const APP_BUNDLE_ID: &'static str = "software.Browsers";
 
-/// Create a new NSString from a &str.
-pub(crate) fn make_nsstring(s: &str) -> *mut Object {
-    unsafe { NSString::alloc(nil).init_str(s).autorelease() }
-}
-
-pub(crate) fn from_nsstring(s: *mut Object) -> String {
+pub fn create_icon_for_app(full_path: &NSString, icon_path: &str) {
     unsafe {
-        let slice = std::slice::from_raw_parts(s.UTF8String() as *const _, s.len());
-        let result = std::str::from_utf8_unchecked(slice);
-        result.into()
-    }
-}
+        let shared_workspace = NSWorkspace::sharedWorkspace();
 
-pub fn create_icon_for_app(full_path: id, icon_path: &str) {
-    unsafe {
-        let workspace = class!(NSWorkspace);
-        let shared: *mut Object = msg_send![workspace, sharedWorkspace];
-
-        // NSImage
-        let icon: id = msg_send![shared, iconForFile: full_path];
-
-        // resize to smaller
         let size = NSSize::new(64.0, 64.0);
 
-        //this makes NSImage create a new representation
-        let _a: id = msg_send![icon, setScalesWhenResized: true];
-        let _a: id = msg_send![icon, setSize: size];
+        // NSImage
+        let icon = shared_workspace.iconForFile(full_path);
+        // resize to smaller
+        icon.setSize(size);
 
-        let tiff: id = msg_send![icon, TIFFRepresentation];
+        icon.lockFocus();
 
-        let ns_bitmap_image_rep = class!(NSBitmapImageRep);
+        let tiff = icon.TIFFRepresentation().unwrap();
 
         let rect = NSRect::new(NSPoint::new(0.0, 0.0), size);
+        let rep_from_tiff = NSBitmapImageRep::imageRepWithData(&tiff).unwrap();
 
-        // NSBitmapImageRep
-        let rep_from_tiff: *mut Object = msg_send![ns_bitmap_image_rep, imageRepWithData: tiff];
+        // draws icon into the rectangle
+        rep_from_tiff.drawInRect(rect);
 
-        let _a: id = msg_send![icon, lockFocus];
-        // NSBitmapImageRep
-        let rep: id = msg_send![rep_from_tiff, initWithFocusedViewRect: rect];
-        let _b: id = msg_send![icon, unlockFocus];
+        let rectAsImage =
+            NSBitmapImageRep::initWithFocusedViewRect(NSBitmapImageRep::alloc(), rect).unwrap();
+        icon.unlockFocus();
 
-        let ns_png_file_type: i32 = 4;
-        // NSData
-        let icon_png: *mut Object =
-            msg_send![rep, representationUsingType:ns_png_file_type properties: nil];
+        let icon_png = rectAsImage
+            .representationUsingType_properties(NSBitmapImageFileType::PNG, &NSDictionary::new())
+            .unwrap();
 
-        //let width: NSInteger = msg_send![icon_png, pixelsWide];
-
-        //let filename_str = format!("icons/{}.png", bundle_id);
-        let filename = NSString::alloc(nil).init_str(icon_path);
-        let _: () = msg_send![icon_png, writeToFile: filename atomically: YES];
-
-        //let raw = from_nsdata(icon_png);
-
-        //info!("ok");
-        //return (raw, filename_str);
+        icon_png.writeToFile_atomically(&NSString::from_str(icon_path), true);
     }
 }
 
 // returns nsstring
-pub fn get_bundle_url(bundle_id: &str) -> Option<id> {
+pub fn get_bundle_url(bundle_id: &str) -> Option<Retained<NSString>> {
     debug!("Getting url for bundle: {}", bundle_id);
 
-    let bundle_id_nsstring = make_nsstring(bundle_id);
-
     unsafe {
-        let workspace = class!(NSWorkspace);
-        let shared: *mut Object = msg_send![workspace, sharedWorkspace];
+        let shared_workspace = NSWorkspace::sharedWorkspace();
 
-        //let _: () = msg_send![obj, setArg1:1 arg2:2];
-
-        // The URL of the app, or nil if no app has the bundle identifier.
-        let url: id = msg_send![
-            shared,
-            URLForApplicationWithBundleIdentifier: bundle_id_nsstring
-        ];
-
-        if url == nil {
-            None
-        } else {
-            // fileSystemRepresentation is commented out :S
-            let url_str = url.path();
-            let path = from_nsstring(url_str);
-            Some(url_str)
-        }
+        // The URL of the app, or None if no app has the bundle identifier.
+        shared_workspace
+            .URLForApplicationWithBundleIdentifier(&NSString::from_str(bundle_id))
+            .and_then(|url| url.relativePath())
     }
 }
 
-//noinspection RsConstNaming
-const NS_CACHES_DIRECTORY: u64 = 13;
-
-//noinspection RsConstNaming
-const NS_APPLICATION_SUPPORT_DIRECTORY: u64 = 14;
-
-// potentially sandboxed
-const NS_LIBRARY_DIRECTORY: u64 = 5;
-
 /// get macOS application support directory for this app, supports sandboxing
 pub fn get_this_app_support_dir() -> PathBuf {
-    return macos_get_application_support_dir_path().join(APP_DIR_NAME);
+    macos_get_application_support_dir_path().join(APP_DIR_NAME)
 }
 
 /// get macOS application support directory, supports sandboxing
 pub fn macos_get_application_support_dir_path() -> PathBuf {
-    macos_get_directory(NS_APPLICATION_SUPPORT_DIRECTORY)
+    macos_get_directory(NSSearchPathDirectory::ApplicationSupportDirectory)
 }
 
 /// get macOS application support directory, ignores sandboxing
 /// e.g $HOME/Library/Application Support
 pub fn macos_get_unsandboxed_application_support_dir() -> PathBuf {
     let home_dir = macos::mac_paths::unsandboxed_home_dir().unwrap();
-    return home_dir.join("Library").join("Application Support");
+    home_dir.join("Library").join("Application Support")
 }
 
 // ~/
 pub fn macos_get_unsandboxed_home_dir() -> PathBuf {
-    let home_dir = macos::mac_paths::unsandboxed_home_dir().unwrap();
-    return home_dir;
+    macos::mac_paths::unsandboxed_home_dir().unwrap()
 }
 
 // ~/Library/Containers/com.tinyspeck.slackmacgap/Data/
 pub fn macos_get_sandboxed_home_dir(app_id: &str) -> PathBuf {
     let home_dir = macos::mac_paths::unsandboxed_home_dir().unwrap();
-    return home_dir
+    home_dir
         .join("Library")
         .join("Containers")
         .join(app_id)
-        .join("Data");
+        .join("Data")
 }
 
 /// get macOS standard directory, supports sandboxing
-pub fn macos_get_directory(directory: u64) -> PathBuf {
-    let results = unsafe { NSSearchPathForDirectoriesInDomains(directory, 1, 1) };
-    let results = unsafe { CFArray::<CFString>::wrap_under_get_rule(results) };
+pub fn macos_get_directory(directory: NSSearchPathDirectory) -> PathBuf {
+    let results = unsafe {
+        NSSearchPathForDirectoriesInDomains(directory, NSSearchPathDomainMask::UserDomainMask, true)
+    };
 
-    let option = results.get(0);
+    //let results = unsafe { CFArray::<CFString>::wrap_under_get_rule(results) };
+
+    let option = results.firstObject();
     if option.is_none() {
         panic!("no")
     }
 
     let x = option.unwrap().to_string();
 
-    return PathBuf::from(x);
-}
-
-#[link(name = "Foundation", kind = "framework")]
-unsafe extern "C" {
-    pub fn NSSearchPathForDirectoriesInDomains(
-        directory: u64,
-        domain_mask: u64,
-        expand_tilde: i8,
-    ) -> CFArrayRef;
-}
-
-#[link(name = "Foundation", kind = "framework")]
-unsafe extern "C" {
-    pub fn LSCopyAllHandlersForURLScheme(in_url_scheme: CFStringRef) -> CFArrayRef;
-}
-
-unsafe extern "C" {
-    pub static kCFBundleNameKey: CFStringRef;
-    pub static kCFBundleExecutableKey: CFStringRef;
+    PathBuf::from(x)
 }
 
 // bundle_path e.g "/Applications/Slack.app"
@@ -208,7 +157,7 @@ fn has_sandbox_entitlement(bundle_path: &str) -> bool {
     return cow.contains(search);
 }
 
-fn has_sandbox_entitlement2(bundle_url: id) -> bool {
+fn has_sandbox_entitlement2(bundle_url: &NSString) -> bool {
     unsafe {
         let is_sandboxed = false;
         //SecStaticCodeCreateWithPath(bundle_url, 0, nil)
@@ -280,38 +229,29 @@ fn has_sandbox_entitlement2(bundle_url: id) -> bool {
      */
 }
 
-fn get_app_name(bundle_path: id) -> String {
+fn get_app_name(bundle_path: &NSString) -> String {
     let bundle = get_bundle(bundle_path);
     //bundleWithURL
-    unsafe {
-        // returns NSString
-        let bundle_name: id = msg_send![bundle, objectForInfoDictionaryKey: kCFBundleNameKey];
-        let bundle_name_str = from_nsstring(bundle_name);
-        return bundle_name_str;
-    }
+    let bundle_name = bundle.name().unwrap();
+    bundle_name.to_string()
 }
 
-fn get_app_executable(bundle_path: id) -> String {
+fn get_app_executable_path(bundle_path: &NSString) -> String {
     let bundle = get_bundle(bundle_path);
+
     //bundleWithURL
     unsafe {
-        // returns NSString
-        // apparently CFBundleExecutableKey is optional, but let's see if this ever causes issues
-        // for apps
-        let executable_name: id =
-            msg_send![bundle, objectForInfoDictionaryKey: kCFBundleExecutableKey];
-        let bundle_name_str = from_nsstring(executable_name);
-        return bundle_name_str;
+        let executablePath = bundle.executablePath().unwrap();
+        executablePath.to_string()
     }
 }
 
 // returns NSBundle
-fn get_bundle(bundle_path: id) -> id {
+fn get_bundle(bundle_path: &NSString) -> Retained<NSBundle> {
     //bundleWithURL
     unsafe {
-        // returns NSBundle
-        let bundle: id = msg_send![class!(NSBundle), bundleWithPath: bundle_path];
-        return bundle;
+        let bundle = NSBundle::bundleWithPath(bundle_path).unwrap();
+        bundle
     }
 }
 
@@ -332,7 +272,7 @@ impl OsHelper {
     }
 
     pub fn get_app_repository(&self) -> &SupportedAppRepository {
-        return &self.app_repository;
+        &self.app_repository
     }
 
     pub fn get_installed_browsers(
@@ -399,16 +339,13 @@ impl OsHelper {
         }
         let bundle_url = bundle_url_maybe.unwrap();
 
-        let bundle_path = from_nsstring(bundle_url);
-        let display_name = get_app_name(bundle_url);
-        let executable_name = get_app_executable(bundle_url);
-        let executable_path = Path::new(bundle_path.as_str())
-            .join("Contents")
-            .join("MacOS")
-            .join(executable_name.as_str());
+        let bundle_path = bundle_url.to_string();
+        let display_name = get_app_name(&bundle_url);
+        let executable_path = get_app_executable_path(&bundle_url);
+        let executable_path = PathBuf::from(executable_path);
 
         let icon_path_str = full_stored_icon_path.display().to_string();
-        create_icon_for_app(bundle_url, icon_path_str.as_str());
+        create_icon_for_app(&bundle_url, icon_path_str.as_str());
 
         let command_parts: Vec<String> = vec![executable_path.to_str().unwrap().to_string()];
 
@@ -435,7 +372,7 @@ impl OsHelper {
 // e.g /Applications/Browsers.app/Contents/Resources/
 pub fn get_this_app_resources_dir() -> PathBuf {
     let app_bundle_dir = get_this_app_bundle_dir();
-    return app_bundle_dir.join("Contents").join("Resources");
+    app_bundle_dir.join("Contents").join("Resources")
 }
 
 // e.g /Applications/Browsers.app/
@@ -458,30 +395,30 @@ fn get_this_app_bundle_dir_fallback() -> PathBuf {
     // .../Browsers.app/
     let bundle_dir_path = contents_dir_path.parent().unwrap();
 
-    return bundle_dir_path.to_path_buf();
+    bundle_dir_path.to_path_buf()
 }
 
 // e.g /Applications/<bundle>/
 fn get_bundle_path(bundle_id: &str) -> Option<PathBuf> {
-    return get_bundle_url(bundle_id)
-        .map(|bundle_url| from_nsstring(bundle_url))
-        .map(|bundle_path| PathBuf::from(bundle_path.as_str()));
+    get_bundle_url(bundle_id)
+        .map(|bundle_url| bundle_url.to_string())
+        .map(|bundle_path| PathBuf::from(bundle_path.as_str()))
 }
 
 // ~/Library/Caches/software.Browsers/runtime/
 pub fn get_this_app_runtime_dir() -> PathBuf {
-    return get_this_app_cache_root_dir().join("runtime");
+    get_this_app_cache_root_dir().join("runtime")
 }
 
 // ~/Library/Caches/software.Browsers/
 pub fn get_this_app_cache_root_dir() -> PathBuf {
     let cache_dir_root = macos_get_caches_dir();
-    return cache_dir_root.join(APP_DIR_NAME);
+    cache_dir_root.join(APP_DIR_NAME)
 }
 
 /// get macOS caches directory, supports sandboxing
 pub fn macos_get_caches_dir() -> PathBuf {
-    macos_get_directory(NS_CACHES_DIRECTORY)
+    macos_get_directory(NSSearchPathDirectory::CachesDirectory)
 }
 
 /// get macOS logs directory for this app, supports sandboxing
@@ -491,16 +428,17 @@ pub fn get_this_app_logs_root_dir() -> PathBuf {
 
 /// get macOS logs directory, supports sandboxing
 pub fn macos_get_logs_dir() -> PathBuf {
-    return macos_get_library_dir().join("Logs");
+    macos_get_library_dir().join("Logs")
 }
 
 /// get macOS library directory, supports sandboxing
 pub fn macos_get_library_dir() -> PathBuf {
-    macos_get_directory(NS_LIBRARY_DIRECTORY)
+    // LibraryDirectory is potentially sandboxed
+    macos_get_directory(NSSearchPathDirectory::LibraryDirectory)
 }
 
 pub fn get_this_app_config_root_dir() -> PathBuf {
-    return get_this_app_support_dir();
+    get_this_app_support_dir()
 }
 
 /*pub fn find_bundle_ids_for_browsers() -> Vec<String> {
@@ -555,29 +493,29 @@ pub fn find_bundle_ids_for_url_scheme(scheme: &str) -> Vec<String> {
 
 // check schemes from an apps Info.plist CFBundleUrlTypes.CFBundleURLSchemes
 pub fn get_bundle_ids_for_url_scheme(scheme: &str) -> Vec<String> {
-    let app_ids: HashSet<String> = unsafe {
+    let scheme = NSString::from_str(scheme);
+
+    let mut scheme_handlers = unsafe {
         // https scheme has some apps which are not browsers, e.g iterm2, Folx
-        let handlers_https =
-            LSCopyAllHandlersForURLScheme(CFString::new(scheme).as_concrete_TypeRef());
-        if handlers_https.is_null() {
+        let scheme_handlers = LSCopyAllHandlersForURLScheme(&scheme);
+
+        if scheme_handlers.is_none() {
             return Vec::new();
         }
 
-        let handlers_https: CFArray<CFString> = TCFType::wrap_under_create_rule(handlers_https);
-
-        let mut vec = handlers_https
+        scheme_handlers
+            .unwrap()
             .iter()
-            .map(|h| String::from(h.to_string()))
-            .collect::<Vec<_>>();
-
-        vec.sort();
-
-        let bundles_https = vec
-            .iter()
-            .map(|h| String::from(h.to_string()))
-            .collect::<HashSet<_>>();
-        bundles_https
+            .map(|h| h.to_string())
+            .collect::<Vec<_>>()
     };
+
+    scheme_handlers.sort();
+
+    let app_ids = scheme_handlers
+        .iter()
+        .map(|h| String::from(h.to_string()))
+        .collect::<HashSet<_>>();
 
     Vec::from_iter(app_ids)
 }
@@ -589,18 +527,18 @@ pub fn set_default_web_browser() -> bool {
     }
 
     let bundle_id = "software.Browsers";
-    let bundle_id = CFString::new(bundle_id);
-    let bundle_id_ref = bundle_id.as_concrete_TypeRef();
+    let bundle_id = NSString::from_str(bundle_id);
+    let bundle_id = bundle_id.deref();
 
-    let https_scheme = CFString::new("https");
-    let https_scheme_ref = https_scheme.as_concrete_TypeRef();
+    let https_scheme = NSString::from_str("https");
+    let https_scheme = https_scheme.deref();
 
-    let http_scheme = CFString::new("http");
-    let http_scheme_ref = http_scheme.as_concrete_TypeRef();
+    let http_scheme = NSString::from_str("http");
+    let http_scheme = http_scheme.deref();
 
     unsafe {
-        LSSetDefaultHandlerForURLScheme(https_scheme_ref, bundle_id_ref);
-        LSSetDefaultHandlerForURLScheme(http_scheme_ref, bundle_id_ref);
+        LSSetDefaultHandlerForURLScheme(https_scheme, bundle_id);
+        LSSetDefaultHandlerForURLScheme(http_scheme, bundle_id);
     }
 
     return false;
@@ -608,26 +546,35 @@ pub fn set_default_web_browser() -> bool {
 
 pub fn is_default_web_browser() -> bool {
     let bundle_id = "software.Browsers";
+    //let bundle_id = NSString::from_str(bundle_id);
+    //let bundle_id = bundle_id.deref();
 
-    let https_scheme = CFString::new("https");
-    let https_scheme_ref = https_scheme.as_concrete_TypeRef();
+    let https_scheme = NSString::from_str("https");
+    let https_scheme = https_scheme.deref();
 
-    let http_scheme = CFString::new("http");
-    let http_scheme_ref = http_scheme.as_concrete_TypeRef();
+    let http_scheme = NSString::from_str("http");
+    let http_scheme = http_scheme.deref();
 
-    let https_bundle = unsafe { LSCopyDefaultHandlerForURLScheme(https_scheme_ref) };
-    let https_bundle = from_nsstring(https_bundle);
+    let https_bundle = unsafe { LSCopyDefaultHandlerForURLScheme(https_scheme) };
+    let https_bundle = https_bundle.to_string();
 
-    let http_bundle = unsafe { LSCopyDefaultHandlerForURLScheme(http_scheme_ref) };
-    let http_bundle = from_nsstring(http_bundle);
+    let http_bundle = unsafe { LSCopyDefaultHandlerForURLScheme(http_scheme) };
+    let http_bundle = http_bundle.to_string();
 
     return https_bundle == bundle_id && http_bundle == bundle_id;
 }
 
 #[link(name = "CoreServices", kind = "framework")]
 unsafe extern "C" {
-    fn LSSetDefaultHandlerForURLScheme(scheme: CFStringRef, bundle_id: CFStringRef);
+    fn LSSetDefaultHandlerForURLScheme(scheme: &NSString, bundle_id: &NSString);
 
     // returns bundle id
-    fn LSCopyDefaultHandlerForURLScheme(scheme: CFStringRef) -> id;
+    fn LSCopyDefaultHandlerForURLScheme(scheme: &NSString) -> Retained<NSString>;
+}
+
+#[link(name = "Foundation", kind = "framework")]
+unsafe extern "C" {
+    pub fn LSCopyAllHandlersForURLScheme(
+        in_url_scheme: &NSString,
+    ) -> Option<Retained<NSArray<NSString>>>;
 }

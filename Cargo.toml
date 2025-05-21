@@ -60,9 +60,12 @@ dark-light = "2.0.0"
 # macOS Core Foundation bindings
 # small selection of Core Foundation libs I happen to need
 [target.'cfg(target_os = "macos")'.dependencies]
-core-foundation = "0.10.0"
-cocoa-foundation = "0.2.0"
-objc = "0.2.7"
+#core-foundation = "0.10.0"
+#cocoa-foundation = "0.2.0"
+
+objc2-foundation = { version = "0.3.1" }
+objc2-app-kit = "0.3.1"
+objc2 = { version = "0.6.1" }
 libc = "0.2.154"
 
 [target.'cfg(target_os = "linux")'.dependencies]
