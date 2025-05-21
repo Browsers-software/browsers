@@ -17,16 +17,15 @@ pub fn initialize_theme(env: &mut Env, ui_state: &UIState) {
 }
 
 fn get_active_ui_theme(ui_state: &UIState) -> UITheme {
-    let system_ui_theme = detect_system_theme();
-    return match ui_state.ui_settings.visual_settings.theme {
-        ConfiguredTheme::Auto => system_ui_theme,
+    match ui_state.ui_settings.visual_settings.theme {
+        ConfiguredTheme::Auto => detect_system_theme(),
         ConfiguredTheme::Light => UITheme::Light,
         ConfiguredTheme::Dark => UITheme::Dark,
-    };
+    }
 }
 
 fn detect_system_theme() -> UITheme {
-    return match dark_light::detect() {
+    match dark_light::detect() {
         Ok(Mode::Dark) => UITheme::Dark,
         Ok(Mode::Light) => UITheme::Light,
         Ok(Mode::Unspecified) => UITheme::Dark,
@@ -34,7 +33,7 @@ fn detect_system_theme() -> UITheme {
             warn!("{}", error);
             UITheme::Dark
         }
-    };
+    }
 }
 
 pub fn setup_theme(env: &mut Env, ui_theme: UITheme) {
