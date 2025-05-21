@@ -15,7 +15,7 @@ use objc::{class, msg_send, sel, sel_impl};
 use tracing::{debug, info, warn};
 
 use crate::browser_repository::SupportedAppRepository;
-use crate::{macos, InstalledBrowser};
+use crate::{InstalledBrowser, macos};
 
 const APP_DIR_NAME: &'static str = "software.Browsers";
 const APP_BUNDLE_ID: &'static str = "software.Browsers";
@@ -167,7 +167,7 @@ pub fn macos_get_directory(directory: u64) -> PathBuf {
 }
 
 #[link(name = "Foundation", kind = "framework")]
-extern "C" {
+unsafe extern "C" {
     pub fn NSSearchPathForDirectoriesInDomains(
         directory: u64,
         domain_mask: u64,
@@ -176,11 +176,11 @@ extern "C" {
 }
 
 #[link(name = "Foundation", kind = "framework")]
-extern "C" {
+unsafe extern "C" {
     pub fn LSCopyAllHandlersForURLScheme(in_url_scheme: CFStringRef) -> CFArrayRef;
 }
 
-extern "C" {
+unsafe extern "C" {
     pub static kCFBundleNameKey: CFStringRef;
     pub static kCFBundleExecutableKey: CFStringRef;
 }
@@ -625,7 +625,7 @@ pub fn is_default_web_browser() -> bool {
 }
 
 #[link(name = "CoreServices", kind = "framework")]
-extern "C" {
+unsafe extern "C" {
     fn LSSetDefaultHandlerForURLScheme(scheme: CFStringRef, bundle_id: CFStringRef);
 
     // returns bundle id

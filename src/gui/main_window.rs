@@ -16,12 +16,12 @@ use tracing::{debug, instrument};
 
 use ui_theme::MainWindowTheme;
 
+use crate::MoveTo;
 use crate::gui::focus_widget::{FocusData, FocusWidget};
 use crate::gui::image_controller::UIImageController;
-use crate::gui::ui::{UIBrowser, UISettings, UIState, EXIT_APP};
+use crate::gui::ui::{EXIT_APP, UIBrowser, UISettings, UIState};
 use crate::gui::ui_util::ellipsize;
 use crate::gui::{shared, ui_theme};
-use crate::MoveTo;
 
 pub const COPY_LINK_TO_CLIPBOARD: Selector<()> = Selector::new("browsers.copy_link");
 
@@ -112,7 +112,7 @@ impl MainWindow {
     }
 
     #[instrument(skip_all)]
-    pub fn ui_builder(&self, window_size: Size) -> impl Widget<UIState> {
+    pub fn ui_builder(&self, window_size: Size) -> impl Widget<UIState> + use<> {
         const BOTTOM_ROW_HEIGHT: f64 = 18.0;
 
         let url_label = Label::dynamic(|data: &UIState, _| ellipsize(data.url.as_str(), 28))
@@ -504,7 +504,7 @@ impl<W: Widget<((bool, UISettings), UIBrowser)>> Controller<((bool, UISettings),
         env: &Env,
     ) {
         match event {
-            Event::MouseDown(ref mouse) if mouse.button.is_right() => {
+            Event::MouseDown(mouse) if mouse.button.is_right() => {
                 ctx.show_context_menu(make_context_menu(&data.1), mouse.pos);
             }
             _ => child.event(ctx, event, data, env),

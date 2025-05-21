@@ -10,26 +10,28 @@ pub fn unsandboxed_home_dir() -> Option<PathBuf> {
 }
 
 unsafe fn pw_dir() -> Option<OsString> {
-    let amt = match libc::sysconf(libc::_SC_GETPW_R_SIZE_MAX) {
-        n if n < 0 => 512 as usize,
+    let amt = match unsafe { libc::sysconf(libc::_SC_GETPW_R_SIZE_MAX) } {
+        n if n < 0 => 512usize,
         n => n as usize,
     };
     let mut buf = Vec::with_capacity(amt);
-    let mut passwd: libc::passwd = mem::zeroed();
+    let mut passwd: libc::passwd = unsafe { mem::zeroed() };
     let mut result = ptr::null_mut();
 
     // if running under macos sandbox,
     // home directory can be found via getpwuid(getuid()).pw_dir
-    match libc::getpwuid_r(
-        libc::getuid(),
-        &mut passwd,
-        buf.as_mut_ptr(),
-        buf.capacity(),
-        &mut result,
-    ) {
+    match unsafe {
+        libc::getpwuid_r(
+            libc::getuid(),
+            &mut passwd,
+            buf.as_mut_ptr(),
+            buf.capacity(),
+            &mut result,
+        )
+    } {
         0 if !result.is_null() => {
             let ptr = passwd.pw_dir as *const _;
-            let bytes = CStr::from_ptr(ptr).to_bytes();
+            let bytes = unsafe { CStr::from_ptr(ptr) }.to_bytes();
             if bytes.is_empty() {
                 None
             } else {

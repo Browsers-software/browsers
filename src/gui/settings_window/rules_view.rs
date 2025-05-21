@@ -13,8 +13,8 @@ use druid::{
 };
 
 use crate::gui::ui::{
-    UIBrowser, UIProfileAndIncognito, UISettings, UISettingsRule, UIState, SAVE_DEFAULT_RULE,
-    SAVE_RULE, SAVE_RULES,
+    SAVE_DEFAULT_RULE, SAVE_RULE, SAVE_RULES, UIBrowser, UIProfileAndIncognito, UISettings,
+    UISettingsRule, UIState,
 };
 use crate::gui::ui_theme::SettingsWindowTheme;
 
@@ -24,7 +24,7 @@ const RULE_INDEX_KEY: Key<u64> = Key::new("RULE_INDEX");
 
 const CHOOSE_EMPTY_LABEL: &str = "☰ List of Apps";
 
-pub(crate) fn rules_content(browsers: Arc<Vec<UIBrowser>>) -> impl Widget<UIState> {
+pub(crate) fn rules_content(browsers: Arc<Vec<UIBrowser>>) -> impl Widget<UIState> + use<> {
     let browsers_arc = browsers.clone();
     let browsers_arc2 = browsers.clone();
 
@@ -129,7 +129,7 @@ fn create_profile_pop_up_button(
 fn create_incognito_checkbox(
     browsers: &Arc<Vec<UIBrowser>>,
     command: Command,
-) -> impl Widget<Option<UIProfileAndIncognito>> {
+) -> impl Widget<Option<UIProfileAndIncognito>> + use<> {
     let browsers_clone3 = browsers.clone();
 
     return Maybe::new(
@@ -176,7 +176,7 @@ fn create_profile_label() -> Label<Option<UIProfileAndIncognito>> {
     return profile_label;
 }
 
-fn default_app(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettings> {
+fn default_app(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettings> + use<> {
     let profile_label = create_profile_label();
 
     let save_profile_command = SAVE_DEFAULT_RULE.with(());
@@ -232,7 +232,7 @@ impl<W: Widget<UISettingsRule>> Controller<UISettingsRule, W> for AddRuleControl
     }
 }
 
-fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettingsRule> {
+fn create_rule(browsers: &Arc<Vec<UIBrowser>>) -> impl Widget<UISettingsRule> + use<> {
     let remove_rule_button = Button::from_label(Label::new("➖").with_text_size(5.0))
         .on_click(move |ctx, data: &mut UISettingsRule, _env| {
             data.deleted = true;

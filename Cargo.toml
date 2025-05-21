@@ -2,7 +2,7 @@
 name = "browsers"
 version = "0.6.0"
 authors = ["Madis Liias <madisliias@gmail.com>"]
-edition = "2021"
+edition = "2024"
 description = "Browsers"
 homepage = "https://browsers.software/"
 repository = "https://github.com/Browsers-software/browsers"

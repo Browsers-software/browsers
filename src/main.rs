@@ -5,15 +5,15 @@ use rolling_file::{BasicRollingFileAppender, RollingConditionBasic};
 use std::str::FromStr;
 use std::sync::mpsc;
 use std::{env, fs, thread};
-use tracing::{info, Level};
+use tracing::{Level, info};
 use tracing_subscriber;
 use tracing_subscriber::fmt::time::OffsetTime;
 use tracing_subscriber::fmt::writer::MakeWriterExt;
 
 use browsers::utils::OSAppFinder;
 use browsers::{
-    generate_all_browser_profiles, get_opening_rules, open_link_if_matching_rule, prepare_ui,
-    unwrap_url, utils, MessageToMain, UrlOpenContext,
+    MessageToMain, UrlOpenContext, generate_all_browser_profiles, get_opening_rules,
+    open_link_if_matching_rule, prepare_ui, unwrap_url, utils,
 };
 use browsers::{handle_messages_to_main, paths};
 
@@ -41,7 +41,7 @@ fn main() {
 
     if log_level == Level::DEBUG {
         // also show full backtrace if debug log level
-        env::set_var("RUST_BACKTRACE", "full");
+        unsafe { env::set_var("RUST_BACKTRACE", "full") };
     }
 
     tracing_subscriber::fmt()
