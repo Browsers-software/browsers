@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Removed Single Instance feature
+- Browsers is not checking for existing instance of Browsers anymore due to buggy behaviour
 
 ### Fixed
 
