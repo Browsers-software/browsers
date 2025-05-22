@@ -60,12 +60,12 @@ dark-light = "2.0.0"
 # macOS Core Foundation bindings
 # small selection of Core Foundation libs I happen to need
 [target.'cfg(target_os = "macos")'.dependencies]
-#core-foundation = "0.10.0"
-#cocoa-foundation = "0.2.0"
-
-objc2-foundation = { version = "0.3.1" }
+# for macos_native
+objc2-foundation = "0.3.1"
 objc2-app-kit = "0.3.1"
-objc2 = { version = "0.6.1" }
+objc2 = "0.6.1"
+
+# for mac_paths (to get unsandboxed_home_dir for mac)
 libc = "0.2.154"
 
 [target.'cfg(target_os = "linux")'.dependencies]
