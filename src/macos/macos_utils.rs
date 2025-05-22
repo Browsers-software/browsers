@@ -1,34 +1,16 @@
-use objc2::{AnyThread, Message};
-use std::any::Any;
+use objc2::AnyThread;
+use objc2::rc::Retained;
 use std::collections::HashSet;
 use std::fs;
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-
-/*
-use cocoa_foundation::base::{id, nil};
-
-use cocoa_foundation::foundation::{NSAutoreleasePool, NSPoint, NSRect, NSSize, NSString, NSURL};
-use core_foundation::array::{CFArray, CFArrayRef};
-use core_foundation::base::TCFType;
-use core_foundation::string::CFString;
-use core_foundation::string::CFStringRef;
- */
-
 use tracing::{debug, info, warn};
 
-use objc2::__framework_prelude::Retained;
-use objc2::{DefinedClass, MainThreadMarker, MainThreadOnly, define_class, msg_send};
-use objc2_app_kit::{
-    NSApplication, NSApplicationActivationPolicy, NSApplicationDelegate, NSBitmapImageFileType,
-    NSBitmapImageRep, NSObjectNSAccessibility, NSWorkspace,
-};
+use objc2_app_kit::{NSBitmapImageFileType, NSBitmapImageRep, NSWorkspace};
 use objc2_foundation::{
-    NSArray, NSBundle, NSCopying, NSDictionary, NSMetadataItemCFBundleIdentifierKey,
-    NSNotification, NSObject, NSObjectProtocol, NSPoint, NSRect, NSSearchPathDirectory,
-    NSSearchPathDomainMask, NSSearchPathForDirectoriesInDomains, NSSize, NSStream, NSString,
-    ns_string,
+    NSArray, NSBundle, NSDictionary, NSPoint, NSRect, NSSearchPathDirectory,
+    NSSearchPathDomainMask, NSSearchPathForDirectoriesInDomains, NSSize, NSString,
 };
 
 use crate::browser_repository::SupportedAppRepository;
@@ -58,11 +40,11 @@ pub fn create_icon_for_app(full_path: &NSString, icon_path: &str) {
         // draws icon into the rectangle
         rep_from_tiff.drawInRect(rect);
 
-        let rectAsImage =
+        let rect_as_image =
             NSBitmapImageRep::initWithFocusedViewRect(NSBitmapImageRep::alloc(), rect).unwrap();
         icon.unlockFocus();
 
-        let icon_png = rectAsImage
+        let icon_png = rect_as_image
             .representationUsingType_properties(NSBitmapImageFileType::PNG, &NSDictionary::new())
             .unwrap();
 
@@ -241,8 +223,8 @@ fn get_app_executable_path(bundle_path: &NSString) -> String {
 
     //bundleWithURL
     unsafe {
-        let executablePath = bundle.executablePath().unwrap();
-        executablePath.to_string()
+        let executable_path = bundle.executablePath().unwrap();
+        executable_path.to_string()
     }
 }
 
