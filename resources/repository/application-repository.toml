@@ -321,6 +321,12 @@ kind = "FIREFOX"
 os = "MAC"
 
 [[apps]]
+id = "org.mozilla.basilisk"
+config_dir_relative = "Basilisk"
+kind = "FIREFOX"
+os = "MAC"
+
+[[apps]]
 id = "org.mozilla.floorp"
 config_dir_relative = "Floorp"
 kind = "FIREFOX"
@@ -341,6 +347,12 @@ os = "LINUX"
 [[apps]]
 id = "net.mullvad.mullvadbrowser"
 config_dir_relative = "MullvadBrowser"
+kind = "FIREFOX"
+os = "MAC"
+
+[[apps]]
+id = "org.mozilla.pale moon"
+config_dir_relative = "Pale Moon"
 kind = "FIREFOX"
 os = "MAC"
 
