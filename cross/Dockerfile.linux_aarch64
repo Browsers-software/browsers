@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 ghcr.io/cross-rs/aarch64-unknown-linux-gnu:main@sha256:4cccd72b64ea7d8e8dbaf3fd4c5493c894149f2e8cd8ce71d56bc65b1c972c6a
+FROM --platform=linux/amd64 ghcr.io/cross-rs/aarch64-unknown-linux-gnu:main@sha256:6be016d53cfd489021b3e9bbd1fda41b9df2931f7497065b1a04b374da2532e0
 
 RUN dpkg --add-architecture arm64 && \
     DEBIAN_FRONTEND=noninteractive apt-get \
