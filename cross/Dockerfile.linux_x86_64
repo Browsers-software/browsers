@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 ghcr.io/cross-rs/x86_64-unknown-linux-gnu:main@sha256:ac4b559a686670def8b2ce14e188e695d76bd1e370c8f1e8fc362da4991894c3
+FROM --platform=linux/amd64 ghcr.io/cross-rs/x86_64-unknown-linux-gnu:main@sha256:d5443468cd2f2dbbe85ef13704e92774d49bf01e29b3ba474d83184a9c3b0cdc
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install \
