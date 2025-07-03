@@ -1,7 +1,7 @@
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
-    'config:best-practices',
+    'config:recommended',
   ],
   ignoreDeps: [
     // we use older version, because glib should be the same version as druid is using
