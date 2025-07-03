@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 ghcr.io/cross-rs/armv7-unknown-linux-gnueabihf:main@sha256:3da41706c6df2da2a0e2132de2201ce9680284e12c7aa6eebb5808f543f1d8ac
+FROM --platform=linux/amd64 ghcr.io/cross-rs/armv7-unknown-linux-gnueabihf:main@sha256:daa2a0071788ec7fd172b73fc777b661c8b7d037ec2aac84e2fac6bc540723bd
 
 RUN dpkg --add-architecture armhf && \
     DEBIAN_FRONTEND=noninteractive apt-get \
