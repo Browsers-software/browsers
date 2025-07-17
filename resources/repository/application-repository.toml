@@ -351,6 +351,12 @@ kind = "FIREFOX"
 os = "MAC"
 
 [[apps]]
+id = "librewolf"
+config_dir_relative = ".librewolf"
+kind = "FIREFOX"
+os = "LINUX"
+
+[[apps]]
 id = "net.waterfox.waterfox"
 config_dir_relative = "Waterfox"
 kind = "FIREFOX"
