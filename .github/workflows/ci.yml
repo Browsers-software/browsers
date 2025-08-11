@@ -9,7 +9,7 @@ jobs:
       CROSS_NO_WARNINGS: 0
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           show-progress: false
       - name: Set up Docker Buildx
@@ -160,7 +160,7 @@ jobs:
     runs-on: macos-14
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           show-progress: false
       - name: Download cache
@@ -283,7 +283,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           show-progress: false
       - name: Download cache
@@ -397,7 +397,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           show-progress: false
       - name: Download release artifacts
