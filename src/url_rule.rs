@@ -36,7 +36,7 @@ impl UrlGlobMatcher {
         // "name=ferret&color=purple" -> "name=ferret/color=purple"
         let query_with_slashes = url_matcher.query.replace("&", "/");
         let query_matcher = Self::str_to_glob(query_with_slashes.as_str(), "query", true);
-        let fragment_matcher = Self::str_to_glob(url_matcher.fragment.as_str(), "fragment", true);
+        let fragment_matcher = Self::str_to_glob(url_matcher.fragment.as_str(), "fragment", false);
 
         Self {
             scheme: scheme_matcher,
@@ -349,8 +349,8 @@ mod tests {
 
         // It seems that having / in the url after # trips it up.
         // Will attempt to take a look this week.
-        let matches =
-            url_glob_matcher.url_str_matches("https://sso-org.awsapps.com/start/#/somefragment");
+        let matches = url_glob_matcher
+            .url_str_matches("https://sso-org.awsapps.com/start/#/ignore?this=DEF-ABC&that=wow");
         assert_eq!(matches, true);
     }
 
