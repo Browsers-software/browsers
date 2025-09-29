@@ -26,17 +26,17 @@ pub struct UrlGlobMatcher {
 
 impl UrlGlobMatcher {
     fn from_url_matcher(url_matcher: &UrlMatcher) -> Self {
-        let scheme_matcher = Self::str_to_glob(url_matcher.scheme.as_str(), "scheme");
+        let scheme_matcher = Self::str_to_glob(url_matcher.scheme.as_str(), "scheme", true);
 
         // "my.path.**" -> "my/path/**"
         let hostname_with_slashes = url_matcher.hostname.replace(".", "/");
-        let hostname_matcher = Self::str_to_glob(hostname_with_slashes.as_str(), "hostname");
-        let path_matcher = Self::str_to_glob(url_matcher.path.as_str(), "path");
+        let hostname_matcher = Self::str_to_glob(hostname_with_slashes.as_str(), "hostname", true);
+        let path_matcher = Self::str_to_glob(url_matcher.path.as_str(), "path", true);
 
         // "name=ferret&color=purple" -> "name=ferret/color=purple"
         let query_with_slashes = url_matcher.query.replace("&", "/");
-        let query_matcher = Self::str_to_glob(query_with_slashes.as_str(), "query");
-        let fragment_matcher = Self::str_to_glob(url_matcher.fragment.as_str(), "fragment");
+        let query_matcher = Self::str_to_glob(query_with_slashes.as_str(), "query", true);
+        let fragment_matcher = Self::str_to_glob(url_matcher.fragment.as_str(), "fragment", true);
 
         Self {
             scheme: scheme_matcher,
@@ -47,15 +47,14 @@ impl UrlGlobMatcher {
         }
     }
 
-    fn str_to_glob(pattern: &str, name: &str) -> GlobMatcher {
+    fn str_to_glob(pattern: &str, name: &str, literal_separator: bool) -> GlobMatcher {
         let glob = GlobBuilder::new(pattern)
-            .literal_separator(true)
+            .literal_separator(literal_separator)
             .case_insensitive(true)
             .build()
             .expect(format!("illegal pattern for {name}").as_str());
 
-        let glob_matcher = glob.compile_matcher();
-        return glob_matcher;
+        return glob.compile_matcher();
     }
 
     fn to_target_url(&self, url: &Url) -> TargetUrl {
@@ -340,6 +339,18 @@ mod tests {
         let url_glob_matcher = url_matcher.to_glob_matcher();
         let matches =
             url_glob_matcher.url_str_matches("https://app.company.xyz/v2/matches/everything");
+        assert_eq!(matches, true);
+    }
+
+    #[test]
+    fn test_url_matches_matches_path_with_two_asterisk_when_url_contains_fragment_with_slash() {
+        let url_matcher = to_url_matcher("https://sso-org.awsapps.com/**");
+        let url_glob_matcher = url_matcher.to_glob_matcher();
+
+        // It seems that having / in the url after # trips it up.
+        // Will attempt to take a look this week.
+        let matches =
+            url_glob_matcher.url_str_matches("https://sso-org.awsapps.com/start/#/somefragment");
         assert_eq!(matches, true);
     }
 
