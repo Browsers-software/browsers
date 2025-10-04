@@ -264,6 +264,12 @@ kind = "CHROMIUM"
 os = "MAC"
 
 [[apps]]
+id = "ai.perplexity.comet"
+config_dir_relative = "Comet"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
 id = "org.mozilla.firefox"
 config_dir_relative = "Firefox"
 kind = "FIREFOX"
