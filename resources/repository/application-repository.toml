@@ -270,6 +270,12 @@ kind = "CHROMIUM"
 os = "MAC"
 
 [[apps]]
+id = "com.openai.atlas"
+config_dir_relative = "com.openai.atlas/browser-data/host"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
 id = "org.mozilla.firefox"
 config_dir_relative = "Firefox"
 kind = "FIREFOX"
