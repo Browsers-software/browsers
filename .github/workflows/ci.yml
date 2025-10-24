@@ -139,7 +139,7 @@ jobs:
           fi
         shell: bash
       - name: Upload release artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: browsers-linux-artifacts
           path: |
@@ -267,7 +267,7 @@ jobs:
         # special shell script to make tty working
         shell: 'script -q /dev/null bash -e {0}'
       - name: Upload mac artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: browsers-mac-artifacts
           path: |
@@ -381,7 +381,7 @@ jobs:
           fi
         shell: bash
       - name: Upload release artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: browsers-windows-artifacts
           path: |
@@ -401,7 +401,7 @@ jobs:
         with:
           show-progress: false
       - name: Download release artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           pattern: browsers-*-artifacts
       - name: Verify directories exist
