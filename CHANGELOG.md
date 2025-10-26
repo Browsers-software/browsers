@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- macOS: Support profiles for ChatGPT Atlas, Basilisk and Pale Moon
+- macOS: Support profiles for ChatGPT Atlas, Basilisk, Pale Moon and Zen
 
 ## [0.7.2] - 2025-10-04
 
