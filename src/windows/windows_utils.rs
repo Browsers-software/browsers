@@ -1,4 +1,5 @@
 use std::{
+    collections::HashSet,
     ffi::CString,
     fs,
     mem::{self, MaybeUninit},
@@ -63,7 +64,10 @@ impl OsHelper {
             let mut hkcu_apps = Self::find_applications_for_url_scheme_and_reg_root(scheme, hkcu);
 
             hklm_apps.append(&mut hkcu_apps);
-            hklm_apps
+
+            // Deduplicate apps based on executable path
+            // Apps can be registered in both HKLM and HKCU, causing duplicates
+            Self::deduplicate_app_infos(hklm_apps)
         } else {
             let classes = RegKey::predef(HKEY_CLASSES_ROOT);
             //let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
@@ -75,6 +79,19 @@ impl OsHelper {
             let mut class_apps = Self::find_applications_for_class(scheme, classes);
             class_apps
         };
+    }
+
+    fn deduplicate_app_infos(apps: Vec<AppInfoHolder>) -> Vec<AppInfoHolder> {
+        let mut seen_commands: HashSet<String> = HashSet::new();
+        let mut deduplicated: Vec<AppInfoHolder> = Vec::new();
+
+        for app in apps {
+            if seen_commands.insert(app.command.clone()) {
+                deduplicated.push(app);
+            }
+        }
+
+        deduplicated
     }
 
     fn find_applications_for_class(scheme: &str, classes: RegKey) -> Vec<AppInfoHolder> {
