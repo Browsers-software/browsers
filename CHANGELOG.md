@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - macOS: Support profiles for ChatGPT Atlas, Basilisk, Pale Moon and Zen
 
+### Fixed
+
+- Windows: Don't show same browser twice if it has an entry for user and system at the same time. Thanks to @kfatehi for contribution #337
+
 ## [0.7.2] - 2025-10-04
 
 ### Added
