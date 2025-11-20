@@ -5,7 +5,7 @@ use std::{fs, u32};
 
 use druid::image::imageops::FilterType;
 use druid::image::{ImageFormat, Rgba};
-use druid::{image, Data};
+use druid::{image, Data, Lens};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
@@ -75,7 +75,8 @@ pub struct UIConfig {
     // linux calls this even when just opening a context menu (e.g the 3-dot menu)
     pub quit_on_lost_focus: bool,
 
-    pub theme: ConfiguredTheme,
+    pub theme_mode: ThemeMode,
+    pub custom_theme: CustomTheme,
 }
 
 impl Default for UIConfig {
@@ -83,16 +84,40 @@ impl Default for UIConfig {
         UIConfig {
             show_hotkeys: true,
             quit_on_lost_focus: false,
-            theme: ConfiguredTheme::Auto,
+            theme_mode: ThemeMode::Auto,
+            custom_theme: CustomTheme::default(),
         }
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, Data, PartialEq)]
-pub enum ConfiguredTheme {
+#[derive(Serialize, Deserialize, Debug, Clone, Data, PartialEq)]
+pub enum ThemeMode {
     Auto,
     Light,
     Dark,
+    Custom,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Data, Lens, PartialEq)]
+pub struct CustomTheme {
+    pub window_background: String,
+    pub text_color: String,
+    pub active_tab_background: String,
+    pub active_tab_text: String,
+    pub inactive_tab_text: String,
+    // Add more fields as needed for full customization
+}
+
+impl Default for CustomTheme {
+    fn default() -> Self {
+        Self {
+            window_background: "#292929".to_string(),
+            text_color: "#f0f0ea".to_string(),
+            active_tab_background: "#195ac2".to_string(),
+            active_tab_text: "#ffffff".to_string(),
+            inactive_tab_text: "#ffffff".to_string(),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
