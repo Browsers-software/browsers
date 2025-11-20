@@ -1,14 +1,15 @@
 use crate::gui::ui::UIState;
-use crate::utils::ConfiguredTheme;
+use crate::utils::{CustomTheme, ThemeMode};
 use dark_light::Mode;
 use druid::{Color, Data, Env, Key};
 use serde::{Deserialize, Serialize};
 use tracing::warn;
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Data)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Data)]
 pub enum UITheme {
     Light,
     Dark,
+    Custom(CustomTheme),
 }
 
 pub fn initialize_theme(env: &mut Env, ui_state: &UIState) {
@@ -17,10 +18,11 @@ pub fn initialize_theme(env: &mut Env, ui_state: &UIState) {
 }
 
 fn get_active_ui_theme(ui_state: &UIState) -> UITheme {
-    match ui_state.ui_settings.visual_settings.theme {
-        ConfiguredTheme::Auto => detect_system_theme(),
-        ConfiguredTheme::Light => UITheme::Light,
-        ConfiguredTheme::Dark => UITheme::Dark,
+    match ui_state.ui_settings.visual_settings.theme_mode {
+        ThemeMode::Auto => detect_system_theme(),
+        ThemeMode::Light => UITheme::Light,
+        ThemeMode::Dark => UITheme::Dark,
+        ThemeMode::Custom => UITheme::Custom(ui_state.ui_settings.visual_settings.custom_theme.clone()),
     }
 }
 
@@ -155,6 +157,34 @@ fn get_theme(ui_theme: UITheme) -> Theme {
     let theme = match ui_theme {
         UITheme::Light => light_theme,
         UITheme::Dark => dark_theme,
+        UITheme::Custom(custom) => {
+            let mut theme = dark_theme; // Start with dark theme as base
+            
+            if let Ok(color) = parse_color(&custom.window_background) {
+                theme.druid_builtin.window_background_color = color.clone();
+                theme.general.window_background_color = color.clone();
+                theme.main.window_background_color = color.clone();
+            }
+            
+            if let Ok(color) = parse_color(&custom.text_color) {
+                theme.druid_builtin.text_color = color.clone();
+                theme.main.browser_label_color = color.clone();
+            }
+
+            if let Ok(color) = parse_color(&custom.active_tab_background) {
+                theme.settings.active_tab_background_color = color;
+            }
+
+            if let Ok(color) = parse_color(&custom.active_tab_text) {
+                theme.settings.active_tab_text_color = color;
+            }
+
+            if let Ok(color) = parse_color(&custom.inactive_tab_text) {
+                theme.settings.inactive_tab_text_color = color;
+            }
+
+            theme
+        }
     };
 
     return theme;
@@ -404,3 +434,13 @@ struct Palette {}
 //.adding(UI_FONT, FontDescriptor::new(FontFamily::SYSTEM_UI).with_size(15.0))
 //.adding(UI_FONT_BOLD, FontDescriptor::new(FontFamily::SYSTEM_UI).with_weight(FontWeight::BOLD).with_size(15.0))
 //.adding(UI_FONT_ITALIC, FontDescriptor::new(FontFamily::SYSTEM_UI).with_style(FontStyle::Italic).with_size(15.0))
+
+fn parse_color(hex: &str) -> Result<Color, ()> {
+    if hex.len() != 7 || !hex.starts_with('#') {
+        return Err(());
+    }
+    let r = u8::from_str_radix(&hex[1..3], 16).map_err(|_| ())?;
+    let g = u8::from_str_radix(&hex[3..5], 16).map_err(|_| ())?;
+    let b = u8::from_str_radix(&hex[5..7], 16).map_err(|_| ())?;
+    Ok(Color::rgb8(r, g, b))
+}
