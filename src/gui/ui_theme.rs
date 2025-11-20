@@ -1,14 +1,15 @@
 use crate::gui::ui::UIState;
-use crate::utils::ConfiguredTheme;
+use crate::utils::{CustomTheme, ThemeMode};
 use dark_light::Mode;
 use druid::{Color, Data, Env, FontDescriptor, FontFamily, Key};
 use serde::{Deserialize, Serialize};
 use tracing::warn;
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Data)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Data)]
 pub enum UITheme {
     Light,
     Dark,
+    Custom(CustomTheme),
 }
 
 pub fn initialize_theme(env: &mut Env, ui_state: &UIState) {
@@ -17,10 +18,13 @@ pub fn initialize_theme(env: &mut Env, ui_state: &UIState) {
 }
 
 fn get_active_ui_theme(ui_state: &UIState) -> UITheme {
-    match ui_state.ui_settings.visual_settings.theme {
-        ConfiguredTheme::Auto => detect_system_theme(),
-        ConfiguredTheme::Light => UITheme::Light,
-        ConfiguredTheme::Dark => UITheme::Dark,
+    match ui_state.ui_settings.visual_settings.theme_mode {
+        ThemeMode::Auto => detect_system_theme(),
+        ThemeMode::Light => UITheme::Light,
+        ThemeMode::Dark => UITheme::Dark,
+        ThemeMode::Custom => {
+            UITheme::Custom(ui_state.ui_settings.visual_settings.custom_theme.clone())
+        }
     }
 }
 
@@ -175,6 +179,7 @@ fn get_theme(ui_theme: UITheme) -> Theme {
     let theme = match ui_theme {
         UITheme::Light => light_theme,
         UITheme::Dark => dark_theme,
+        UITheme::Custom(custom) => custom_theme(&custom, dark_theme),
     };
 
     return theme;
@@ -495,3 +500,106 @@ struct Palette {}
 //.adding(UI_FONT, FontDescriptor::new(FontFamily::SYSTEM_UI).with_size(15.0))
 //.adding(UI_FONT_BOLD, FontDescriptor::new(FontFamily::SYSTEM_UI).with_weight(FontWeight::BOLD).with_size(15.0))
 //.adding(UI_FONT_ITALIC, FontDescriptor::new(FontFamily::SYSTEM_UI).with_style(FontStyle::Italic).with_size(15.0))
+
+fn custom_theme(custom: &CustomTheme, base_theme: Theme) -> Theme {
+    let mut theme = base_theme; // Start with dark theme as base
+
+    if let Ok(color) = parse_color(&custom.window_background) {
+        theme.druid_builtin.window_background_color = color.clone();
+        theme.general.window_background_color = color.clone();
+        theme.main.window_background_color = color.clone();
+    }
+
+    if let Ok(color) = parse_color(&custom.text_color) {
+        theme.druid_builtin.text_color = color.clone();
+        theme.main.browser_label_color = color.clone();
+    }
+
+    if let Ok(color) = parse_color(&custom.active_tab_background) {
+        theme.settings.active_tab_background_color = color;
+    }
+
+    if let Ok(color) = parse_color(&custom.active_tab_text) {
+        theme.settings.active_tab_text_color = color;
+    }
+
+    if let Ok(color) = parse_color(&custom.inactive_tab_text) {
+        theme.settings.inactive_tab_text_color = color;
+    }
+
+    if let Ok(color) = parse_color(&custom.hover_background) {
+        theme.main.item_background_color_hover = color;
+    }
+
+    if let Ok(color) = parse_color(&custom.hover_text) {
+        theme.main.browser_label_color_hover = color;
+    }
+
+    if let Ok(color) = parse_color(&custom.secondary_text) {
+        theme.main.profile_label_color = color;
+    }
+
+    if let Ok(color) = parse_color(&custom.hover_secondary_text) {
+        theme.main.profile_label_color_hover = color;
+    }
+
+    if let Some(size) = parse_font_size(&custom.primary_font_size) {
+        theme.main.browser_label_size = size;
+    }
+
+    if let Some(family) = parse_font_family(&custom.primary_font_family) {
+        theme.main.browser_label_font_family = family;
+    }
+
+    if let Some(size) = parse_font_size(&custom.secondary_font_size) {
+        theme.main.profile_label_size = size;
+    }
+
+    if let Some(family) = parse_font_family(&custom.secondary_font_family) {
+        theme.main.profile_label_font_family = family;
+    }
+
+    if let Ok(color) = parse_color(&custom.hotkey_background) {
+        theme.main.hotkey_background_color = color;
+    }
+
+    if let Ok(color) = parse_color(&custom.hotkey_text) {
+        theme.main.hotkey_text_color = color;
+    }
+
+    if let Ok(color) = parse_color(&custom.hover_hotkey_background) {
+        theme.main.hotkey_background_color_hover = color;
+    }
+
+    if let Ok(color) = parse_color(&custom.hover_hotkey_text) {
+        theme.main.hotkey_text_color_hover = color;
+    }
+
+    theme
+}
+
+fn parse_color(hex: &str) -> Result<Color, ()> {
+    if hex.len() != 7 || !hex.starts_with('#') {
+        return Err(());
+    }
+    let r = u8::from_str_radix(&hex[1..3], 16).map_err(|_| ())?;
+    let g = u8::from_str_radix(&hex[3..5], 16).map_err(|_| ())?;
+    let b = u8::from_str_radix(&hex[5..7], 16).map_err(|_| ())?;
+    Ok(Color::rgb8(r, g, b))
+}
+
+fn parse_font_family(family: &str) -> Option<FontFamily> {
+    let font_family = match family {
+        "default" | "System UI" => FontFamily::SYSTEM_UI,
+        "Serif" => FontFamily::SERIF,
+        "Sans Serif" => FontFamily::SANS_SERIF,
+        "Monospace" => FontFamily::MONOSPACE,
+        name => FontFamily::new_unchecked(name),
+    };
+
+    Some(font_family)
+}
+
+fn parse_font_size(size: &str) -> Option<f64> {
+    size.parse::<f64>().ok()
+}

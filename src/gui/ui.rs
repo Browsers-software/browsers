@@ -21,7 +21,9 @@ use crate::gui::main_window::{
 use crate::gui::ui::SettingsTab::GENERAL;
 use crate::gui::{about_dialog, main_window, settings_window, ui_theme};
 use crate::url_rule::UrlGlobMatcher;
-use crate::utils::{BehavioralConfig, Config, ConfiguredTheme, ProfileAndOptions, UIConfig};
+use crate::utils::{
+    BehavioralConfig, Config, CustomTheme, ProfileAndOptions, ThemeMode, UIConfig,
+};
 use crate::{CommonBrowserProfile, MessageToMain};
 
 pub struct UI {
@@ -71,7 +73,8 @@ impl UI {
         UIVisualSettings {
             show_hotkeys: ui_config.show_hotkeys,
             quit_on_lost_focus: ui_config.quit_on_lost_focus,
-            theme: ui_config.theme,
+            theme_mode: ui_config.theme_mode.clone(),
+            custom_theme: ui_config.custom_theme.clone(),
         }
     }
 
@@ -238,7 +241,8 @@ pub struct UISettings {
 pub struct UIVisualSettings {
     pub show_hotkeys: bool,
     pub quit_on_lost_focus: bool,
-    pub theme: ConfiguredTheme,
+    pub theme_mode: ThemeMode,
+    pub custom_theme: CustomTheme,
 }
 
 #[derive(Clone, Debug, Data, Lens)]
@@ -257,6 +261,7 @@ pub enum SettingsTab {
     GENERAL,
     RULES,
     ADVANCED,
+    APPEARANCE,
 }
 
 impl UISettings {
