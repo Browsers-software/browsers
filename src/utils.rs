@@ -129,6 +129,10 @@ pub struct CustomPalette {
     pub browser_label_size: f64,
     pub profile_label_size: f64,
     pub url_label_size: f64,
+    pub hover_label: String,
+    pub hover_secondary_label: String,
+    pub hotkey_hover_background: String,
+    pub hotkey_hover_text: String,
 }
 
 impl Default for CustomPalette {
@@ -161,6 +165,10 @@ impl Default for CustomPalette {
             browser_label_size: 12.0,
             profile_label_size: 11.0,
             url_label_size: 12.0,
+            hover_label: hex(Color::rgb8(255, 255, 255)),
+            hover_secondary_label: hex(Color::rgb8(255, 255, 255)),
+            hotkey_hover_background: hex(Color::rgba(0.15, 0.15, 0.15, 1.0)),
+            hotkey_hover_text: hex(Color::rgb8(255, 255, 255)),
         }
     }
 }
