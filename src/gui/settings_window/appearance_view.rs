@@ -78,6 +78,27 @@ pub(crate) fn appearance_content() -> impl Widget<UIState> {
             .then(CustomTheme::hover_background),
         save_command.clone());
 
+    let hover_text_input = make_color_input("Hover/Selected Text", 
+        UIState::ui_settings
+            .then(UISettings::visual_settings)
+            .then(UIVisualSettings::custom_theme)
+            .then(CustomTheme::hover_text),
+        save_command.clone());
+
+    let secondary_text_input = make_color_input("Secondary Text", 
+        UIState::ui_settings
+            .then(UISettings::visual_settings)
+            .then(UIVisualSettings::custom_theme)
+            .then(CustomTheme::secondary_text),
+        save_command.clone());
+
+    let hover_secondary_text_input = make_color_input("Hover/Selected Secondary Text", 
+        UIState::ui_settings
+            .then(UISettings::visual_settings)
+            .then(UIVisualSettings::custom_theme)
+            .then(CustomTheme::hover_secondary_text),
+        save_command.clone());
+
     Flex::column()
         .cross_axis_alignment(CrossAxisAlignment::Start)
         .with_child(theme_radio_row)
@@ -95,6 +116,12 @@ pub(crate) fn appearance_content() -> impl Widget<UIState> {
         .with_child(inactive_tab_text_input)
         .with_spacer(5.0)
         .with_child(hover_background_input)
+        .with_spacer(5.0)
+        .with_child(hover_text_input)
+        .with_spacer(5.0)
+        .with_child(secondary_text_input)
+        .with_spacer(5.0)
+        .with_child(hover_secondary_text_input)
 }
 
 fn make_color_input(label: &str, lens: impl druid::Lens<UIState, String> + 'static, save_command: druid::Command) -> impl Widget<UIState> {

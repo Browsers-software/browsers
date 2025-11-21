@@ -87,6 +87,8 @@ fn get_theme(ui_theme: UITheme) -> Theme {
             hotkey_text_color: Color::rgb8(128, 128, 128),
             options_button_text_color: Color::rgb8(128, 128, 128),
             hover_background_color: Color::rgba(1.0, 1.0, 1.0, 0.25),
+            hover_text_color: Color::rgb8(255, 255, 255),
+            hover_secondary_text_color: Color::rgb8(255, 255, 255),
         },
         settings: SettingsWindowTheme {
             active_tab_background_color: Color::rgb8(25, 90, 194),
@@ -143,6 +145,8 @@ fn get_theme(ui_theme: UITheme) -> Theme {
             hotkey_text_color: Color::rgb8(128, 128, 128),
             options_button_text_color: Color::rgb8(128, 128, 128),
             hover_background_color: Color::rgba(1.0, 1.0, 1.0, 0.25),
+            hover_text_color: Color::rgb8(0, 0, 0),
+            hover_secondary_text_color: Color::rgb8(0, 0, 0),
         },
         settings: SettingsWindowTheme {
             active_tab_background_color: Color::rgb8(25, 90, 194),
@@ -187,6 +191,18 @@ fn get_theme(ui_theme: UITheme) -> Theme {
 
             if let Ok(color) = parse_color(&custom.hover_background) {
                 theme.main.hover_background_color = color;
+            }
+
+            if let Ok(color) = parse_color(&custom.hover_text) {
+                theme.main.hover_text_color = color;
+            }
+
+            if let Ok(color) = parse_color(&custom.secondary_text) {
+                theme.main.profile_label_color = color;
+            }
+
+            if let Ok(color) = parse_color(&custom.hover_secondary_text) {
+                theme.main.hover_secondary_text_color = color;
             }
 
             theme
@@ -243,6 +259,8 @@ pub(crate) struct MainWindowTheme {
     hotkey_text_color: Color,
     options_button_text_color: Color,
     hover_background_color: Color,
+    hover_text_color: Color,
+    hover_secondary_text_color: Color,
 }
 
 impl MainWindowTheme {
@@ -279,6 +297,12 @@ impl MainWindowTheme {
     pub const ENV_HOVER_BACKGROUND_COLOR: Key<Color> =
         Key::new("software.browsers.theme.main.hover_background_color");
 
+    pub const ENV_HOVER_TEXT_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.main.hover_text_color");
+
+    pub const ENV_HOVER_SECONDARY_TEXT_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.main.hover_secondary_text_color");
+
     fn set_env_to_theme(&self, env: &mut Env) {
         env.set(Self::ENV_WINDOW_BACKGROUND_COLOR, self.window_background_color);
         env.set(Self::ENV_WINDOW_BORDER_COLOR, self.window_border_color);
@@ -296,6 +320,14 @@ impl MainWindowTheme {
         env.set(
             Self::ENV_HOVER_BACKGROUND_COLOR,
             self.hover_background_color,
+        );
+        env.set(
+            Self::ENV_HOVER_TEXT_COLOR,
+            self.hover_text_color,
+        );
+        env.set(
+            Self::ENV_HOVER_SECONDARY_TEXT_COLOR,
+            self.hover_secondary_text_color,
         );
     }
 }
