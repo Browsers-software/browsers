@@ -459,10 +459,10 @@ fn create_browser(
 
     let container = FocusWidget::new(
         container,
-        |ctx, _: &((bool, UISettings), UIBrowser), _env| {
+        |ctx, _: &((bool, UISettings), UIBrowser), env| {
             let size = ctx.size();
             let rounded_rect = size.to_rounded_rect(5.0);
-            let color = Color::rgba(1.0, 1.0, 1.0, 0.25);
+            let color = env.get(MainWindowTheme::ENV_HOVER_BACKGROUND_COLOR);
             ctx.fill(rounded_rect, &color);
         },
         |ctx, (_, data): &((bool, UISettings), UIBrowser), _env| {

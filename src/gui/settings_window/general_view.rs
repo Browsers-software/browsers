@@ -1,5 +1,5 @@
 use druid::widget::{
-    Button, ControllerHost, CrossAxisAlignment, Flex, Label, LineBreaking, RadioGroup, Switch,
+    Button, ControllerHost, CrossAxisAlignment, Flex, Label, LineBreaking, Switch,
 };
 use druid::{LensExt, Widget, WidgetExt};
 

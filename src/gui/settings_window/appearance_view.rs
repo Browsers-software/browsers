@@ -71,6 +71,13 @@ pub(crate) fn appearance_content() -> impl Widget<UIState> {
             .then(CustomTheme::inactive_tab_text),
         save_command.clone());
 
+    let hover_background_input = make_color_input("Hover/Selected Background", 
+        UIState::ui_settings
+            .then(UISettings::visual_settings)
+            .then(UIVisualSettings::custom_theme)
+            .then(CustomTheme::hover_background),
+        save_command.clone());
+
     Flex::column()
         .cross_axis_alignment(CrossAxisAlignment::Start)
         .with_child(theme_radio_row)
@@ -86,6 +93,8 @@ pub(crate) fn appearance_content() -> impl Widget<UIState> {
         .with_child(active_tab_text_input)
         .with_spacer(5.0)
         .with_child(inactive_tab_text_input)
+        .with_spacer(5.0)
+        .with_child(hover_background_input)
 }
 
 fn make_color_input(label: &str, lens: impl druid::Lens<UIState, String> + 'static, save_command: druid::Command) -> impl Widget<UIState> {
