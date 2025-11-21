@@ -476,7 +476,21 @@ fn create_browser(
                     .ok();
             }
         },
-    );
+    )
+    .with_env_on_focus(|env| {
+        let mut new_env = env.clone();
+        let hover_text_color = env.get(MainWindowTheme::ENV_HOVER_TEXT_COLOR);
+        let hover_secondary_text_color = env.get(MainWindowTheme::ENV_HOVER_SECONDARY_TEXT_COLOR);
+        
+        new_env.set(MainWindowTheme::ENV_BROWSER_LABEL_COLOR, hover_text_color.clone());
+        new_env.set(MainWindowTheme::ENV_PROFILE_LABEL_COLOR, hover_secondary_text_color.clone());
+        new_env.set(MainWindowTheme::ENV_HOTKEY_TEXT_COLOR, hover_secondary_text_color.clone());
+        new_env.set(
+            MainWindowTheme::ENV_OPTIONS_BUTTON_TEXT_COLOR,
+            hover_secondary_text_color.clone(),
+        );
+        new_env
+    });
 
     let container = Container::new(container);
 
