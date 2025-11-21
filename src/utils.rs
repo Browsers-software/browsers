@@ -105,7 +105,7 @@ pub struct CustomTheme {
     pub active_tab_background: String,
     pub active_tab_text: String,
     pub inactive_tab_text: String,
-    // Add more fields as needed for full customization
+    pub hover_background: String, // Add more fields as needed for full customization
 }
 
 impl Default for CustomTheme {
@@ -116,6 +116,7 @@ impl Default for CustomTheme {
             active_tab_background: "#195ac2".to_string(),
             active_tab_text: "#ffffff".to_string(),
             inactive_tab_text: "#ffffff".to_string(),
+            hover_background: "#ffffff40".to_string(), // 25% white
         }
     }
 }

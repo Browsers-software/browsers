@@ -86,6 +86,7 @@ fn get_theme(ui_theme: UITheme) -> Theme {
             hotkey_border_color: Color::rgba(0.4, 0.4, 0.4, 0.9),
             hotkey_text_color: Color::rgb8(128, 128, 128),
             options_button_text_color: Color::rgb8(128, 128, 128),
+            hover_background_color: Color::rgba(1.0, 1.0, 1.0, 0.25),
         },
         settings: SettingsWindowTheme {
             active_tab_background_color: Color::rgb8(25, 90, 194),
@@ -141,6 +142,7 @@ fn get_theme(ui_theme: UITheme) -> Theme {
             hotkey_border_color: Color::rgba(0.4, 0.4, 0.4, 0.9),
             hotkey_text_color: Color::rgb8(128, 128, 128),
             options_button_text_color: Color::rgb8(128, 128, 128),
+            hover_background_color: Color::rgba(1.0, 1.0, 1.0, 0.25),
         },
         settings: SettingsWindowTheme {
             active_tab_background_color: Color::rgb8(25, 90, 194),
@@ -181,6 +183,10 @@ fn get_theme(ui_theme: UITheme) -> Theme {
 
             if let Ok(color) = parse_color(&custom.inactive_tab_text) {
                 theme.settings.inactive_tab_text_color = color;
+            }
+
+            if let Ok(color) = parse_color(&custom.hover_background) {
+                theme.main.hover_background_color = color;
             }
 
             theme
@@ -236,6 +242,7 @@ pub(crate) struct MainWindowTheme {
     hotkey_border_color: Color,
     hotkey_text_color: Color,
     options_button_text_color: Color,
+    hover_background_color: Color,
 }
 
 impl MainWindowTheme {
@@ -269,6 +276,9 @@ impl MainWindowTheme {
     pub const ENV_OPTIONS_BUTTON_TEXT_COLOR: Key<Color> =
         Key::new("software.browsers.theme.main.options_button_text_color");
 
+    pub const ENV_HOVER_BACKGROUND_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.main.hover_background_color");
+
     fn set_env_to_theme(&self, env: &mut Env) {
         env.set(Self::ENV_WINDOW_BACKGROUND_COLOR, self.window_background_color);
         env.set(Self::ENV_WINDOW_BORDER_COLOR, self.window_border_color);
@@ -282,6 +292,10 @@ impl MainWindowTheme {
         env.set(
             Self::ENV_OPTIONS_BUTTON_TEXT_COLOR,
             self.options_button_text_color,
+        );
+        env.set(
+            Self::ENV_HOVER_BACKGROUND_COLOR,
+            self.hover_background_color,
         );
     }
 }
