@@ -1,7 +1,7 @@
 use crate::gui::ui::UIState;
 use crate::utils::{CustomTheme, ThemeMode};
 use dark_light::Mode;
-use druid::{Color, Data, Env, Key};
+use druid::{Color, Data, Env, FontDescriptor, FontFamily, Key};
 use serde::{Deserialize, Serialize};
 use tracing::warn;
 
@@ -78,9 +78,9 @@ fn get_theme(ui_theme: UITheme) -> Theme {
         main: MainWindowTheme {
             window_background_color: Color::rgba(0.15, 0.15, 0.15, 0.9),
             window_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
-            browser_label_size: 12.0,
+            browser_label_font: FontDescriptor::new(FontFamily::SYSTEM_UI).with_size(12.0),
             browser_label_color: Color::rgb8(255, 255, 255),
-            profile_label_size: 11.0,
+            profile_label_font: FontDescriptor::new(FontFamily::SYSTEM_UI).with_size(11.0),
             profile_label_color: Color::rgb8(190, 190, 190),
             hotkey_background_color: Color::rgba(0.15, 0.15, 0.15, 1.0),
             hotkey_border_color: Color::rgba(0.4, 0.4, 0.4, 0.9),
@@ -136,9 +136,9 @@ fn get_theme(ui_theme: UITheme) -> Theme {
         main: MainWindowTheme {
             window_background_color: Color::rgba8(215, 215, 215, 230),
             window_border_color: Color::rgba(0.7, 0.7, 0.7, 0.9),
-            browser_label_size: 12.0,
+            browser_label_font: FontDescriptor::new(FontFamily::SYSTEM_UI).with_size(12.0),
             browser_label_color: Color::rgb8(0, 0, 0),
-            profile_label_size: 11.0,
+            profile_label_font: FontDescriptor::new(FontFamily::SYSTEM_UI).with_size(11.0),
             profile_label_color: Color::rgb8(30, 30, 30),
             hotkey_background_color: Color::rgb8(215, 215, 215),
             hotkey_border_color: Color::rgba(0.4, 0.4, 0.4, 0.9),
@@ -205,6 +205,14 @@ fn get_theme(ui_theme: UITheme) -> Theme {
                 theme.main.hover_secondary_text_color = color;
             }
 
+            if let Ok(font) = parse_font(&custom.primary_font_family, &custom.primary_font_size) {
+                theme.main.browser_label_font = font;
+            }
+
+            if let Ok(font) = parse_font(&custom.secondary_font_family, &custom.secondary_font_size) {
+                theme.main.profile_label_font = font;
+            }
+
             theme
         }
     };
@@ -250,9 +258,9 @@ impl GeneralTheme {
 pub(crate) struct MainWindowTheme {
     window_background_color: Color,
     window_border_color: Color,
-    browser_label_size: f64,
+    browser_label_font: FontDescriptor,
     browser_label_color: Color,
-    profile_label_size: f64,
+    profile_label_font: FontDescriptor,
     profile_label_color: Color,
     hotkey_background_color: Color,
     hotkey_border_color: Color,
@@ -270,14 +278,14 @@ impl MainWindowTheme {
     pub const ENV_WINDOW_BORDER_COLOR: Key<Color> =
         Key::new("software.browsers.theme.main.window_border_color");
 
-    pub const ENV_BROWSER_LABEL_SIZE: Key<f64> =
-        Key::new("software.browsers.theme.main.browser_label_size");
+    pub const ENV_BROWSER_LABEL_FONT: Key<FontDescriptor> =
+        Key::new("software.browsers.theme.main.browser_label_font");
 
     pub const ENV_BROWSER_LABEL_COLOR: Key<Color> =
         Key::new("software.browsers.theme.main.browser_label_color");
 
-    pub const ENV_PROFILE_LABEL_SIZE: Key<f64> =
-        Key::new("software.browsers.theme.main.profile_label_size");
+    pub const ENV_PROFILE_LABEL_FONT: Key<FontDescriptor> =
+        Key::new("software.browsers.theme.main.profile_label_font");
 
     pub const ENV_PROFILE_LABEL_COLOR: Key<Color> =
         Key::new("software.browsers.theme.main.profile_label_color");
@@ -306,9 +314,9 @@ impl MainWindowTheme {
     fn set_env_to_theme(&self, env: &mut Env) {
         env.set(Self::ENV_WINDOW_BACKGROUND_COLOR, self.window_background_color);
         env.set(Self::ENV_WINDOW_BORDER_COLOR, self.window_border_color);
-        env.set(Self::ENV_BROWSER_LABEL_SIZE, self.browser_label_size);
+        env.set(Self::ENV_BROWSER_LABEL_FONT, self.browser_label_font.clone());
         env.set(Self::ENV_BROWSER_LABEL_COLOR, self.browser_label_color);
-        env.set(Self::ENV_PROFILE_LABEL_SIZE, self.profile_label_size);
+        env.set(Self::ENV_PROFILE_LABEL_FONT, self.profile_label_font.clone());
         env.set(Self::ENV_PROFILE_LABEL_COLOR, self.profile_label_color);
         env.set(Self::ENV_HOTKEY_BACKGROUND_COLOR, self.hotkey_background_color);
         env.set(Self::ENV_HOTKEY_BORDER_COLOR, self.hotkey_border_color);
@@ -489,4 +497,16 @@ fn parse_color(hex: &str) -> Result<Color, ()> {
     let g = u8::from_str_radix(&hex[3..5], 16).map_err(|_| ())?;
     let b = u8::from_str_radix(&hex[5..7], 16).map_err(|_| ())?;
     Ok(Color::rgb8(r, g, b))
+}
+
+fn parse_font(family: &str, size: &str) -> Result<FontDescriptor, ()> {
+    let size = size.parse::<f64>().map_err(|_| ())?;
+    let family = match family {
+        "default" | "System UI" => FontFamily::SYSTEM_UI,
+        "Serif" => FontFamily::SERIF,
+        "Sans Serif" => FontFamily::SANS_SERIF,
+        "Monospace" => FontFamily::MONOSPACE,
+        name => FontFamily::new_unchecked(name),
+    };
+    Ok(FontDescriptor::new(family).with_size(size))
 }

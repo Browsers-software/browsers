@@ -10,11 +10,14 @@ pub trait FocusData {
 
 pub const FOCUS_WIDGET_SET_FOCUS_ON_HOVER: Selector<WidgetId> =
     Selector::new("focus_widget.set_focus");
+pub const FOCUS_WIDGET_RESIGN_FOCUS: Selector<WidgetId> =
+    Selector::new("focus_widget.resign_focus");
 
 pub struct FocusWidget<S: druid::Data + FocusData, W> {
     inner: W,
     paint_fn_on_focus: fn(ctx: &mut PaintCtx, data: &S, env: &Env),
     lifecycle_fn: fn(ctx: &mut LifeCycleCtx, data: &S, env: &Env),
+    hover_lost_fn: Option<fn(ctx: &mut LifeCycleCtx, data: &S, env: &Env)>,
     env_fn_on_focus: Option<fn(&Env) -> Env>,
     is_focused: bool,
 }
@@ -31,9 +34,15 @@ impl<S: druid::Data + FocusData, W> FocusWidget<S, W> {
             inner,
             paint_fn_on_focus,
             lifecycle_fn,
+            hover_lost_fn: None,
             env_fn_on_focus: None,
             is_focused: false,
         }
+    }
+
+    pub fn on_hover_lost(mut self, f: fn(ctx: &mut LifeCycleCtx, data: &S, env: &Env)) -> Self {
+        self.hover_lost_fn = Some(f);
+        self
     }
 
     pub fn with_env_on_focus(mut self, f: fn(&Env) -> Env) -> Self {
@@ -53,6 +62,14 @@ impl<S: druid::Data + FocusData, W: Widget<S>> Widget<S> for FocusWidget<S, W> {
                 //    widget_id
                 //);
                 ctx.request_focus();
+                ctx.request_paint();
+                ctx.set_handled();
+                ctx.request_update();
+            }
+            Event::Command(cmd) if cmd.is(FOCUS_WIDGET_RESIGN_FOCUS) => {
+                if ctx.has_focus() {
+                    ctx.resign_focus();
+                }
                 ctx.request_paint();
                 ctx.set_handled();
                 ctx.request_update();
@@ -103,7 +120,11 @@ impl<S: druid::Data + FocusData, W: Widget<S>> Widget<S> for FocusWidget<S, W> {
         }
 
         let mut local_env = env.clone();
-        if ctx.has_focus() {
+        if ctx.has_focus() != self.is_focused {
+            self.is_focused = ctx.has_focus();
+            ctx.request_layout();
+        }
+        if self.is_focused {
             if let Some(f) = self.env_fn_on_focus {
                 local_env = f(env);
             }
@@ -126,8 +147,8 @@ impl<S: druid::Data + FocusData, W: Widget<S>> Widget<S> for FocusWidget<S, W> {
                     if !ctx.is_hot() {
                         ctx.scroll_to_view();
                     }
-                    (self.lifecycle_fn)(ctx, data, env);
                 }
+                (self.lifecycle_fn)(ctx, data, env);
                 ctx.request_paint();
                 ctx.request_layout();
             }
@@ -142,12 +163,28 @@ impl<S: druid::Data + FocusData, W: Widget<S>> Widget<S> for FocusWidget<S, W> {
                     );
                     ctx.submit_command(cmd);
                     //ctx.request_paint();
+                } else if !*to_hot {
+                    if let Some(f) = self.hover_lost_fn {
+                        f(ctx, data, env);
+                    }
+                    if ctx.has_focus() {
+                        let cmd = Command::new(
+                            FOCUS_WIDGET_RESIGN_FOCUS,
+                            ctx.widget_id(),
+                            Target::Widget(ctx.widget_id()),
+                        );
+                        ctx.submit_command(cmd);
+                    }
                 }
             }
             _ => {}
         }
         let mut local_env = env.clone();
-        if ctx.has_focus() {
+        if ctx.has_focus() != self.is_focused {
+            self.is_focused = ctx.has_focus();
+            ctx.request_layout();
+        }
+        if self.is_focused {
             if let Some(f) = self.env_fn_on_focus {
                 local_env = f(env);
             }
@@ -160,7 +197,11 @@ impl<S: druid::Data + FocusData, W: Widget<S>> Widget<S> for FocusWidget<S, W> {
             ctx.request_paint();
         }*/
         let mut local_env = env.clone();
-        if ctx.has_focus() {
+        if ctx.has_focus() != self.is_focused {
+            self.is_focused = ctx.has_focus();
+            ctx.request_layout();
+        }
+        if self.is_focused {
             if let Some(f) = self.env_fn_on_focus {
                 local_env = f(env);
             }
@@ -170,6 +211,7 @@ impl<S: druid::Data + FocusData, W: Widget<S>> Widget<S> for FocusWidget<S, W> {
 
     fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &S, env: &Env) -> Size {
         let mut local_env = env.clone();
+        // info!("FocusWidget: layout, widget_id: {:?}, is_focused: {}", ctx.widget_id(), self.is_focused);
         if self.is_focused {
             if let Some(f) = self.env_fn_on_focus {
                 local_env = f(env);
@@ -179,7 +221,7 @@ impl<S: druid::Data + FocusData, W: Widget<S>> Widget<S> for FocusWidget<S, W> {
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &S, env: &Env) {
-        if ctx.has_focus() {
+        if self.is_focused {
             (self.paint_fn_on_focus)(ctx, data, env);
             if let Some(f) = self.env_fn_on_focus {
                 let new_env = f(env);

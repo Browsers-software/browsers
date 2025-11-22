@@ -131,6 +131,7 @@ impl UI {
                 unique_id: p.get_unique_id(),
                 unique_app_id: p.get_unique_app_id(),
                 filtered_index: i, // TODO: filter against current url
+                is_focused: false,
             })
             .collect();
     }
@@ -368,7 +369,10 @@ pub struct UIBrowser {
 
     // index in list of actually visible browsers for current url
     // (correctly set only in filtered_browsers list)
+    // index in list of actually visible browsers for current url
+    // (correctly set only in filtered_browsers list)
     pub(crate) filtered_index: usize,
+    pub(crate) is_focused: bool,
 }
 
 impl UIBrowser {
@@ -691,6 +695,15 @@ impl AppDelegate<UIState> for UIDelegate {
         } else if cmd.is(SET_FOCUSED_INDEX) {
             let profile_index = cmd.get_unchecked(SET_FOCUSED_INDEX);
             data.focused_index = profile_index.clone();
+
+            let browsers_mut = Arc::make_mut(&mut data.filtered_browsers);
+            for (i, browser) in browsers_mut.iter_mut().enumerate() {
+                if let Some(index) = profile_index {
+                    browser.is_focused = browser.browser_profile_index == *index;
+                } else {
+                    browser.is_focused = false;
+                }
+            }
             Handled::Yes
         } else if cmd.is(COPY_LINK_TO_CLIPBOARD) {
             copy_to_clipboard(data.url.as_str());

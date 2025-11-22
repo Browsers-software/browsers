@@ -1,7 +1,7 @@
 use druid::widget::{
     ControllerHost, CrossAxisAlignment, Flex, Label, RadioGroup, TextBox,
 };
-use druid::{LensExt, Widget, WidgetExt};
+use druid::{Color, LensExt, Widget, WidgetExt};
 
 use crate::gui::settings_window::rules_view;
 use crate::gui::ui::{
@@ -99,6 +99,34 @@ pub(crate) fn appearance_content() -> impl Widget<UIState> {
             .then(CustomTheme::hover_secondary_text),
         save_command.clone());
 
+    let primary_font_size_input = make_input("Primary Font Size",
+        UIState::ui_settings
+            .then(UISettings::visual_settings)
+            .then(UIVisualSettings::custom_theme)
+            .then(CustomTheme::primary_font_size),
+        save_command.clone());
+
+    let primary_font_family_input = make_input("Primary Font Family",
+        UIState::ui_settings
+            .then(UISettings::visual_settings)
+            .then(UIVisualSettings::custom_theme)
+            .then(CustomTheme::primary_font_family),
+        save_command.clone());
+
+    let secondary_font_size_input = make_input("Secondary Font Size",
+        UIState::ui_settings
+            .then(UISettings::visual_settings)
+            .then(UIVisualSettings::custom_theme)
+            .then(CustomTheme::secondary_font_size),
+        save_command.clone());
+
+    let secondary_font_family_input = make_input("Secondary Font Family",
+        UIState::ui_settings
+            .then(UISettings::visual_settings)
+            .then(UIVisualSettings::custom_theme)
+            .then(CustomTheme::secondary_font_family),
+        save_command.clone());
+
     Flex::column()
         .cross_axis_alignment(CrossAxisAlignment::Start)
         .with_child(theme_radio_row)
@@ -122,6 +150,32 @@ pub(crate) fn appearance_content() -> impl Widget<UIState> {
         .with_child(secondary_text_input)
         .with_spacer(5.0)
         .with_child(hover_secondary_text_input)
+        .with_spacer(10.0)
+        .with_child(Label::new("Fonts").with_text_size(14.0).with_text_color(Color::WHITE))
+        .with_spacer(5.0)
+        .with_child(primary_font_size_input)
+        .with_spacer(5.0)
+        .with_child(primary_font_family_input)
+        .with_spacer(5.0)
+        .with_child(secondary_font_size_input)
+        .with_spacer(5.0)
+        .with_child(secondary_font_family_input)
+}
+
+fn make_input(label: &str, lens: impl druid::Lens<UIState, String> + 'static, save_command: druid::Command) -> impl Widget<UIState> {
+    Flex::column()
+        .cross_axis_alignment(CrossAxisAlignment::Start)
+        .with_child(Label::new(label).with_text_size(12.0))
+        .with_spacer(2.0)
+        .with_child(
+            druid::widget::TextBox::new()
+                .with_placeholder(label)
+                .lens(lens)
+                .controller(rules_view::SubmitCommandOnDataChange {
+                    command: save_command,
+                })
+                .expand_width()
+        )
 }
 
 fn make_color_input(label: &str, lens: impl druid::Lens<UIState, String> + 'static, save_command: druid::Command) -> impl Widget<UIState> {
