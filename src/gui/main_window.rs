@@ -495,14 +495,6 @@ fn create_browser(
                         Target::Global,
                     )
                     .ok();
-            } else {
-                ctx.get_external_handle()
-                    .submit_command(
-                        SET_FOCUSED_INDEX,
-                        None,
-                        Target::Global,
-                    )
-                    .ok();
             }
         },
     )
