@@ -109,6 +109,10 @@ pub struct CustomTheme {
     pub hover_text: String,
     pub secondary_text: String,
     pub hover_secondary_text: String,
+    pub primary_font_size: String,
+    pub primary_font_family: String,
+    pub secondary_font_size: String,
+    pub secondary_font_family: String,
 }
 
 impl Default for CustomTheme {
@@ -123,6 +127,10 @@ impl Default for CustomTheme {
             hover_text: "#ffffff".to_string(),
             secondary_text: "#bebebe".to_string(),
             hover_secondary_text: "#ffffff".to_string(),
+            primary_font_size: "12.0".to_string(),
+            primary_font_family: "default".to_string(),
+            secondary_font_size: "11.0".to_string(),
+            secondary_font_family: "default".to_string(),
         }
     }
 }
