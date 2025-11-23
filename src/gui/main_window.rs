@@ -439,16 +439,17 @@ fn create_browser(
 
             let hotkey_label = Either::new(
                 |(_, item): &((bool, UISettings), UIBrowser), _| item.is_focused,
-                make_hotkey_label(MainWindowTheme::ENV_HOVER_SECONDARY_TEXT_COLOR)
-                    .padding(4.0),
+                make_hotkey_label(MainWindowTheme::ENV_HOVER_HOTKEY_TEXT_COLOR)
+                    .padding(4.0)
+                    .background(MainWindowTheme::ENV_HOVER_HOTKEY_BACKGROUND_COLOR)
+                    .rounded(5.0)
+                    .border(MainWindowTheme::ENV_HOTKEY_BORDER_COLOR, 0.5),
                 make_hotkey_label(MainWindowTheme::ENV_HOTKEY_TEXT_COLOR)
-                    .padding(4.0),
+                    .padding(4.0)
+                    .background(MainWindowTheme::ENV_HOTKEY_BACKGROUND_COLOR)
+                    .rounded(5.0)
+                    .border(MainWindowTheme::ENV_HOTKEY_BORDER_COLOR, 0.5),
             );
-
-            let hotkey_label = Container::new(hotkey_label)
-                .background(MainWindowTheme::ENV_HOTKEY_BACKGROUND_COLOR)
-                .rounded(5.0)
-                .border(MainWindowTheme::ENV_HOTKEY_BORDER_COLOR, 0.5);
 
             hotkey_label
         },

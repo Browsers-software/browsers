@@ -113,6 +113,10 @@ pub struct CustomTheme {
     pub primary_font_family: String,
     pub secondary_font_size: String,
     pub secondary_font_family: String,
+    pub hotkey_background: String,
+    pub hotkey_text: String,
+    pub hover_hotkey_background: String,
+    pub hover_hotkey_text: String,
 }
 
 impl Default for CustomTheme {
@@ -131,6 +135,10 @@ impl Default for CustomTheme {
             primary_font_family: "default".to_string(),
             secondary_font_size: "11.0".to_string(),
             secondary_font_family: "default".to_string(),
+            hotkey_background: "#292929".to_string(),
+            hotkey_text: "#808080".to_string(),
+            hover_hotkey_background: "#292929".to_string(),
+            hover_hotkey_text: "#ffffff".to_string(),
         }
     }
 }
