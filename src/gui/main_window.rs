@@ -116,8 +116,8 @@ impl MainWindow {
         const BOTTOM_ROW_HEIGHT: f64 = 18.0;
 
         let url_label = Label::dynamic(|data: &UIState, _| ellipsize(data.url.as_str(), 28))
-            .with_text_size(12.0)
-            .with_text_color(Color::from_hex_str("808080").unwrap())
+            .with_font(MainWindowTheme::ENV_PROFILE_LABEL_FONT)
+            .with_text_color(MainWindowTheme::ENV_PROFILE_LABEL_COLOR)
             .with_line_break_mode(LineBreaking::Clip)
             .with_text_alignment(TextAlignment::Start)
             .fix_height(BOTTOM_ROW_HEIGHT)
