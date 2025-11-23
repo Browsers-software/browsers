@@ -89,6 +89,8 @@ fn get_theme(ui_theme: UITheme) -> Theme {
             hover_background_color: Color::rgba(1.0, 1.0, 1.0, 0.25),
             hover_text_color: Color::rgb8(255, 255, 255),
             hover_secondary_text_color: Color::rgb8(255, 255, 255),
+            hover_hotkey_background_color: Color::rgba(0.15, 0.15, 0.15, 1.0),
+            hover_hotkey_text_color: Color::rgb8(255, 255, 255),
         },
         settings: SettingsWindowTheme {
             active_tab_background_color: Color::rgb8(25, 90, 194),
@@ -147,6 +149,8 @@ fn get_theme(ui_theme: UITheme) -> Theme {
             hover_background_color: Color::rgba(1.0, 1.0, 1.0, 0.25),
             hover_text_color: Color::rgb8(0, 0, 0),
             hover_secondary_text_color: Color::rgb8(0, 0, 0),
+            hover_hotkey_background_color: Color::rgb8(215, 215, 215),
+            hover_hotkey_text_color: Color::rgb8(0, 0, 0),
         },
         settings: SettingsWindowTheme {
             active_tab_background_color: Color::rgb8(25, 90, 194),
@@ -213,6 +217,22 @@ fn get_theme(ui_theme: UITheme) -> Theme {
                 theme.main.profile_label_font = font;
             }
 
+            if let Ok(color) = parse_color(&custom.hotkey_background) {
+                theme.main.hotkey_background_color = color;
+            }
+
+            if let Ok(color) = parse_color(&custom.hotkey_text) {
+                theme.main.hotkey_text_color = color;
+            }
+
+            if let Ok(color) = parse_color(&custom.hover_hotkey_background) {
+                theme.main.hover_hotkey_background_color = color;
+            }
+
+            if let Ok(color) = parse_color(&custom.hover_hotkey_text) {
+                theme.main.hover_hotkey_text_color = color;
+            }
+
             theme
         }
     };
@@ -269,6 +289,8 @@ pub(crate) struct MainWindowTheme {
     hover_background_color: Color,
     hover_text_color: Color,
     hover_secondary_text_color: Color,
+    hover_hotkey_background_color: Color,
+    hover_hotkey_text_color: Color,
 }
 
 impl MainWindowTheme {
@@ -311,6 +333,12 @@ impl MainWindowTheme {
     pub const ENV_HOVER_SECONDARY_TEXT_COLOR: Key<Color> =
         Key::new("software.browsers.theme.main.hover_secondary_text_color");
 
+    pub const ENV_HOVER_HOTKEY_BACKGROUND_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.main.hover_hotkey_background_color");
+
+    pub const ENV_HOVER_HOTKEY_TEXT_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.main.hover_hotkey_text_color");
+
     fn set_env_to_theme(&self, env: &mut Env) {
         env.set(Self::ENV_WINDOW_BACKGROUND_COLOR, self.window_background_color);
         env.set(Self::ENV_WINDOW_BORDER_COLOR, self.window_border_color);
@@ -336,6 +364,14 @@ impl MainWindowTheme {
         env.set(
             Self::ENV_HOVER_SECONDARY_TEXT_COLOR,
             self.hover_secondary_text_color,
+        );
+        env.set(
+            Self::ENV_HOVER_HOTKEY_BACKGROUND_COLOR,
+            self.hover_hotkey_background_color,
+        );
+        env.set(
+            Self::ENV_HOVER_HOTKEY_TEXT_COLOR,
+            self.hover_hotkey_text_color,
         );
     }
 }

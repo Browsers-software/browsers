@@ -99,6 +99,34 @@ pub(crate) fn appearance_content() -> impl Widget<UIState> {
             .then(CustomTheme::hover_secondary_text),
         save_command.clone());
 
+    let hotkey_background_input = make_color_input("Hotkey Background", 
+        UIState::ui_settings
+            .then(UISettings::visual_settings)
+            .then(UIVisualSettings::custom_theme)
+            .then(CustomTheme::hotkey_background),
+        save_command.clone());
+
+    let hotkey_text_input = make_color_input("Hotkey Text", 
+        UIState::ui_settings
+            .then(UISettings::visual_settings)
+            .then(UIVisualSettings::custom_theme)
+            .then(CustomTheme::hotkey_text),
+        save_command.clone());
+
+    let hover_hotkey_background_input = make_color_input("Hover Hotkey Background", 
+        UIState::ui_settings
+            .then(UISettings::visual_settings)
+            .then(UIVisualSettings::custom_theme)
+            .then(CustomTheme::hover_hotkey_background),
+        save_command.clone());
+
+    let hover_hotkey_text_input = make_color_input("Hover Hotkey Text", 
+        UIState::ui_settings
+            .then(UISettings::visual_settings)
+            .then(UIVisualSettings::custom_theme)
+            .then(CustomTheme::hover_hotkey_text),
+        save_command.clone());
+
     let primary_font_size_input = make_input("Primary Font Size",
         UIState::ui_settings
             .then(UISettings::visual_settings)
@@ -150,6 +178,14 @@ pub(crate) fn appearance_content() -> impl Widget<UIState> {
         .with_child(secondary_text_input)
         .with_spacer(5.0)
         .with_child(hover_secondary_text_input)
+        .with_spacer(5.0)
+        .with_child(hotkey_background_input)
+        .with_spacer(5.0)
+        .with_child(hotkey_text_input)
+        .with_spacer(5.0)
+        .with_child(hover_hotkey_background_input)
+        .with_spacer(5.0)
+        .with_child(hover_hotkey_text_input)
         .with_spacer(10.0)
         .with_child(Label::new("Fonts").with_text_size(14.0).with_text_color(Color::WHITE))
         .with_spacer(5.0)
