@@ -55,7 +55,7 @@ jobs:
       # even though we build inside a docker container via `cross`, then `cross` mounts
       # target/
       - name: Download cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/bin/
@@ -164,7 +164,7 @@ jobs:
         with:
           show-progress: false
       - name: Download cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/bin/
@@ -287,7 +287,7 @@ jobs:
         with:
           show-progress: false
       - name: Download cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/bin/
