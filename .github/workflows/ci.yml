@@ -399,7 +399,7 @@ jobs:
         with:
           show-progress: false
       - name: Download release artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           pattern: browsers-*-artifacts
       - name: Verify directories exist
