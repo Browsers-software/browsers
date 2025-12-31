@@ -75,7 +75,7 @@ xdg-mime = "^0.4.0"
 #gtk = { version = "0.16.2" }
 
 # to find application .desktop files
-freedesktop-desktop-entry = "0.7.0"
+freedesktop-desktop-entry = "0.8.0"
 
 # to find icon theme and icon;
 freedesktop-icons = "0.4.0"
