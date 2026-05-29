@@ -276,6 +276,12 @@ kind = "CHROMIUM"
 os = "MAC"
 
 [[apps]]
+id = "net.imput.helium"
+config_dir_relative = "net.imput.helium"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
 id = "org.mozilla.firefox"
 config_dir_relative = "Firefox"
 kind = "FIREFOX"
