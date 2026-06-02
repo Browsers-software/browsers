@@ -288,6 +288,12 @@ kind = "FIREFOX"
 os = "MAC"
 
 [[apps]]
+id = "org.nixos.firefox"
+config_dir_relative = "Firefox"
+kind = "FIREFOX"
+os = "MAC"
+
+[[apps]]
 id = "firefox"
 config_dir_relative = ".mozilla/firefox"
 snap_dir = "firefox"
