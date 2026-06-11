@@ -936,7 +936,8 @@ pub fn handle_messages_to_main(
                 let ui_config = UIConfig {
                     show_hotkeys: settings.show_hotkeys,
                     quit_on_lost_focus: settings.quit_on_lost_focus,
-                    theme: settings.theme,
+                    theme_mode: settings.theme_mode,
+                    custom_theme: settings.custom_theme,
                 };
 
                 let mut config = app_finder.load_config();

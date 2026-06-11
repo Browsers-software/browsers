@@ -1,14 +1,15 @@
 use crate::gui::ui::UIState;
-use crate::utils::ConfiguredTheme;
+use crate::utils::{CustomTheme, ThemeMode};
 use dark_light::Mode;
-use druid::{Color, Data, Env, Key};
+use druid::{Color, Data, Env, FontDescriptor, FontFamily, Key};
 use serde::{Deserialize, Serialize};
 use tracing::warn;
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Data)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Data)]
 pub enum UITheme {
     Light,
     Dark,
+    Custom(CustomTheme),
 }
 
 pub fn initialize_theme(env: &mut Env, ui_state: &UIState) {
@@ -17,10 +18,11 @@ pub fn initialize_theme(env: &mut Env, ui_state: &UIState) {
 }
 
 fn get_active_ui_theme(ui_state: &UIState) -> UITheme {
-    match ui_state.ui_settings.visual_settings.theme {
-        ConfiguredTheme::Auto => detect_system_theme(),
-        ConfiguredTheme::Light => UITheme::Light,
-        ConfiguredTheme::Dark => UITheme::Dark,
+    match ui_state.ui_settings.visual_settings.theme_mode {
+        ThemeMode::Auto => detect_system_theme(),
+        ThemeMode::Light => UITheme::Light,
+        ThemeMode::Dark => UITheme::Dark,
+        ThemeMode::Custom => UITheme::Custom(ui_state.ui_settings.visual_settings.custom_theme.clone()),
     }
 }
 
@@ -76,14 +78,19 @@ fn get_theme(ui_theme: UITheme) -> Theme {
         main: MainWindowTheme {
             window_background_color: Color::rgba(0.15, 0.15, 0.15, 0.9),
             window_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
-            browser_label_size: 12.0,
+            browser_label_font: FontDescriptor::new(FontFamily::SYSTEM_UI).with_size(12.0),
             browser_label_color: Color::rgb8(255, 255, 255),
-            profile_label_size: 11.0,
+            profile_label_font: FontDescriptor::new(FontFamily::SYSTEM_UI).with_size(11.0),
             profile_label_color: Color::rgb8(190, 190, 190),
             hotkey_background_color: Color::rgba(0.15, 0.15, 0.15, 1.0),
             hotkey_border_color: Color::rgba(0.4, 0.4, 0.4, 0.9),
             hotkey_text_color: Color::rgb8(128, 128, 128),
             options_button_text_color: Color::rgb8(128, 128, 128),
+            hover_background_color: Color::rgba(1.0, 1.0, 1.0, 0.25),
+            hover_text_color: Color::rgb8(255, 255, 255),
+            hover_secondary_text_color: Color::rgb8(255, 255, 255),
+            hover_hotkey_background_color: Color::rgba(0.15, 0.15, 0.15, 1.0),
+            hover_hotkey_text_color: Color::rgb8(255, 255, 255),
         },
         settings: SettingsWindowTheme {
             active_tab_background_color: Color::rgb8(25, 90, 194),
@@ -131,14 +138,19 @@ fn get_theme(ui_theme: UITheme) -> Theme {
         main: MainWindowTheme {
             window_background_color: Color::rgba8(215, 215, 215, 230),
             window_border_color: Color::rgba(0.7, 0.7, 0.7, 0.9),
-            browser_label_size: 12.0,
+            browser_label_font: FontDescriptor::new(FontFamily::SYSTEM_UI).with_size(12.0),
             browser_label_color: Color::rgb8(0, 0, 0),
-            profile_label_size: 11.0,
+            profile_label_font: FontDescriptor::new(FontFamily::SYSTEM_UI).with_size(11.0),
             profile_label_color: Color::rgb8(30, 30, 30),
             hotkey_background_color: Color::rgb8(215, 215, 215),
             hotkey_border_color: Color::rgba(0.4, 0.4, 0.4, 0.9),
             hotkey_text_color: Color::rgb8(128, 128, 128),
             options_button_text_color: Color::rgb8(128, 128, 128),
+            hover_background_color: Color::rgba(1.0, 1.0, 1.0, 0.25),
+            hover_text_color: Color::rgb8(0, 0, 0),
+            hover_secondary_text_color: Color::rgb8(0, 0, 0),
+            hover_hotkey_background_color: Color::rgb8(215, 215, 215),
+            hover_hotkey_text_color: Color::rgb8(0, 0, 0),
         },
         settings: SettingsWindowTheme {
             active_tab_background_color: Color::rgb8(25, 90, 194),
@@ -155,6 +167,74 @@ fn get_theme(ui_theme: UITheme) -> Theme {
     let theme = match ui_theme {
         UITheme::Light => light_theme,
         UITheme::Dark => dark_theme,
+        UITheme::Custom(custom) => {
+            let mut theme = dark_theme; // Start with dark theme as base
+            
+            if let Ok(color) = parse_color(&custom.window_background) {
+                theme.druid_builtin.window_background_color = color.clone();
+                theme.general.window_background_color = color.clone();
+                theme.main.window_background_color = color.clone();
+            }
+            
+            if let Ok(color) = parse_color(&custom.text_color) {
+                theme.druid_builtin.text_color = color.clone();
+                theme.main.browser_label_color = color.clone();
+            }
+
+            if let Ok(color) = parse_color(&custom.active_tab_background) {
+                theme.settings.active_tab_background_color = color;
+            }
+
+            if let Ok(color) = parse_color(&custom.active_tab_text) {
+                theme.settings.active_tab_text_color = color;
+            }
+
+            if let Ok(color) = parse_color(&custom.inactive_tab_text) {
+                theme.settings.inactive_tab_text_color = color;
+            }
+
+            if let Ok(color) = parse_color(&custom.hover_background) {
+                theme.main.hover_background_color = color;
+            }
+
+            if let Ok(color) = parse_color(&custom.hover_text) {
+                theme.main.hover_text_color = color;
+            }
+
+            if let Ok(color) = parse_color(&custom.secondary_text) {
+                theme.main.profile_label_color = color;
+            }
+
+            if let Ok(color) = parse_color(&custom.hover_secondary_text) {
+                theme.main.hover_secondary_text_color = color;
+            }
+
+            if let Ok(font) = parse_font(&custom.primary_font_family, &custom.primary_font_size) {
+                theme.main.browser_label_font = font;
+            }
+
+            if let Ok(font) = parse_font(&custom.secondary_font_family, &custom.secondary_font_size) {
+                theme.main.profile_label_font = font;
+            }
+
+            if let Ok(color) = parse_color(&custom.hotkey_background) {
+                theme.main.hotkey_background_color = color;
+            }
+
+            if let Ok(color) = parse_color(&custom.hotkey_text) {
+                theme.main.hotkey_text_color = color;
+            }
+
+            if let Ok(color) = parse_color(&custom.hover_hotkey_background) {
+                theme.main.hover_hotkey_background_color = color;
+            }
+
+            if let Ok(color) = parse_color(&custom.hover_hotkey_text) {
+                theme.main.hover_hotkey_text_color = color;
+            }
+
+            theme
+        }
     };
 
     return theme;
@@ -198,14 +278,19 @@ impl GeneralTheme {
 pub(crate) struct MainWindowTheme {
     window_background_color: Color,
     window_border_color: Color,
-    browser_label_size: f64,
+    browser_label_font: FontDescriptor,
     browser_label_color: Color,
-    profile_label_size: f64,
+    profile_label_font: FontDescriptor,
     profile_label_color: Color,
     hotkey_background_color: Color,
     hotkey_border_color: Color,
     hotkey_text_color: Color,
     options_button_text_color: Color,
+    hover_background_color: Color,
+    hover_text_color: Color,
+    hover_secondary_text_color: Color,
+    hover_hotkey_background_color: Color,
+    hover_hotkey_text_color: Color,
 }
 
 impl MainWindowTheme {
@@ -215,14 +300,14 @@ impl MainWindowTheme {
     pub const ENV_WINDOW_BORDER_COLOR: Key<Color> =
         Key::new("software.browsers.theme.main.window_border_color");
 
-    pub const ENV_BROWSER_LABEL_SIZE: Key<f64> =
-        Key::new("software.browsers.theme.main.browser_label_size");
+    pub const ENV_BROWSER_LABEL_FONT: Key<FontDescriptor> =
+        Key::new("software.browsers.theme.main.browser_label_font");
 
     pub const ENV_BROWSER_LABEL_COLOR: Key<Color> =
         Key::new("software.browsers.theme.main.browser_label_color");
 
-    pub const ENV_PROFILE_LABEL_SIZE: Key<f64> =
-        Key::new("software.browsers.theme.main.profile_label_size");
+    pub const ENV_PROFILE_LABEL_FONT: Key<FontDescriptor> =
+        Key::new("software.browsers.theme.main.profile_label_font");
 
     pub const ENV_PROFILE_LABEL_COLOR: Key<Color> =
         Key::new("software.browsers.theme.main.profile_label_color");
@@ -239,12 +324,27 @@ impl MainWindowTheme {
     pub const ENV_OPTIONS_BUTTON_TEXT_COLOR: Key<Color> =
         Key::new("software.browsers.theme.main.options_button_text_color");
 
+    pub const ENV_HOVER_BACKGROUND_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.main.hover_background_color");
+
+    pub const ENV_HOVER_TEXT_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.main.hover_text_color");
+
+    pub const ENV_HOVER_SECONDARY_TEXT_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.main.hover_secondary_text_color");
+
+    pub const ENV_HOVER_HOTKEY_BACKGROUND_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.main.hover_hotkey_background_color");
+
+    pub const ENV_HOVER_HOTKEY_TEXT_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.main.hover_hotkey_text_color");
+
     fn set_env_to_theme(&self, env: &mut Env) {
         env.set(Self::ENV_WINDOW_BACKGROUND_COLOR, self.window_background_color);
         env.set(Self::ENV_WINDOW_BORDER_COLOR, self.window_border_color);
-        env.set(Self::ENV_BROWSER_LABEL_SIZE, self.browser_label_size);
+        env.set(Self::ENV_BROWSER_LABEL_FONT, self.browser_label_font.clone());
         env.set(Self::ENV_BROWSER_LABEL_COLOR, self.browser_label_color);
-        env.set(Self::ENV_PROFILE_LABEL_SIZE, self.profile_label_size);
+        env.set(Self::ENV_PROFILE_LABEL_FONT, self.profile_label_font.clone());
         env.set(Self::ENV_PROFILE_LABEL_COLOR, self.profile_label_color);
         env.set(Self::ENV_HOTKEY_BACKGROUND_COLOR, self.hotkey_background_color);
         env.set(Self::ENV_HOTKEY_BORDER_COLOR, self.hotkey_border_color);
@@ -252,6 +352,26 @@ impl MainWindowTheme {
         env.set(
             Self::ENV_OPTIONS_BUTTON_TEXT_COLOR,
             self.options_button_text_color,
+        );
+        env.set(
+            Self::ENV_HOVER_BACKGROUND_COLOR,
+            self.hover_background_color,
+        );
+        env.set(
+            Self::ENV_HOVER_TEXT_COLOR,
+            self.hover_text_color,
+        );
+        env.set(
+            Self::ENV_HOVER_SECONDARY_TEXT_COLOR,
+            self.hover_secondary_text_color,
+        );
+        env.set(
+            Self::ENV_HOVER_HOTKEY_BACKGROUND_COLOR,
+            self.hover_hotkey_background_color,
+        );
+        env.set(
+            Self::ENV_HOVER_HOTKEY_TEXT_COLOR,
+            self.hover_hotkey_text_color,
         );
     }
 }
@@ -404,3 +524,25 @@ struct Palette {}
 //.adding(UI_FONT, FontDescriptor::new(FontFamily::SYSTEM_UI).with_size(15.0))
 //.adding(UI_FONT_BOLD, FontDescriptor::new(FontFamily::SYSTEM_UI).with_weight(FontWeight::BOLD).with_size(15.0))
 //.adding(UI_FONT_ITALIC, FontDescriptor::new(FontFamily::SYSTEM_UI).with_style(FontStyle::Italic).with_size(15.0))
+
+fn parse_color(hex: &str) -> Result<Color, ()> {
+    if hex.len() != 7 || !hex.starts_with('#') {
+        return Err(());
+    }
+    let r = u8::from_str_radix(&hex[1..3], 16).map_err(|_| ())?;
+    let g = u8::from_str_radix(&hex[3..5], 16).map_err(|_| ())?;
+    let b = u8::from_str_radix(&hex[5..7], 16).map_err(|_| ())?;
+    Ok(Color::rgb8(r, g, b))
+}
+
+fn parse_font(family: &str, size: &str) -> Result<FontDescriptor, ()> {
+    let size = size.parse::<f64>().map_err(|_| ())?;
+    let family = match family {
+        "default" | "System UI" => FontFamily::SYSTEM_UI,
+        "Serif" => FontFamily::SERIF,
+        "Sans Serif" => FontFamily::SANS_SERIF,
+        "Monospace" => FontFamily::MONOSPACE,
+        name => FontFamily::new_unchecked(name),
+    };
+    Ok(FontDescriptor::new(family).with_size(size))
+}

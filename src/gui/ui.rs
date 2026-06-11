@@ -21,7 +21,9 @@ use crate::gui::main_window::{
 use crate::gui::ui::SettingsTab::GENERAL;
 use crate::gui::{about_dialog, main_window, settings_window, ui_theme};
 use crate::url_rule::UrlGlobMatcher;
-use crate::utils::{BehavioralConfig, Config, ConfiguredTheme, ProfileAndOptions, UIConfig};
+use crate::utils::{
+    BehavioralConfig, Config, CustomTheme, ProfileAndOptions, ThemeMode, UIConfig,
+};
 use crate::{CommonBrowserProfile, MessageToMain};
 
 pub struct UI {
@@ -71,7 +73,8 @@ impl UI {
         UIVisualSettings {
             show_hotkeys: ui_config.show_hotkeys,
             quit_on_lost_focus: ui_config.quit_on_lost_focus,
-            theme: ui_config.theme,
+            theme_mode: ui_config.theme_mode.clone(),
+            custom_theme: ui_config.custom_theme.clone(),
         }
     }
 
@@ -128,6 +131,7 @@ impl UI {
                 unique_id: p.get_unique_id(),
                 unique_app_id: p.get_unique_app_id(),
                 filtered_index: i, // TODO: filter against current url
+                is_focused: false,
             })
             .collect();
     }
@@ -238,7 +242,8 @@ pub struct UISettings {
 pub struct UIVisualSettings {
     pub show_hotkeys: bool,
     pub quit_on_lost_focus: bool,
-    pub theme: ConfiguredTheme,
+    pub theme_mode: ThemeMode,
+    pub custom_theme: CustomTheme,
 }
 
 #[derive(Clone, Debug, Data, Lens)]
@@ -257,6 +262,7 @@ pub enum SettingsTab {
     GENERAL,
     RULES,
     ADVANCED,
+    APPEARANCE,
 }
 
 impl UISettings {
@@ -363,7 +369,10 @@ pub struct UIBrowser {
 
     // index in list of actually visible browsers for current url
     // (correctly set only in filtered_browsers list)
+    // index in list of actually visible browsers for current url
+    // (correctly set only in filtered_browsers list)
     pub(crate) filtered_index: usize,
+    pub(crate) is_focused: bool,
 }
 
 impl UIBrowser {
@@ -686,6 +695,15 @@ impl AppDelegate<UIState> for UIDelegate {
         } else if cmd.is(SET_FOCUSED_INDEX) {
             let profile_index = cmd.get_unchecked(SET_FOCUSED_INDEX);
             data.focused_index = profile_index.clone();
+
+            let browsers_mut = Arc::make_mut(&mut data.filtered_browsers);
+            for (i, browser) in browsers_mut.iter_mut().enumerate() {
+                if let Some(index) = profile_index {
+                    browser.is_focused = browser.browser_profile_index == *index;
+                } else {
+                    browser.is_focused = false;
+                }
+            }
             Handled::Yes
         } else if cmd.is(COPY_LINK_TO_CLIPBOARD) {
             copy_to_clipboard(data.url.as_str());

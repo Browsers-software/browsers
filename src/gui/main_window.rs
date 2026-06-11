@@ -116,8 +116,8 @@ impl MainWindow {
         const BOTTOM_ROW_HEIGHT: f64 = 18.0;
 
         let url_label = Label::dynamic(|data: &UIState, _| ellipsize(data.url.as_str(), 28))
-            .with_text_size(12.0)
-            .with_text_color(Color::from_hex_str("808080").unwrap())
+            .with_font(MainWindowTheme::ENV_PROFILE_LABEL_FONT)
+            .with_text_color(MainWindowTheme::ENV_PROFILE_LABEL_COLOR)
             .with_line_break_mode(LineBreaking::Clip)
             .with_text_alignment(TextAlignment::Start)
             .fix_height(BOTTOM_ROW_HEIGHT)
@@ -322,22 +322,24 @@ pub(crate) fn calculate_window_position(
     return Point::new(x, y);
 }
 
-fn create_browser_label() -> Label<((bool, UISettings), UIBrowser)> {
-    let browser_label = Label::dynamic(
-        |((incognito_mode, _), item): &((bool, UISettings), UIBrowser), _env| {
-            let mut name = item.browser_name.clone();
-            if item.supports_incognito && *incognito_mode {
-                name += " 👓";
-            }
-            name
-        },
-    )
-    .with_text_size(MainWindowTheme::ENV_BROWSER_LABEL_SIZE)
-    .with_line_break_mode(LineBreaking::Clip)
-    .with_text_alignment(TextAlignment::Start)
-    .with_text_color(MainWindowTheme::ENV_BROWSER_LABEL_COLOR);
+fn create_browser_label() -> impl Widget<((bool, UISettings), UIBrowser)> {
+    let label_fn = |((_incognito_mode, _), item): &((bool, UISettings), UIBrowser), _env: &_| {
+        item.browser_name.clone()
+    };
 
-    browser_label
+    Either::new(
+        |(_, item): &((bool, UISettings), UIBrowser), _| item.is_focused,
+        Label::dynamic(label_fn)
+            .with_font(MainWindowTheme::ENV_BROWSER_LABEL_FONT)
+            .with_line_break_mode(LineBreaking::Clip)
+            .with_text_alignment(TextAlignment::Start)
+            .with_text_color(MainWindowTheme::ENV_HOVER_TEXT_COLOR),
+        Label::dynamic(label_fn)
+            .with_font(MainWindowTheme::ENV_BROWSER_LABEL_FONT)
+            .with_line_break_mode(LineBreaking::Clip)
+            .with_text_alignment(TextAlignment::Start)
+            .with_text_color(MainWindowTheme::ENV_BROWSER_LABEL_COLOR),
+    )
 }
 
 fn create_browser(
@@ -372,14 +374,23 @@ fn create_browser(
     let item_label = Either::new(
         |(_, item): &((bool, UISettings), UIBrowser), _env| item.supports_profiles,
         {
-            let profile_label =
-                Label::dynamic(|(_, item): &((bool, UISettings), UIBrowser), _env: &_| {
-                    item.profile_name.clone()
-                })
-                .with_text_size(MainWindowTheme::ENV_PROFILE_LABEL_SIZE)
-                .with_line_break_mode(LineBreaking::Clip)
-                .with_text_alignment(TextAlignment::Start)
-                .with_text_color(MainWindowTheme::ENV_PROFILE_LABEL_COLOR);
+            let profile_label_fn = |(_, item): &((bool, UISettings), UIBrowser), _env: &_| {
+                item.profile_name.clone()
+            };
+
+            let profile_label = Either::new(
+                |(_, item): &((bool, UISettings), UIBrowser), _| item.is_focused,
+                Label::dynamic(profile_label_fn)
+                    .with_font(MainWindowTheme::ENV_PROFILE_LABEL_FONT)
+                    .with_line_break_mode(LineBreaking::Clip)
+                    .with_text_alignment(TextAlignment::Start)
+                    .with_text_color(MainWindowTheme::ENV_HOVER_SECONDARY_TEXT_COLOR),
+                Label::dynamic(profile_label_fn)
+                    .with_font(MainWindowTheme::ENV_PROFILE_LABEL_FONT)
+                    .with_line_break_mode(LineBreaking::Clip)
+                    .with_text_alignment(TextAlignment::Start)
+                    .with_text_color(MainWindowTheme::ENV_PROFILE_LABEL_COLOR),
+            );
 
             let profile_row = Flex::row()
                 //.with_child(profile_icon)
@@ -415,21 +426,30 @@ fn create_browser(
             ui_settings.visual_settings.show_hotkeys && item.filtered_index < 9
         },
         {
-            let hotkey_label =
+            let make_hotkey_label = |color: druid::Key<Color>| {
                 Label::dynamic(|(_, item): &((bool, UISettings), UIBrowser), _env: &_| {
                     let hotkey_number = item.filtered_index + 1;
                     let hotkey = hotkey_number.to_string();
                     hotkey
                 })
-                .with_font(font)
-                .with_text_color(MainWindowTheme::ENV_HOTKEY_TEXT_COLOR)
+                .with_font(font.clone())
+                .with_text_color(color)
                 .fix_size(text_size, text_size)
-                .padding(4.0);
+            };
 
-            let hotkey_label = Container::new(hotkey_label)
-                .background(MainWindowTheme::ENV_HOTKEY_BACKGROUND_COLOR)
-                .rounded(5.0)
-                .border(MainWindowTheme::ENV_HOTKEY_BORDER_COLOR, 0.5);
+            let hotkey_label = Either::new(
+                |(_, item): &((bool, UISettings), UIBrowser), _| item.is_focused,
+                make_hotkey_label(MainWindowTheme::ENV_HOVER_HOTKEY_TEXT_COLOR)
+                    .padding(4.0)
+                    .background(MainWindowTheme::ENV_HOVER_HOTKEY_BACKGROUND_COLOR)
+                    .rounded(5.0)
+                    .border(MainWindowTheme::ENV_HOTKEY_BORDER_COLOR, 0.5),
+                make_hotkey_label(MainWindowTheme::ENV_HOTKEY_TEXT_COLOR)
+                    .padding(4.0)
+                    .background(MainWindowTheme::ENV_HOTKEY_BACKGROUND_COLOR)
+                    .rounded(5.0)
+                    .border(MainWindowTheme::ENV_HOTKEY_BORDER_COLOR, 0.5),
+            );
 
             hotkey_label
         },
@@ -459,11 +479,13 @@ fn create_browser(
 
     let container = FocusWidget::new(
         container,
-        |ctx, _: &((bool, UISettings), UIBrowser), _env| {
-            let size = ctx.size();
-            let rounded_rect = size.to_rounded_rect(5.0);
-            let color = Color::rgba(1.0, 1.0, 1.0, 0.25);
-            ctx.fill(rounded_rect, &color);
+        |ctx, (_, data): &((bool, UISettings), UIBrowser), env| {
+            if data.is_focused {
+                let size = ctx.size();
+                let rounded_rect = size.to_rounded_rect(5.0);
+                let color = env.get(MainWindowTheme::ENV_HOVER_BACKGROUND_COLOR);
+                ctx.fill(rounded_rect, &color);
+            }
         },
         |ctx, (_, data): &((bool, UISettings), UIBrowser), _env| {
             if ctx.has_focus() {
@@ -476,7 +498,21 @@ fn create_browser(
                     .ok();
             }
         },
-    );
+    )
+    .on_hover_lost(|ctx, (_, data), _| {
+        if data.is_focused {
+            ctx.get_external_handle()
+                .submit_command(
+                    SET_FOCUSED_INDEX,
+                    None,
+                    Target::Global,
+                )
+                .ok();
+        }
+    })
+    .env_scope(|env, (_, data): &((bool, UISettings), UIBrowser)| {
+        // env scope removed as we handle colors explicitly
+    });
 
     let container = Container::new(container);
 
