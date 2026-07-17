@@ -399,6 +399,12 @@ kind = "FIREFOX"
 os = "MAC"
 
 [[apps]]
+id = "Zen Browser"
+config_dir_relative = "zen"
+kind = "FIREFOX"
+os = "WINDOWS"
+
+[[apps]]
 id = "com.linear"
 kind = "LINEAR"
 os = "MAC"
