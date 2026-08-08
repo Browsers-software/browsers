@@ -102,7 +102,7 @@ dunce = "1.0.4"
 winres = "0.1.12"
 
 # statically link vcruntime140.dll instead of requiring user to install the runtime
-static_vcruntime = "2.0"
+static_vcruntime = "3.0"
 
 #[profile.dev]
 #lto = true
