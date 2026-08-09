@@ -376,7 +376,7 @@ Initial Release
 
 [unreleased]: https://github.com/Browsers-software/browsers/compare/0.7.4...HEAD
 
-[0.7.3]: https://github.com/Browsers-software/browsers/releases/tag/0.7.4
+[0.7.4]: https://github.com/Browsers-software/browsers/releases/tag/0.7.4
 
 [0.7.3]: https://github.com/Browsers-software/browsers/releases/tag/0.7.3
 
