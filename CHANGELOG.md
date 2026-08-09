@@ -2,8 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.7.4] - 2026-08-09
+
+### Added
+
+- macOS: Support profiles for Helium browser. Thanks to @DontMash for contribution #357
+- Linux: Support profiles for Helium browser. Thanks to @tarik02 for contribution #362
+- Windows: Support profiles for Helium browser. Thanks to @tarik02 for contribution #362
+- Windows: Support profiles for Zen browser. Thanks to @Lockszmith-GH for contribution #366
+- macOS: Support profiles for Firefox browser installed via nix. Thanks to @kdn-pton for contribution #358
 
 ## [0.7.3] - 2025-11-12
 
@@ -365,7 +374,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial Release
 
-[unreleased]: https://github.com/Browsers-software/browsers/compare/0.7.3...HEAD
+[unreleased]: https://github.com/Browsers-software/browsers/compare/0.7.4...HEAD
+
+[0.7.3]: https://github.com/Browsers-software/browsers/releases/tag/0.7.4
 
 [0.7.3]: https://github.com/Browsers-software/browsers/releases/tag/0.7.3
 
