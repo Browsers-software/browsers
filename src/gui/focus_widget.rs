@@ -18,6 +18,7 @@ pub struct FocusWidget<S: druid::Data + FocusData, W> {
     paint_fn_on_focus: fn(ctx: &mut PaintCtx, data: &S, env: &Env),
     lifecycle_fn: fn(ctx: &mut LifeCycleCtx, data: &S, env: &Env),
     hover_lost_fn: Option<fn(ctx: &mut LifeCycleCtx, data: &S, env: &Env)>,
+    env_fn_on_focus: Option<fn(&mut Env)>,
 }
 
 impl<S: druid::Data + FocusData, W> FocusWidget<S, W> {}
@@ -33,11 +34,19 @@ impl<S: druid::Data + FocusData, W> FocusWidget<S, W> {
             paint_fn_on_focus,
             lifecycle_fn,
             hover_lost_fn: None,
+            env_fn_on_focus: None,
         }
     }
 
     pub fn on_hover_lost(mut self, f: fn(ctx: &mut LifeCycleCtx, data: &S, env: &Env)) -> Self {
         self.hover_lost_fn = Some(f);
+        self
+    }
+
+    /// Overrides env values (e.g. swapping a color key to its hover variant) whenever
+    /// this widget has real focus, so descendants can just read the base keys as normal.
+    pub fn with_env_on_focus(mut self, f: fn(&mut Env)) -> Self {
+        self.env_fn_on_focus = Some(f);
         self
     }
 }
@@ -110,6 +119,13 @@ impl<S: druid::Data + FocusData, W: Widget<S>> Widget<S> for FocusWidget<S, W> {
             _ => {}
         }
 
+        if ctx.has_focus() {
+            if let Some(f) = self.env_fn_on_focus {
+                let mut env = env.clone();
+                f(&mut env);
+                return self.inner.event(ctx, event, data, &env);
+            }
+        }
         self.inner.event(ctx, event, data, env);
     }
 
@@ -158,6 +174,13 @@ impl<S: druid::Data + FocusData, W: Widget<S>> Widget<S> for FocusWidget<S, W> {
             }
             _ => {}
         }
+        if ctx.has_focus() {
+            if let Some(f) = self.env_fn_on_focus {
+                let mut env = env.clone();
+                f(&mut env);
+                return self.inner.lifecycle(ctx, event, data, &env);
+            }
+        }
         self.inner.lifecycle(ctx, event, data, env);
     }
 
@@ -165,16 +188,29 @@ impl<S: druid::Data + FocusData, W: Widget<S>> Widget<S> for FocusWidget<S, W> {
         /*if old_data.glow_hot != data.glow_hot {
             ctx.request_paint();
         }*/
+        if ctx.has_focus() {
+            if let Some(f) = self.env_fn_on_focus {
+                let mut env = env.clone();
+                f(&mut env);
+                return self.inner.update(ctx, old_data, data, &env);
+            }
+        }
         self.inner.update(ctx, old_data, data, env);
     }
 
     fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &S, env: &Env) -> Size {
+        // LayoutCtx has no has_focus(), but focus-driven colors don't affect layout size anyway
         self.inner.layout(ctx, bc, data, env)
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &S, env: &Env) {
         if ctx.has_focus() {
             (self.paint_fn_on_focus)(ctx, data, env);
+            if let Some(f) = self.env_fn_on_focus {
+                let mut env = env.clone();
+                f(&mut env);
+                return self.inner.paint(ctx, data, &env);
+            }
         }
         self.inner.paint(ctx, data, env);
     }

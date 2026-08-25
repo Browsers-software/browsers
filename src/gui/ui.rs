@@ -1,8 +1,8 @@
 use std::ops::Not;
 use std::path::PathBuf;
 use std::process::exit;
-use std::sync::mpsc::Sender;
 use std::sync::Arc;
+use std::sync::mpsc::Sender;
 
 use druid::commands::{CONFIGURE_WINDOW_SIZE_AND_POSITION, QUIT_APP, SHOW_WINDOW};
 use druid::{
@@ -14,9 +14,9 @@ use tracing::{debug, info, instrument};
 use url::Url;
 
 use crate::gui::main_window::{
-    calculate_window_position, recalculate_window_size, COPY_LINK_TO_CLIPBOARD, HIDE_ALL_PROFILES,
-    HIDE_PROFILE, MOVE_PROFILE, OPEN_LINK_IN_BROWSER, REFRESH, RESTORE_HIDDEN_PROFILE,
-    SET_BROWSERS_AS_DEFAULT_BROWSER, SET_FOCUSED_INDEX, SHOW_ABOUT_DIALOG, SHOW_SETTINGS_DIALOG,
+    COPY_LINK_TO_CLIPBOARD, HIDE_ALL_PROFILES, HIDE_PROFILE, MOVE_PROFILE, OPEN_LINK_IN_BROWSER,
+    REFRESH, RESTORE_HIDDEN_PROFILE, SET_BROWSERS_AS_DEFAULT_BROWSER, SET_FOCUSED_INDEX,
+    SHOW_ABOUT_DIALOG, SHOW_SETTINGS_DIALOG, calculate_window_position, recalculate_window_size,
 };
 use crate::gui::ui::SettingsTab::GENERAL;
 use crate::gui::{about_dialog, main_window, settings_window, ui_theme};
