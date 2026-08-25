@@ -42,6 +42,9 @@ pub fn setup_theme(env: &mut Env, ui_theme: UITheme) {
 }
 
 fn get_theme(ui_theme: UITheme) -> Theme {
+    let dark_palette = Palette::dark();
+    let light_palette = Palette::light();
+
     let dark_theme = Theme {
         druid_builtin: DruidBuiltinTheme {
             window_background_color: Color::rgb8(0x29, 0x29, 0x29),
@@ -70,37 +73,37 @@ fn get_theme(ui_theme: UITheme) -> Theme {
             scrollbar_border_color: Color::rgb8(0x77, 0x77, 0x77),
         },
         general: GeneralTheme {
-            window_background_color: Color::rgba(0.15, 0.15, 0.15, 0.9),
-            window_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
+            window_background_color: dark_palette.background,
+            window_border_color: dark_palette.stroke,
         },
         main: MainWindowTheme {
-            window_background_color: Color::rgba(0.15, 0.15, 0.15, 0.9),
-            window_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
-            item_background_color_hover: Color::rgba(1.0, 1.0, 1.0, 0.25),
+            window_background_color: dark_palette.background,
+            window_border_color: dark_palette.stroke,
+            item_background_color_hover: dark_palette.highlight,
             browser_label_font_family: FontFamily::SYSTEM_UI,
             browser_label_size: 12.0,
-            browser_label_color: Color::rgb8(255, 255, 255),
-            browser_label_color_hover: Color::rgb8(255, 255, 255),
+            browser_label_color: dark_palette.label,
+            browser_label_color_hover: dark_palette.label,
             profile_label_font_family: FontFamily::SYSTEM_UI,
             profile_label_size: 11.0,
-            profile_label_color: Color::rgb8(190, 190, 190),
-            profile_label_color_hover: Color::rgb8(255, 255, 255),
+            profile_label_color: dark_palette.secondary_label,
+            profile_label_color_hover: dark_palette.label,
             url_label_font_family: FontFamily::SYSTEM_UI,
             url_label_size: 12.0,
-            url_label_color: Color::rgb8(128, 128, 128),
-            hotkey_background_color: Color::rgba(0.15, 0.15, 0.15, 1.0),
-            hotkey_background_color_hover: Color::rgba(0.15, 0.15, 0.15, 1.0),
-            hotkey_border_color: Color::rgba(0.4, 0.4, 0.4, 0.9),
-            hotkey_text_color: Color::rgb8(128, 128, 128),
-            hotkey_text_color_hover: Color::rgb8(255, 255, 255),
-            options_button_text_color: Color::rgb8(128, 128, 128),
+            url_label_color: dark_palette.muted_label,
+            hotkey_background_color: dark_palette.secondary_background,
+            hotkey_background_color_hover: dark_palette.secondary_background,
+            hotkey_border_color: dark_palette.secondary_stroke,
+            hotkey_text_color: dark_palette.muted_label,
+            hotkey_text_color_hover: dark_palette.label,
+            options_button_text_color: dark_palette.muted_label,
         },
         settings: SettingsWindowTheme {
-            active_tab_background_color: Color::rgb8(25, 90, 194),
-            active_tab_text_color: Color::rgb8(255, 255, 255),
-            inactive_tab_text_color: Color::rgb8(255, 255, 255),
-            rule_background_color: Color::rgba(0.1, 0.1, 0.1, 0.9),
-            rule_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
+            active_tab_background_color: dark_palette.accent,
+            active_tab_text_color: dark_palette.on_accent,
+            inactive_tab_text_color: dark_palette.label,
+            rule_background_color: dark_palette.subtle_background,
+            rule_border_color: dark_palette.stroke,
         },
         about: AboutWindowTheme {
             window_background_color: Color::rgb8(27, 32, 32),
@@ -135,37 +138,37 @@ fn get_theme(ui_theme: UITheme) -> Theme {
             scrollbar_border_color: Color::rgb8(0x77, 0x77, 0x77),
         },
         general: GeneralTheme {
-            window_background_color: Color::rgba(0.85, 0.85, 0.85, 0.9),
-            window_border_color: Color::rgba(0.7, 0.7, 0.7, 0.9),
+            window_background_color: light_palette.background,
+            window_border_color: light_palette.stroke,
         },
         main: MainWindowTheme {
-            window_background_color: Color::rgba8(215, 215, 215, 230),
-            window_border_color: Color::rgba(0.7, 0.7, 0.7, 0.9),
-            item_background_color_hover: Color::rgba(1.0, 1.0, 1.0, 0.25),
+            window_background_color: light_palette.background,
+            window_border_color: light_palette.stroke,
+            item_background_color_hover: light_palette.highlight,
             browser_label_font_family: FontFamily::SYSTEM_UI,
             browser_label_size: 12.0,
-            browser_label_color: Color::rgb8(0, 0, 0),
-            browser_label_color_hover: Color::rgb8(0, 0, 0),
+            browser_label_color: light_palette.label,
+            browser_label_color_hover: light_palette.label,
             profile_label_font_family: FontFamily::SYSTEM_UI,
             profile_label_size: 11.0,
-            profile_label_color: Color::rgb8(30, 30, 30),
-            profile_label_color_hover: Color::rgb8(0, 0, 0),
+            profile_label_color: light_palette.secondary_label,
+            profile_label_color_hover: light_palette.label,
             url_label_font_family: FontFamily::SYSTEM_UI,
             url_label_size: 12.0,
-            url_label_color: Color::rgb8(128, 128, 128),
-            hotkey_background_color: Color::rgb8(215, 215, 215),
-            hotkey_background_color_hover: Color::rgb8(215, 215, 215),
-            hotkey_border_color: Color::rgba(0.4, 0.4, 0.4, 0.9),
-            hotkey_text_color: Color::rgb8(128, 128, 128),
-            hotkey_text_color_hover: Color::rgb8(0, 0, 0),
-            options_button_text_color: Color::rgb8(128, 128, 128),
+            url_label_color: light_palette.muted_label,
+            hotkey_background_color: light_palette.secondary_background,
+            hotkey_background_color_hover: light_palette.secondary_background,
+            hotkey_border_color: light_palette.secondary_stroke,
+            hotkey_text_color: light_palette.muted_label,
+            hotkey_text_color_hover: light_palette.label,
+            options_button_text_color: light_palette.muted_label,
         },
         settings: SettingsWindowTheme {
-            active_tab_background_color: Color::rgb8(25, 90, 194),
-            active_tab_text_color: Color::rgb8(255, 255, 255),
-            inactive_tab_text_color: Color::rgb8(0, 0, 0),
-            rule_background_color: Color::rgba(0.8, 0.8, 0.8, 0.9),
-            rule_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
+            active_tab_background_color: light_palette.accent,
+            active_tab_text_color: light_palette.on_accent,
+            inactive_tab_text_color: light_palette.label,
+            rule_background_color: light_palette.subtle_background,
+            rule_border_color: light_palette.stroke,
         },
         about: AboutWindowTheme {
             window_background_color: Color::rgb8(236, 236, 236),
@@ -469,7 +472,53 @@ impl DruidBuiltinTheme {
     }
 }
 
-struct Palette {}
+struct Palette {
+    background: Color,
+    label: Color,
+    secondary_label: Color,
+    muted_label: Color,
+    stroke: Color,
+    secondary_stroke: Color,
+    highlight: Color,
+    secondary_background: Color,
+    subtle_background: Color,
+    accent: Color,
+    on_accent: Color,
+}
+
+impl Palette {
+    fn dark() -> Self {
+        Palette {
+            background: Color::rgba(0.15, 0.15, 0.15, 0.9),
+            label: Color::rgb8(255, 255, 255),
+            secondary_label: Color::rgb8(190, 190, 190),
+            muted_label: Color::rgb8(128, 128, 128),
+            stroke: Color::rgba(0.5, 0.5, 0.5, 0.9),
+            secondary_stroke: Color::rgba(0.4, 0.4, 0.4, 0.9),
+            highlight: Color::rgba(1.0, 1.0, 1.0, 0.25),
+            secondary_background: Color::rgba(0.15, 0.15, 0.15, 1.0),
+            subtle_background: Color::rgba(0.1, 0.1, 0.1, 0.9),
+            accent: Color::rgb8(25, 90, 194),
+            on_accent: Color::rgb8(255, 255, 255),
+        }
+    }
+
+    fn light() -> Self {
+        Palette {
+            background: Color::rgba(0.85, 0.85, 0.85, 0.9),
+            label: Color::rgb8(0, 0, 0),
+            secondary_label: Color::rgb8(30, 30, 30),
+            muted_label: Color::rgb8(128, 128, 128),
+            stroke: Color::rgba(0.7, 0.7, 0.7, 0.9),
+            secondary_stroke: Color::rgba(0.4, 0.4, 0.4, 0.9),
+            highlight: Color::rgba(1.0, 1.0, 1.0, 0.25),
+            secondary_background: Color::rgb8(215, 215, 215),
+            subtle_background: Color::rgba(0.8, 0.8, 0.8, 0.9),
+            accent: Color::rgb8(25, 90, 194),
+            on_accent: Color::rgb8(255, 255, 255),
+        }
+    }
+}
 
 //.adding(PROGRESS_BAR_RADIUS, 4.)
 //.adding(BUTTON_BORDER_RADIUS, 4.)
