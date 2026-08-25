@@ -1,7 +1,7 @@
 use crate::gui::ui::UIState;
 use crate::utils::ConfiguredTheme;
 use dark_light::Mode;
-use druid::{Color, Data, Env, Key};
+use druid::{Color, Data, Env, FontDescriptor, FontFamily, Key};
 use serde::{Deserialize, Serialize};
 use tracing::warn;
 
@@ -76,13 +76,23 @@ fn get_theme(ui_theme: UITheme) -> Theme {
         main: MainWindowTheme {
             window_background_color: Color::rgba(0.15, 0.15, 0.15, 0.9),
             window_border_color: Color::rgba(0.5, 0.5, 0.5, 0.9),
+            item_background_color_hover: Color::rgba(1.0, 1.0, 1.0, 0.25),
+            browser_label_font_family: FontFamily::SYSTEM_UI,
             browser_label_size: 12.0,
             browser_label_color: Color::rgb8(255, 255, 255),
+            browser_label_color_hover: Color::rgb8(255, 255, 255),
+            profile_label_font_family: FontFamily::SYSTEM_UI,
             profile_label_size: 11.0,
             profile_label_color: Color::rgb8(190, 190, 190),
+            profile_label_color_hover: Color::rgb8(255, 255, 255),
+            url_label_font_family: FontFamily::SYSTEM_UI,
+            url_label_size: 12.0,
+            url_label_color: Color::rgb8(128, 128, 128),
             hotkey_background_color: Color::rgba(0.15, 0.15, 0.15, 1.0),
+            hotkey_background_color_hover: Color::rgba(0.15, 0.15, 0.15, 1.0),
             hotkey_border_color: Color::rgba(0.4, 0.4, 0.4, 0.9),
             hotkey_text_color: Color::rgb8(128, 128, 128),
+            hotkey_text_color_hover: Color::rgb8(255, 255, 255),
             options_button_text_color: Color::rgb8(128, 128, 128),
         },
         settings: SettingsWindowTheme {
@@ -131,13 +141,23 @@ fn get_theme(ui_theme: UITheme) -> Theme {
         main: MainWindowTheme {
             window_background_color: Color::rgba8(215, 215, 215, 230),
             window_border_color: Color::rgba(0.7, 0.7, 0.7, 0.9),
+            item_background_color_hover: Color::rgba(1.0, 1.0, 1.0, 0.25),
+            browser_label_font_family: FontFamily::SYSTEM_UI,
             browser_label_size: 12.0,
             browser_label_color: Color::rgb8(0, 0, 0),
+            browser_label_color_hover: Color::rgb8(0, 0, 0),
+            profile_label_font_family: FontFamily::SYSTEM_UI,
             profile_label_size: 11.0,
             profile_label_color: Color::rgb8(30, 30, 30),
+            profile_label_color_hover: Color::rgb8(0, 0, 0),
+            url_label_font_family: FontFamily::SYSTEM_UI,
+            url_label_size: 12.0,
+            url_label_color: Color::rgb8(128, 128, 128),
             hotkey_background_color: Color::rgb8(215, 215, 215),
+            hotkey_background_color_hover: Color::rgb8(215, 215, 215),
             hotkey_border_color: Color::rgba(0.4, 0.4, 0.4, 0.9),
             hotkey_text_color: Color::rgb8(128, 128, 128),
+            hotkey_text_color_hover: Color::rgb8(0, 0, 0),
             options_button_text_color: Color::rgb8(128, 128, 128),
         },
         settings: SettingsWindowTheme {
@@ -198,13 +218,23 @@ impl GeneralTheme {
 pub(crate) struct MainWindowTheme {
     window_background_color: Color,
     window_border_color: Color,
+    item_background_color_hover: Color,
+    browser_label_font_family: FontFamily,
     browser_label_size: f64,
     browser_label_color: Color,
+    browser_label_color_hover: Color,
+    profile_label_font_family: FontFamily,
     profile_label_size: f64,
     profile_label_color: Color,
+    profile_label_color_hover: Color,
+    url_label_font_family: FontFamily,
+    url_label_size: f64,
+    url_label_color: Color,
     hotkey_background_color: Color,
+    hotkey_background_color_hover: Color,
     hotkey_border_color: Color,
     hotkey_text_color: Color,
+    hotkey_text_color_hover: Color,
     options_button_text_color: Color,
 }
 
@@ -215,11 +245,23 @@ impl MainWindowTheme {
     pub const ENV_WINDOW_BORDER_COLOR: Key<Color> =
         Key::new("software.browsers.theme.main.window_border_color");
 
+    pub const ENV_ITEM_BACKGROUND_COLOR_HOVER: Key<Color> =
+        Key::new("software.browsers.theme.main.item_background_color_hover");
+
+    pub const ENV_BROWSER_LABEL_FONT_FAMILY: Key<FontDescriptor> =
+        Key::new("software.browsers.theme.main.browser_label_font_family");
+
     pub const ENV_BROWSER_LABEL_SIZE: Key<f64> =
         Key::new("software.browsers.theme.main.browser_label_size");
 
     pub const ENV_BROWSER_LABEL_COLOR: Key<Color> =
         Key::new("software.browsers.theme.main.browser_label_color");
+
+    pub const ENV_BROWSER_LABEL_COLOR_HOVER: Key<Color> =
+        Key::new("software.browsers.theme.main.browser_label_color_hover");
+
+    pub const ENV_PROFILE_LABEL_FONT_FAMILY: Key<FontDescriptor> =
+        Key::new("software.browsers.theme.main.profile_label_font_family");
 
     pub const ENV_PROFILE_LABEL_SIZE: Key<f64> =
         Key::new("software.browsers.theme.main.profile_label_size");
@@ -227,8 +269,23 @@ impl MainWindowTheme {
     pub const ENV_PROFILE_LABEL_COLOR: Key<Color> =
         Key::new("software.browsers.theme.main.profile_label_color");
 
+    pub const ENV_PROFILE_LABEL_COLOR_HOVER: Key<Color> =
+        Key::new("software.browsers.theme.main.profile_label_color_hover");
+
+    pub const ENV_URL_LABEL_FONT_FAMILY: Key<FontDescriptor> =
+        Key::new("software.browsers.theme.main.url_label_font_family");
+
+    pub const ENV_URL_LABEL_SIZE: Key<f64> =
+        Key::new("software.browsers.theme.main.url_label_size");
+
+    pub const ENV_URL_LABEL_COLOR: Key<Color> =
+        Key::new("software.browsers.theme.main.url_label_color");
+
     pub const ENV_HOTKEY_BACKGROUND_COLOR: Key<Color> =
         Key::new("software.browsers.theme.main.hotkey_background_color");
+
+    pub const ENV_HOTKEY_BACKGROUND_COLOR_HOVER: Key<Color> =
+        Key::new("software.browsers.theme.main.hotkey_background_color_hover");
 
     pub const ENV_HOTKEY_BORDER_COLOR: Key<Color> =
         Key::new("software.browsers.theme.main.hotkey_border_color");
@@ -236,19 +293,53 @@ impl MainWindowTheme {
     pub const ENV_HOTKEY_TEXT_COLOR: Key<Color> =
         Key::new("software.browsers.theme.main.hotkey_text_color");
 
+    pub const ENV_HOTKEY_TEXT_COLOR_HOVER: Key<Color> =
+        Key::new("software.browsers.theme.main.hotkey_text_color_hover");
+
     pub const ENV_OPTIONS_BUTTON_TEXT_COLOR: Key<Color> =
         Key::new("software.browsers.theme.main.options_button_text_color");
 
     fn set_env_to_theme(&self, env: &mut Env) {
         env.set(Self::ENV_WINDOW_BACKGROUND_COLOR, self.window_background_color);
         env.set(Self::ENV_WINDOW_BORDER_COLOR, self.window_border_color);
+        env.set(
+            Self::ENV_ITEM_BACKGROUND_COLOR_HOVER,
+            self.item_background_color_hover,
+        );
+        env.set(
+            Self::ENV_BROWSER_LABEL_FONT_FAMILY,
+            FontDescriptor::new(self.browser_label_font_family.clone()),
+        );
         env.set(Self::ENV_BROWSER_LABEL_SIZE, self.browser_label_size);
         env.set(Self::ENV_BROWSER_LABEL_COLOR, self.browser_label_color);
+        env.set(
+            Self::ENV_BROWSER_LABEL_COLOR_HOVER,
+            self.browser_label_color_hover,
+        );
+        env.set(
+            Self::ENV_PROFILE_LABEL_FONT_FAMILY,
+            FontDescriptor::new(self.profile_label_font_family.clone()),
+        );
         env.set(Self::ENV_PROFILE_LABEL_SIZE, self.profile_label_size);
         env.set(Self::ENV_PROFILE_LABEL_COLOR, self.profile_label_color);
+        env.set(
+            Self::ENV_PROFILE_LABEL_COLOR_HOVER,
+            self.profile_label_color_hover,
+        );
+        env.set(
+            Self::ENV_URL_LABEL_FONT_FAMILY,
+            FontDescriptor::new(self.url_label_font_family.clone()),
+        );
+        env.set(Self::ENV_URL_LABEL_SIZE, self.url_label_size);
+        env.set(Self::ENV_URL_LABEL_COLOR, self.url_label_color);
         env.set(Self::ENV_HOTKEY_BACKGROUND_COLOR, self.hotkey_background_color);
+        env.set(
+            Self::ENV_HOTKEY_BACKGROUND_COLOR_HOVER,
+            self.hotkey_background_color_hover,
+        );
         env.set(Self::ENV_HOTKEY_BORDER_COLOR, self.hotkey_border_color);
         env.set(Self::ENV_HOTKEY_TEXT_COLOR, self.hotkey_text_color);
+        env.set(Self::ENV_HOTKEY_TEXT_COLOR_HOVER, self.hotkey_text_color_hover);
         env.set(
             Self::ENV_OPTIONS_BUTTON_TEXT_COLOR,
             self.options_button_text_color,
