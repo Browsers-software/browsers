@@ -93,9 +93,16 @@ pub fn macos_get_directory(directory: NSSearchPathDirectory) -> PathBuf {
 
 pub(crate) fn get_app_name(bundle_path: &NSString) -> String {
     let bundle = get_bundle(bundle_path);
+
     //bundleWithURL
-    let bundle_name = bundle.name().unwrap();
-    bundle_name.to_string()
+    bundle
+        .name() // Info.plist -> CFBundleName (optional)
+        .unwrap_or_else(|| {
+            bundle_path
+                .lastPathComponent()
+                .stringByDeletingPathExtension() // SomeBrowser.app -> SomeBrowser
+        })
+        .to_string()
 }
 
 pub(crate) fn get_app_executable_path(bundle_path: &NSString) -> String {
