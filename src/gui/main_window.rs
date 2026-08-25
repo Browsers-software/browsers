@@ -476,7 +476,14 @@ fn create_browser(
                     .ok();
             }
         },
-    );
+    )
+    .on_hover_lost(|ctx, _, _| {
+        if ctx.has_focus() {
+            ctx.get_external_handle()
+                .submit_command(SET_FOCUSED_INDEX, None, Target::Global)
+                .ok();
+        }
+    });
 
     let container = Container::new(container);
 
