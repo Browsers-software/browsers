@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::path::Path;
 
-use druid::image::io::Reader as ImageReader;
+use druid::image::ImageReader;
 use druid::widget::{Controller, Image};
 use druid::{Env, ImageBuf, LifeCycle, LifeCycleCtx, UpdateCtx, Widget};
 use tracing::debug;
