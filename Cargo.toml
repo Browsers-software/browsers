@@ -12,9 +12,9 @@ build = "build.rs"
 [dependencies]
 
 # logging library
-tracing = "0.1.41"
-tracing-subscriber = { version = "0.3.20", features = ["fmt", "std", "time", "local-time"] }
-tracing-appender = "0.2.3"
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["fmt", "std", "time", "local-time"] }
+tracing-appender = "0.2.5"
 
 # Official remote
 #rolling-file = "0.2.0"
@@ -24,9 +24,9 @@ rolling-file = { git = "https://github.com/browsers-software/rolling-file-rs.git
 
 dirs = "6.0.0"
 
-toml = "1.0.0"
-serde_json = "1.0.145"
-serde = { version = "1.0.228", features = ["derive"] }
+toml = "1.1.4"
+serde_json = "1.0.151"
+serde = { version = "1.0.229", features = ["derive"] }
 
 # UI library
 # official remote
@@ -39,13 +39,13 @@ serde = { version = "1.0.228", features = ["derive"] }
 druid = { git = "https://github.com/browsers-software/druid.git", branch = "browsers", features = ["png", "jpeg", "image"] }
 
 # parse urls
-url = "2.5.7"
+url = "2.5.8"
 
 # parse url rules
-globset = "0.4.18"
+globset = "0.4.20"
 
 # Parse .ini files (e.g Firefox profiles.ini)
-configparser = "3.1.0"
+configparser = "3.2.0"
 
 # Hash Firefox path with cityhash64, to map it to
 # locked installation in profiles.ini
@@ -61,27 +61,27 @@ dark-light = "2.0.0"
 # small selection of Core Foundation libs I happen to need
 [target.'cfg(target_os = "macos")'.dependencies]
 # for macos_native
-objc2-foundation = "0.3.1"
-objc2-app-kit = "0.3.1"
-objc2 = "0.6.1"
+objc2-foundation = "0.3.2"
+objc2-app-kit = "0.3.2"
+objc2 = "0.6.4"
 
 # for mac_paths (to get unsandboxed_home_dir for mac)
-libc = "0.2.154"
+libc = "0.2.189"
 
-[target.'cfg(target_os = "linux")'.dependencies]
+#[target.'cfg(target_os = "linux")'.dependencies]
 xdg-mime = "^0.4.0"
 
 # eagerly init gtk (should be same version of gtk as druid is using)
 #gtk = { version = "0.16.2" }
 
 # to find application .desktop files
-freedesktop-desktop-entry = "0.8.0"
+freedesktop-desktop-entry = "0.8.2"
 
 # to find icon theme and icon;
 freedesktop-icons = "0.4.0"
 
 # Helps parsing commands that are in Exec field in .desktop files
-shell-words = "1.1.0"
+shell-words = "1.1.1"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winreg = "0.56.0"
@@ -91,10 +91,10 @@ winapi = { version = "0.3.9", features = ["ntdef"] }
 
 # Helps parsing commands that are in windows registry for different apps
 # Same as `shell-words` but for Windows, i.e supporting \ in paths
-winsplit = "0.1"
+winsplit = "0.1.0"
 
 # Replacement for fs::canonicalize, but returns normal path instead of the `\\?` prefixed path
-dunce = "1.0.4"
+dunce = "1.0.5"
 
 [target.'cfg(target_os = "windows")'.build-dependencies]
 # To embed .ico into .exe
@@ -102,7 +102,7 @@ dunce = "1.0.4"
 winres = "0.1.12"
 
 # statically link vcruntime140.dll instead of requiring user to install the runtime
-static_vcruntime = "3.0"
+static_vcruntime = "3.0.0"
 
 #[profile.dev]
 #lto = true
