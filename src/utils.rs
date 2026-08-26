@@ -123,6 +123,12 @@ pub struct CustomPalette {
     pub button_light: String,
     pub cursor: String,
     pub about_background: String,
+    /// Font family name, or one of the generic keywords `system-ui`, `serif`,
+    /// `sans-serif`, `monospace`.
+    pub font_family: String,
+    pub browser_label_size: f64,
+    pub profile_label_size: f64,
+    pub url_label_size: f64,
 }
 
 impl Default for CustomPalette {
@@ -151,6 +157,10 @@ impl Default for CustomPalette {
             button_light: hex(Color::rgb8(0x21, 0x21, 0x21)),
             cursor: hex(Color::WHITE),
             about_background: hex(Color::rgb8(27, 32, 32)),
+            font_family: "system-ui".to_string(),
+            browser_label_size: 12.0,
+            profile_label_size: 11.0,
+            url_label_size: 12.0,
         }
     }
 }
