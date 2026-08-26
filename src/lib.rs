@@ -2,19 +2,19 @@ use druid::{ExtEventSink, Target, UrlOpenInfo};
 use serde::{Deserialize, Serialize};
 use std::borrow::Borrow;
 use std::fmt::Debug;
-use std::process::{exit, Command};
+use std::process::{Command, exit};
 use std::str::FromStr;
-use std::sync::mpsc::{Receiver, Sender};
 use std::sync::Arc;
+use std::sync::mpsc::{Receiver, Sender};
 use tracing::{debug, info, instrument, warn};
-use url::form_urlencoded::Parse;
 use url::Url;
+use url::form_urlencoded::Parse;
 
 use gui::ui;
 
 use crate::browser_repository::{SupportedApp, SupportedAppRepository};
+use crate::gui::ui::{UI, UIVisualSettings};
 use crate::gui::ui::{UIBehavioralSettings, UIProfileAndIncognito, UISettingsRule};
-use crate::gui::ui::{UIVisualSettings, UI};
 use crate::url_rule::UrlGlobMatcher;
 use crate::utils::{
     BehavioralConfig, Config, ConfigRule, OSAppFinder, ProfileAndOptions, UIConfig,

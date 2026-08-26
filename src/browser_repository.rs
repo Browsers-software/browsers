@@ -5,14 +5,13 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 use tracing::info;
-use url::form_urlencoded::byte_serialize;
 use url::Url;
+use url::form_urlencoded::byte_serialize;
 
 use crate::url_rule::UrlGlobMatcher;
 use crate::{
-    chromium_profiles_parser, firefox_profiles_parser, paths, slack_profiles_parser,
-    slack_url_parser, url_rule, CommonBrowserProfile, InstalledAppProfiles,
-    InstalledBrowserProfile,
+    CommonBrowserProfile, InstalledAppProfiles, InstalledBrowserProfile, chromium_profiles_parser,
+    firefox_profiles_parser, paths, slack_profiles_parser, slack_url_parser, url_rule,
 };
 
 // Holds list of custom SupportedApp configurations

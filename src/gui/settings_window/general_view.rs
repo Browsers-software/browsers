@@ -6,8 +6,8 @@ use druid::{LensExt, Widget, WidgetExt};
 use crate::gui::settings_window::rules_view;
 use crate::gui::shared;
 use crate::gui::ui::{
-    UIBehavioralSettings, UISettings, UIState, UIVisualSettings, SAVE_BEHAVIORAL_SETTINGS,
-    SAVE_UI_SETTINGS,
+    SAVE_BEHAVIORAL_SETTINGS, SAVE_UI_SETTINGS, UIBehavioralSettings, UISettings, UIState,
+    UIVisualSettings,
 };
 
 pub(crate) fn general_content() -> impl Widget<UIState> {

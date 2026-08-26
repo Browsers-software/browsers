@@ -157,9 +157,9 @@ pub fn find_firefox_profiles(
             let containers_json_file = profile_dir.join("containers.json");
             if !containers_json_file.exists() {
                 info!(
-                "Skipping containers for profile '{}', because it does not have containers.json file",
-                profile_dir.display()
-            );
+                    "Skipping containers for profile '{}', because it does not have containers.json file",
+                    profile_dir.display()
+                );
             } else {
                 // containers for this profile
                 info!(

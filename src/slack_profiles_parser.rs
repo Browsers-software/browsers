@@ -6,7 +6,7 @@ use std::path::Path;
 use serde_json::{Map, Value};
 use tracing::{debug, info};
 
-use crate::{paths, InstalledBrowserProfile};
+use crate::{InstalledBrowserProfile, paths};
 
 pub fn find_slack_profiles(
     slack_user_dir: &Path,

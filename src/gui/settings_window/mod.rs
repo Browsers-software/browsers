@@ -141,10 +141,7 @@ fn sidebar_items() -> impl Widget<UISettings> {
         .must_fill_main_axis(true)
         .cross_axis_alignment(CrossAxisAlignment::Fill)
         .with_child(tab_button("settings-tab-general", SettingsTab::GENERAL))
-        .with_child(tab_button(
-            "settings-tab-appearance",
-            SettingsTab::APPEARANCE,
-        ))
+        .with_child(tab_button("settings-tab-appearance", SettingsTab::APPEARANCE))
         .with_child(tab_button("settings-tab-rules", SettingsTab::RULES))
         .with_child(tab_button("settings-tab-advanced", SettingsTab::ADVANCED))
         .with_flex_spacer(1.0)

@@ -11,7 +11,7 @@ use druid::image::{ImageFormat, RgbaImage};
 use tracing::{info, warn};
 
 use winapi::shared::windef::{HBITMAP, HDC, HICON, HWND};
-use winapi::um::winuser::{GetDC, GetIconInfo, ReleaseDC, ICONINFO};
+use winapi::um::winuser::{GetDC, GetIconInfo, ICONINFO, ReleaseDC};
 use winapi::{
     shared::{
         minwindef::{HINSTANCE, INT, LPVOID, UINT},
@@ -19,15 +19,15 @@ use winapi::{
     },
     um::{
         shellapi::{ExtractIconA, ExtractIconExA},
-        wingdi::{DeleteObject, GetBitmapBits, GetObjectW, BITMAP, BITMAPINFOHEADER},
+        wingdi::{BITMAP, BITMAPINFOHEADER, DeleteObject, GetBitmapBits, GetObjectW},
     },
 };
 use winreg::{
-    enums::{HKEY_CLASSES_ROOT, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE},
     RegKey,
+    enums::{HKEY_CLASSES_ROOT, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE},
 };
 
-use crate::{browser_repository::SupportedAppRepository, InstalledBrowser};
+use crate::{InstalledBrowser, browser_repository::SupportedAppRepository};
 
 #[derive(Clone)]
 struct AppInfoHolder {
