@@ -136,39 +136,41 @@ pub struct CustomPalette {
 }
 
 impl Default for CustomPalette {
+    /// A "midnight violet" theme: near-black navy backgrounds with a vivid
+    /// purple accent, used as the starting point for a new custom palette.
     fn default() -> Self {
         fn hex(color: Color) -> String {
             format!("#{:08x}", color.as_rgba_u32())
         }
 
         CustomPalette {
-            background_color: hex(Color::rgba(0.15, 0.15, 0.15, 0.9)),
-            label_color: hex(Color::rgb8(255, 255, 255)),
-            secondary_label_color: hex(Color::rgb8(190, 190, 190)),
-            muted_label_color: hex(Color::rgb8(128, 128, 128)),
-            stroke_color: hex(Color::rgba(0.5, 0.5, 0.5, 0.9)),
-            secondary_stroke_color: hex(Color::rgba(0.4, 0.4, 0.4, 0.9)),
-            highlight_background_color: hex(Color::rgba(1.0, 1.0, 1.0, 0.25)),
-            secondary_background_color: hex(Color::rgba(0.15, 0.15, 0.15, 1.0)),
-            subtle_background_color: hex(Color::rgba(0.1, 0.1, 0.1, 0.9)),
-            accent_color: hex(Color::rgb8(25, 90, 194)),
-            on_accent_color: hex(Color::rgb8(255, 255, 255)),
-            opaque_background_color: hex(Color::rgb8(0x29, 0x29, 0x29)),
-            text_color: hex(Color::rgb8(0xf0, 0xf0, 0xea)),
-            background_light: hex(Color::rgb8(0x3a, 0x3a, 0x3a)),
-            background_dark: hex(Color::rgb8(0x31, 0x31, 0x31)),
-            button_dark: hex(Color::BLACK),
-            button_light: hex(Color::rgb8(0x21, 0x21, 0x21)),
-            cursor_color: hex(Color::WHITE),
-            about_background_color: hex(Color::rgb8(27, 32, 32)),
-            font_family: "system-ui".to_string(),
-            browser_label_size: 12.0,
-            profile_label_size: 11.0,
-            url_label_size: 12.0,
-            label_color_hover: hex(Color::rgb8(255, 255, 255)),
-            secondary_label_color_hover: hex(Color::rgb8(255, 255, 255)),
-            hotkey_background_color_hover: hex(Color::rgba(0.15, 0.15, 0.15, 1.0)),
-            hotkey_text_color_hover: hex(Color::rgb8(255, 255, 255)),
+            background_color: hex(Color::rgba(0.07, 0.07, 0.10, 0.92)),
+            label_color: hex(Color::rgb8(0xf5, 0xf5, 0xf7)),
+            secondary_label_color: hex(Color::rgb8(0xb8, 0xb8, 0xd1)),
+            muted_label_color: hex(Color::rgb8(0x8a, 0x8a, 0xa6)),
+            stroke_color: hex(Color::rgba(0.35, 0.35, 0.47, 0.9)),
+            secondary_stroke_color: hex(Color::rgba(0.27, 0.27, 0.37, 0.9)),
+            highlight_background_color: hex(Color::rgba(0.49, 0.36, 1.0, 0.25)),
+            secondary_background_color: hex(Color::rgba(0.09, 0.09, 0.13, 1.0)),
+            subtle_background_color: hex(Color::rgba(0.06, 0.06, 0.09, 0.9)),
+            accent_color: hex(Color::rgb8(0x7c, 0x5c, 0xff)),
+            on_accent_color: hex(Color::rgb8(0xf0, 0xea, 0xff)),
+            opaque_background_color: hex(Color::rgb8(0x14, 0x14, 0x1c)),
+            text_color: hex(Color::rgb8(0xec, 0xec, 0xf4)),
+            background_light: hex(Color::rgb8(0x35, 0x35, 0x42)),
+            background_dark: hex(Color::rgb8(0x22, 0x22, 0x2c)),
+            button_dark: hex(Color::rgb8(0x05, 0x05, 0x08)),
+            button_light: hex(Color::rgb8(0x1e, 0x1e, 0x28)),
+            cursor_color: hex(Color::rgb8(0x7c, 0x5c, 0xff)),
+            about_background_color: hex(Color::rgb8(0x12, 0x12, 0x18)),
+            font_family: "monospace".to_string(),
+            browser_label_size: 13.0,
+            profile_label_size: 11.5,
+            url_label_size: 12.5,
+            label_color_hover: hex(Color::rgb8(0xe6, 0xdf, 0xff)),
+            secondary_label_color_hover: hex(Color::rgb8(0xd8, 0xcf, 0xff)),
+            hotkey_background_color_hover: hex(Color::rgba(0.18, 0.14, 0.30, 1.0)),
+            hotkey_text_color_hover: hex(Color::rgb8(0xf2, 0xee, 0xff)),
         }
     }
 }
