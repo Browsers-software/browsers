@@ -1,5 +1,7 @@
 use druid::widget::{ControllerHost, CrossAxisAlignment, Either, Flex, Label, RadioGroup, TextBox};
-use druid::{Command, Data, Lens, LensExt, Widget, WidgetExt};
+use druid::{
+    Command, Data, FontDescriptor, FontFamily, FontWeight, Lens, LensExt, Widget, WidgetExt,
+};
 
 use crate::gui::settings_window::rules_view;
 use crate::gui::ui::{SAVE_UI_SETTINGS, UISettings, UIState, UIVisualSettings};
@@ -38,104 +40,93 @@ pub(crate) fn appearance_content() -> impl Widget<UIState> {
         .with_spacer(2.0)
         .with_child(Label::new("Colors are #rrggbb or #rrggbbaa hex.").with_text_size(11.0))
         .with_spacer(8.0)
-        .with_child(section_label("General"))
+        .with_child(section_label("Window"))
         .with_child(color_row(
             "Background",
-            CustomPalette::background,
-            save_command.clone(),
-        ))
-        .with_child(color_row("Label", CustomPalette::label, save_command.clone()))
-        .with_child(color_row(
-            "Secondary label",
-            CustomPalette::secondary_label,
+            CustomPalette::background_color,
             save_command.clone(),
         ))
         .with_child(color_row(
-            "Muted label",
-            CustomPalette::muted_label,
-            save_command.clone(),
-        ))
-        .with_child(color_row("Stroke", CustomPalette::stroke, save_command.clone()))
-        .with_child(color_row(
-            "Secondary stroke",
-            CustomPalette::secondary_stroke,
-            save_command.clone(),
-        ))
-        .with_child(color_row(
-            "Highlight",
-            CustomPalette::highlight,
-            save_command.clone(),
-        ))
-        .with_child(color_row(
-            "Secondary background",
-            CustomPalette::secondary_background,
-            save_command.clone(),
-        ))
-        .with_child(color_row(
-            "Subtle background",
-            CustomPalette::subtle_background,
-            save_command.clone(),
-        ))
-        .with_child(color_row("Accent", CustomPalette::accent, save_command.clone()))
-        .with_child(color_row(
-            "On accent",
-            CustomPalette::on_accent,
+            "Border",
+            CustomPalette::stroke_color,
             save_command.clone(),
         ))
         .with_spacer(8.0)
-        .with_child(section_label("Native widgets"))
+        .with_child(section_label("Browser & profile rows"))
         .with_child(color_row(
-            "Window background",
-            CustomPalette::window_background,
-            save_command.clone(),
-        ))
-        .with_child(color_row("Text", CustomPalette::text, save_command.clone()))
-        .with_child(color_row(
-            "Background (light)",
-            CustomPalette::background_light,
+            "Browser label",
+            CustomPalette::label_color,
             save_command.clone(),
         ))
         .with_child(color_row(
-            "Background (dark)",
-            CustomPalette::background_dark,
+            "Browser label (hover)",
+            CustomPalette::label_color_hover,
             save_command.clone(),
         ))
         .with_child(color_row(
-            "Button (dark)",
-            CustomPalette::button_dark,
+            "Profile label",
+            CustomPalette::secondary_label_color,
             save_command.clone(),
         ))
         .with_child(color_row(
-            "Button (light)",
-            CustomPalette::button_light,
+            "Profile label (hover)",
+            CustomPalette::secondary_label_color_hover,
             save_command.clone(),
         ))
-        .with_child(color_row("Cursor", CustomPalette::cursor, save_command.clone()))
         .with_child(color_row(
-            "About window background",
-            CustomPalette::about_background,
+            "Row background (hover)",
+            CustomPalette::highlight_background_color,
             save_command.clone(),
         ))
         .with_spacer(8.0)
-        .with_child(section_label("Hover states"))
+        .with_child(section_label("URL & hotkeys"))
         .with_child(color_row(
-            "Label (hover)",
-            CustomPalette::hover_label,
+            "URL / hotkey / options text",
+            CustomPalette::muted_label_color,
             save_command.clone(),
         ))
         .with_child(color_row(
-            "Secondary label (hover)",
-            CustomPalette::hover_secondary_label,
+            "Hotkey background",
+            CustomPalette::secondary_background_color,
             save_command.clone(),
         ))
         .with_child(color_row(
             "Hotkey background (hover)",
-            CustomPalette::hotkey_hover_background,
+            CustomPalette::hotkey_background_color_hover,
+            save_command.clone(),
+        ))
+        .with_child(color_row(
+            "Hotkey border",
+            CustomPalette::secondary_stroke_color,
             save_command.clone(),
         ))
         .with_child(color_row(
             "Hotkey text (hover)",
-            CustomPalette::hotkey_hover_text,
+            CustomPalette::hotkey_text_color_hover,
+            save_command.clone(),
+        ))
+        .with_spacer(8.0)
+        .with_child(section_label("Settings tabs & rules"))
+        .with_child(color_row(
+            "Active tab background",
+            CustomPalette::accent_color,
+            save_command.clone(),
+        ))
+        .with_child(color_row(
+            "Active tab text",
+            CustomPalette::on_accent_color,
+            save_command.clone(),
+        ))
+        .with_child(color_row(
+            "Rule background",
+            CustomPalette::subtle_background_color,
+            save_command.clone(),
+        ))
+        .with_spacer(8.0)
+        .with_child(section_label("About window"))
+        .with_child(color_row(
+            "Background",
+            CustomPalette::about_background_color,
             save_command.clone(),
         ))
         .with_spacer(8.0)
@@ -164,6 +155,43 @@ pub(crate) fn appearance_content() -> impl Widget<UIState> {
             "URL label size",
             CustomPalette::url_label_size,
             save_command.clone(),
+        ))
+        .with_spacer(8.0)
+        .with_child(section_label("Native widgets (rarely visible)"))
+        .with_child(color_row(
+            "Background (opaque)",
+            CustomPalette::opaque_background_color,
+            save_command.clone(),
+        ))
+        .with_child(color_row(
+            "Text",
+            CustomPalette::text_color,
+            save_command.clone(),
+        ))
+        .with_child(color_row(
+            "Background (light)",
+            CustomPalette::background_light,
+            save_command.clone(),
+        ))
+        .with_child(color_row(
+            "Background (dark)",
+            CustomPalette::background_dark,
+            save_command.clone(),
+        ))
+        .with_child(color_row(
+            "Button (dark)",
+            CustomPalette::button_dark,
+            save_command.clone(),
+        ))
+        .with_child(color_row(
+            "Button (light)",
+            CustomPalette::button_light,
+            save_command.clone(),
+        ))
+        .with_child(color_row(
+            "Cursor",
+            CustomPalette::cursor_color,
+            save_command.clone(),
         ));
 
     let custom_palette_section = Either::new(
@@ -182,8 +210,12 @@ pub(crate) fn appearance_content() -> impl Widget<UIState> {
 }
 
 fn section_label(text: &str) -> impl Widget<UIState> {
+    let font = FontDescriptor::new(FontFamily::SYSTEM_UI)
+        .with_weight(FontWeight::BOLD)
+        .with_size(12.0);
+
     Label::new(text.to_string())
-        .with_text_size(12.0)
+        .with_font(font)
         .padding((0.0, 4.0))
 }
 
