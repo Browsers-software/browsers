@@ -5,7 +5,7 @@ use std::{fs, u32};
 
 use druid::image::imageops::FilterType;
 use druid::image::{ImageFormat, Rgba};
-use druid::{Color, Data, image};
+use druid::{Color, Data, Lens, image};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
@@ -101,7 +101,7 @@ pub enum ConfiguredTheme {
 
 /// User-defined palette, stored as `#rrggbb`/`#rrggbbaa` hex strings (JSON friendly).
 /// Only used when `UIConfig::theme` is set to `ConfiguredTheme::Custom`.
-#[derive(Serialize, Deserialize, Debug, Clone, Data, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, Data, Lens, PartialEq)]
 #[serde(default)]
 pub struct CustomPalette {
     pub background: String,
