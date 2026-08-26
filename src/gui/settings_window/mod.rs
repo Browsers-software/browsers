@@ -12,6 +12,7 @@ use crate::gui::ui_theme;
 use crate::gui::ui_theme::{GeneralTheme, SettingsWindowTheme};
 
 mod advanced_view;
+mod appearance_view;
 mod general_view;
 mod rules_view;
 
@@ -95,6 +96,10 @@ fn view_switcher(browsers_arc: Arc<Vec<UIBrowser>>) -> ViewSwitcher<UIState, Set
             SettingsTab::GENERAL => {
                 settings_view_container("settings-tab-general", general_view::general_content())
             }
+            SettingsTab::APPEARANCE => settings_view_container(
+                "settings-tab-appearance",
+                appearance_view::appearance_content(),
+            ),
             SettingsTab::RULES => settings_view_container(
                 "settings-tab-rules",
                 rules_view::rules_content(browsers_arc.clone()),
@@ -136,6 +141,10 @@ fn sidebar_items() -> impl Widget<UISettings> {
         .must_fill_main_axis(true)
         .cross_axis_alignment(CrossAxisAlignment::Fill)
         .with_child(tab_button("settings-tab-general", SettingsTab::GENERAL))
+        .with_child(tab_button(
+            "settings-tab-appearance",
+            SettingsTab::APPEARANCE,
+        ))
         .with_child(tab_button("settings-tab-rules", SettingsTab::RULES))
         .with_child(tab_button("settings-tab-advanced", SettingsTab::ADVANCED))
         .with_flex_spacer(1.0)

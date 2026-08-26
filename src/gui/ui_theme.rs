@@ -1,5 +1,5 @@
-use crate::gui::ui::UIState;
-use crate::utils::ConfiguredTheme;
+use crate::gui::ui::{UIState, UIVisualSettings};
+use crate::utils::{ConfiguredTheme, CustomPalette};
 use dark_light::Mode;
 use druid::{Color, Data, Env, FontDescriptor, FontFamily, FontStyle, FontWeight, Insets, Key};
 use serde::{Deserialize, Serialize};
@@ -12,16 +12,7 @@ pub enum UITheme {
 }
 
 pub fn initialize_theme(env: &mut Env, ui_state: &UIState) {
-    let active_ui_theme = get_active_ui_theme(ui_state);
-    setup_theme(env, active_ui_theme);
-}
-
-fn get_active_ui_theme(ui_state: &UIState) -> UITheme {
-    match ui_state.ui_settings.visual_settings.theme {
-        ConfiguredTheme::Auto => detect_system_theme(),
-        ConfiguredTheme::Light => UITheme::Light,
-        ConfiguredTheme::Dark => UITheme::Dark,
-    }
+    setup_theme(env, &ui_state.ui_settings.visual_settings);
 }
 
 fn detect_system_theme() -> UITheme {
@@ -36,18 +27,26 @@ fn detect_system_theme() -> UITheme {
     }
 }
 
-pub fn setup_theme(env: &mut Env, ui_theme: UITheme) {
-    let theme = get_theme(ui_theme);
+pub fn setup_theme(env: &mut Env, visual_settings: &UIVisualSettings) {
+    let theme = get_theme(visual_settings);
     theme.set_env_to_theme(env);
 }
 
-fn get_theme(ui_theme: UITheme) -> Theme {
-    let palette = match ui_theme {
-        UITheme::Dark => Palette::dark(),
-        UITheme::Light => Palette::light(),
-    };
-
+fn get_theme(visual_settings: &UIVisualSettings) -> Theme {
+    let palette = resolve_palette(visual_settings);
     build_theme(&palette)
+}
+
+fn resolve_palette(visual_settings: &UIVisualSettings) -> Palette {
+    match visual_settings.theme {
+        ConfiguredTheme::Auto => match detect_system_theme() {
+            UITheme::Dark => Palette::dark(),
+            UITheme::Light => Palette::light(),
+        },
+        ConfiguredTheme::Light => Palette::light(),
+        ConfiguredTheme::Dark => Palette::dark(),
+        ConfiguredTheme::Custom => Palette::from_custom(&visual_settings.custom_palette),
+    }
 }
 
 fn build_theme(palette: &Palette) -> Theme {
@@ -562,4 +561,39 @@ impl Palette {
             about_background: Color::rgb8(236, 236, 236),
         }
     }
+
+    fn from_custom(custom: &CustomPalette) -> Self {
+        let fallback = Palette::dark();
+        Palette {
+            background: parse_color(&custom.background, fallback.background),
+            label: parse_color(&custom.label, fallback.label),
+            secondary_label: parse_color(&custom.secondary_label, fallback.secondary_label),
+            muted_label: parse_color(&custom.muted_label, fallback.muted_label),
+            stroke: parse_color(&custom.stroke, fallback.stroke),
+            secondary_stroke: parse_color(&custom.secondary_stroke, fallback.secondary_stroke),
+            highlight: parse_color(&custom.highlight, fallback.highlight),
+            secondary_background: parse_color(
+                &custom.secondary_background,
+                fallback.secondary_background,
+            ),
+            subtle_background: parse_color(&custom.subtle_background, fallback.subtle_background),
+            accent: parse_color(&custom.accent, fallback.accent),
+            on_accent: parse_color(&custom.on_accent, fallback.on_accent),
+            window_background: parse_color(&custom.window_background, fallback.window_background),
+            text: parse_color(&custom.text, fallback.text),
+            background_light: parse_color(&custom.background_light, fallback.background_light),
+            background_dark: parse_color(&custom.background_dark, fallback.background_dark),
+            button_dark: parse_color(&custom.button_dark, fallback.button_dark),
+            button_light: parse_color(&custom.button_light, fallback.button_light),
+            cursor: parse_color(&custom.cursor, fallback.cursor),
+            about_background: parse_color(&custom.about_background, fallback.about_background),
+        }
+    }
+}
+
+fn parse_color(hex: &str, fallback: Color) -> Color {
+    Color::from_hex_str(hex).unwrap_or_else(|error| {
+        warn!("invalid custom palette color '{}': {:?}", hex, error);
+        fallback
+    })
 }

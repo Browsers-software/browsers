@@ -5,7 +5,7 @@ use std::{fs, u32};
 
 use druid::image::imageops::FilterType;
 use druid::image::{ImageFormat, Rgba};
-use druid::{image, Data};
+use druid::{Color, Data, image};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
@@ -16,7 +16,7 @@ use crate::linux::linux_utils;
 use crate::macos::macos_utils;
 #[cfg(target_os = "windows")]
 use crate::windows::windows_utils;
-use crate::{paths, InstalledBrowser, SupportedAppRepository};
+use crate::{InstalledBrowser, SupportedAppRepository, paths};
 
 #[cfg(target_os = "linux")]
 pub fn is_default_web_browser() -> bool {
@@ -76,6 +76,8 @@ pub struct UIConfig {
     pub quit_on_lost_focus: bool,
 
     pub theme: ConfiguredTheme,
+
+    pub custom_palette: CustomPalette,
 }
 
 impl Default for UIConfig {
@@ -84,6 +86,7 @@ impl Default for UIConfig {
             show_hotkeys: true,
             quit_on_lost_focus: false,
             theme: ConfiguredTheme::Auto,
+            custom_palette: CustomPalette::default(),
         }
     }
 }
@@ -93,6 +96,63 @@ pub enum ConfiguredTheme {
     Auto,
     Light,
     Dark,
+    Custom,
+}
+
+/// User-defined palette, stored as `#rrggbb`/`#rrggbbaa` hex strings (JSON friendly).
+/// Only used when `UIConfig::theme` is set to `ConfiguredTheme::Custom`.
+#[derive(Serialize, Deserialize, Debug, Clone, Data, PartialEq)]
+#[serde(default)]
+pub struct CustomPalette {
+    pub background: String,
+    pub label: String,
+    pub secondary_label: String,
+    pub muted_label: String,
+    pub stroke: String,
+    pub secondary_stroke: String,
+    pub highlight: String,
+    pub secondary_background: String,
+    pub subtle_background: String,
+    pub accent: String,
+    pub on_accent: String,
+    pub window_background: String,
+    pub text: String,
+    pub background_light: String,
+    pub background_dark: String,
+    pub button_dark: String,
+    pub button_light: String,
+    pub cursor: String,
+    pub about_background: String,
+}
+
+impl Default for CustomPalette {
+    fn default() -> Self {
+        fn hex(color: Color) -> String {
+            format!("#{:08x}", color.as_rgba_u32())
+        }
+
+        CustomPalette {
+            background: hex(Color::rgba(0.15, 0.15, 0.15, 0.9)),
+            label: hex(Color::rgb8(255, 255, 255)),
+            secondary_label: hex(Color::rgb8(190, 190, 190)),
+            muted_label: hex(Color::rgb8(128, 128, 128)),
+            stroke: hex(Color::rgba(0.5, 0.5, 0.5, 0.9)),
+            secondary_stroke: hex(Color::rgba(0.4, 0.4, 0.4, 0.9)),
+            highlight: hex(Color::rgba(1.0, 1.0, 1.0, 0.25)),
+            secondary_background: hex(Color::rgba(0.15, 0.15, 0.15, 1.0)),
+            subtle_background: hex(Color::rgba(0.1, 0.1, 0.1, 0.9)),
+            accent: hex(Color::rgb8(25, 90, 194)),
+            on_accent: hex(Color::rgb8(255, 255, 255)),
+            window_background: hex(Color::rgb8(0x29, 0x29, 0x29)),
+            text: hex(Color::rgb8(0xf0, 0xf0, 0xea)),
+            background_light: hex(Color::rgb8(0x3a, 0x3a, 0x3a)),
+            background_dark: hex(Color::rgb8(0x31, 0x31, 0x31)),
+            button_dark: hex(Color::BLACK),
+            button_light: hex(Color::rgb8(0x21, 0x21, 0x21)),
+            cursor: hex(Color::WHITE),
+            about_background: hex(Color::rgb8(27, 32, 32)),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]

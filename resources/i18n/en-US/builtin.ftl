@@ -6,5 +6,6 @@ hide-profile = Hide { $item-name }
 hide-app = Hide all profiles of { $app-name }
 
 settings-tab-advanced = Advanced
+settings-tab-appearance = Appearance
 settings-tab-general = General
 settings-tab-rules = Rules
