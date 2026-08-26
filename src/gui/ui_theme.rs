@@ -42,25 +42,31 @@ pub fn setup_theme(env: &mut Env, ui_theme: UITheme) {
 }
 
 fn get_theme(ui_theme: UITheme) -> Theme {
-    let dark_palette = Palette::dark();
-    let light_palette = Palette::light();
+    let palette = match ui_theme {
+        UITheme::Dark => Palette::dark(),
+        UITheme::Light => Palette::light(),
+    };
 
-    let dark_theme = Theme {
+    build_theme(&palette)
+}
+
+fn build_theme(palette: &Palette) -> Theme {
+    Theme {
         druid_builtin: DruidBuiltinTheme {
-            window_background_color: Color::rgb8(0x29, 0x29, 0x29),
-            text_color: Color::rgb8(0xf0, 0xf0, 0xea),
+            window_background_color: palette.window_background,
+            text_color: palette.text,
             disabled_text_color: Color::rgb8(0xa0, 0xa0, 0x9a),
             placeholder_color: Color::rgb8(0x80, 0x80, 0x80),
             primary_light: Color::rgb8(0x5c, 0xc4, 0xff),
             primary_dark: Color::rgb8(0x00, 0x8d, 0xdd),
-            background_light: Color::rgb8(0x3a, 0x3a, 0x3a),
-            background_dark: Color::rgb8(0x31, 0x31, 0x31),
+            background_light: palette.background_light,
+            background_dark: palette.background_dark,
             foreground_light: Color::rgb8(0xf9, 0xf9, 0xf9),
             foreground_dark: Color::rgb8(0xbf, 0xbf, 0xbf),
             disabled_foreground_light: Color::rgb8(0x89, 0x89, 0x89),
             disabled_foreground_dark: Color::rgb8(0x6f, 0x6f, 0x6f),
-            button_dark: Color::BLACK,
-            button_light: Color::rgb8(0x21, 0x21, 0x21),
+            button_dark: palette.button_dark,
+            button_light: palette.button_light,
             disabled_button_dark: Color::grey8(0x28),
             disabled_button_light: Color::grey8(0x38),
             border_dark: Color::rgb8(0x3a, 0x3a, 0x3a),
@@ -68,7 +74,7 @@ fn get_theme(ui_theme: UITheme) -> Theme {
             selected_text_background_color: Color::rgb8(0x43, 0x70, 0xA8),
             selected_text_inactive_background_color: Color::grey8(0x74),
             selection_text_color: Color::rgb8(0x00, 0x00, 0x00),
-            cursor_color: Color::WHITE,
+            cursor_color: palette.cursor,
             scrollbar_color: Color::rgb8(0xff, 0xff, 0xff),
             scrollbar_border_color: Color::rgb8(0x77, 0x77, 0x77),
             progress_bar_radius: 4.0,
@@ -101,142 +107,42 @@ fn get_theme(ui_theme: UITheme) -> Theme {
                 .with_size(15.0),
         },
         general: GeneralTheme {
-            window_background_color: dark_palette.background,
-            window_border_color: dark_palette.stroke,
+            window_background_color: palette.background,
+            window_border_color: palette.stroke,
         },
         main: MainWindowTheme {
-            window_background_color: dark_palette.background,
-            window_border_color: dark_palette.stroke,
-            item_background_color_hover: dark_palette.highlight,
+            window_background_color: palette.background,
+            window_border_color: palette.stroke,
+            item_background_color_hover: palette.highlight,
             browser_label_font_family: FontFamily::SYSTEM_UI,
             browser_label_size: 12.0,
-            browser_label_color: dark_palette.label,
-            browser_label_color_hover: dark_palette.label,
+            browser_label_color: palette.label,
+            browser_label_color_hover: palette.label,
             profile_label_font_family: FontFamily::SYSTEM_UI,
             profile_label_size: 11.0,
-            profile_label_color: dark_palette.secondary_label,
-            profile_label_color_hover: dark_palette.label,
+            profile_label_color: palette.secondary_label,
+            profile_label_color_hover: palette.label,
             url_label_font_family: FontFamily::SYSTEM_UI,
             url_label_size: 12.0,
-            url_label_color: dark_palette.muted_label,
-            hotkey_background_color: dark_palette.secondary_background,
-            hotkey_background_color_hover: dark_palette.secondary_background,
-            hotkey_border_color: dark_palette.secondary_stroke,
-            hotkey_text_color: dark_palette.muted_label,
-            hotkey_text_color_hover: dark_palette.label,
-            options_button_text_color: dark_palette.muted_label,
+            url_label_color: palette.muted_label,
+            hotkey_background_color: palette.secondary_background,
+            hotkey_background_color_hover: palette.secondary_background,
+            hotkey_border_color: palette.secondary_stroke,
+            hotkey_text_color: palette.muted_label,
+            hotkey_text_color_hover: palette.label,
+            options_button_text_color: palette.muted_label,
         },
         settings: SettingsWindowTheme {
-            active_tab_background_color: dark_palette.accent,
-            active_tab_text_color: dark_palette.on_accent,
-            inactive_tab_text_color: dark_palette.label,
-            rule_background_color: dark_palette.subtle_background,
-            rule_border_color: dark_palette.stroke,
+            active_tab_background_color: palette.accent,
+            active_tab_text_color: palette.on_accent,
+            inactive_tab_text_color: palette.label,
+            rule_background_color: palette.subtle_background,
+            rule_border_color: palette.stroke,
         },
         about: AboutWindowTheme {
-            window_background_color: Color::rgb8(27, 32, 32),
+            window_background_color: palette.about_background,
         },
-    };
-
-    let light_theme = Theme {
-        druid_builtin: DruidBuiltinTheme {
-            window_background_color: Color::rgb(0.85, 0.85, 0.85),
-            text_color: Color::rgb8(10, 10, 10),
-            disabled_text_color: Color::rgb8(0xa0, 0xa0, 0x9a),
-            placeholder_color: Color::rgb8(0x80, 0x80, 0x80),
-            primary_light: Color::rgb8(0x5c, 0xc4, 0xff),
-            primary_dark: Color::rgb8(0x00, 0x8d, 0xdd),
-            background_light: Color::rgb8(220, 220, 220),
-            background_dark: Color::rgb8(200, 200, 200),
-            foreground_light: Color::rgb8(0xf9, 0xf9, 0xf9),
-            foreground_dark: Color::rgb8(0xbf, 0xbf, 0xbf),
-            disabled_foreground_light: Color::rgb8(0x89, 0x89, 0x89),
-            disabled_foreground_dark: Color::rgb8(0x6f, 0x6f, 0x6f),
-            button_dark: Color::rgb8(120, 120, 120),
-            button_light: Color::rgb8(150, 150, 150),
-            disabled_button_dark: Color::grey8(0x28),
-            disabled_button_light: Color::grey8(0x38),
-            border_dark: Color::rgb8(0x3a, 0x3a, 0x3a),
-            border_light: Color::rgb8(0xa1, 0xa1, 0xa1),
-            selected_text_background_color: Color::rgb8(0x43, 0x70, 0xA8),
-            selected_text_inactive_background_color: Color::grey8(0x74),
-            selection_text_color: Color::rgb8(0x00, 0x00, 0x00),
-            cursor_color: Color::BLACK,
-            scrollbar_color: Color::rgb8(0xff, 0xff, 0xff),
-            scrollbar_border_color: Color::rgb8(0x77, 0x77, 0x77),
-            progress_bar_radius: 4.0,
-            button_border_radius: 4.0,
-            button_border_width: 2.0,
-            text_size_normal: 15.0,
-            text_size_large: 24.0,
-            basic_widget_height: 18.0,
-            wide_widget_width: 100.0,
-            bordered_widget_height: 24.0,
-            textbox_border_radius: 2.0,
-            textbox_border_width: 1.0,
-            textbox_insets: Insets::new(4.0, 4.0, 4.0, 4.0),
-            scrollbar_max_opacity: 0.7,
-            scrollbar_fade_delay: 1500u64,
-            scrollbar_width: 8.0,
-            scrollbar_pad: 2.0,
-            scrollbar_min_size: 45.0,
-            scrollbar_radius: 5.0,
-            scrollbar_edge_width: 1.0,
-            widget_padding_vertical: 10.0,
-            widget_padding_horizontal: 8.0,
-            widget_control_component_padding: 4.0,
-            ui_font: FontDescriptor::new(FontFamily::SYSTEM_UI).with_size(15.0),
-            ui_font_bold: FontDescriptor::new(FontFamily::SYSTEM_UI)
-                .with_weight(FontWeight::BOLD)
-                .with_size(15.0),
-            ui_font_italic: FontDescriptor::new(FontFamily::SYSTEM_UI)
-                .with_style(FontStyle::Italic)
-                .with_size(15.0),
-        },
-        general: GeneralTheme {
-            window_background_color: light_palette.background,
-            window_border_color: light_palette.stroke,
-        },
-        main: MainWindowTheme {
-            window_background_color: light_palette.background,
-            window_border_color: light_palette.stroke,
-            item_background_color_hover: light_palette.highlight,
-            browser_label_font_family: FontFamily::SYSTEM_UI,
-            browser_label_size: 12.0,
-            browser_label_color: light_palette.label,
-            browser_label_color_hover: light_palette.label,
-            profile_label_font_family: FontFamily::SYSTEM_UI,
-            profile_label_size: 11.0,
-            profile_label_color: light_palette.secondary_label,
-            profile_label_color_hover: light_palette.label,
-            url_label_font_family: FontFamily::SYSTEM_UI,
-            url_label_size: 12.0,
-            url_label_color: light_palette.muted_label,
-            hotkey_background_color: light_palette.secondary_background,
-            hotkey_background_color_hover: light_palette.secondary_background,
-            hotkey_border_color: light_palette.secondary_stroke,
-            hotkey_text_color: light_palette.muted_label,
-            hotkey_text_color_hover: light_palette.label,
-            options_button_text_color: light_palette.muted_label,
-        },
-        settings: SettingsWindowTheme {
-            active_tab_background_color: light_palette.accent,
-            active_tab_text_color: light_palette.on_accent,
-            inactive_tab_text_color: light_palette.label,
-            rule_background_color: light_palette.subtle_background,
-            rule_border_color: light_palette.stroke,
-        },
-        about: AboutWindowTheme {
-            window_background_color: Color::rgb8(236, 236, 236),
-        },
-    };
-
-    let theme = match ui_theme {
-        UITheme::Light => light_theme,
-        UITheme::Dark => dark_theme,
-    };
-
-    return theme;
+    }
 }
 
 struct Theme {
@@ -598,6 +504,14 @@ struct Palette {
     subtle_background: Color,
     accent: Color,
     on_accent: Color,
+    window_background: Color,
+    text: Color,
+    background_light: Color,
+    background_dark: Color,
+    button_dark: Color,
+    button_light: Color,
+    cursor: Color,
+    about_background: Color,
 }
 
 impl Palette {
@@ -614,6 +528,14 @@ impl Palette {
             subtle_background: Color::rgba(0.1, 0.1, 0.1, 0.9),
             accent: Color::rgb8(25, 90, 194),
             on_accent: Color::rgb8(255, 255, 255),
+            window_background: Color::rgb8(0x29, 0x29, 0x29),
+            text: Color::rgb8(0xf0, 0xf0, 0xea),
+            background_light: Color::rgb8(0x3a, 0x3a, 0x3a),
+            background_dark: Color::rgb8(0x31, 0x31, 0x31),
+            button_dark: Color::BLACK,
+            button_light: Color::rgb8(0x21, 0x21, 0x21),
+            cursor: Color::WHITE,
+            about_background: Color::rgb8(27, 32, 32),
         }
     }
 
@@ -630,6 +552,14 @@ impl Palette {
             subtle_background: Color::rgba(0.8, 0.8, 0.8, 0.9),
             accent: Color::rgb8(25, 90, 194),
             on_accent: Color::rgb8(255, 255, 255),
+            window_background: Color::rgb(0.85, 0.85, 0.85),
+            text: Color::rgb8(10, 10, 10),
+            background_light: Color::rgb8(220, 220, 220),
+            background_dark: Color::rgb8(200, 200, 200),
+            button_dark: Color::rgb8(120, 120, 120),
+            button_light: Color::rgb8(150, 150, 150),
+            cursor: Color::BLACK,
+            about_background: Color::rgb8(236, 236, 236),
         }
     }
 }
