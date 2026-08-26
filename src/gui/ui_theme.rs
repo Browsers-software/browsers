@@ -1,7 +1,7 @@
 use crate::gui::ui::UIState;
 use crate::utils::ConfiguredTheme;
 use dark_light::Mode;
-use druid::{Color, Data, Env, FontDescriptor, FontFamily, Key};
+use druid::{Color, Data, Env, FontDescriptor, FontFamily, FontStyle, FontWeight, Insets, Key};
 use serde::{Deserialize, Serialize};
 use tracing::warn;
 
@@ -71,6 +71,34 @@ fn get_theme(ui_theme: UITheme) -> Theme {
             cursor_color: Color::WHITE,
             scrollbar_color: Color::rgb8(0xff, 0xff, 0xff),
             scrollbar_border_color: Color::rgb8(0x77, 0x77, 0x77),
+            progress_bar_radius: 4.0,
+            button_border_radius: 4.0,
+            button_border_width: 2.0,
+            text_size_normal: 15.0,
+            text_size_large: 24.0,
+            basic_widget_height: 18.0,
+            wide_widget_width: 100.0,
+            bordered_widget_height: 24.0,
+            textbox_border_radius: 2.0,
+            textbox_border_width: 1.0,
+            textbox_insets: Insets::new(4.0, 4.0, 4.0, 4.0),
+            scrollbar_max_opacity: 0.7,
+            scrollbar_fade_delay: 1500u64,
+            scrollbar_width: 8.0,
+            scrollbar_pad: 2.0,
+            scrollbar_min_size: 45.0,
+            scrollbar_radius: 5.0,
+            scrollbar_edge_width: 1.0,
+            widget_padding_vertical: 10.0,
+            widget_padding_horizontal: 8.0,
+            widget_control_component_padding: 4.0,
+            ui_font: FontDescriptor::new(FontFamily::SYSTEM_UI).with_size(15.0),
+            ui_font_bold: FontDescriptor::new(FontFamily::SYSTEM_UI)
+                .with_weight(FontWeight::BOLD)
+                .with_size(15.0),
+            ui_font_italic: FontDescriptor::new(FontFamily::SYSTEM_UI)
+                .with_style(FontStyle::Italic)
+                .with_size(15.0),
         },
         general: GeneralTheme {
             window_background_color: dark_palette.background,
@@ -136,6 +164,34 @@ fn get_theme(ui_theme: UITheme) -> Theme {
             cursor_color: Color::BLACK,
             scrollbar_color: Color::rgb8(0xff, 0xff, 0xff),
             scrollbar_border_color: Color::rgb8(0x77, 0x77, 0x77),
+            progress_bar_radius: 4.0,
+            button_border_radius: 4.0,
+            button_border_width: 2.0,
+            text_size_normal: 15.0,
+            text_size_large: 24.0,
+            basic_widget_height: 18.0,
+            wide_widget_width: 100.0,
+            bordered_widget_height: 24.0,
+            textbox_border_radius: 2.0,
+            textbox_border_width: 1.0,
+            textbox_insets: Insets::new(4.0, 4.0, 4.0, 4.0),
+            scrollbar_max_opacity: 0.7,
+            scrollbar_fade_delay: 1500u64,
+            scrollbar_width: 8.0,
+            scrollbar_pad: 2.0,
+            scrollbar_min_size: 45.0,
+            scrollbar_radius: 5.0,
+            scrollbar_edge_width: 1.0,
+            widget_padding_vertical: 10.0,
+            widget_padding_horizontal: 8.0,
+            widget_control_component_padding: 4.0,
+            ui_font: FontDescriptor::new(FontFamily::SYSTEM_UI).with_size(15.0),
+            ui_font_bold: FontDescriptor::new(FontFamily::SYSTEM_UI)
+                .with_weight(FontWeight::BOLD)
+                .with_size(15.0),
+            ui_font_italic: FontDescriptor::new(FontFamily::SYSTEM_UI)
+                .with_style(FontStyle::Italic)
+                .with_size(15.0),
         },
         general: GeneralTheme {
             window_background_color: light_palette.background,
@@ -426,6 +482,30 @@ pub(crate) struct DruidBuiltinTheme {
     cursor_color: Color,
     scrollbar_color: Color,
     scrollbar_border_color: Color,
+    progress_bar_radius: f64,
+    button_border_radius: f64,
+    button_border_width: f64,
+    text_size_normal: f64,
+    text_size_large: f64,
+    basic_widget_height: f64,
+    wide_widget_width: f64,
+    bordered_widget_height: f64,
+    textbox_border_radius: f64,
+    textbox_border_width: f64,
+    textbox_insets: Insets,
+    scrollbar_max_opacity: f64,
+    scrollbar_fade_delay: u64,
+    scrollbar_width: f64,
+    scrollbar_pad: f64,
+    scrollbar_min_size: f64,
+    scrollbar_radius: f64,
+    scrollbar_edge_width: f64,
+    widget_padding_vertical: f64,
+    widget_padding_horizontal: f64,
+    widget_control_component_padding: f64,
+    ui_font: FontDescriptor,
+    ui_font_bold: FontDescriptor,
+    ui_font_italic: FontDescriptor,
 }
 
 impl DruidBuiltinTheme {
@@ -469,6 +549,40 @@ impl DruidBuiltinTheme {
         env.set(druid::theme::CURSOR_COLOR, self.cursor_color);
         env.set(druid::theme::SCROLLBAR_COLOR, self.scrollbar_color);
         env.set(druid::theme::SCROLLBAR_BORDER_COLOR, self.scrollbar_border_color);
+
+        env.set(druid::theme::PROGRESS_BAR_RADIUS, self.progress_bar_radius);
+        env.set(druid::theme::BUTTON_BORDER_RADIUS, self.button_border_radius);
+        env.set(druid::theme::BUTTON_BORDER_WIDTH, self.button_border_width);
+        env.set(druid::theme::TEXT_SIZE_NORMAL, self.text_size_normal);
+        env.set(druid::theme::TEXT_SIZE_LARGE, self.text_size_large);
+        env.set(druid::theme::BASIC_WIDGET_HEIGHT, self.basic_widget_height);
+        env.set(druid::theme::WIDE_WIDGET_WIDTH, self.wide_widget_width);
+        env.set(druid::theme::BORDERED_WIDGET_HEIGHT, self.bordered_widget_height);
+        env.set(druid::theme::TEXTBOX_BORDER_RADIUS, self.textbox_border_radius);
+        env.set(druid::theme::TEXTBOX_BORDER_WIDTH, self.textbox_border_width);
+        env.set(druid::theme::TEXTBOX_INSETS, self.textbox_insets);
+        env.set(druid::theme::SCROLLBAR_MAX_OPACITY, self.scrollbar_max_opacity);
+        env.set(druid::theme::SCROLLBAR_FADE_DELAY, self.scrollbar_fade_delay);
+        env.set(druid::theme::SCROLLBAR_WIDTH, self.scrollbar_width);
+        env.set(druid::theme::SCROLLBAR_PAD, self.scrollbar_pad);
+        env.set(druid::theme::SCROLLBAR_MIN_SIZE, self.scrollbar_min_size);
+        env.set(druid::theme::SCROLLBAR_RADIUS, self.scrollbar_radius);
+        env.set(druid::theme::SCROLLBAR_EDGE_WIDTH, self.scrollbar_edge_width);
+        env.set(
+            druid::theme::WIDGET_PADDING_VERTICAL,
+            self.widget_padding_vertical,
+        );
+        env.set(
+            druid::theme::WIDGET_PADDING_HORIZONTAL,
+            self.widget_padding_horizontal,
+        );
+        env.set(
+            druid::theme::WIDGET_CONTROL_COMPONENT_PADDING,
+            self.widget_control_component_padding,
+        );
+        env.set(druid::theme::UI_FONT, self.ui_font.clone());
+        env.set(druid::theme::UI_FONT_BOLD, self.ui_font_bold.clone());
+        env.set(druid::theme::UI_FONT_ITALIC, self.ui_font_italic.clone());
     }
 }
 
@@ -519,28 +633,3 @@ impl Palette {
         }
     }
 }
-
-//.adding(PROGRESS_BAR_RADIUS, 4.)
-//.adding(BUTTON_BORDER_RADIUS, 4.)
-//.adding(BUTTON_BORDER_WIDTH, 2.)
-//.adding(TEXT_SIZE_NORMAL, 15.0)
-//.adding(TEXT_SIZE_LARGE, 24.0)
-//.adding(BASIC_WIDGET_HEIGHT, 18.0)
-//.adding(WIDE_WIDGET_WIDTH, 100.)
-//.adding(BORDERED_WIDGET_HEIGHT, 24.0)
-//.adding(TEXTBOX_BORDER_RADIUS, 2.)
-//.adding(TEXTBOX_BORDER_WIDTH, 1.)
-//.adding(TEXTBOX_INSETS, Insets::new(4.0, 4.0, 4.0, 4.0))
-//.adding(SCROLLBAR_MAX_OPACITY, 0.7)
-//.adding(SCROLLBAR_FADE_DELAY, 1500u64)
-//.adding(SCROLLBAR_WIDTH, 8.)
-//.adding(SCROLLBAR_PAD, 2.)
-//.adding(SCROLLBAR_MIN_SIZE, 45.)
-//.adding(SCROLLBAR_RADIUS, 5.)
-//.adding(SCROLLBAR_EDGE_WIDTH, 1.)
-//.adding(WIDGET_PADDING_VERTICAL, 10.0)
-//.adding(WIDGET_PADDING_HORIZONTAL, 8.0)
-//.adding(WIDGET_CONTROL_COMPONENT_PADDING, 4.0)
-//.adding(UI_FONT, FontDescriptor::new(FontFamily::SYSTEM_UI).with_size(15.0))
-//.adding(UI_FONT_BOLD, FontDescriptor::new(FontFamily::SYSTEM_UI).with_weight(FontWeight::BOLD).with_size(15.0))
-//.adding(UI_FONT_ITALIC, FontDescriptor::new(FontFamily::SYSTEM_UI).with_style(FontStyle::Italic).with_size(15.0))
