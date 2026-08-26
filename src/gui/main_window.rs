@@ -324,22 +324,31 @@ pub(crate) fn calculate_window_position(
 }
 
 fn create_browser_label() -> impl Widget<((bool, UISettings), UIBrowser)> {
-    let browser_label = Label::dynamic(
-        |((incognito_mode, _), item): &((bool, UISettings), UIBrowser), _env| {
-            let mut name = item.browser_name.clone();
-            if item.supports_incognito && *incognito_mode {
-                name += " 👓";
-            }
-            name
-        },
-    )
+    let browser_label = Label::dynamic(|((_, _), item): &((bool, UISettings), UIBrowser), _env| {
+        item.browser_name.clone()
+    })
     .with_font(MainWindowTheme::ENV_BROWSER_LABEL_FONT_FAMILY)
     .with_text_size(MainWindowTheme::ENV_BROWSER_LABEL_SIZE)
     .with_line_break_mode(LineBreaking::Clip)
     .with_text_alignment(TextAlignment::Start)
     .with_text_color(MainWindowTheme::ENV_BROWSER_LABEL_COLOR);
 
-    browser_label
+    // fixed size so that fonts which lack the emoji don't mess up the text label size
+    let incognito_indicator = Either::new(
+        |((incognito_mode, _), item): &((bool, UISettings), UIBrowser), _env| {
+            item.supports_incognito && *incognito_mode
+        },
+        Label::new("👓")
+            .with_text_size(MainWindowTheme::ENV_BROWSER_LABEL_SIZE)
+            .with_text_color(MainWindowTheme::ENV_BROWSER_LABEL_COLOR)
+            .center()
+            .fix_size(16.0, 16.0),
+        Label::new("").fix_size(16.0, 16.0),
+    );
+
+    Flex::row()
+        .with_child(browser_label)
+        .with_child(incognito_indicator)
 }
 
 fn create_browser(
