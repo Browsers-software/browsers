@@ -55,7 +55,7 @@ naive-cityhash = "0.2.0"
 lazy_static = "1.5.0"
 
 # Dark-light system theme detection
-dark-light = "2.0.0"
+dark-light = "3.0.0"
 
 # macOS Core Foundation bindings
 # small selection of Core Foundation libs I happen to need
