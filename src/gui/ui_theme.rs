@@ -113,16 +113,16 @@ fn build_theme(palette: &Palette) -> Theme {
             window_background_color: palette.background,
             window_border_color: palette.stroke,
             item_background_color_hover: palette.highlight,
-            browser_label_font_family: FontFamily::SYSTEM_UI,
-            browser_label_size: 12.0,
+            browser_label_font_family: palette.font_family.clone(),
+            browser_label_size: palette.browser_label_size,
             browser_label_color: palette.label,
             browser_label_color_hover: palette.label,
-            profile_label_font_family: FontFamily::SYSTEM_UI,
-            profile_label_size: 11.0,
+            profile_label_font_family: palette.font_family.clone(),
+            profile_label_size: palette.profile_label_size,
             profile_label_color: palette.secondary_label,
             profile_label_color_hover: palette.label,
-            url_label_font_family: FontFamily::SYSTEM_UI,
-            url_label_size: 12.0,
+            url_label_font_family: palette.font_family.clone(),
+            url_label_size: palette.url_label_size,
             url_label_color: palette.muted_label,
             hotkey_background_color: palette.secondary_background,
             hotkey_background_color_hover: palette.secondary_background,
@@ -511,6 +511,10 @@ struct Palette {
     button_light: Color,
     cursor: Color,
     about_background: Color,
+    font_family: FontFamily,
+    browser_label_size: f64,
+    profile_label_size: f64,
+    url_label_size: f64,
 }
 
 impl Palette {
@@ -535,6 +539,10 @@ impl Palette {
             button_light: Color::rgb8(0x21, 0x21, 0x21),
             cursor: Color::WHITE,
             about_background: Color::rgb8(27, 32, 32),
+            font_family: FontFamily::SYSTEM_UI,
+            browser_label_size: 12.0,
+            profile_label_size: 11.0,
+            url_label_size: 12.0,
         }
     }
 
@@ -559,6 +567,10 @@ impl Palette {
             button_light: Color::rgb8(150, 150, 150),
             cursor: Color::BLACK,
             about_background: Color::rgb8(236, 236, 236),
+            font_family: FontFamily::SYSTEM_UI,
+            browser_label_size: 12.0,
+            profile_label_size: 11.0,
+            url_label_size: 12.0,
         }
     }
 
@@ -587,6 +599,16 @@ impl Palette {
             button_light: parse_color(&custom.button_light, fallback.button_light),
             cursor: parse_color(&custom.cursor, fallback.cursor),
             about_background: parse_color(&custom.about_background, fallback.about_background),
+            font_family: parse_font_family(&custom.font_family),
+            browser_label_size: parse_text_size(
+                custom.browser_label_size,
+                fallback.browser_label_size,
+            ),
+            profile_label_size: parse_text_size(
+                custom.profile_label_size,
+                fallback.profile_label_size,
+            ),
+            url_label_size: parse_text_size(custom.url_label_size, fallback.url_label_size),
         }
     }
 }
@@ -596,4 +618,23 @@ fn parse_color(hex: &str, fallback: Color) -> Color {
         warn!("invalid custom palette color '{}': {:?}", hex, error);
         fallback
     })
+}
+
+fn parse_font_family(name: &str) -> FontFamily {
+    match name.trim().to_lowercase().as_str() {
+        "system-ui" | "" => FontFamily::SYSTEM_UI,
+        "serif" => FontFamily::SERIF,
+        "sans-serif" => FontFamily::SANS_SERIF,
+        "monospace" => FontFamily::MONOSPACE,
+        _ => FontFamily::new_unchecked(name.trim()),
+    }
+}
+
+fn parse_text_size(size: f64, fallback: f64) -> f64 {
+    if size.is_finite() && size > 0.0 {
+        size
+    } else {
+        warn!("invalid custom palette text size '{}'", size);
+        fallback
+    }
 }
