@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
 
+### Added
+
+- Support custom appearance. Thanks to @devnullvoid for contribution #341
+
 ### Fixed
 
 - Fix unfocusing focused item when moving mouse away. Thanks to @devnullvoid for contribution #341
