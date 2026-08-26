@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use serde_json::{Map, Value};
 use tracing::{debug, info};
 
-use crate::{paths, utils, InstalledBrowserProfile};
+use crate::{InstalledBrowserProfile, paths, utils};
 
 pub fn find_chromium_profiles(
     chromium_user_dir: &Path,
@@ -93,8 +93,19 @@ impl ChromeInfoCacheMap {
         let v: Value = serde_json::from_reader(reader).unwrap();
         let profiles = &v["profile"];
         let info_cache = &profiles["info_cache"];
-        let info_cache_map = info_cache.as_object().unwrap();
-        return info_cache_map.to_owned();
+        // A freshly installed but never-launched browser can have a `Local State`
+        // file without a populated `profile.info_cache` yet - treat that as "no
+        // profiles" instead of panicking (see issue #380).
+        match info_cache.as_object() {
+            Some(info_cache_map) => info_cache_map.to_owned(),
+            None => {
+                info!(
+                    "No profile.info_cache found in {}, treating as no profiles",
+                    local_state_file_path.display()
+                );
+                Map::new()
+            }
+        }
     }
 
     pub fn parse_chrome_local_state_profiles(self) -> Vec<ChromeProfilePreferences> {
