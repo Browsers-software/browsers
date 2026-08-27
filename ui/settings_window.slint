@@ -1,0 +1,434 @@
+import { LineEdit, Switch, ScrollView, Palette, ComboBox, Button, RadioGroup } from "std-widgets.slint";
+import { Card, ThemeChoice } from "common.slint";
+import { BrowserItem, RestorableProfile } from "main_window.slint";
+import { DirEntry } from "about_window.slint";
+
+export enum SettingsTab { general, appearance, rules, advanced }
+
+export struct SettingsRule {
+    index: int, // -1 means "default opener" row
+    url-pattern: string,
+    opener-id: string,
+    opener-label: string,
+    // index into profile-picker-options / (offset by one) browsers: 0 is the synthetic "List of
+    // Apps" entry, N+1 is browsers[N]. Rust computes this alongside opener-label so ProfilePicker
+    // can drive the ComboBox by position instead of matching on opener-label's text.
+    opener-index: int,
+    incognito: bool,
+    show-incognito: bool,
+}
+
+component ProfilePicker inherits HorizontalLayout {
+    in property <[BrowserItem]> browsers;
+    // "List of Apps" followed by one entry per browser, same order as browsers - shared across
+    // every row's ComboBox since the choices themselves don't vary per rule, only the selection.
+    in property <[string]> profile-picker-options;
+    in property <SettingsRule> rule;
+    spacing: 6px;
+    // without this, the default stretch alignment redistributes space between the ComboBox and
+    // the incognito checkbox below whenever the checkbox appears/disappears (depends on which
+    // browser is picked), which shifts the dropdown sideways.
+    // start just packs everything to its natural size instead, so the dropdown stays put either
+    // way
+    alignment: start;
+
+    callback profile-changed(string);
+    callback incognito-changed(bool);
+
+    Text {
+        text: rule.opener-id == "" ? "Show" : "Open in";
+        font-size: 12px;
+        vertical-alignment: center;
+    }
+
+    picker := ComboBox {
+        width: 220px;
+        model: root.profile-picker-options;
+        current-index: root.rule.opener-index;
+        selected(value) => {
+            // by position, not by matching value against a browser's name - two profiles could
+            // share a display name, and the model/browsers arrays are built in lockstep anyway
+            root.profile-changed(self.current-index == 0 ? "" : root.browsers[self.current-index - 1].unique-id);
+        }
+    }
+
+    if rule.show-incognito: TouchArea {
+        clicked => { root.incognito-changed(!rule.incognito); }
+        HorizontalLayout {
+            spacing: 4px;
+            Rectangle {
+                width: 12px;
+                height: 12px;
+                border-width: 1px;
+                border-color: Palette.border;
+                background: rule.incognito ? Palette.accent-background : transparent;
+            }
+            Text {
+                text: "In Incognito";
+                font-size: 12px;
+            }
+        }
+    }
+}
+
+component GeneralTab inherits VerticalLayout {
+    in property <bool> show-hotkeys;
+    in property <bool> quit-on-lost-focus;
+    in property <bool> show-quit-on-lost-focus;
+    in property <bool> unwrap-urls;
+    in property <[RestorableProfile]> restorable-app-profiles;
+
+    callback show-hotkeys-changed(bool);
+    callback quit-on-lost-focus-changed(bool);
+    callback unwrap-urls-changed(bool);
+    callback restore-profile(string);
+
+    alignment: start;
+    spacing: 10px;
+
+    HorizontalLayout {
+        Text { text: "Show hotkeys"; font-size: 13px; vertical-alignment: center; }
+        Rectangle { horizontal-stretch: 1; }
+        Switch { checked: root.show-hotkeys; toggled => { root.show-hotkeys-changed(self.checked); } }
+    }
+
+    if show-quit-on-lost-focus: HorizontalLayout {
+        Text { text: "Quit when focus is lost"; font-size: 13px; vertical-alignment: center; }
+        Rectangle { horizontal-stretch: 1; }
+        Switch { checked: root.quit-on-lost-focus; toggled => { root.quit-on-lost-focus-changed(self.checked); } }
+    }
+
+    HorizontalLayout {
+        Text { text: "Unwrap URLs"; font-size: 13px; vertical-alignment: center; }
+        Rectangle { horizontal-stretch: 1; }
+        Switch { checked: root.unwrap-urls; toggled => { root.unwrap-urls-changed(self.checked); } }
+    }
+
+    Text { text: "Applications and Profiles"; font-size: 13px; }
+
+    // explicit width/height here (matches the Button below) - ContextMenuArea doesn't forward its
+    // visual content's size to the layout it sits in, so without this the enclosing
+    // VerticalLayout reserved zero height for this row and the "Restore App..." button (still
+    // rendered at 130x26) just overlapped the hint text below it instead of pushing it down
+    ram := ContextMenuArea {
+        width: 130px;
+        height: 26px;
+        Menu {
+            if root.restorable-app-profiles.length == 0: MenuItem { title: "No hidden apps or profiles"; enabled: false; }
+            for p[i] in root.restorable-app-profiles: MenuItem {
+                title: p.full-name;
+                activated => { root.restore-profile(p.unique-id); }
+            }
+        }
+
+        Button {
+            width: 130px;
+            height: 26px;
+            text: "Restore App...";
+            // Button doesn't expose a mouse-x/mouse-y like TouchArea does, so just anchor the
+            // menu under the button's bottom-left corner instead of the click position
+            clicked => { ram.show({x: 0px, y: self.height}); }
+        }
+    }
+
+    Text {
+        text: "To hide and move applications/profiles just right-click on the application in the main dialog";
+        font-size: 11px;
+        color: Palette.foreground.transparentize(0.4);
+        wrap: word-wrap;
+    }
+}
+
+component AppearanceTab inherits VerticalLayout {
+    in property <ThemeChoice> theme;
+
+    callback theme-changed(ThemeChoice);
+
+    alignment: start;
+    spacing: 12px;
+
+    RadioGroup {
+        title: "Theme";
+        RadioButton { text: "Match System"; checked: root.theme == ThemeChoice.auto; }
+        RadioButton { text: "Light"; checked: root.theme == ThemeChoice.light; }
+        RadioButton { text: "Dark"; checked: root.theme == ThemeChoice.dark; }
+        // matching on the picked label rather than a two-way `checked` binding per button - Rust
+        // re-echoes root.theme right back after every change anyway (see save_and_refresh in
+        // settings_window.rs), so the one-way `checked:` bindings above staying in sync is enough
+        selected(value) => {
+            if (value == "Match System") {
+                root.theme-changed(ThemeChoice.auto);
+            } else if (value == "Light") {
+                root.theme-changed(ThemeChoice.light);
+            } else {
+                root.theme-changed(ThemeChoice.dark);
+            }
+        }
+    }
+}
+
+component RuleCard inherits Card {
+    in property <SettingsRule> rule;
+    in property <[BrowserItem]> browsers;
+    in property <[string]> profile-picker-options;
+    callback url-changed(int, string);
+    callback profile-changed(int, string);
+    callback incognito-changed(int, bool);
+    callback remove(int);
+
+    HorizontalLayout {
+        padding: 10px;
+        spacing: 10px;
+
+        VerticalLayout {
+            spacing: 6px;
+            HorizontalLayout {
+                spacing: 6px;
+                Text { text: "If URL matches"; font-size: 12px; vertical-alignment: center; }
+                LineEdit {
+                    width: 300px;
+                    text: rule.url-pattern;
+                    placeholder-text: "https://";
+                    edited(t) => { root.url-changed(rule.index, t); }
+                }
+            }
+            ProfilePicker {
+                rule: rule;
+                browsers: browsers;
+                profile-picker-options: profile-picker-options;
+                profile-changed(id) => { root.profile-changed(rule.index, id); }
+                incognito-changed(v) => { root.incognito-changed(rule.index, v); }
+            }
+        }
+        Rectangle { horizontal-stretch: 1; }
+        TouchArea {
+            width: 28px;
+            height: 28px;
+            clicked => { root.remove(rule.index); }
+            Text { text: "➖"; font-size: 12px; horizontal-alignment: center; vertical-alignment: center; }
+        }
+    }
+}
+
+component RulesTab inherits VerticalLayout {
+    in property <[SettingsRule]> rules;
+    in property <SettingsRule> default-rule;
+    in property <[BrowserItem]> browsers;
+    in property <[string]> profile-picker-options;
+
+    callback add-rule();
+    callback remove-rule(int);
+    callback url-changed(int, string);
+    callback profile-changed(int, string);
+    callback incognito-changed(int, bool);
+
+    // no alignment here on purpose (leaving it at the default stretch) - it used to be set to
+    // start, which pinned every child, including the ScrollView below, to its minimum/preferred
+    // size instead of letting stretch hand out the leftover space, so the rule list never
+    // actually grew to fill the tab.
+    // same bug as the hotkey badges in main_window.slint's BrowserRow, just a different symptom.
+    spacing: 8px;
+
+    Card {
+        HorizontalLayout {
+            padding: 10px;
+            VerticalLayout {
+                Text { text: "If no rules match"; font-size: 12px; }
+                ProfilePicker {
+                    rule: root.default-rule;
+                    browsers: root.browsers;
+                    profile-picker-options: root.profile-picker-options;
+                    profile-changed(id) => { root.profile-changed(-1, id); }
+                    incognito-changed(v) => { root.incognito-changed(-1, v); }
+                }
+            }
+        }
+    }
+
+    ScrollView {
+        vertical-stretch: 1;
+        VerticalLayout {
+            alignment: start;
+            spacing: 6px;
+            for rule[i] in root.rules: RuleCard {
+                rule: rule;
+                browsers: root.browsers;
+                profile-picker-options: root.profile-picker-options;
+                url-changed(idx, t) => { root.url-changed(idx, t); }
+                profile-changed(idx, id) => { root.profile-changed(idx, id); }
+                incognito-changed(idx, v) => { root.incognito-changed(idx, v); }
+                remove(idx) => { root.remove-rule(idx); }
+            }
+
+            Text {
+                text: "URL matching examples:\n • github.com/Browsers-software/** starts with \"github.com/Browsers-software/\"\n • github.com/**/end starts with \"github.com/\" and ends with \"/end\"\n • github.com/*/end starts with \"github.com/\" and ends with \"/end\" but can have\n   only up to one path item in between\n\nSee https://github.com/Browsers-software/browsers/wiki/Rules for all the details.";
+                font-size: 11px;
+                color: Palette.foreground.transparentize(0.4);
+                wrap: word-wrap;
+            }
+        }
+    }
+
+    HorizontalLayout {
+        alignment: end;
+        Button {
+            text: "Add Rule";
+            clicked => { root.add-rule(); }
+        }
+    }
+}
+
+component AdvancedTab inherits VerticalLayout {
+    in property <[DirEntry]> directories;
+    callback set-default();
+    callback refresh();
+
+    alignment: start;
+    spacing: 10px;
+
+    HorizontalLayout {
+        alignment: start;
+        Button {
+            text: "Set Browsers as a Default Browser";
+            clicked => { root.set-default(); }
+        }
+    }
+    HorizontalLayout {
+        alignment: start;
+        Button {
+            text: "Refresh Installed Applications";
+            clicked => { root.refresh(); }
+        }
+    }
+
+    Text { text: "Directories"; font-size: 13px; }
+    HorizontalLayout {
+        spacing: 6px;
+        VerticalLayout {
+            alignment: start;
+            for d in root.directories: Text { text: d.label; font-size: 11px; horizontal-alignment: right; }
+        }
+        VerticalLayout {
+            alignment: start;
+            for d in root.directories: TextInput { text: d.path; font-size: 11px; read-only: true; }
+        }
+    }
+}
+
+export component SettingsWindow inherits Window {
+    title: "Settings";
+    // tried preferred-width/preferred-height here first, but they don't actually take effect -
+    // the shown size just ends up being whatever the currently-visible tab's content computes to
+    // (General's, since it's the default tab), so Rules' wider content (a 300px LineEdit plus its
+    // row) never got the room it needed.
+    // width/height are a hard size Slint always honors, so using those instead - can't combine
+    // them with min-width/min-height though (compile error), so those had to go.
+    width: 750px;
+    height: 500px;
+
+    in-out property <SettingsTab> current-tab: SettingsTab.general;
+
+    in property <bool> show-hotkeys;
+    in property <bool> quit-on-lost-focus;
+    in property <bool> show-quit-on-lost-focus;
+    in property <bool> unwrap-urls;
+    in property <[RestorableProfile]> restorable-app-profiles;
+
+    in property <ThemeChoice> theme;
+
+    in property <[SettingsRule]> rules;
+    in property <SettingsRule> default-rule;
+    in property <[BrowserItem]> browsers;
+    in property <[string]> profile-picker-options;
+
+    in property <[DirEntry]> directories;
+
+    callback show-hotkeys-changed(bool);
+    callback quit-on-lost-focus-changed(bool);
+    callback unwrap-urls-changed(bool);
+    callback restore-profile(string);
+    callback theme-changed(ThemeChoice);
+    callback add-rule();
+    callback remove-rule(int);
+    callback rule-url-changed(int, string);
+    callback rule-profile-changed(int, string);
+    callback rule-incognito-changed(int, bool);
+    callback set-default-browser();
+    callback refresh();
+
+    Rectangle {
+        background: Palette.background;
+
+        HorizontalLayout {
+            sidebar := VerticalLayout {
+                width: 190px;
+                padding: 10px;
+                spacing: 4px;
+                alignment: start;
+
+                for t in [
+                    { tab: SettingsTab.general, label: "General" },
+                    { tab: SettingsTab.appearance, label: "Appearance" },
+                    { tab: SettingsTab.rules, label: "Rules" },
+                    { tab: SettingsTab.advanced, label: "Advanced" },
+                ]: TouchArea {
+                    height: 30px;
+                    clicked => { root.current-tab = t.tab; }
+                    Rectangle {
+                        background: root.current-tab == t.tab ? Palette.accent-background : transparent;
+                        border-radius: 5px;
+                        Text {
+                            text: t.label;
+                            font-size: 14px;
+                            x: 12px;
+                            color: root.current-tab == t.tab ? Palette.accent-foreground : Palette.foreground;
+                            vertical-alignment: center;
+                        }
+                    }
+                }
+            }
+
+            VerticalLayout {
+                padding: 10px;
+                // a VerticalLayout-based child (which every *Tab component is) doesn't stretch
+                // to fill available width when nested inside a HorizontalLayout - horizontal-
+                // stretch alone doesn't fix it, reproduced down to the simplest case of a bare
+                // HorizontalLayout wrapping a single VerticalLayout child. Computing the width
+                // explicitly sidesteps the whole stretch-across-a-perpendicular-layout quirk.
+                width: root.width - sidebar.width;
+
+                if root.current-tab == SettingsTab.general: GeneralTab {
+                    show-hotkeys: root.show-hotkeys;
+                    quit-on-lost-focus: root.quit-on-lost-focus;
+                    show-quit-on-lost-focus: root.show-quit-on-lost-focus;
+                    unwrap-urls: root.unwrap-urls;
+                    restorable-app-profiles: root.restorable-app-profiles;
+                    show-hotkeys-changed(v) => { root.show-hotkeys-changed(v); }
+                    quit-on-lost-focus-changed(v) => { root.quit-on-lost-focus-changed(v); }
+                    unwrap-urls-changed(v) => { root.unwrap-urls-changed(v); }
+                    restore-profile(id) => { root.restore-profile(id); }
+                }
+                if root.current-tab == SettingsTab.appearance: AppearanceTab {
+                    theme: root.theme;
+                    theme-changed(t) => { root.theme-changed(t); }
+                }
+                if root.current-tab == SettingsTab.rules: RulesTab {
+                    rules: root.rules;
+                    default-rule: root.default-rule;
+                    browsers: root.browsers;
+                    profile-picker-options: root.profile-picker-options;
+                    add-rule => { root.add-rule(); }
+                    remove-rule(i) => { root.remove-rule(i); }
+                    url-changed(i, t) => { root.rule-url-changed(i, t); }
+                    profile-changed(i, id) => { root.rule-profile-changed(i, id); }
+                    incognito-changed(i, v) => { root.rule-incognito-changed(i, v); }
+                }
+                if root.current-tab == SettingsTab.advanced: AdvancedTab {
+                    directories: root.directories;
+                    set-default => { root.set-default-browser(); }
+                    refresh => { root.refresh(); }
+                }
+            }
+        }
+    }
+}

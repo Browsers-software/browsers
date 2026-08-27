@@ -1,0 +1,497 @@
+import { ListView, Palette } from "std-widgets.slint";
+import { AppPalette } from "theme.slint";
+
+export struct BrowserItem {
+    image: image,
+    profile-image: image,
+    browser-name: string,
+    profile-name: string,
+    full-name: string,
+    show-incognito: bool,
+    hotkey: string,
+    show-hotkey: bool,
+    unique-id: string,
+    unique-app-id: string,
+    browser-profile-index: int,
+    filtered-index: int,
+    is-first: bool,
+    is-last: bool,
+    has-priority-ordering: bool,
+    supports-profiles: bool,
+}
+
+component BrowserRow inherits Rectangle {
+    in property <BrowserItem> item;
+    in property <bool> incognito-mode;
+    in property <bool> is-focused;
+    in property <length> icon-size: 24px;
+    in property <data-transfer> drag-data;
+
+    callback open(int);
+    callback move-profile(string, string);
+    callback hide-profile(string);
+    callback hide-app(string);
+    callback set-focused(int);
+    callback drag-state-changed(bool);
+
+    width: 100%;
+    height: 32px;
+
+    property <bool> highlighted: ta.has-hover || is-focused;
+
+    background: highlighted ? AppPalette.highlight-background-color : transparent;
+    border-radius: 5px;
+
+    drag-area := DragArea {
+        width: 100%;
+        height: 100%;
+        data: root.drag-data;
+        allow-move: true;
+        enabled: !root.item.has-priority-ordering;
+        opacity: self.dragging ? 0.4 : 1.0;
+
+        changed dragging => {
+            root.drag-state-changed(self.dragging);
+        }
+
+        ta := TouchArea {
+        clicked => { root.open(item.browser-profile-index); }
+        // TouchArea's moved callback only fires while the mouse is pressed (dragging), not on
+        // plain hover.
+        // pointer-event's Move kind fires regardless, which is what we want here - hovering alone
+        // should move focus/highlight to this row.
+        pointer-event(event) => {
+            if (event.kind == PointerEventKind.move) {
+                root.set-focused(item.filtered-index);
+            }
+        }
+    }
+
+    // declared after ta on purpose: siblings hit-test front-to-back in declaration order, so
+    // being last makes cm the frontmost one. a TouchArea grabs every press it sees regardless of
+    // button, so with cm behind ta a right-click would never reach it no matter how it's sized.
+    // being in front, cm gets first look at every press, handles the right-click/Menu-key itself,
+    // and otherwise ignores the event so it falls through to ta underneath for left-click/hover.
+    // it also still needs an explicit size - it has no visual children of its own (just a
+    // non-visual Menu), so without one it defaults to 0x0 and never receives a click at all.
+        cm := ContextMenuArea {
+        width: 100%;
+        height: 100%;
+        Menu {
+            for m in item.has-priority-ordering ? [] : [
+                { suffix: "to Top", enabled: !item.is-first, dir: "top" },
+                { suffix: "Up", enabled: !item.is-first, dir: "up" },
+                { suffix: "Down", enabled: !item.is-last, dir: "down" },
+                { suffix: "to Bottom", enabled: !item.is-last, dir: "bottom" },
+            ]: MenuItem {
+                title: "Move \{item.full-name} \{m.suffix}";
+                enabled: m.enabled;
+                activated => { root.move-profile(item.unique-id, m.dir); }
+            }
+            MenuItem {
+                title: "Hide \{item.full-name}";
+                activated => { root.hide-profile(item.unique-id); }
+            }
+            if item.supports-profiles: MenuItem {
+                title: "Hide all profiles of \{item.browser-name}";
+                activated => { root.hide-app(item.unique-app-id); }
+            }
+        }
+    }
+
+        HorizontalLayout {
+        padding-right: 15px;
+        padding-left: 4px;
+        spacing: 6px;
+        // center instead of the default stretch, so the fixed-size hotkey badge (18px tall in a
+        // 32px row) is vertically centered instead of pinned to the top.
+        // doesn't affect the icon or name/profile column since those end up the same
+        // size/position either way.
+        cross-axis-alignment: center;
+        // no alignment here on purpose - setting it to start (like it used to be) pins every
+        // child, including the stretch spacer below, to its minimum size instead of letting
+        // stretch actually distribute the leftover space.
+        // that quietly left the spacer at 0 width, so the hotkey badge sat right after the
+        // name/profile column instead of getting pushed to the row's edge, and its x position
+        // ended up tracking each row's text width instead of lining up across rows
+
+        Rectangle {
+            width: 32px;
+            height: 32px;
+            Image {
+                source: item.image;
+                width: icon-size;
+                height: icon-size;
+                image-fit: contain;
+            }
+            Image {
+                source: item.profile-image;
+                width: 16px;
+                height: 16px;
+                x: 32px - self.width - 1px;
+                y: 32px - self.height - 1px;
+                visible: item.profile-image.width > 0;
+            }
+        }
+
+        VerticalLayout {
+            alignment: center;
+            HorizontalLayout {
+                spacing: 4px;
+                Text {
+                    text: item.browser-name;
+                    font-size: AppPalette.browser-label-size;
+                    color: highlighted ? AppPalette.label-color-hover : AppPalette.label-color;
+                    overflow: elide;
+                }
+                Text {
+                    text: (item.show-incognito && incognito-mode) ? "👓" : "";
+                    font-size: AppPalette.browser-label-size;
+                    color: highlighted ? AppPalette.label-color-hover : AppPalette.label-color;
+                }
+            }
+            if item.supports-profiles: Text {
+                text: item.profile-name;
+                font-size: AppPalette.profile-label-size;
+                color: highlighted ? AppPalette.secondary-label-color-hover : AppPalette.secondary-label-color;
+                overflow: elide;
+            }
+        }
+
+        Rectangle { horizontal-stretch: 1; }
+
+        if item.show-hotkey: Rectangle {
+            width: 18px;
+            height: 18px;
+            border-radius: 5px;
+            border-width: 1px;
+            border-color: AppPalette.secondary-stroke-color;
+            background: highlighted ? AppPalette.hotkey-background-color-hover : AppPalette.secondary-background-color;
+            Text {
+                text: item.hotkey;
+                font-size: 10px;
+                color: highlighted ? AppPalette.hotkey-text-color-hover : AppPalette.muted-label-color;
+            }
+        }
+        }
+    }
+}
+
+export struct RestorableProfile {
+    unique-id: string,
+    full-name: string,
+}
+
+export component MainWindow inherits Window {
+    no-frame: true;
+    background: transparent;
+    always-on-top: true;
+    // borderless windows get an invisible resize-hit-region near the edges by default (winit),
+    // which was showing a resize cursor right over the "⋮" options button in the corner - this
+    // popup is never meant to be resizable anyway (Rust sizes it based on content), so just turn
+    // the hit-region off
+    resize-border-width: 0px;
+    // winit derives its own "is this window resizable" purely from min-size < max-size, and
+    // recomputes it (silently overriding Rust's one-time set_resizable(false) call) every time
+    // this window's layout constraints change - which happens right after launch once the
+    // browser list loads and the window resizes to fit it. Pinning min/max here keeps that
+    // recompute permanently landing on "not resizable" instead of racing Rust's single early
+    // call, which is what let the OS resize cursor show up over the window edges when the
+    // cursor happened to be there right as the constraints flipped back.
+    // these mirror the size Rust already computes and passes to window().set_size() (see
+    // reposition-main-window/resize-main-window in app.rs) - binding straight to root.width/
+    // root.height instead would be circular (width's own layout info would depend on itself),
+    // which slint-viewer flags as a binding-loop warning that risks a runtime panic.
+    in property <length> pinned-width: 300px;
+    in property <length> pinned-height: 300px;
+    min-width: pinned-width;
+    max-width: pinned-width;
+    min-height: pinned-height;
+    max-height: pinned-height;
+
+    in property <[BrowserItem]> browsers;
+    in property <[RestorableProfile]> restorable-app-profiles;
+    in property <string> url-text;
+    in property <bool> show-set-as-default;
+    in property <length> icon-size: 24px;
+    in-out property <bool> incognito-mode: false;
+    in-out property <int> focused-index: 0;
+    property <bool> browser-drag-active: false;
+    property <length> delete-drop-area-height: 48px;
+
+    callback open-browser(int);
+    callback activate-focused();
+    callback open-hotkey(int);
+    callback move-profile(string, string);
+    pure callback make-browser-drag-data(string, int) -> data-transfer;
+    pure callback can-drop-browser(DropEvent, int) -> DragAction;
+    callback browser-dropped(DropEvent, int);
+    callback browser-delete-dropped(DropEvent);
+    callback hide-profile(string);
+    callback hide-app(string);
+    callback restore-profile(string);
+    callback refresh();
+    callback set-browsers-default();
+    callback show-settings();
+    callback show-about();
+    callback copy-link();
+    callback quit();
+    callback grab-focus();
+
+    function ensure-focused-visible() {
+        if (root.browsers.length > 0) {
+            let row-height = 32px;
+            let row-top = root.focused-index * row-height;
+            let row-bottom = row-top + row-height;
+            let visible-top = -browser-list.content-y;
+            let visible-bottom = visible-top + browser-list.visible-height;
+
+            if (row-top < visible-top) {
+                browser-list.content-y = -row-top;
+            } else if (row-bottom > visible-bottom) {
+                browser-list.content-y = browser-list.visible-height - row-bottom;
+            }
+        }
+    }
+
+    grab-focus => { fs.focus(); }
+
+    VerticalLayout {
+        width: 100%;
+        height: root.pinned-height;
+        spacing: 0px;
+
+        dialog := Rectangle {
+            width: 100%;
+            height: root.pinned-height - root.delete-drop-area-height;
+            background: AppPalette.background-color;
+            border-color: AppPalette.stroke-color;
+            border-width: 1px;
+            border-radius: 7px;
+
+        fs := FocusScope {
+            key-pressed(event) => {
+                if (event.text == Key.Escape) {
+                    root.quit();
+                    return accept;
+                }
+                if (event.text == Key.Return || event.text == " ") {
+                    root.activate-focused();
+                    return accept;
+                }
+                if (event.text == Key.Shift) {
+                    root.incognito-mode = true;
+                    return accept;
+                }
+                if (event.text == Key.UpArrow) {
+                    if (root.browsers.length > 0) {
+                        root.focused-index = max(0, root.focused-index - 1);
+                        root.ensure-focused-visible();
+                    }
+                    return accept;
+                }
+                if (event.text == Key.DownArrow) {
+                    if (root.browsers.length > 0) {
+                        root.focused-index = min(root.browsers.length - 1, root.focused-index + 1);
+                        root.ensure-focused-visible();
+                    }
+                    return accept;
+                }
+                if (event.modifiers.control || event.modifiers.meta) {
+                    if (event.text == "c") { root.copy-link(); return accept; }
+                    if (event.text == ",") { root.show-settings(); return accept; }
+                }
+                return reject;
+            }
+            key-released(event) => {
+                if (event.text == Key.Shift) {
+                    root.incognito-mode = false;
+                    return accept;
+                }
+                return reject;
+            }
+
+            KeyBinding { keys: @keys("1"); activated => { root.open-hotkey(0); } }
+            KeyBinding { keys: @keys("2"); activated => { root.open-hotkey(1); } }
+            KeyBinding { keys: @keys("3"); activated => { root.open-hotkey(2); } }
+            KeyBinding { keys: @keys("4"); activated => { root.open-hotkey(3); } }
+            KeyBinding { keys: @keys("5"); activated => { root.open-hotkey(4); } }
+            KeyBinding { keys: @keys("6"); activated => { root.open-hotkey(5); } }
+            KeyBinding { keys: @keys("7"); activated => { root.open-hotkey(6); } }
+            KeyBinding { keys: @keys("8"); activated => { root.open-hotkey(7); } }
+            KeyBinding { keys: @keys("9"); activated => { root.open-hotkey(8); } }
+
+            VerticalLayout {
+                padding: 5px;
+                spacing: 5px;
+
+                browser-list-container := Rectangle {
+                    vertical-stretch: 1;
+                    clip: true;
+
+                    property <length> row-height: 32px;
+                    property <length> drag-y;
+                    property <length> drag-content-y: self.drag-y - browser-list.content-y;
+                    property <int> drop-index: clamp(
+                        floor((self.drag-content-y - self.row-height / 2) / self.row-height) + 1,
+                        0,
+                        root.browsers.length
+                    );
+
+                    browser-drop-area := DropArea {
+                        width: 100%;
+                        height: 100%;
+
+                        can-drop(event) => {
+                            browser-list-container.drag-y = event.position.y;
+                            return root.can-drop-browser(event, browser-list-container.drop-index);
+                        }
+
+                        dropped(event) => {
+                            root.browser-dropped(event, browser-list-container.drop-index);
+                            return event.proposed-action;
+                        }
+
+                        browser-list := ListView {
+                            for item[idx] in root.browsers: BrowserRow {
+                                item: item;
+                                incognito-mode: root.incognito-mode;
+                                is-focused: item.filtered-index == root.focused-index;
+                                icon-size: root.icon-size;
+                                drag-data: root.make-browser-drag-data(item.unique-id, idx);
+                                open(profile-index) => { root.open-browser(profile-index); }
+                                move-profile(id, dir) => { root.move-profile(id, dir); }
+                                hide-profile(id) => { root.hide-profile(id); }
+                                hide-app(id) => { root.hide-app(id); }
+                                set-focused(i) => { root.focused-index = i; }
+                                drag-state-changed(active) => {
+                                    root.browser-drag-active = active;
+                                }
+                            }
+                        }
+
+                        if browser-drop-area.has-drag: Rectangle {
+                            width: browser-list.visible-width;
+                            height: 2px;
+                            y: browser-list-container.drop-index * browser-list-container.row-height
+                                + browser-list.content-y - self.height / 2;
+                            background: Palette.accent-background;
+                        }
+                    }
+                }
+
+                HorizontalLayout {
+                    height: 18px;
+                    urlTa := TouchArea {
+                        clicked => { root.copy-link(); }
+                        Text {
+                            text: root.url-text;
+                            font-size: AppPalette.url-label-size;
+                            color: AppPalette.muted-label-color;
+                            overflow: elide;
+                            vertical-alignment: center;
+                        }
+                    }
+                    Rectangle { horizontal-stretch: 1; }
+                    om := ContextMenuArea {
+                        Menu {
+                            MenuItem {
+                                title: "Refresh";
+                                activated => { root.refresh(); }
+                            }
+                            if root.show-set-as-default: MenuItem {
+                                title: "Make Browsers Default";
+                                activated => { root.set-browsers-default(); }
+                            }
+                            Menu {
+                                title: "Restore";
+                                if root.restorable-app-profiles.length == 0: MenuItem {
+                                    title: "No hidden apps or profiles";
+                                    enabled: false;
+                                }
+                                for p[i] in root.restorable-app-profiles: MenuItem {
+                                    title: p.full-name;
+                                    activated => { root.restore-profile(p.unique-id); }
+                                }
+                            }
+                            MenuItem {
+                                title: "Settings...";
+                                activated => { root.show-settings(); }
+                            }
+                            MenuItem {
+                                title: "About";
+                                activated => { root.show-about(); }
+                            }
+                            MenuItem {
+                                title: "Quit";
+                                activated => { root.quit(); }
+                            }
+                        }
+
+                        // keeping the visual content inside the ContextMenuArea instead of next
+                        // to it as a sibling, so .show()'s point argument and mouse-x/mouse-y
+                        // below share the same coordinate space
+                        optionsTa := TouchArea {
+                            width: 18px;
+                            height: 18px;
+                            clicked => { om.show({x: self.mouse-x, y: self.mouse-y}); }
+                            Rectangle {
+                                width: 18px;
+                                height: 18px;
+                                border-radius: 9px;
+                                background: optionsTa.has-hover ? AppPalette.highlight-background-color : transparent;
+                                Text {
+                                    text: "⋮";
+                                    font-size: 15px;
+                                    color: AppPalette.muted-label-color;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        }
+
+        delete-drop-slot := Rectangle {
+            width: 100%;
+            height: root.delete-drop-area-height;
+
+            if root.browser-drag-active: delete-drop-target := Rectangle {
+                x: 5px;
+                y: 5px;
+                width: parent.width - 10px;
+                height: parent.height - 5px;
+                border-radius: 7px;
+                border-width: 1px;
+                border-color: delete-drop-area.has-drag ? #ef4444 : #991b1b;
+                background: delete-drop-area.has-drag ? #b91c1c : #7f1d1d;
+
+                Text {
+                    text: delete-drop-area.has-drag
+                        ? "Release to hide profile"
+                        : "Drop here to hide profile";
+                    color: white;
+                    font-size: 13px;
+                    font-weight: 600;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+
+                delete-drop-area := DropArea {
+                    width: 100%;
+                    height: 100%;
+
+                    can-drop(event) => {
+                        return root.can-drop-browser(event, 0);
+                    }
+
+                    dropped(event) => {
+                        root.browser-delete-dropped(event);
+                        return event.proposed-action;
+                    }
+                }
+            }
+        }
+    }
+}

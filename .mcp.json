@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "browsers-slint-ui": {
+      "type": "http",
+      "url": "http://localhost:9315/mcp"
+    }
+  }
+}

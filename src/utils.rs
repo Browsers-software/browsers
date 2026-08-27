@@ -3,9 +3,8 @@ use std::io::BufReader;
 use std::path::Path;
 use std::{fs, u32};
 
-use druid::image::imageops::FilterType;
-use druid::image::{ImageFormat, Rgba};
-use druid::{Color, Data, Lens, image};
+use image::imageops::FilterType;
+use image::{ImageFormat, Rgba};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
@@ -88,7 +87,7 @@ impl Default for UIConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, Data, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq)]
 pub enum ConfiguredTheme {
     Auto,
     Light,

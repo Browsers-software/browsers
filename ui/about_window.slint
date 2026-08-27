@@ -1,0 +1,98 @@
+import { AboutSlint } from "std-widgets.slint";
+import { AppPalette } from "theme.slint";
+
+export struct DirEntry {
+    label: string,
+    path: string,
+}
+
+export component AboutWindow inherits Window {
+    title: " ";
+    width: 340px;
+    height: 320px;
+
+    in property <image> app-icon;
+    in property <string> version-text;
+    in property <[DirEntry]> directories;
+
+    Rectangle {
+        background: AppPalette.about-background-color;
+
+        VerticalLayout {
+            padding: 10px;
+            spacing: 10px;
+            alignment: start;
+            // centers the icon/title/version/copyright block - without this, fixed-size children
+            // like the icon default to the left instead of centering
+            cross-axis-alignment: center;
+
+            Image {
+                source: root.app-icon;
+                width: 64px;
+                height: 64px;
+            }
+
+            // TextInput with read-only instead of plain Text - Text has no built-in selection,
+            // TextInput does (drag/double-click to select, Cmd/Ctrl+C to copy), and read-only
+            // still blocks actually editing it
+            TextInput {
+                text: "Browsers";
+                font-size: 14px;
+                font-weight: 700;
+                color: AppPalette.text-color;
+                horizontal-alignment: center;
+                read-only: true;
+            }
+
+            TextInput {
+                text: root.version-text;
+                font-size: 10px;
+                color: AppPalette.text-color;
+                horizontal-alignment: center;
+                read-only: true;
+            }
+
+            TextInput {
+                text: "© 2022-2024 Browsers.software team.";
+                font-size: 10px;
+                color: AppPalette.text-color;
+                horizontal-alignment: center;
+                read-only: true;
+            }
+
+            StyledText {
+                text: @markdown("Visit us at [https://browsers.software](https://browsers.software).");
+                default-font-size: 10px;
+                default-color: AppPalette.text-color;
+                link-color: AppPalette.accent-color;
+                link-clicked(link) => { Platform.open-url(link); }
+            }
+
+            HorizontalLayout {
+                spacing: 6px;
+                VerticalLayout {
+                    alignment: start;
+                    for d in root.directories: Text {
+                        text: d.label;
+                        font-size: 8px;
+                        horizontal-alignment: right;
+                        color: AppPalette.text-color;
+                    }
+                }
+                VerticalLayout {
+                    alignment: start;
+                    for d in root.directories: TextInput {
+                        text: d.path;
+                        font-size: 8px;
+                        color: AppPalette.text-color;
+                        read-only: true;
+                    }
+                }
+            }
+
+            // Required attribution for Slint's Royalty-free license -
+            // see https://slint.dev/legal/licensing. Do not remove.
+            AboutSlint {}
+        }
+    }
+}

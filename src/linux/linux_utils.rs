@@ -3,8 +3,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
-use druid::image;
-use druid::image::ImageFormat;
+use image;
+use image::ImageFormat;
 use tracing::{info, warn};
 
 use freedesktop_desktop_entry::{DesktopEntry, Iter, default_paths, get_languages_from_env};
