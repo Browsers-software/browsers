@@ -1,0 +1,11 @@
+import { Palette } from "std-widgets.slint";
+
+// rounded/bordered container, used for rule cards and the default-opener card
+export component Card inherits Rectangle {
+    background: Palette.alternate-background;
+    border-color: Palette.border;
+    border-width: 1px;
+    border-radius: 10px;
+}
+
+export enum ThemeChoice { auto, light, dark }

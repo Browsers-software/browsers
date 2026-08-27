@@ -33,13 +33,23 @@ fn copy_resources() {
     let target_build_path = get_target_build_path();
     let to_dir = target_build_path.as_path();
 
-    copy_resource(to_dir, "i18n/en-US/builtin.ftl");
     copy_resource(to_dir, "icons/512x512/software.Browsers.png");
     copy_resource(to_dir, "repository/application-repository.toml");
 }
 
+fn compile_slint_files() {
+    // slint_build::compile()'s bare form leaves the widget style unset, which
+    // i-slint-compiler's TypeLoader then defaults straight to "fluent" - the "native" ->
+    // platform-appropriate-style resolution (cupertino on macOS, fluent on Windows, material on
+    // Android, qt/fluent on Linux) only kicks in when the style is literally the string "native",
+    // so it has to be requested explicitly.
+    let config = slint_build::CompilerConfiguration::new().with_style("native".into());
+    slint_build::compile_with_config("ui/app.slint", config).unwrap();
+}
+
 #[cfg(target_os = "macos")]
 fn main() {
+    compile_slint_files();
     copy_resources();
 
     const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -75,6 +85,8 @@ fn main() {
 
 #[cfg(target_os = "windows")]
 fn main() {
+    compile_slint_files();
+
     let mut res = winres::WindowsResource::new();
     res.set_icon("extra/windows/icons/browsers.ico");
     res.compile().unwrap();
@@ -85,6 +97,8 @@ fn main() {
 
 #[cfg(target_os = "linux")]
 fn main() {
+    compile_slint_files();
+
     // x86_64, aarch64, arm, i686
     // https://doc.rust-lang.org/reference/conditional-compilation.html#target_arch
     let rust_target_arch = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap();

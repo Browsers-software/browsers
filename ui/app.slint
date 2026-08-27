@@ -1,0 +1,16 @@
+// single compile root for all three top-level windows, so Rust can pull them all in with one
+// slint::include_modules!() instead of hand-including three separately-compiled files. each
+// window still gets its own independent Palette/AppPalette globals - re-exporting them here once
+// doesn't share instances across windows, see the tray example in slint-ui/slint's own repo
+// (examples/system-tray) for the same pattern.
+export { Palette } from "std-widgets.slint";
+export { AppPalette } from "theme.slint";
+
+export { MainWindow, BrowserItem, RestorableProfile } from "main_window.slint";
+export { SettingsWindow, SettingsRule } from "settings_window.slint";
+export { AboutWindow, DirEntry } from "about_window.slint";
+
+// not exported by settings_window.slint itself, but SettingsWindow uses it in a public property
+// (theme), so slint_build generates Rust bindings for it either way - this just makes it
+// reachable by name instead of relying on that
+export { ThemeChoice } from "common.slint";

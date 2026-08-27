@@ -1,0 +1,33 @@
+// central color/font palette, populated from Rust at startup and whenever the user changes theme
+// settings - see src/gui/theme.rs -> apply_palette
+export global AppPalette {
+    in-out property <color> background-color;
+    in-out property <color> label-color;
+    in-out property <color> secondary-label-color;
+    in-out property <color> muted-label-color;
+    in-out property <color> stroke-color;
+    in-out property <color> secondary-stroke-color;
+    in-out property <color> highlight-background-color;
+    in-out property <color> secondary-background-color;
+    in-out property <color> subtle-background-color;
+    in-out property <color> accent-color;
+    in-out property <color> on-accent-color;
+    in-out property <color> opaque-background-color;
+    in-out property <color> text-color;
+    in-out property <color> background-light;
+    in-out property <color> background-dark;
+    in-out property <color> button-dark;
+    in-out property <color> button-light;
+    in-out property <color> cursor-color;
+    in-out property <color> about-background-color;
+
+    in-out property <string> font-family;
+    in-out property <length> browser-label-size: 12px;
+    in-out property <length> profile-label-size: 11px;
+    in-out property <length> url-label-size: 12px;
+
+    in-out property <color> label-color-hover;
+    in-out property <color> secondary-label-color-hover;
+    in-out property <color> hotkey-background-color-hover;
+    in-out property <color> hotkey-text-color-hover;
+}

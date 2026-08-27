@@ -7,11 +7,14 @@ use std::{
     ptr::{self, null_mut},
 };
 
-use druid::image::{ImageFormat, RgbaImage};
+use image::{ImageFormat, RgbaImage};
 use tracing::{info, warn};
 
-use winapi::shared::windef::{HBITMAP, HDC, HICON, HWND};
-use winapi::um::winuser::{GetDC, GetIconInfo, ICONINFO, ReleaseDC};
+use winapi::shared::windef::{HBITMAP, HDC, HICON, HMONITOR, HWND, POINT};
+use winapi::um::winuser::{
+    GetCursorPos, GetDC, GetIconInfo, GetMonitorInfoW, ICONINFO, MONITOR_DEFAULTTONEAREST,
+    MONITORINFO, MonitorFromPoint, MonitorFromWindow, ReleaseDC,
+};
 use winapi::{
     shared::{
         minwindef::{HINSTANCE, INT, LPVOID, UINT},
@@ -22,6 +25,35 @@ use winapi::{
         wingdi::{BITMAP, BITMAPINFOHEADER, DeleteObject, GetBitmapBits, GetObjectW},
     },
 };
+
+use crate::gui::screen::{Point as ScreenPoint, Rect as ScreenRect};
+
+// cursor position + usable screen area (excludes the taskbar)
+pub fn mouse_position_and_work_area() -> (ScreenPoint, ScreenRect) {
+    unsafe {
+        let mut point: POINT = mem::zeroed();
+        GetCursorPos(&mut point);
+
+        let monitor: HMONITOR = MonitorFromPoint(point, MONITOR_DEFAULTTONEAREST);
+        let mut info: MONITORINFO = mem::zeroed();
+        info.cbSize = mem::size_of::<MONITORINFO>() as u32;
+        GetMonitorInfoW(monitor, &mut info);
+
+        let screen_point = ScreenPoint {
+            x: point.x as f32,
+            y: point.y as f32,
+        };
+        let work_area = ScreenRect {
+            x0: info.rcWork.left as f32,
+            y0: info.rcWork.top as f32,
+            x1: info.rcWork.right as f32,
+            y1: info.rcWork.bottom as f32,
+        };
+
+        (screen_point, work_area)
+    }
+}
+
 use winreg::{
     RegKey,
     enums::{HKEY_CLASSES_ROOT, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE},
