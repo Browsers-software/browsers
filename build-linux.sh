@@ -6,11 +6,9 @@ set -e
 target_dir='target/universal-unknown-linux-gnu/release'
 
 build_binary() {
-  export CROSS_NO_WARNINGS=0
-
-  cross build --target x86_64-unknown-linux-gnu --release
-  cross build --target aarch64-unknown-linux-gnu --release
-  cross build --target armv7-unknown-linux-gnueabihf --release
+  cargo zigbuild --release --target x86_64-unknown-linux-gnu.2.17
+  cargo zigbuild --release --target aarch64-unknown-linux-gnu.2.17
+  cargo zigbuild --release --target armv7-unknown-linux-gnueabihf.2.17
 
   # Clean universal binary
   rm -rf "${target_dir:?}/"

@@ -3,7 +3,6 @@ Version:        €Version€
 Release:        1
 Summary:        Context menu displaying a list of apps when clicking on a web link
 License:        MIT AND Apache-2.0
-Requires:       gtk3, pango
 
 %define _rpmfilename %%{NAME}.%%{ARCH}.rpm
 %define _bindir /usr/bin

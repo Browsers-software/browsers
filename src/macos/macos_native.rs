@@ -1,15 +1,246 @@
 use objc2::AnyThread;
 use objc2::rc::Retained;
+use std::cell::RefCell;
 use std::collections::HashSet;
+use std::ffi::c_void;
 use std::ops::Deref;
 use std::path::PathBuf;
 
-use objc2_app_kit::{NSBitmapImageFileType, NSBitmapImageRep, NSWorkspace};
-use objc2_foundation::{
-    NSArray, NSBundle, NSDictionary, NSPoint, NSRect, NSSearchPathDirectory,
-    NSSearchPathDomainMask, NSSearchPathForDirectoriesInDomains, NSSize, NSString,
+use objc2::runtime::AnyObject;
+use objc2::{DefinedClass, MainThreadOnly, define_class, msg_send, sel};
+use objc2_app_kit::{
+    NSApplication, NSApplicationActivationPolicy, NSBitmapImageFileType, NSBitmapImageRep, NSEvent,
+    NSFloatingWindowLevel, NSScreen, NSView, NSWindowCollectionBehavior, NSWorkspace,
 };
-use tracing::debug;
+use objc2_foundation::{
+    MainThreadMarker, NSArray, NSBundle, NSDictionary, NSNotification, NSNotificationCenter,
+    NSObject, NSObjectProtocol, NSPoint, NSRect, NSSearchPathDirectory, NSSearchPathDomainMask,
+    NSSearchPathForDirectoriesInDomains, NSSize, NSString,
+};
+use tracing::{debug, warn};
+
+use crate::gui::screen::{Point, Rect};
+
+// cursor position + usable screen area, so the popup shows up where you clicked
+pub fn mouse_position_and_work_area() -> (Point, Rect) {
+    let mtm = MainThreadMarker::new().expect("must be called from the main thread");
+    let mouse_location = NSEvent::mouseLocation();
+    let screens = NSScreen::screens(mtm);
+
+    let primary_height = screens
+        .firstObject()
+        .map(|s| s.frame().size.height)
+        .unwrap_or(0.0);
+
+    let mut visible_frame: Option<NSRect> = None;
+    for screen in screens.iter() {
+        let frame = screen.frame();
+        let contains = mouse_location.x >= frame.origin.x
+            && mouse_location.x <= frame.origin.x + frame.size.width
+            && mouse_location.y >= frame.origin.y
+            && mouse_location.y <= frame.origin.y + frame.size.height;
+        if contains {
+            visible_frame = Some(screen.visibleFrame());
+            break;
+        }
+    }
+
+    let visible_frame = visible_frame.unwrap_or_else(|| {
+        screens
+            .firstObject()
+            .map(|s| s.visibleFrame())
+            .unwrap_or(NSRect::new(NSPoint::new(0.0, 0.0), NSSize::new(1920.0, 1080.0)))
+    });
+
+    let point = Point {
+        x: mouse_location.x as f32,
+        y: (primary_height - mouse_location.y) as f32,
+    };
+
+    let rect = Rect {
+        x0: visible_frame.origin.x as f32,
+        y0: (primary_height - (visible_frame.origin.y + visible_frame.size.height)) as f32,
+        x1: (visible_frame.origin.x + visible_frame.size.width) as f32,
+        y1: (primary_height - visible_frame.origin.y) as f32,
+    };
+
+    (point, rect)
+}
+
+// always-on-top isn't documented for macOS in Slint, so we do it natively here (see gui::app::run)
+// not setting CanJoinAllSpaces on purpose, the popup should stay on the Space it was triggered
+// from and not follow you around
+pub fn make_window_floating(ns_view_ptr: *mut c_void) {
+    unsafe {
+        let ns_view = &*(ns_view_ptr as *const NSView);
+        if let Some(window) = ns_view.window() {
+            window.setLevel(NSFloatingWindowLevel);
+            window.setCollectionBehavior(NSWindowCollectionBehavior::FullScreenAuxiliary);
+        } else {
+            warn!("could not find NSWindow for view to make it floating");
+        }
+    }
+}
+
+pub struct EventBridgeIvars {
+    resign_active: RefCell<Option<Box<dyn Fn()>>>,
+    // (sender bundle id, if known; url)
+    open_urls: RefCell<Option<Box<dyn Fn(Option<String>, String)>>>,
+}
+
+define_class!(
+    // SAFETY:
+    // - NSObject has no subclassing requirements.
+    // - EventBridge does not implement Drop.
+    #[unsafe(super(NSObject))]
+    #[thread_kind = MainThreadOnly]
+    #[ivars = EventBridgeIvars]
+    pub struct EventBridge;
+
+    unsafe impl NSObjectProtocol for EventBridge {}
+
+    impl EventBridge {
+        #[unsafe(method(handleAppResignActive:))]
+        fn handle_app_resign_active(&self, _notification: &NSNotification) {
+            if let Some(cb) = self.ivars().resign_active.borrow().as_ref() {
+                cb();
+            }
+        }
+
+        #[unsafe(method(handleGetURLEvent:withReplyEvent:))]
+        fn handle_get_url_event(&self, event: *mut AnyObject, _reply: *mut AnyObject) {
+            // event is an NSAppleEventDescriptor*; paramDescriptorForKeyword: keyDirectObject
+            // (four-char code '----') gives the URL as a UTF-8 string param.
+            const KEY_DIRECT_OBJECT: u32 = 0x2d2d2d2d; // '----'
+            unsafe {
+                let desc: *mut AnyObject =
+                    msg_send![event, paramDescriptorForKeyword: KEY_DIRECT_OBJECT];
+                if desc.is_null() {
+                    return;
+                }
+                let ns_string: *mut NSString = msg_send![desc, stringValue];
+                if ns_string.is_null() {
+                    return;
+                }
+                let url_string = (*ns_string).to_string();
+                let sender_bundle_id = sender_bundle_id(event);
+                if let Some(cb) = self.ivars().open_urls.borrow().as_ref() {
+                    cb(sender_bundle_id, url_string);
+                }
+            }
+        }
+    }
+);
+
+// bundle id of whoever sent us this GetURL event, for source_app-based opening rules
+fn sender_bundle_id(event: *mut AnyObject) -> Option<String> {
+    const KEY_ADDRESS_ATTR: u32 = 0x61646472; // 'addr'
+    const TYPE_APPLICATION_BUNDLE_ID: u32 = 0x62756e64; // 'bund'
+    unsafe {
+        let sender: *mut AnyObject =
+            msg_send![event, attributeDescriptorForKeyword: KEY_ADDRESS_ATTR];
+        if sender.is_null() {
+            return None;
+        }
+        let coerced: *mut AnyObject =
+            msg_send![sender, coerceToDescriptorType: TYPE_APPLICATION_BUNDLE_ID];
+        if coerced.is_null() {
+            return None;
+        }
+        let ns_string: *mut NSString = msg_send![coerced, stringValue];
+        if ns_string.is_null() {
+            return None;
+        }
+        Some((*ns_string).to_string())
+    }
+}
+
+impl EventBridge {
+    fn new(mtm: MainThreadMarker) -> Retained<Self> {
+        let this = Self::alloc(mtm).set_ivars(EventBridgeIvars {
+            resign_active: RefCell::new(None),
+            open_urls: RefCell::new(None),
+        });
+        unsafe { msg_send![super(this), init] }
+    }
+
+    pub fn set_resign_active_handler(&self, f: impl Fn() + 'static) {
+        *self.ivars().resign_active.borrow_mut() = Some(Box::new(f));
+    }
+
+    // f gets (sender bundle id if we could resolve it, url)
+    pub fn set_open_urls_handler(&self, f: impl Fn(Option<String>, String) + 'static) {
+        *self.ivars().open_urls.borrow_mut() = Some(Box::new(f));
+    }
+}
+
+// hides the Dock icon via activation policy Accessory - needed alongside Info.plist's
+// LSUIElement, which only kicks in once packaged as a .app, so this also covers the raw dev binary
+pub fn hide_dock_icon() {
+    let Some(mtm) = MainThreadMarker::new() else {
+        warn!("hide_dock_icon must be called from the main thread");
+        return;
+    };
+    NSApplication::sharedApplication(mtm)
+        .setActivationPolicy(NSApplicationActivationPolicy::Accessory);
+}
+
+// native dark mode check - works before any window exists, unlike Slint's Palette.color-scheme.
+// only used for the very first paint, see theme::detect_system_is_dark for why
+pub fn is_dark_mode() -> bool {
+    let Some(mtm) = MainThreadMarker::new() else {
+        warn!("is_dark_mode must be called from the main thread");
+        return false;
+    };
+    let appearance = NSApplication::sharedApplication(mtm).effectiveAppearance();
+
+    // https://developer.apple.com/documentation/appkit/nsappearance/name-swift.struct
+    appearance.name().to_string().contains("Dark")
+}
+
+// sets up native hooks for app-resign-active (quit_on_lost_focus) and GetURL apple events.
+// doesn't touch NSApplication's delegate, so it won't step on winit's.
+//
+// call this before anything else in main() - on a cold launch via URL scheme, macOS can deliver
+// GetURL before our own setup runs, and if nothing's registered yet the event is just gone.
+// keep the returned EventBridge alive for the life of the process (only weak refs held
+// elsewhere), and wire up the real callbacks later with
+// set_resign_active_handler/set_open_urls_handler
+pub fn register_event_bridge() -> Option<Retained<EventBridge>> {
+    let mtm = match MainThreadMarker::new() {
+        Some(mtm) => mtm,
+        None => {
+            warn!("register_event_bridge must be called from the main thread");
+            return None;
+        }
+    };
+
+    let bridge = EventBridge::new(mtm);
+
+    unsafe {
+        let center = NSNotificationCenter::defaultCenter();
+        center.addObserver_selector_name_object(
+            &bridge,
+            sel!(handleAppResignActive:),
+            Some(objc2_app_kit::NSApplicationDidResignActiveNotification),
+            None,
+        );
+
+        let manager: *mut AnyObject =
+            msg_send![objc2::class!(NSAppleEventManager), sharedAppleEventManager];
+        const CLASS_INTERNET: u32 = 0x4755524c; // 'GURL'
+        const EVENT_ID_GET_URL: u32 = 0x4755524c; // 'GURL'
+        let _: () = msg_send![
+            manager,
+            setEventHandler: &*bridge,
+            andSelector: sel!(handleGetURLEvent:withReplyEvent:),
+            forEventClass: CLASS_INTERNET,
+            andEventID: EVENT_ID_GET_URL
+        ];
+    }
+
+    Some(bridge)
+}
 
 pub fn create_icon_for_app(full_path: &NSString, icon_path: &str) {
     unsafe {
