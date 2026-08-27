@@ -3,10 +3,4 @@
   extends: [
     'config:recommended',
   ],
-  ignoreDeps: [
-    // we use older version, because glib should be the same version as druid is using
-    'glib',
-    // we use older version, because gtk should be the same version as druid is using
-    'gtk',
-  ],
 }

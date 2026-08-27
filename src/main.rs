@@ -10,14 +10,39 @@ use tracing_subscriber;
 use tracing_subscriber::fmt::time::OffsetTime;
 use tracing_subscriber::fmt::writer::MakeWriterExt;
 
+use browsers::gui::app;
+use browsers::gui::app::UiHandle;
 use browsers::utils::OSAppFinder;
 use browsers::{
     MessageToMain, UrlOpenContext, generate_all_browser_profiles, get_opening_rules,
-    open_link_if_matching_rule, prepare_ui, unwrap_url, utils,
+    open_link_if_matching_rule, prepare_ui, print_visible_options, unwrap_url, utils,
 };
 use browsers::{handle_messages_to_main, paths};
 
 fn main() {
+    // prefer Skia over Slint's default femtovg on macOS - femtovg's lack of font hinting causes
+    // small-text artifacts, Skia delegates to CoreText instead (see Cargo.toml for why it's
+    // macOS-only).
+    // only kicks in if SLINT_BACKEND isn't already set, so it still doubles as an override point
+    // (e.g. SLINT_BACKEND=headless for the MCP server)
+    #[cfg(target_os = "macos")]
+    if env::var_os("SLINT_BACKEND").is_none()
+        && let Err(err) = slint::BackendSelector::new()
+            .renderer_name("skia".to_string())
+            .select()
+    {
+        eprintln!("Warning: failed to select the Skia renderer, using Slint's default: {err}");
+    }
+
+    // see hide_dock_icon's comment for why this is needed alongside Info.plist
+    #[cfg(target_os = "macos")]
+    browsers::macos::macos_native::hide_dock_icon();
+
+    // has to run before anything else - see register_event_bridge's comment.
+    // callbacks get wired up later once state exists, bridge just needs to stay alive till then
+    #[cfg(target_os = "macos")]
+    let bridge = browsers::macos::macos_native::register_event_bridge();
+
     let offset_time = OffsetTime::local_rfc_3339().expect("could not get local offset!");
 
     let logs_root_dir = paths::get_logs_root_dir();
@@ -65,6 +90,9 @@ fn main() {
 
     let show_gui = !args.contains(&"--no-gui".to_string());
     let force_reload = args.contains(&"--reload".to_string());
+    // jump straight to Settings/About, skipping the menu clicks - handy for checking UI changes
+    let open_settings = args.contains(&"--settings".to_string());
+    let open_about = args.contains(&"--about".to_string());
 
     let (main_sender, main_receiver) = mpsc::channel::<MessageToMain>();
 
@@ -97,32 +125,71 @@ fn main() {
     let is_default = utils::is_default_web_browser();
     let show_set_as_default = !is_default;
 
-    let ui = prepare_ui(
+    let prepared_ui = prepare_ui(
         &url_open_context,
-        main_sender.clone(),
         &visible_and_hidden_profiles,
         &config,
         show_set_as_default,
     );
 
     if !show_gui {
-        ui.print_visible_options();
+        print_visible_options(&prepared_ui);
         return;
     }
 
-    let launcher = ui.create_app_launcher();
-    let ui_event_sink = launcher.get_external_handle();
+    let state = app::new(
+        main_sender.clone(),
+        prepared_ui.url,
+        prepared_ui.browsers,
+        prepared_ui.hidden_browsers,
+        prepared_ui.show_set_as_default,
+        prepared_ui.ui_settings,
+    );
 
+    #[cfg(target_os = "macos")]
+    if let Some(bridge) = &bridge {
+        let resign_active_state = state.clone();
+        bridge.set_resign_active_handler(move || {
+            let quits = resign_active_state.borrow().quit_on_lost_focus_applies();
+            if quits {
+                std::process::exit(browsers::QUIT_EXIT_CODE);
+            }
+        });
+
+        let open_urls_sender = main_sender.clone();
+        let open_urls_state = state.clone();
+        bridge.set_open_urls_handler(move |sender_bundle_id, url| {
+            let unwrap_urls = open_urls_state
+                .borrow()
+                .ui_settings
+                .behavioral_settings
+                .unwrap_urls;
+            let behavioral_config = utils::BehavioralConfig { unwrap_urls };
+            let _ = open_urls_sender.send(MessageToMain::UrlPassedToMain(
+                sender_bundle_id.unwrap_or_default(),
+                url,
+                behavioral_config,
+            ));
+        });
+    }
+
+    let ui_handle = UiHandle::new(&state);
     thread::spawn(move || {
         handle_messages_to_main(
             main_receiver,
-            ui_event_sink,
+            ui_handle,
             &mut opening_rules_and_default_profile,
             &mut visible_and_hidden_profiles,
             &app_finder,
         );
     });
 
-    let initial_ui_state = ui.create_initial_ui_state();
-    launcher.launch(initial_ui_state).expect("error");
+    if open_settings {
+        browsers::gui::settings_window::open(&state);
+    }
+    if open_about {
+        browsers::gui::about_window::open(&state);
+    }
+
+    app::run(&state);
 }

@@ -10,22 +10,17 @@
 ## Setup (e.g Ubuntu)
 
     sudo apt install build-essential
-    sudo apt install libpango-1.0-0 libpango1.0-dev libgtk-3-dev
 
 ## Setup (e.g Fedora)
 
     sudo dnf groupinstall "Development Tools"
-    sudo dnf install glib2-devel pango-devel cairo-gobject-devel atk-devel gtk3-devel
 
 ## Build Natively
 
     cargo build --release
 
-## Or build via docker image
+## Or build via zigbuild
 
-    cargo install cross --git https://github.com/cross-rs/cross
-
-    cd cross
-    ./build-cross-images.sh
-    cd ..
+    brew install zig
+    cargo install --locked cargo-zigbuild
     ./build-linux.sh

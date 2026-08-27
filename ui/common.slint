@@ -1,0 +1,50 @@
+import { Palette } from "std-widgets.slint";
+
+// rounded/bordered container, used for rule cards and the default-opener card
+export component Card inherits Rectangle {
+    background: Palette.alternate-background;
+    border-color: Palette.border;
+    border-width: 1px;
+    border-radius: 10px;
+}
+
+export enum ThemeChoice { auto, light, dark }
+
+// single source of truth for the browser row height - main_window.slint's BrowserRow height,
+// its keyboard-scroll math, and its drag-drop index math all have to agree on this value
+export global Layout {
+    out property <length> browser-row-height: 32px;
+}
+
+export struct DirEntry {
+    label: string,
+    path: string,
+}
+
+// label/path two-column list - used by both about_window.slint and settings_window.slint's
+// AdvancedTab, which show the same Config/Cache/Logs/Resources directories at different sizes
+export component DirectoriesList inherits HorizontalLayout {
+    in property <[DirEntry]> directories;
+    in property <length> entry-font-size: 11px;
+    in property <color> entry-color: black;
+
+    spacing: 6px;
+    VerticalLayout {
+        alignment: start;
+        for d in root.directories: Text {
+            text: d.label;
+            font-size: root.entry-font-size;
+            horizontal-alignment: right;
+            color: root.entry-color;
+        }
+    }
+    VerticalLayout {
+        alignment: start;
+        for d in root.directories: TextInput {
+            text: d.path;
+            font-size: root.entry-font-size;
+            color: root.entry-color;
+            read-only: true;
+        }
+    }
+}

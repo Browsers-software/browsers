@@ -9,8 +9,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Profiles can now be reordered/removed via drag and drop
 - Linux: Support profiles for Brave Origin browser
 - Linux: Support profiles for Microsoft Edge browser
+- Switched UI library from Druid to Slint
 
 ## [0.7.5] - 2026-08-28
 

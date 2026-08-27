@@ -123,12 +123,6 @@ pub fn get_app_icon_path() -> PathBuf {
     return get_resources_basedir().join("icons/512x512/software.Browsers.png");
 }
 
-// This is the {base_dir} of the path {base_dir}/{locale}/{resource},
-// where '{locale}' is a valid BCP47 language tag, and {resource} is a file with .ftl extension.
-pub fn get_localizations_basedir() -> PathBuf {
-    return get_resources_basedir().join("i18n");
-}
-
 pub fn get_repository_basedir() -> PathBuf {
     return get_resources_basedir().join("repository");
 }
