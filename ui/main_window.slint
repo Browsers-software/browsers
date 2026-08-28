@@ -26,12 +26,14 @@ component BrowserRow inherits Rectangle {
     in property <bool> incognito-mode;
     in property <bool> is-focused;
     in property <length> icon-size: 24px;
+    in property <data-transfer> drag-data;
 
     callback open(int);
     callback move-profile(string, string);
     callback hide-profile(string);
     callback hide-app(string);
     callback set-focused(int);
+    callback drag-state-changed(bool);
 
     width: 100%;
     height: 32px;
@@ -39,7 +41,19 @@ component BrowserRow inherits Rectangle {
     background: (ta.has-hover || is-focused) ? AppPalette.highlight-background-color : transparent;
     border-radius: 5px;
 
-    ta := TouchArea {
+    drag-area := DragArea {
+        width: 100%;
+        height: 100%;
+        data: root.drag-data;
+        allow-move: true;
+        enabled: !root.item.has-priority-ordering;
+        opacity: self.dragging ? 0.4 : 1.0;
+
+        changed dragging => {
+            root.drag-state-changed(self.dragging);
+        }
+
+        ta := TouchArea {
         clicked => { root.open(item.browser-profile-index); }
         // TouchArea's moved callback only fires while the mouse is pressed (dragging), not on
         // plain hover.
@@ -59,7 +73,7 @@ component BrowserRow inherits Rectangle {
     // and otherwise ignores the event so it falls through to ta underneath for left-click/hover.
     // it also still needs an explicit size - it has no visual children of its own (just a
     // non-visual Menu), so without one it defaults to 0x0 and never receives a click at all.
-    cm := ContextMenuArea {
+        cm := ContextMenuArea {
         width: 100%;
         height: 100%;
         Menu {
@@ -94,7 +108,7 @@ component BrowserRow inherits Rectangle {
         }
     }
 
-    HorizontalLayout {
+        HorizontalLayout {
         padding-right: 15px;
         padding-left: 4px;
         spacing: 6px;
@@ -168,6 +182,7 @@ component BrowserRow inherits Rectangle {
                 color: (ta.has-hover || is-focused) ? AppPalette.hotkey-text-color-hover : AppPalette.muted-label-color;
             }
         }
+        }
     }
 }
 
@@ -210,11 +225,17 @@ export component MainWindow inherits Window {
     in property <length> icon-size: 24px;
     in-out property <bool> incognito-mode: false;
     in-out property <int> focused-index: 0;
+    property <bool> browser-drag-active: false;
+    property <length> delete-drop-area-height: 48px;
 
     callback open-browser(int);
     callback activate-focused();
     callback open-hotkey(int);
     callback move-profile(string, string);
+    pure callback make-browser-drag-data(string, int) -> data-transfer;
+    pure callback can-drop-browser(DropEvent, int) -> DragAction;
+    callback browser-dropped(DropEvent, int);
+    callback browser-delete-dropped(DropEvent);
     callback hide-profile(string);
     callback hide-app(string);
     callback restore-profile(string);
@@ -244,11 +265,18 @@ export component MainWindow inherits Window {
 
     grab-focus => { fs.focus(); }
 
-    Rectangle {
-        background: AppPalette.background-color;
-        border-color: AppPalette.stroke-color;
-        border-width: 1px;
-        border-radius: 7px;
+    VerticalLayout {
+        width: 100%;
+        height: root.pinned-height;
+        spacing: 0px;
+
+        dialog := Rectangle {
+            width: 100%;
+            height: root.pinned-height - root.delete-drop-area-height;
+            background: AppPalette.background-color;
+            border-color: AppPalette.stroke-color;
+            border-width: 1px;
+            border-radius: 7px;
 
         fs := FocusScope {
             key-pressed(event) => {
@@ -305,20 +333,57 @@ export component MainWindow inherits Window {
                 padding: 5px;
                 spacing: 5px;
 
-                Rectangle {
+                browser-list-container := Rectangle {
                     vertical-stretch: 1;
                     clip: true;
-                    browser-list := ListView {
-                        for item[idx] in root.browsers: BrowserRow {
-                            item: item;
-                            incognito-mode: root.incognito-mode;
-                            is-focused: item.filtered-index == root.focused-index;
-                            icon-size: root.icon-size;
-                            open(profile-index) => { root.open-browser(profile-index); }
-                            move-profile(id, dir) => { root.move-profile(id, dir); }
-                            hide-profile(id) => { root.hide-profile(id); }
-                            hide-app(id) => { root.hide-app(id); }
-                            set-focused(i) => { root.focused-index = i; }
+
+                    property <length> row-height: 32px;
+                    property <length> drag-y;
+                    property <length> drag-content-y: self.drag-y - browser-list.viewport-y;
+                    property <int> drop-index: clamp(
+                        floor((self.drag-content-y - self.row-height / 2) / self.row-height) + 1,
+                        0,
+                        root.browsers.length
+                    );
+
+                    browser-drop-area := DropArea {
+                        width: 100%;
+                        height: 100%;
+
+                        can-drop(event) => {
+                            browser-list-container.drag-y = event.position.y;
+                            return root.can-drop-browser(event, browser-list-container.drop-index);
+                        }
+
+                        dropped(event) => {
+                            root.browser-dropped(event, browser-list-container.drop-index);
+                            return event.proposed-action;
+                        }
+
+                        browser-list := ListView {
+                            for item[idx] in root.browsers: BrowserRow {
+                                item: item;
+                                incognito-mode: root.incognito-mode;
+                                is-focused: item.filtered-index == root.focused-index;
+                                icon-size: root.icon-size;
+                                drag-data: root.make-browser-drag-data(item.unique-id, idx);
+                                open(profile-index) => { root.open-browser(profile-index); }
+                                move-profile(id, dir) => { root.move-profile(id, dir); }
+                                hide-profile(id) => { root.hide-profile(id); }
+                                hide-app(id) => { root.hide-app(id); }
+                                set-focused(i) => { root.focused-index = i; }
+                                drag-state-changed(active) => {
+                                    root.browser-drag-active = active;
+                                }
+                            }
+                        }
+
+                        if browser-drop-area.has-drag: Rectangle {
+                            width: browser-list.visible-width;
+                            height: 2px;
+                            y: browser-list-container.drop-index * browser-list-container.row-height
+                                + browser-list.viewport-y - self.height / 2;
+                            background: Palette.accent-background;
                         }
                     }
                 }
@@ -390,6 +455,48 @@ export component MainWindow inherits Window {
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
+        }
+
+        delete-drop-slot := Rectangle {
+            width: 100%;
+            height: root.delete-drop-area-height;
+
+            if root.browser-drag-active: delete-drop-target := Rectangle {
+                x: 5px;
+                y: 5px;
+                width: parent.width - 10px;
+                height: parent.height - 5px;
+                border-radius: 7px;
+                border-width: 1px;
+                border-color: delete-drop-area.has-drag ? #ef4444 : #991b1b;
+                background: delete-drop-area.has-drag ? #b91c1c : #7f1d1d;
+
+                Text {
+                    text: delete-drop-area.has-drag
+                        ? "Release to hide profile"
+                        : "Drop here to hide profile";
+                    color: white;
+                    font-size: 13px;
+                    font-weight: 600;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+
+                delete-drop-area := DropArea {
+                    width: 100%;
+                    height: 100%;
+
+                    can-drop(event) => {
+                        return root.can-drop-browser(event, 0);
+                    }
+
+                    dropped(event) => {
+                        root.browser-delete-dropped(event);
+                        return event.proposed-action;
                     }
                 }
             }

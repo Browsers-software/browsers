@@ -4,7 +4,8 @@ use std::rc::Rc;
 use std::sync::mpsc::Sender;
 
 use copypasta::{ClipboardContext, ClipboardProvider};
-use slint::{ComponentHandle, ModelRc, VecModel, Weak};
+use slint::language::{DragAction, DropEvent};
+use slint::{ComponentHandle, DataTransfer, ModelRc, VecModel, Weak};
 
 use crate::MessageToMain;
 use crate::gui::app_state::{UIBrowser, UISettings, get_filtered_browsers};
@@ -31,6 +32,16 @@ pub struct AppState {
     // number of extra (non-main) windows currently open (Settings/About)
     pub extra_windows_open: u32,
 }
+
+#[derive(Clone)]
+struct BrowserDragPayload {
+    unique_id: String,
+    source_index: usize,
+}
+
+// This matches MainWindow.delete-drop-area-height. The extra transparent part of the borderless
+// window becomes a delete target while a browser row is being dragged.
+const DELETE_DROP_AREA_HEIGHT: f32 = 48.0;
 
 impl AppState {
     pub fn quit_on_lost_focus_applies(&self) -> bool {
@@ -137,17 +148,18 @@ pub fn reposition_main_window(state: &SharedState) {
     drop(st);
 
     let (mouse, work_area) = screen::mouse_position_and_work_area();
-    let size = main_window::recalculate_window_size(browser_count);
+    let dialog_size = main_window::recalculate_window_size(browser_count);
+    let size = (dialog_size.0, dialog_size.1 + DELETE_DROP_AREA_HEIGHT);
     let position = main_window::calculate_window_position(mouse, work_area, size);
 
-    win.window()
-        .set_size(slint::LogicalSize::new(size.0, size.1));
-    win.window()
-        .set_position(slint::LogicalPosition::new(position.x, position.y));
     // keeps min-size == max-size in main_window.slint, so winit's own resizable-from-constraints
     // logic never re-derives "resizable" from the window's natural (much wider) content bounds
     win.set_pinned_width(size.0);
     win.set_pinned_height(size.1);
+    win.window()
+        .set_size(slint::LogicalSize::new(size.0, size.1));
+    win.window()
+        .set_position(slint::LogicalPosition::new(position.x, position.y));
 }
 
 // resizes for the current browser count without moving it - for refreshing an already-visible
@@ -158,11 +170,12 @@ pub fn resize_main_window(state: &SharedState) {
     let win = st.main_window.clone_strong();
     drop(st);
 
-    let size = main_window::recalculate_window_size(browser_count);
-    win.window()
-        .set_size(slint::LogicalSize::new(size.0, size.1));
+    let dialog_size = main_window::recalculate_window_size(browser_count);
+    let size = (dialog_size.0, dialog_size.1 + DELETE_DROP_AREA_HEIGHT);
     win.set_pinned_width(size.0);
     win.set_pinned_height(size.1);
+    win.window()
+        .set_size(slint::LogicalSize::new(size.0, size.1));
 }
 
 fn wire_main_window(state: &SharedState) {
@@ -265,6 +278,115 @@ fn wire_main_window(state: &SharedState) {
                 .borrow()
                 .main_sender
                 .send(MessageToMain::MoveAppProfile(id.to_string(), move_to));
+        });
+    }
+    win.on_make_browser_drag_data(|id, source_index| {
+        let mut transfer = DataTransfer::default();
+        transfer.set_user_data(Rc::new(BrowserDragPayload {
+            unique_id: id.to_string(),
+            source_index: source_index.max(0) as usize,
+        }));
+        transfer
+    });
+    win.on_can_drop_browser(|event: DropEvent, _target_index| {
+        if event
+            .data
+            .user_data()
+            .and_then(|data| data.downcast::<BrowserDragPayload>().ok())
+            .is_some()
+        {
+            event.proposed_action
+        } else {
+            DragAction::None
+        }
+    });
+    {
+        let state = state.clone();
+        win.on_browser_delete_dropped(move |event: DropEvent| {
+            if event.proposed_action != DragAction::Move {
+                return;
+            }
+
+            let Some(payload) = event
+                .data
+                .user_data()
+                .and_then(|data| data.downcast::<BrowserDragPayload>().ok())
+            else {
+                return;
+            };
+
+            let _ = state
+                .borrow()
+                .main_sender
+                .send(MessageToMain::HideAppProfile(payload.unique_id.clone()));
+        });
+    }
+    {
+        let state = state.clone();
+        win.on_browser_dropped(move |event: DropEvent, target_index| {
+            if event.proposed_action != DragAction::Move {
+                return;
+            }
+
+            let Some(payload) = event
+                .data
+                .user_data()
+                .and_then(|data| data.downcast::<BrowserDragPayload>().ok())
+            else {
+                return;
+            };
+
+            let (sender, browser_count, win) = {
+                let st = state.borrow();
+                (
+                    st.main_sender.clone(),
+                    st.filtered_browsers.len(),
+                    st.main_window.clone_strong(),
+                )
+            };
+            let source_index = payload.source_index;
+            if source_index >= browser_count {
+                return;
+            }
+
+            let target_index = (target_index.max(0) as usize).min(browser_count);
+            if target_index == source_index || target_index == source_index + 1 {
+                return;
+            }
+
+            let final_index = if target_index > source_index {
+                target_index - 1
+            } else {
+                target_index
+            };
+
+            if target_index == 0 {
+                let _ = sender.send(MessageToMain::MoveAppProfile(
+                    payload.unique_id.clone(),
+                    MoveTo::TOP,
+                ));
+            } else if target_index == browser_count {
+                let _ = sender.send(MessageToMain::MoveAppProfile(
+                    payload.unique_id.clone(),
+                    MoveTo::BOTTOM,
+                ));
+            } else if target_index < source_index {
+                for _ in 0..(source_index - target_index) {
+                    let _ = sender.send(MessageToMain::MoveAppProfile(
+                        payload.unique_id.clone(),
+                        MoveTo::UP,
+                    ));
+                }
+            } else {
+                for _ in 0..(target_index - source_index - 1) {
+                    let _ = sender.send(MessageToMain::MoveAppProfile(
+                        payload.unique_id.clone(),
+                        MoveTo::DOWN,
+                    ));
+                }
+            }
+
+            win.set_focused_index(final_index as i32);
         });
     }
     {
