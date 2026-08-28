@@ -222,16 +222,34 @@ kind = "CHROMIUM"
 os = "MAC"
 
 [[apps]]
+id = "brave-origin"
+config_dir_relative = "BraveSoftware/Brave-Origin"
+kind = "CHROMIUM"
+os = "LINUX"
+
+[[apps]]
 id = "com.brave.Browser.origin.beta"
 config_dir_relative = "BraveSoftware/Brave-Origin-Beta"
 kind = "CHROMIUM"
 os = "MAC"
 
 [[apps]]
+id = "brave-origin-beta"
+config_dir_relative = "BraveSoftware/Brave-Origin-Beta"
+kind = "CHROMIUM"
+os = "LINUX"
+
+[[apps]]
 id = "com.brave.Browser.origin.nightly"
 config_dir_relative = "BraveSoftware/Brave-Origin-Nightly"
 kind = "CHROMIUM"
 os = "MAC"
+
+[[apps]]
+id = "brave-origin-nightly"
+config_dir_relative = "BraveSoftware/Brave-Origin-Nightly"
+kind = "CHROMIUM"
+os = "LINUX"
 
 [[apps]]
 id = "com.pushplaylabs.sidekick"
