@@ -76,8 +76,6 @@ pub struct UIConfig {
     pub quit_on_lost_focus: bool,
 
     pub theme: ConfiguredTheme,
-
-    pub custom_palette: CustomPalette,
 }
 
 impl Default for UIConfig {
@@ -86,7 +84,6 @@ impl Default for UIConfig {
             show_hotkeys: true,
             quit_on_lost_focus: false,
             theme: ConfiguredTheme::Auto,
-            custom_palette: CustomPalette::default(),
         }
     }
 }
@@ -96,83 +93,6 @@ pub enum ConfiguredTheme {
     Auto,
     Light,
     Dark,
-    Custom,
-}
-
-/// User-defined palette, stored as `#rrggbb`/`#rrggbbaa` hex strings (JSON friendly).
-/// Only used when `UIConfig::theme` is set to `ConfiguredTheme::Custom`.
-#[derive(Serialize, Deserialize, Debug, Clone, Data, Lens, PartialEq)]
-#[serde(default)]
-pub struct CustomPalette {
-    pub background_color: String,
-    pub label_color: String,
-    pub secondary_label_color: String,
-    pub muted_label_color: String,
-    pub stroke_color: String,
-    pub secondary_stroke_color: String,
-    pub highlight_background_color: String,
-    pub secondary_background_color: String,
-    pub subtle_background_color: String,
-    pub accent_color: String,
-    pub on_accent_color: String,
-    pub opaque_background_color: String,
-    pub text_color: String,
-    pub background_light: String,
-    pub background_dark: String,
-    pub button_dark: String,
-    pub button_light: String,
-    pub cursor_color: String,
-    pub about_background_color: String,
-    /// Font family name, or one of the generic keywords `system-ui`, `serif`,
-    /// `sans-serif`, `monospace`.
-    pub font_family: String,
-    pub browser_label_size: f64,
-    pub profile_label_size: f64,
-    pub url_label_size: f64,
-    pub label_color_hover: String,
-    pub secondary_label_color_hover: String,
-    pub hotkey_background_color_hover: String,
-    pub hotkey_text_color_hover: String,
-}
-
-impl Default for CustomPalette {
-    /// A "midnight violet" theme: near-black navy backgrounds with a vivid
-    /// purple accent, used as the starting point for a new custom palette.
-    fn default() -> Self {
-        fn hex(color: Color) -> String {
-            format!("#{:08x}", color.as_rgba_u32())
-        }
-
-        CustomPalette {
-            background_color: hex(Color::rgba(0.07, 0.07, 0.10, 0.92)),
-            label_color: hex(Color::rgb8(0xf5, 0xf5, 0xf7)),
-            secondary_label_color: hex(Color::rgb8(0xb8, 0xb8, 0xd1)),
-            muted_label_color: hex(Color::rgb8(0x8a, 0x8a, 0xa6)),
-            stroke_color: hex(Color::rgba(0.35, 0.35, 0.47, 0.9)),
-            secondary_stroke_color: hex(Color::rgba(0.27, 0.27, 0.37, 0.9)),
-            highlight_background_color: hex(Color::rgba(0.49, 0.36, 1.0, 0.25)),
-            secondary_background_color: hex(Color::rgba(0.09, 0.09, 0.13, 1.0)),
-            subtle_background_color: hex(Color::rgba(0.06, 0.06, 0.09, 0.9)),
-            accent_color: hex(Color::rgb8(0x7c, 0x5c, 0xff)),
-            on_accent_color: hex(Color::rgb8(0xf0, 0xea, 0xff)),
-            opaque_background_color: hex(Color::rgb8(0x14, 0x14, 0x1c)),
-            text_color: hex(Color::rgb8(0xec, 0xec, 0xf4)),
-            background_light: hex(Color::rgb8(0x35, 0x35, 0x42)),
-            background_dark: hex(Color::rgb8(0x22, 0x22, 0x2c)),
-            button_dark: hex(Color::rgb8(0x05, 0x05, 0x08)),
-            button_light: hex(Color::rgb8(0x1e, 0x1e, 0x28)),
-            cursor_color: hex(Color::rgb8(0x7c, 0x5c, 0xff)),
-            about_background_color: hex(Color::rgb8(0x12, 0x12, 0x18)),
-            font_family: "monospace".to_string(),
-            browser_label_size: 13.0,
-            profile_label_size: 11.5,
-            url_label_size: 12.5,
-            label_color_hover: hex(Color::rgb8(0xe6, 0xdf, 0xff)),
-            secondary_label_color_hover: hex(Color::rgb8(0xd8, 0xcf, 0xff)),
-            hotkey_background_color_hover: hex(Color::rgba(0.18, 0.14, 0.30, 1.0)),
-            hotkey_text_color_hover: hex(Color::rgb8(0xf2, 0xee, 0xff)),
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]

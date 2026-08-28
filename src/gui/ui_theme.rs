@@ -1,5 +1,5 @@
 use crate::gui::ui::{UIState, UIVisualSettings};
-use crate::utils::{ConfiguredTheme, CustomPalette};
+use crate::utils::ConfiguredTheme;
 use dark_light::Mode;
 use druid::{Color, Data, Env, FontDescriptor, FontFamily, FontStyle, FontWeight, Insets, Key};
 use serde::{Deserialize, Serialize};
@@ -45,7 +45,6 @@ fn resolve_palette(visual_settings: &UIVisualSettings) -> Palette {
         },
         ConfiguredTheme::Light => Palette::light(),
         ConfiguredTheme::Dark => Palette::dark(),
-        ConfiguredTheme::Custom => Palette::from_custom(&visual_settings.custom_palette),
     }
 }
 
@@ -583,75 +582,6 @@ impl Palette {
             secondary_label_color_hover: Color::rgb8(0, 0, 0),
             hotkey_background_color_hover: Color::rgb8(215, 215, 215),
             hotkey_text_color_hover: Color::rgb8(0, 0, 0),
-        }
-    }
-
-    fn from_custom(custom: &CustomPalette) -> Self {
-        let fallback = Palette::dark();
-        Palette {
-            background_color: parse_color(&custom.background_color, fallback.background_color),
-            label_color: parse_color(&custom.label_color, fallback.label_color),
-            secondary_label_color: parse_color(
-                &custom.secondary_label_color,
-                fallback.secondary_label_color,
-            ),
-            muted_label_color: parse_color(&custom.muted_label_color, fallback.muted_label_color),
-            stroke_color: parse_color(&custom.stroke_color, fallback.stroke_color),
-            secondary_stroke_color: parse_color(
-                &custom.secondary_stroke_color,
-                fallback.secondary_stroke_color,
-            ),
-            highlight_background_color: parse_color(
-                &custom.highlight_background_color,
-                fallback.highlight_background_color,
-            ),
-            secondary_background_color: parse_color(
-                &custom.secondary_background_color,
-                fallback.secondary_background_color,
-            ),
-            subtle_background_color: parse_color(
-                &custom.subtle_background_color,
-                fallback.subtle_background_color,
-            ),
-            accent_color: parse_color(&custom.accent_color, fallback.accent_color),
-            on_accent_color: parse_color(&custom.on_accent_color, fallback.on_accent_color),
-            opaque_background_color: parse_color(
-                &custom.opaque_background_color,
-                fallback.opaque_background_color,
-            ),
-            text_color: parse_color(&custom.text_color, fallback.text_color),
-            background_light: parse_color(&custom.background_light, fallback.background_light),
-            background_dark: parse_color(&custom.background_dark, fallback.background_dark),
-            button_dark: parse_color(&custom.button_dark, fallback.button_dark),
-            button_light: parse_color(&custom.button_light, fallback.button_light),
-            cursor_color: parse_color(&custom.cursor_color, fallback.cursor_color),
-            about_background_color: parse_color(
-                &custom.about_background_color,
-                fallback.about_background_color,
-            ),
-            font_family: parse_font_family(&custom.font_family),
-            browser_label_size: parse_text_size(
-                custom.browser_label_size,
-                fallback.browser_label_size,
-            ),
-            profile_label_size: parse_text_size(
-                custom.profile_label_size,
-                fallback.profile_label_size,
-            ),
-            url_label_size: parse_text_size(custom.url_label_size, fallback.url_label_size),
-            label_color_hover: parse_color(&custom.label_color_hover, fallback.label_color_hover),
-            secondary_label_color_hover: parse_color(
-                &custom.secondary_label_color_hover,
-                fallback.secondary_label_color_hover,
-            ),
-            hotkey_background_color_hover: parse_color(
-                &custom.hotkey_background_color_hover,
-                fallback.hotkey_background_color_hover,
-            ),
-            hotkey_text_color_hover: parse_color(
-                &custom.hotkey_text_color_hover,
-                fallback.hotkey_text_color_hover,
-            ),
         }
     }
 }

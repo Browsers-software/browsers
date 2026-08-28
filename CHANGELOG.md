@@ -8,7 +8,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-- Support custom appearance. Thanks to @devnullvoid for contribution #341
 - macOS: Support profiles for Brave Origin browser
 
 ### Fixed
