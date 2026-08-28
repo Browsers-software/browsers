@@ -68,7 +68,7 @@ objc2 = "0.6.4"
 # for mac_paths (to get unsandboxed_home_dir for mac)
 libc = "0.2.189"
 
-#[target.'cfg(target_os = "linux")'.dependencies]
+[target.'cfg(target_os = "linux")'.dependencies]
 xdg-mime = "^0.4.0"
 
 # eagerly init gtk (should be same version of gtk as druid is using)
