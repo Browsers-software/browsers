@@ -130,6 +130,8 @@ config_dir_relative = "Yandex/YandexBrowser"
 kind = "CHROMIUM"
 os = "MAC"
 
+# Microsoft Edge
+
 [[apps]]
 id = "com.microsoft.edgemac"
 config_dir_relative = "Microsoft Edge"
@@ -184,6 +186,8 @@ config_dir_relative = "Microsoft/Edge SxS/User Data"
 kind = "CHROMIUM"
 os = "WINDOWS"
 
+# Brave
+
 [[apps]]
 id = "com.brave.Browser"
 config_dir_relative = "BraveSoftware/Brave-Browser"
@@ -206,6 +210,26 @@ os = "MAC"
 [[apps]]
 id = "com.brave.Browser.nightly"
 config_dir_relative = "BraveSoftware/Brave-Browser-Nightly"
+kind = "CHROMIUM"
+os = "MAC"
+
+# Brave Origin
+
+[[apps]]
+id = "com.brave.Browser.origin"
+config_dir_relative = "BraveSoftware/Brave-Origin"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "com.brave.Browser.origin.beta"
+config_dir_relative = "BraveSoftware/Brave-Origin-Beta"
+kind = "CHROMIUM"
+os = "MAC"
+
+[[apps]]
+id = "com.brave.Browser.origin.nightly"
+config_dir_relative = "BraveSoftware/Brave-Origin-Nightly"
 kind = "CHROMIUM"
 os = "MAC"
 

@@ -2,14 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres
-to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
 
 ### Added
 
 - Support custom appearance. Thanks to @devnullvoid for contribution #341
+- macOS: Support profiles for Brave Origin browser
 
 ### Fixed
 
@@ -34,8 +34,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- Windows: Don't show same browser twice if it has an entry for user and system at the same time. Thanks to @kfatehi for
-  contribution #337
+- Windows: Don't show same browser twice if it has an entry for user and system at the same time. Thanks to @kfatehi for contribution #337
 
 ## [0.7.2] - 2025-10-04
 
