@@ -32,6 +32,11 @@ pub fn mouse_position_and_work_area() -> (Point, Rect) {
     {
         linux_mouse_position_and_work_area()
     }
+
+    #[cfg(target_arch = "wasm32")]
+    {
+        crate::wasm::wasm_utils::mouse_position_and_work_area()
+    }
 }
 
 #[cfg(target_os = "linux")]

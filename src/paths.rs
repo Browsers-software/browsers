@@ -9,6 +9,9 @@ use crate::macos::macos_utils;
 #[cfg(target_os = "windows")]
 use crate::windows::windows_utils;
 
+#[cfg(target_arch = "wasm32")]
+use crate::wasm::wasm_utils;
+
 pub fn get_cache_root_dir() -> PathBuf {
     #[cfg(target_os = "macos")]
     return macos_utils::get_this_app_cache_root_dir();
@@ -18,6 +21,9 @@ pub fn get_cache_root_dir() -> PathBuf {
 
     #[cfg(target_os = "windows")]
     return windows_utils::get_this_app_cache_root_dir();
+
+    #[cfg(target_arch = "wasm32")]
+    return wasm_utils::get_this_app_cache_root_dir();
 }
 
 pub fn get_logs_root_dir() -> PathBuf {
@@ -29,6 +35,9 @@ pub fn get_logs_root_dir() -> PathBuf {
 
     #[cfg(target_os = "windows")]
     return windows_utils::get_this_app_logs_root_dir();
+
+    #[cfg(target_arch = "wasm32")]
+    return wasm_utils::get_this_app_logs_root_dir();
 }
 
 pub fn get_repository_toml_path() -> PathBuf {
@@ -48,6 +57,9 @@ pub fn get_config_root_dir() -> PathBuf {
 
     #[cfg(target_os = "windows")]
     return windows_utils::get_this_app_config_root_dir();
+
+    #[cfg(target_arch = "wasm32")]
+    return wasm_utils::get_this_app_config_root_dir();
 }
 
 pub fn get_chrome_user_dir_root() -> PathBuf {
@@ -59,6 +71,9 @@ pub fn get_chrome_user_dir_root() -> PathBuf {
 
     #[cfg(target_os = "windows")]
     return windows_utils::get_unsandboxed_local_config_dir();
+
+    #[cfg(target_arch = "wasm32")]
+    return wasm_utils::get_unsandboxed_local_config_dir();
 }
 
 pub fn get_firefox_user_dir_root() -> PathBuf {
@@ -70,6 +85,9 @@ pub fn get_firefox_user_dir_root() -> PathBuf {
 
     #[cfg(target_os = "windows")]
     return windows_utils::get_unsandboxed_roaming_config_dir();
+
+    #[cfg(target_arch = "wasm32")]
+    return wasm_utils::get_unsandboxed_home_dir();
 }
 
 // ~/Library/Application Support/
@@ -104,6 +122,16 @@ pub fn get_user_home_for_sandboxed_app(app_id: &str) -> PathBuf {
     return PathBuf::new();
 }
 
+#[cfg(target_arch = "wasm32")]
+pub fn get_user_home_for_unsandboxed_app() -> PathBuf {
+    return PathBuf::new();
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn get_user_home_for_sandboxed_app(app_id: &str) -> PathBuf {
+    return PathBuf::new();
+}
+
 #[cfg(target_os = "macos")]
 pub fn get_snap_root() -> PathBuf {
     return PathBuf::new();
@@ -115,6 +143,11 @@ pub fn get_snap_root() -> PathBuf {
 }
 
 #[cfg(target_os = "windows")]
+pub fn get_snap_root() -> PathBuf {
+    return PathBuf::new();
+}
+
+#[cfg(target_arch = "wasm32")]
 pub fn get_snap_root() -> PathBuf {
     return PathBuf::new();
 }
@@ -142,6 +175,9 @@ pub fn get_resources_basedir() -> PathBuf {
 
     #[cfg(target_os = "windows")]
     return windows_utils::get_this_app_resources_dir();
+
+    #[cfg(target_arch = "wasm32")]
+    return wasm_utils::get_this_app_resources_dir();
 }
 
 pub fn get_runtime_dir() -> PathBuf {
@@ -153,4 +189,7 @@ pub fn get_runtime_dir() -> PathBuf {
 
     #[cfg(target_os = "windows")]
     return windows_utils::get_this_app_runtime_dir();
+
+    #[cfg(target_arch = "wasm32")]
+    return wasm_utils::get_this_app_runtime_dir();
 }

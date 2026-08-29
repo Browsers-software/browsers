@@ -554,6 +554,7 @@ name = "browsers"
 version = "0.8.0"
 dependencies = [
  "configparser",
+ "console_error_panic_hook",
  "copypasta",
  "dirs 7.0.0",
  "dunce",
@@ -580,7 +581,11 @@ dependencies = [
  "tracing",
  "tracing-appender",
  "tracing-subscriber",
+ "tracing-wasm",
  "url",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
  "winapi",
  "winreg",
  "winres",
@@ -816,6 +821,16 @@ name = "configparser"
 version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "031ad3d167622974ed636505ae4556267ed4aa2aea0464122fa6bc9698a32825"
+
+[[package]]
+name = "console_error_panic_hook"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a06aeb73f470f66dcdbf7223caeebb85984942f22f1adb2a088cf9668146bbbc"
+dependencies = [
+ "cfg-if",
+ "wasm-bindgen",
+]
 
 [[package]]
 name = "const-field-offset"
@@ -5139,6 +5154,17 @@ dependencies = [
  "time",
  "tracing-core",
  "tracing-log",
+]
+
+[[package]]
+name = "tracing-wasm"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4575c663a174420fa2d78f4108ff68f65bf2fbb7dd89f33749b6e826b3626e07"
+dependencies = [
+ "tracing",
+ "tracing-subscriber",
+ "wasm-bindgen",
 ]
 
 [[package]]
