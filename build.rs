@@ -112,6 +112,11 @@ fn main() {
     create_rpm_spec(rust_target_arch.as_str(), arch_target_dir);
 }
 
+#[cfg(target_arch = "wasm32")]
+fn main() {
+    compile_slint_files();
+}
+
 // e.g target/release/
 //  or target/aarch64-unknown-linux-gnu/release/
 fn get_target_build_path() -> PathBuf {

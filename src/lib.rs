@@ -3,8 +3,9 @@ use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::process::{Command, exit};
 use std::str::FromStr;
-use std::sync::Arc;
 use std::sync::mpsc::Receiver;
+use std::sync::{Arc, mpsc};
+use std::{env, thread};
 use tracing::{debug, info, instrument, warn};
 use url::Url;
 use url::form_urlencoded::Parse;
@@ -1105,4 +1106,16 @@ pub enum MessageToMain {
     SaveConfigDefaultOpener(Option<UIProfileAndIncognito>),
     SaveConfigUISettings(UIVisualSettings),
     SaveConfigUIBehavioralSettings(UIBehavioralSettings),
+}
+
+#[cfg(target_arch = "wasm32")]
+mod wasm;
+
+#[cfg(target_arch = "wasm32")]
+mod wasm_main;
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen::prelude::wasm_bindgen(start)]
+pub fn wasm_main() {
+    wasm_main::launch_wasm()
 }

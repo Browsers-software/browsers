@@ -733,6 +733,9 @@ impl AppIdentifier {
 
         #[cfg(target_os = "windows")]
         return Self::new_windows(app_id);
+
+        #[cfg(target_arch = "wasm32")]
+        return Self::new_linux(app_id);
     }
 
     pub fn new_mac(mac_bundle_id: &str) -> Self {
@@ -768,6 +771,9 @@ impl AppIdentifier {
 
         #[cfg(target_os = "windows")]
         return self.windows_app_id.as_str();
+
+        #[cfg(target_arch = "wasm32")]
+        return self.linux_desktop_id.as_str();
     }
 }
 
@@ -815,6 +821,9 @@ impl AppConfigDir {
 
         #[cfg(target_os = "windows")]
         return self.windows_config_dir_relative.as_path();
+
+        #[cfg(target_arch = "wasm32")]
+        return self.linux_config_dir_relative.as_path();
     }
 
     fn config_dir_absolute(&self) -> PathBuf {

@@ -14,13 +14,6 @@ build = "build.rs"
 # logging library
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["fmt", "std", "time", "local-time"] }
-tracing-appender = "0.2.5"
-
-# Official remote
-#rolling-file = "0.2.0"
-
-# Chrono-less fork, so doesn't pull in old time crate 0.1
-rolling-file = { git = "https://github.com/browsers-software/rolling-file-rs.git", branch = "browsers" }
 
 dirs = "6.0.0"
 
@@ -58,6 +51,16 @@ lazy_static = "1.5.0"
 # clipboard access (copy URL to clipboard) - keep this version matching what i-slint-backend-winit
 # wants internally, so Cargo resolves to one shared copy instead of two
 copypasta = "0.10"
+wasm-bindgen-futures = "0.4.77"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tracing-appender = "0.2.5"
+
+# Official remote
+#rolling-file = "0.2.0"
+
+# Chrono-less fork, so doesn't pull in old time crate 0.1
+rolling-file = { git = "https://github.com/browsers-software/rolling-file-rs.git", branch = "browsers" }
 
 # macOS Core Foundation bindings
 # small selection of Core Foundation libs I happen to need
@@ -128,6 +131,18 @@ static_vcruntime = "3.0.0"
 #[profile.dev]
 #lto = true
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+tracing-wasm = "0.2"
+wasm-bindgen = "0.2"
+console_error_panic_hook = "0.1"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies.web-sys]
+version = "0.3"
+features = [
+    "Window",
+    "Storage",
+]
+
 [profile.release]
 #opt-level = 'z'     # Optimize for size.
 lto = true           # Enable Link Time Optimization
@@ -150,3 +165,6 @@ image = "browsers.software/aarch64-unknown-linux-gnu-gtk:local"
 
 [package.metadata.cross.target.armv7-unknown-linux-gnueabihf]
 image = "browsers.software/armv7-unknown-linux-gnueabihf-gtk:local"
+
+[lib]
+crate-type = ["cdylib", "rlib"]

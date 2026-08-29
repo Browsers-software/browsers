@@ -3,6 +3,7 @@
 #target = "aarch64-pc-windows-msvc"
 #target = "aarch64-unknown-linux-gnu"
 #target = "aarch64-apple-darwin"
+target = "wasm32-unknown-unknown"
 
 #[target.'cfg(all(windows, target_env = "msvc"))']
 #rustflags = ["-C", "target-feature=+crt-static"]

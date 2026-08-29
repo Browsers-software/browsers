@@ -15,6 +15,9 @@ use crate::linux::linux_utils;
 use crate::macos::macos_utils;
 #[cfg(target_os = "windows")]
 use crate::windows::windows_utils;
+#[cfg(target_arch = "wasm32")]
+use crate::wasm::wasm_utils;
+
 use crate::{InstalledBrowser, SupportedAppRepository, paths};
 
 #[cfg(target_os = "linux")]
@@ -32,6 +35,11 @@ pub fn is_default_web_browser() -> bool {
     return true;
 }
 
+#[cfg(target_arch = "wasm32")]
+pub fn is_default_web_browser() -> bool {
+    return true;
+}
+
 #[cfg(target_os = "linux")]
 pub fn set_as_default_web_browser() -> bool {
     return linux_utils::set_default_web_browser();
@@ -43,6 +51,11 @@ pub fn set_as_default_web_browser() -> bool {
 }
 
 #[cfg(target_os = "windows")]
+pub fn set_as_default_web_browser() -> bool {
+    return true;
+}
+
+#[cfg(target_arch = "wasm32")]
 pub fn set_as_default_web_browser() -> bool {
     return true;
 }
@@ -215,6 +228,9 @@ pub struct OSAppFinder {
 
     #[cfg(target_os = "windows")]
     inner: windows_utils::OsHelper,
+
+    #[cfg(target_arch = "wasm32")]
+    inner: wasm_utils::OsHelper,
 }
 
 impl OSAppFinder {
@@ -236,6 +252,13 @@ impl OSAppFinder {
     pub fn new() -> Self {
         Self {
             inner: windows_utils::OsHelper::new(),
+        }
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub fn new() -> Self {
+        Self {
+            inner: wasm_utils::OsHelper::new(),
         }
     }
 
@@ -289,6 +312,7 @@ impl OSAppFinder {
         serde_json::to_writer_pretty(buffer, config).unwrap();
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn load_config(&self) -> Config {
         let config_root_dir = paths::get_config_root_dir();
         fs::create_dir_all(config_root_dir.as_path()).unwrap();
@@ -322,6 +346,22 @@ impl OSAppFinder {
         }
     }
 
+    #[cfg(target_arch = "wasm32")]
+    pub fn load_config(&self) -> Config {
+        let config = Config::default();
+        return config;
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub(crate) fn get_installed_browsers_cached(
+        &self,
+        force_reload: bool,
+    ) -> Vec<InstalledBrowser> {
+        let installed_browsers = self.get_installed_browsers();
+        return installed_browsers;
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
     pub(crate) fn get_installed_browsers_cached(
         &self,
         force_reload: bool,
