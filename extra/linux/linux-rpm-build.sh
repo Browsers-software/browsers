@@ -13,9 +13,9 @@ THIS_DIR_ABSOLUTE="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 RPM_TOP_DIR_ABSOLUTE="$THIS_DIR_ABSOLUTE/$RPM_TOP_DIR"
 
-# e.g "target/aarch64-unknown-linux-musl"
+# e.g "target/aarch64-unknown-linux-gnu"
 TARGET_PATH="$2"
-# e.g "$PROJECT_ROOT/target/aarch64-unknown-linux-musl"
+# e.g "$PROJECT_ROOT/target/aarch64-unknown-linux-gnu"
 LINUX_TARGET_DIR="$PROJECT_ROOT/$TARGET_PATH"
 
 copy_rpm_spec() {
@@ -26,7 +26,7 @@ copy_rpm_spec() {
   cp "$linux_target_dir/meta/rpm_spec/browsers.spec" "$rpm_top_dir/SPECS/browsers.spec"
 }
 
-# creates rpm file to e.g "$PROJECT_ROOT/target/aarch64-unknown-linux-musl/release/browsers_${rpm_arch}.rpm"
+# creates rpm file to e.g "$PROJECT_ROOT/target/aarch64-unknown-linux-gnu/release/browsers_${rpm_arch}.rpm"
 create_rpm() {
   local rpm_arch="$1"
   local rpm_filename="browsers.${rpm_arch}.rpm"

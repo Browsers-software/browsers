@@ -26,7 +26,7 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           file: cross/Dockerfile.linux_x86_64
           push: false
-          tags: browsers.software/x86_64-unknown-linux-musl:local
+          tags: browsers.software/x86_64-unknown-linux-gnu:local
           cache-from: type=gha,scope=x86_64
           cache-to: type=gha,scope=x86_64,mode=max
           load: true # load the created image into docker, so cross can find it
@@ -37,7 +37,7 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           file: cross/Dockerfile.linux_aarch64
           push: false
-          tags: browsers.software/aarch64-unknown-linux-musl:local
+          tags: browsers.software/aarch64-unknown-linux-gnu:local
           cache-from: type=gha,scope=aarch64
           cache-to: type=gha,scope=aarch64,mode=max
           load: true # load the created image into docker, so cross can find it
@@ -48,7 +48,7 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           file: cross/Dockerfile.linux_armv7
           push: false
-          tags: browsers.software/armv7-unknown-linux-musleabihf:local
+          tags: browsers.software/armv7-unknown-linux-gnueabihf:local
           cache-from: type=gha,scope=armv7
           cache-to: type=gha,scope=armv7,mode=max
           load: true # load the created image into docker, so cross can find it
@@ -77,13 +77,13 @@ jobs:
         run: cargo install --list --target-dir ./target/cross | grep cross || cargo install --force cross --git https://github.com/cross-rs/cross --target-dir ./target/cross
       - name: Test x86_64 binary
         run: |
-          CROSS_BUILD_OPTS="--builder ${{ steps.buildx.outputs.name }} --cache-from type=gha,scope=x86_64 --cache-to type=gha,scope=x86_64,mode=max" cross build --target x86_64-unknown-linux-musl --release
+          CROSS_BUILD_OPTS="--builder ${{ steps.buildx.outputs.name }} --cache-from type=gha,scope=x86_64 --cache-to type=gha,scope=x86_64,mode=max" cross build --target x86_64-unknown-linux-gnu --release
       - name: Test aarch64 binaries
         run: |
-          CROSS_BUILD_OPTS="--builder ${{ steps.buildx.outputs.name }} --cache-from type=gha,scope=aarch64 --cache-to type=gha,scope=aarch64,mode=max" cross build --target aarch64-unknown-linux-musl --release
+          CROSS_BUILD_OPTS="--builder ${{ steps.buildx.outputs.name }} --cache-from type=gha,scope=aarch64 --cache-to type=gha,scope=aarch64,mode=max" cross build --target aarch64-unknown-linux-gnu --release
       - name: Test armv7 binaries
         run: |
-          CROSS_BUILD_OPTS="--builder ${{ steps.buildx.outputs.name }} --cache-from type=gha,scope=armv7 --cache-to type=gha,scope=armv7,mode=max" cross build --target armv7-unknown-linux-musleabihf --release
+          CROSS_BUILD_OPTS="--builder ${{ steps.buildx.outputs.name }} --cache-from type=gha,scope=armv7 --cache-to type=gha,scope=armv7,mode=max" cross build --target armv7-unknown-linux-gnueabihf --release
       - name: Build binaries and package
         env:
           APPCAST_SECRET_KEY_BASE64: ${{ secrets.APPCAST_SECRET_KEY_BASE64 }}
@@ -97,7 +97,7 @@ jobs:
         run: |
           # desktop-file-utils is required for running install.sh (desktop-file-install and update-desktop-database)
           sudo apt-get install -y --no-install-recommends desktop-file-utils
-          target_dir='target/universal-unknown-linux-musl/release'
+          target_dir='target/universal-unknown-linux-gnu/release'
           cd "$target_dir"
           set -x
           ./install.sh
@@ -143,18 +143,18 @@ jobs:
         with:
           name: browsers-linux-artifacts
           path: |
-            target/universal-unknown-linux-musl/release/browsers_linux.tar.gz
-            target/universal-unknown-linux-musl/release/browsers_linux.tar.gz.sha256
-            target/universal-unknown-linux-musl/release/browsers_linux.tar.gz.sig
-            target/universal-unknown-linux-musl/release/browsers_linux.tar.xz
-            target/universal-unknown-linux-musl/release/browsers_linux.tar.xz.sha256
-            target/universal-unknown-linux-musl/release/browsers_linux.tar.xz.sig
-            target/universal-unknown-linux-musl/release/x86_64/browsers_amd64.deb
-            target/universal-unknown-linux-musl/release/aarch64/browsers_arm64.deb
-            target/universal-unknown-linux-musl/release/armv7l/browsers_armhf.deb
-            target/universal-unknown-linux-musl/release/x86_64/browsers.x86_64.rpm
-            target/universal-unknown-linux-musl/release/aarch64/browsers.aarch64.rpm
-            target/universal-unknown-linux-musl/release/armv7l/browsers.armhfp.rpm
+            target/universal-unknown-linux-gnu/release/browsers_linux.tar.gz
+            target/universal-unknown-linux-gnu/release/browsers_linux.tar.gz.sha256
+            target/universal-unknown-linux-gnu/release/browsers_linux.tar.gz.sig
+            target/universal-unknown-linux-gnu/release/browsers_linux.tar.xz
+            target/universal-unknown-linux-gnu/release/browsers_linux.tar.xz.sha256
+            target/universal-unknown-linux-gnu/release/browsers_linux.tar.xz.sig
+            target/universal-unknown-linux-gnu/release/x86_64/browsers_amd64.deb
+            target/universal-unknown-linux-gnu/release/aarch64/browsers_arm64.deb
+            target/universal-unknown-linux-gnu/release/armv7l/browsers_armhf.deb
+            target/universal-unknown-linux-gnu/release/x86_64/browsers.x86_64.rpm
+            target/universal-unknown-linux-gnu/release/aarch64/browsers.aarch64.rpm
+            target/universal-unknown-linux-gnu/release/armv7l/browsers.armhfp.rpm
   build-macos:
     environment: PROD_2028
     runs-on: macos-26

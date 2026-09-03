@@ -7,9 +7,9 @@ PROJECT_ROOT="../.."
 
 DEB_ARCH="$1"
 
-# e.g "target/aarch64-unknown-linux-musl"
+# e.g "target/aarch64-unknown-linux-gnu"
 TARGET_PATH="$2"
-# e.g "$PROJECT_ROOT/target/aarch64-unknown-linux-musl"
+# e.g "$PROJECT_ROOT/target/aarch64-unknown-linux-gnu"
 LINUX_TARGET_DIR="$PROJECT_ROOT/$TARGET_PATH"
 
 copy_deb_control() {
@@ -20,7 +20,7 @@ copy_deb_control() {
   cp "$linux_target_dir/meta/deb_control/control" "$deb_src_dir/DEBIAN/control"
 }
 
-# creates deb file to e.g "$PROJECT_ROOT/target/aarch64-unknown-linux-musl/release/browsers_${deb_arch}.deb"
+# creates deb file to e.g "$PROJECT_ROOT/target/aarch64-unknown-linux-gnu/release/browsers_${deb_arch}.deb"
 create_deb() {
   local deb_arch="$1"
   local deb_filename="browsers_${deb_arch}.deb"
