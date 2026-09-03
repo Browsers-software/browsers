@@ -29,14 +29,18 @@ serde_json = "1.0.151"
 serde = { version = "1.0.229", features = ["derive"] }
 
 # UI library
-# official remote
-#druid = { git = "https://github.com/linebender/druid.git", features = ["png", "jpeg", "image"] }
+#
+# unstable-winit-030 gives us slint::winit_030::WinitWindowAccessor, which we need to reach the
+# native window for always-on-top (macOS) and skip-taskbar (Windows) - there's no stable Slint
+# API for either yet, confirmed with the Slint maintainers, see gui::app::run
+#
+# The version requirement below says 1.17.1, but actually resolves to 1.18.0 via the git patch
+# at the bottom of this file, since 1.18.0 isn't published to crates.io yet - see [patch.crates-io].
+slint = { version = "1.17.1", features = ["unstable-winit-030"] }
 
-# for local development
-#druid = { path = "../druid/druid", features = ["png", "jpeg", "image"] }
-
-# jpeg is required to process downloaded Chrome profile images
-druid = { git = "https://github.com/browsers-software/druid.git", branch = "browsers", features = ["png", "jpeg", "image"] }
+# decodes browser/profile icon files into slint::Image, also used by the platform icon-extraction
+# code
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
 
 # parse urls
 url = "2.5.8"
@@ -54,8 +58,9 @@ naive-cityhash = "0.2.0"
 # To create lazy static variables
 lazy_static = "1.5.0"
 
-# Dark-light system theme detection
-dark-light = "3.0.0"
+# clipboard access (copy URL to clipboard) - keep this version matching what i-slint-backend-winit
+# wants internally, so Cargo resolves to one shared copy instead of two
+copypasta = "0.10"
 
 # macOS Core Foundation bindings
 # small selection of Core Foundation libs I happen to need
@@ -68,11 +73,27 @@ objc2 = "0.6.4"
 # for mac_paths (to get unsandboxed_home_dir for mac)
 libc = "0.2.189"
 
+# macOS-only.
+# femtovg (Slint's default renderer elsewhere) has no font hinting and that causes small-text
+# artifacts - Skia delegates to CoreText instead, which fixes it.
+# kept this macOS-only because it needs a full native build or a matching prebuilt binary per
+# target, and building from source failed outright for x86_64-pc-windows-gnu (no MSVC toolchain
+# available for that).
+# picked at runtime via SLINT_BACKEND=skia in main.rs.
+#
+# Resolves to 1.18.0 via the git patch below - must stay in sync with the other `slint` entry
+# above (same features union, same resolved version) or Cargo fails to unify the two.
+slint = { version = "1.17.1", features = ["renderer-skia"] }
+
 [target.'cfg(target_os = "linux")'.dependencies]
 xdg-mime = "^0.4.0"
 
-# eagerly init gtk (should be same version of gtk as druid is using)
-#gtk = { version = "0.16.2" }
+# override ontconfig-dlopen to use dlopen, so it can be cross-compiled
+fontique = {
+    version = "0.11", # major and minor version must match what Slint is using
+    default-features = false,
+    features = ["fontconfig-dlopen", "std"]
+}
 
 # to find application .desktop files
 freedesktop-desktop-entry = "0.8.2"
@@ -83,11 +104,21 @@ freedesktop-icons = "0.4.0"
 # Helps parsing commands that are in Exec field in .desktop files
 shell-words = "1.1.1"
 
+# cross-platform global cursor position, used on Linux to put the popup where the mouse is
+# (macOS/Windows do this natively instead, see gui/screen.rs)
+mouse_position = "0.1.4"
+
 [target.'cfg(target_os = "windows")'.dependencies]
 winreg = "0.56.0"
 
-# same version as druid-shell uses
-winapi = { version = "0.3.9", features = ["ntdef"] }
+winapi = { version = "0.3.9", features = [
+    "ntdef",
+    "windef",
+    "winuser",
+    "minwindef",
+    "shellapi",
+    "wingdi",
+] }
 
 # Helps parsing commands that are in windows registry for different apps
 # Same as `shell-words` but for Windows, i.e supporting \ in paths
@@ -95,6 +126,10 @@ winsplit = "0.1.0"
 
 # Replacement for fs::canonicalize, but returns normal path instead of the `\\?` prefixed path
 dunce = "1.0.5"
+
+[build-dependencies]
+# Resolves to 1.18.0 via the git patch below, same as the `slint` entries above.
+slint-build = "1.17.1"
 
 [target.'cfg(target_os = "windows")'.build-dependencies]
 # To embed .ico into .exe
@@ -113,19 +148,11 @@ lto = true           # Enable Link Time Optimization
 #codegen-units = 1   # Reduce number of codegen units to increase optimizations.
 #panic = 'abort'     # Abort on panic
 
-# Base image is ubuntu:24.04, see https://github.com/cross-rs/cross/blob/main/docker/Dockerfile.x86_64-unknown-linux-gnu
-# Unfortunately https://github.com/cross-rs/cross/pull/591 is not yet in stable version,
-# so update from main to specific version once released https://github.com/cross-rs/cross/pkgs/container/x86_64-unknown-linux-gnu/versions?filters%5Bversion_type%5D=tagged
-# Additionally install some libraries we need
-[package.metadata.cross.target.x86_64-unknown-linux-gnu]
-image = "browsers.software/x86_64-unknown-linux-gnu-gtk:local"
-#image = "ghcr.io/cross-rs/x86_64-unknown-linux-gnu:main"
-#pre-build = ["DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install libpango-1.0-0 libpango1.0-dev libgtk-3-dev"]
-
-[package.metadata.cross.target.aarch64-unknown-linux-gnu]
-image = "browsers.software/aarch64-unknown-linux-gnu-gtk:local"
-#image = "ghcr.io/cross-rs/aarch64-unknown-linux-gnu:main"
-#pre-build = ["dpkg --add-architecture arm64 && DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install libpango-1.0-0:arm64 libpango1.0-dev:arm64 libgtk-3-dev:arm64"]
-
-[package.metadata.cross.target.armv7-unknown-linux-gnueabihf]
-image = "browsers.software/armv7-unknown-linux-gnueabihf-gtk:local"
+# 1.18.0 isn't released on crates.io yet (CHANGELOG.md on master lists it as "Unreleased"), so
+# pull it straight from the Slint git repo instead. Pinned to a specific commit rather than
+# `branch = "master"` so the build doesn't silently drift as upstream keeps committing.
+# Once 1.18.0 is published to crates.io, remove this section and bump the `version = "1.17.1"`
+# requirements above to "1.18.0" instead.
+[patch.crates-io]
+slint = { git = "https://github.com/slint-ui/slint", rev = "2bb5a20694e75d2e8d50cbea91595f8ebff0d9a2" }
+slint-build = { git = "https://github.com/slint-ui/slint", rev = "2bb5a20694e75d2e8d50cbea91595f8ebff0d9a2" }
