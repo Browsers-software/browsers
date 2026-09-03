@@ -3,14 +3,14 @@
 # exit when any command fails
 set -e
 
-target_dir='target/universal-unknown-linux-gnu/release'
+target_dir='target/universal-unknown-linux-musl/release'
 
 build_binary() {
   export CROSS_NO_WARNINGS=0
 
-  cross build --target x86_64-unknown-linux-gnu --release
-  cross build --target aarch64-unknown-linux-gnu --release
-  cross build --target armv7-unknown-linux-gnueabihf --release
+  cross build --target x86_64-unknown-linux-musl --release
+  cross build --target aarch64-unknown-linux-musl --release
+  cross build --target armv7-unknown-linux-musleabihf --release
 
   # Clean universal binary
   rm -rf "${target_dir:?}/"
@@ -21,9 +21,9 @@ build_binary() {
   mkdir -p "$target_dir/aarch64/"
   mkdir -p "$target_dir/armv7l/"
 
-  cp "target/x86_64-unknown-linux-gnu/release/browsers" "$target_dir/x86_64/browsers"
-  cp "target/aarch64-unknown-linux-gnu/release/browsers" "$target_dir/aarch64/browsers"
-  cp "target/armv7-unknown-linux-gnueabihf/release/browsers" "$target_dir/armv7l/browsers"
+  cp "target/x86_64-unknown-linux-musl/release/browsers" "$target_dir/x86_64/browsers"
+  cp "target/aarch64-unknown-linux-musl/release/browsers" "$target_dir/aarch64/browsers"
+  cp "target/armv7-unknown-linux-musleabihf/release/browsers" "$target_dir/armv7l/browsers"
 }
 
 build_app_bundle() {
@@ -115,13 +115,13 @@ build_deb() {
 
 make_deb_packages() {
   # creating deb does not depend on universal directory at all, but will store the deb there
-  build_deb "amd64" "target/x86_64-unknown-linux-gnu"
-  build_deb "arm64" "target/aarch64-unknown-linux-gnu"
-  build_deb "armhf" "target/armv7-unknown-linux-gnueabihf"
+  build_deb "amd64" "target/x86_64-unknown-linux-musl"
+  build_deb "arm64" "target/aarch64-unknown-linux-musl"
+  build_deb "armhf" "target/armv7-unknown-linux-musleabihf"
 
-  cp "target/x86_64-unknown-linux-gnu/release/browsers_amd64.deb" "$target_dir/x86_64/browsers_amd64.deb"
-  cp "target/aarch64-unknown-linux-gnu/release/browsers_arm64.deb" "$target_dir/aarch64/browsers_arm64.deb"
-  cp "target/armv7-unknown-linux-gnueabihf/release/browsers_armhf.deb" "$target_dir/armv7l/browsers_armhf.deb"
+  cp "target/x86_64-unknown-linux-musl/release/browsers_amd64.deb" "$target_dir/x86_64/browsers_amd64.deb"
+  cp "target/aarch64-unknown-linux-musl/release/browsers_arm64.deb" "$target_dir/aarch64/browsers_arm64.deb"
+  cp "target/armv7-unknown-linux-musleabihf/release/browsers_armhf.deb" "$target_dir/armv7l/browsers_armhf.deb"
 }
 
 build_rpm() {
@@ -133,13 +133,13 @@ build_rpm() {
 
 make_rpm_packages() {
   # creating rpm does not depend on universal directory at all, but will store the rpm there
-  build_rpm "x86_64" "target/x86_64-unknown-linux-gnu"
-  build_rpm "aarch64" "target/aarch64-unknown-linux-gnu"
-  build_rpm "armhfp" "target/armv7-unknown-linux-gnueabihf"
+  build_rpm "x86_64" "target/x86_64-unknown-linux-musl"
+  build_rpm "aarch64" "target/aarch64-unknown-linux-musl"
+  build_rpm "armhfp" "target/armv7-unknown-linux-musleabihf"
 
-  cp "target/x86_64-unknown-linux-gnu/release/browsers.x86_64.rpm" "$target_dir/x86_64/browsers.x86_64.rpm"
-  cp "target/aarch64-unknown-linux-gnu/release/browsers.aarch64.rpm" "$target_dir/aarch64/browsers.aarch64.rpm"
-  cp "target/armv7-unknown-linux-gnueabihf/release/browsers.armhfp.rpm" "$target_dir/armv7l/browsers.armhfp.rpm"
+  cp "target/x86_64-unknown-linux-musl/release/browsers.x86_64.rpm" "$target_dir/x86_64/browsers.x86_64.rpm"
+  cp "target/aarch64-unknown-linux-musl/release/browsers.aarch64.rpm" "$target_dir/aarch64/browsers.aarch64.rpm"
+  cp "target/armv7-unknown-linux-musleabihf/release/browsers.armhfp.rpm" "$target_dir/armv7l/browsers.armhfp.rpm"
 }
 
 build_binary

@@ -8,9 +8,9 @@ EXTRA_LINUX_DIST_PATH="./dist/"
 
 PACKAGE_SRC_DIR="$1"
 
-# e.g "target/aarch64-unknown-linux-gnu"
+# e.g "target/aarch64-unknown-linux-musl"
 TARGET_PATH="$2"
-# e.g "$PROJECT_ROOT/target/aarch64-unknown-linux-gnu"
+# e.g "$PROJECT_ROOT/target/aarch64-unknown-linux-musl"
 LINUX_TARGET_DIR="$PROJECT_ROOT/$TARGET_PATH"
 
 create_package_content() {

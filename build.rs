@@ -98,7 +98,7 @@ fn main() {
     let rust_target_arch = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap();
 
     // e.g target/
-    //  or target/aarch64-unknown-linux-gnu/
+    //  or target/aarch64-unknown-linux-musl/
     let target_build_path = get_target_build_path();
     let arch_target_dir = target_build_path.parent().unwrap();
 
@@ -107,14 +107,14 @@ fn main() {
 }
 
 // e.g target/release/
-//  or target/aarch64-unknown-linux-gnu/release/
+//  or target/aarch64-unknown-linux-musl/release/
 fn get_target_build_path() -> PathBuf {
-    // e.g "/target/aarch64-unknown-linux-gnu/release/build/browsers-f4fff742057613df/out"
+    // e.g "/target/aarch64-unknown-linux-musl/release/build/browsers-f4fff742057613df/out"
     //  or "/target/release/build/browsers-f4fff742057613df/out"
     let out_dir = std::env::var("OUT_DIR").unwrap();
     let out_dir = PathBuf::from(out_dir.as_str());
 
-    // /target/aarch64-unknown-linux-gnu
+    // /target/aarch64-unknown-linux-musl
     let arch_target_dir = out_dir
         .parent() // release/build/browsers/
         .map(|a| a.parent()) // target/.../release/build/
@@ -147,10 +147,10 @@ fn create_deb_control(rust_target_arch: &str, arch_target_dir: &Path) {
         .join("DEBIAN")
         .join("template.control");
 
-    // /target/aarch64-unknown-linux-gnu/meta/deb_control
+    // /target/aarch64-unknown-linux-musl/meta/deb_control
     let target_deb_control_dir_path = arch_target_dir.join("meta").join("deb_control");
 
-    // /target/aarch64-unknown-linux-gnu/meta/deb_control/control
+    // /target/aarch64-unknown-linux-musl/meta/deb_control/control
     let target_deb_control_path: PathBuf = target_deb_control_dir_path.join("control");
 
     fs::create_dir_all(target_deb_control_dir_path).unwrap();
@@ -188,10 +188,10 @@ fn create_rpm_spec(rust_target_arch: &str, arch_target_dir: &Path) {
         .join("SPECS")
         .join("template.browsers.spec");
 
-    // /target/aarch64-unknown-linux-gnu/meta/rpm_spec/
+    // /target/aarch64-unknown-linux-musl/meta/rpm_spec/
     let target_rpm_spec_dir_path = arch_target_dir.join("meta").join("rpm_spec");
 
-    // /target/aarch64-unknown-linux-gnu/meta/rpm_spec/browsers.spec
+    // /target/aarch64-unknown-linux-musl/meta/rpm_spec/browsers.spec
     let target_rpm_spec_file_path: PathBuf = target_rpm_spec_dir_path.join("browsers.spec");
 
     fs::create_dir_all(target_rpm_spec_dir_path).unwrap();
