@@ -19,11 +19,8 @@
 
     cargo build --release
 
-## Or build via docker image
+## Or build via zigbuild
 
-    cargo install cross --git https://github.com/cross-rs/cross
-
-    cd cross
-    ./build-cross-images.sh
-    cd ..
+    brew install zig
+    cargo install --locked cargo-zigbuild
     ./build-linux.sh

@@ -5,8 +5,6 @@ jobs:
   build-linux:
     environment: PROD_2028
     runs-on: ubuntu-latest
-    env:
-      CROSS_NO_WARNINGS: 0
     steps:
       - name: Check out repository code
         uses: actions/checkout@v7
@@ -19,41 +17,6 @@ jobs:
         uses: docker/setup-buildx-action@v4
         with:
           install: true
-      - name: Build cross builder image for x86_64
-        uses: docker/build-push-action@v7
-        with:
-          context: ./cross/
-          builder: ${{ steps.buildx.outputs.name }}
-          file: cross/Dockerfile.linux_x86_64
-          push: false
-          tags: browsers.software/x86_64-unknown-linux-gnu:local
-          cache-from: type=gha,scope=x86_64
-          cache-to: type=gha,scope=x86_64,mode=max
-          load: true # load the created image into docker, so cross can find it
-      - name: Build cross builder image for aarch64
-        uses: docker/build-push-action@v7
-        with:
-          context: ./cross/
-          builder: ${{ steps.buildx.outputs.name }}
-          file: cross/Dockerfile.linux_aarch64
-          push: false
-          tags: browsers.software/aarch64-unknown-linux-gnu:local
-          cache-from: type=gha,scope=aarch64
-          cache-to: type=gha,scope=aarch64,mode=max
-          load: true # load the created image into docker, so cross can find it
-      - name: Build cross builder image for armv7
-        uses: docker/build-push-action@v7
-        with:
-          context: ./cross/
-          builder: ${{ steps.buildx.outputs.name }}
-          file: cross/Dockerfile.linux_armv7
-          push: false
-          tags: browsers.software/armv7-unknown-linux-gnueabihf:local
-          cache-from: type=gha,scope=armv7
-          cache-to: type=gha,scope=armv7,mode=max
-          load: true # load the created image into docker, so cross can find it
-      # even though we build inside a docker container via `cross`, then `cross` mounts
-      # target/
       - name: Download cache
         uses: actions/cache@v6
         with:
@@ -69,21 +32,33 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
             ${{ runner.os }}-cargo-
+
       - name: Install signify
         run: cargo install signify --target-dir ./target/signify
-      - name: Install cross
-        # cargo install does check if dependency already exists,
-        # but there's some conflict with github cache about it, so checking manually
-        run: cargo install --list --target-dir ./target/cross | grep cross || cargo install --force cross --git https://github.com/cross-rs/cross --target-dir ./target/cross
+
+      - name: Install Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
+
+      - name: Install zigbuild
+        run: cargo install --locked cargo-zigbuild --target-dir ./target/zigbuild
+
+      - name: Add Rust targets
+        run: |
+          rustup target add x86_64-unknown-linux-gnu
+          rustup target add aarch64-unknown-linux-gnu
+          rustup target add armv7-unknown-linux-gnueabihf
+
       - name: Test x86_64 binary
         run: |
-          CROSS_BUILD_OPTS="--builder ${{ steps.buildx.outputs.name }} --cache-from type=gha,scope=x86_64 --cache-to type=gha,scope=x86_64,mode=max" cross build --target x86_64-unknown-linux-gnu --release
+          cargo zigbuild --release --target x86_64-unknown-linux-gnu.2.17
       - name: Test aarch64 binaries
         run: |
-          CROSS_BUILD_OPTS="--builder ${{ steps.buildx.outputs.name }} --cache-from type=gha,scope=aarch64 --cache-to type=gha,scope=aarch64,mode=max" cross build --target aarch64-unknown-linux-gnu --release
+          cargo zigbuild --release --target aarch64-unknown-linux-gnu.2.17
       - name: Test armv7 binaries
         run: |
-          CROSS_BUILD_OPTS="--builder ${{ steps.buildx.outputs.name }} --cache-from type=gha,scope=armv7 --cache-to type=gha,scope=armv7,mode=max" cross build --target armv7-unknown-linux-gnueabihf --release
+          cargo zigbuild --release --target armv7-unknown-linux-gnueabihf.2.17
       - name: Build binaries and package
         env:
           APPCAST_SECRET_KEY_BASE64: ${{ secrets.APPCAST_SECRET_KEY_BASE64 }}

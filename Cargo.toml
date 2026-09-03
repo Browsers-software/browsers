@@ -148,22 +148,6 @@ lto = true           # Enable Link Time Optimization
 #codegen-units = 1   # Reduce number of codegen units to increase optimizations.
 #panic = 'abort'     # Abort on panic
 
-# Base image is ubuntu:24.04, see https://github.com/cross-rs/cross/blob/main/docker/Dockerfile.x86_64-unknown-linux-gnu
-# Unfortunately https://github.com/cross-rs/cross/pull/591 is not yet in stable version,
-# so update from main to specific version once released https://github.com/cross-rs/cross/pkgs/container/x86_64-unknown-linux-gnu/versions?filters%5Bversion_type%5D=tagged
-# Additionally install some libraries we need
-[package.metadata.cross.target.x86_64-unknown-linux-gnu]
-image = "browsers.software/x86_64-unknown-linux-gnu:local"
-#image = "ghcr.io/cross-rs/x86_64-unknown-linux-gnu:main"
-
-[package.metadata.cross.target.aarch64-unknown-linux-gnu]
-image = "browsers.software/aarch64-unknown-linux-gnu:local"
-#image = "ghcr.io/cross-rs/aarch64-unknown-linux-gnu:main"
-
-[package.metadata.cross.target.armv7-unknown-linux-gnueabihf]
-image = "browsers.software/armv7-unknown-linux-gnueabihf:local"
-#image = "ghcr.io/cross-rs/armv7-unknown-linux-gnueabihf:main"
-
 # 1.18.0 isn't released on crates.io yet (CHANGELOG.md on master lists it as "Unreleased"), so
 # pull it straight from the Slint git repo instead. Pinned to a specific commit rather than
 # `branch = "master"` so the build doesn't silently drift as upstream keeps committing.
