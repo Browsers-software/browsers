@@ -88,6 +88,13 @@ slint = { version = "1.17.1", features = ["renderer-skia"] }
 [target.'cfg(target_os = "linux")'.dependencies]
 xdg-mime = "^0.4.0"
 
+# override ontconfig-dlopen to use dlopen, so it can be cross-compiled
+fontique = {
+    version = "0.11", # major and minor version must match what Slint is using
+    default-features = false,
+    features = ["fontconfig-dlopen", "std"]
+}
+
 # to find application .desktop files
 freedesktop-desktop-entry = "0.8.2"
 

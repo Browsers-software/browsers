@@ -557,6 +557,7 @@ dependencies = [
  "copypasta",
  "dirs 6.0.0",
  "dunce",
+ "fontique",
  "freedesktop-desktop-entry",
  "freedesktop-icons",
  "globset",
