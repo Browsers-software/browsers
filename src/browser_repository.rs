@@ -51,7 +51,7 @@ struct AppConfigRepository {
 }
 
 #[derive(Deserialize, Debug, Clone)]
-#[serde(default)]
+#[serde(default, deny_unknown_fields)]
 struct AppConfig {
     // linux, etc
     os: AppOS,
@@ -59,6 +59,7 @@ struct AppConfig {
     kind: AppKind,
     id: String,
     config_dir_relative: String,
+    #[serde(rename = "snap_dir")]
     snap_id: Option<String>,
 }
 
@@ -892,4 +893,28 @@ fn convert_spotify_uri(_: &CommonBrowserProfile, url_str: &str) -> String {
         .map(|(resource_type, resource_id)| format!("spotify:{}:{}", resource_type, resource_id));
 
     return uri_maybe.unwrap_or_else(|| unknown);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_snap_dir_from_repository_toml() {
+        let toml = r#"
+            [[apps]]
+            id = "firefox"
+            config_dir_relative = ".mozilla/firefox"
+            snap_dir = "firefox"
+            kind = "FIREFOX"
+            os = "LINUX"
+        "#;
+
+        let repository: AppConfigRepository = toml::from_str(toml).unwrap();
+        assert_eq!(
+            repository.apps[0].snap_id.as_deref(),
+            Some("firefox"),
+            "snap_dir key must map onto AppConfig::snap_id"
+        );
+    }
 }
