@@ -10,6 +10,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - Linux: Support profiles for Brave Origin browser
+- Linux: Support profiles for Microsoft Edge browser
 
 ## [0.7.5] - 2026-08-28
 

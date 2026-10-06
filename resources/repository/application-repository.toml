@@ -139,6 +139,12 @@ kind = "CHROMIUM"
 os = "MAC"
 
 [[apps]]
+id = "microsoft-edge"
+config_dir_relative = "microsoft-edge"
+kind = "CHROMIUM"
+os = "LINUX"
+
+[[apps]]
 id = "Microsoft Edge"
 config_dir_relative = "Microsoft/Edge/User Data"
 kind = "CHROMIUM"
