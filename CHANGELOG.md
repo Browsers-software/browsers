@@ -402,7 +402,7 @@ Initial Release
 
 [unreleased]: https://github.com/Browsers-software/browsers/compare/0.8.0...HEAD
 
-[0.7.5]: https://github.com/Browsers-software/browsers/releases/tag/0.8.0
+[0.8.0]: https://github.com/Browsers-software/browsers/releases/tag/0.8.0
 
 [0.7.5]: https://github.com/Browsers-software/browsers/releases/tag/0.7.5
 
