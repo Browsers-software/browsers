@@ -3,4 +3,14 @@
   extends: [
     'config:recommended',
   ],
+  packageRules: [
+    {
+      // must match the major/minor version Slint uses
+      matchPackageNames: [
+        'fontique'
+      ],
+      // 0.11.x
+      allowedVersions: '~0.11',
+    },
+  ],
 }
