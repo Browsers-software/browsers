@@ -76,21 +76,21 @@ os = "MAC"
 [[apps]]
 id = "chromium"
 config_dir_relative = "chromium"
-snap_dir = "chromium"
+snap_id = "chromium"
 kind = "CHROMIUM"
 os = "LINUX"
 
 [[apps]]
 id = "chromium_chromium"
 config_dir_relative = "chromium"
-snap_dir = "chromium"
+snap_id = "chromium"
 kind = "CHROMIUM"
 os = "LINUX"
 
 [[apps]]
 id = "chromium-browser"
 config_dir_relative = "chromium"
-snap_dir = "chromium"
+snap_id = "chromium"
 kind = "CHROMIUM"
 os = "LINUX"
 
@@ -203,7 +203,7 @@ os = "MAC"
 [[apps]]
 id = "brave-browser"
 config_dir_relative = "BraveSoftware/Brave-Browser"
-snap_dir = "brave"
+snap_id = "brave"
 kind = "CHROMIUM"
 os = "LINUX"
 
@@ -356,21 +356,21 @@ os = "MAC"
 [[apps]]
 id = "firefox"
 config_dir_relative = ".mozilla/firefox"
-snap_dir = "firefox"
+snap_id = "firefox"
 kind = "FIREFOX"
 os = "LINUX"
 
 [[apps]]
 id = "firefox_firefox"
 config_dir_relative = ".mozilla/firefox"
-snap_dir = "firefox"
+snap_id = "firefox"
 kind = "FIREFOX"
 os = "LINUX"
 
 [[apps]]
 id = "firefox-esr"
 config_dir_relative = ".mozilla/firefox"
-snap_dir = "firefox"
+snap_id = "firefox"
 kind = "FIREFOX"
 os = "LINUX"
 
@@ -494,7 +494,7 @@ os = "MAC"
 [[apps]]
 id = "slack"
 config_dir_relative = "Slack"
-snap_dir = "slack"
+snap_id = "slack"
 kind = "SLACK"
 os = "LINUX"
 

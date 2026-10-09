@@ -51,7 +51,7 @@ struct AppConfigRepository {
 }
 
 #[derive(Deserialize, Debug, Clone)]
-#[serde(default)]
+#[serde(default, deny_unknown_fields)]
 struct AppConfig {
     // linux, etc
     os: AppOS,

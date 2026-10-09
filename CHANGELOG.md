@@ -14,6 +14,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Linux: Support profiles for Microsoft Edge browser
 - Switched UI library from Druid to Slint
 
+### Fixed
+
+- Linux: Fix profiles of snap-installed browsers not being found. Thanks to @pandlab for contribution #396
+
 ## [0.7.5] - 2026-08-28
 
 ### Added
