@@ -163,12 +163,12 @@ jobs:
           rustup target add aarch64-apple-darwin
       - name: Test x86_64 binary
         run: |
-          export MACOSX_DEPLOYMENT_TARGET=10.7
+          export MACOSX_DEPLOYMENT_TARGET=10.12
           cargo build --target x86_64-apple-darwin --release
         shell: bash
       - name: Test aarch64 binaries
         run: |
-          export MACOSX_DEPLOYMENT_TARGET=10.7
+          export MACOSX_DEPLOYMENT_TARGET=10.12
           cargo build --target aarch64-apple-darwin --release
         shell: bash
       - name: Build Universal Binary

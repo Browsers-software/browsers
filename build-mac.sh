@@ -12,7 +12,7 @@ target_dir='target/universal-apple-darwin/release'
 
 build_binary() {
   # Set minimum macOS version to support older OS versions
-  export MACOSX_DEPLOYMENT_TARGET=10.7
+  export MACOSX_DEPLOYMENT_TARGET=10.12
 
   # Build x86_64 binary (also re-creates target/universal-apple-darwin/meta/Info.plist)
   cargo build --target x86_64-apple-darwin --release
