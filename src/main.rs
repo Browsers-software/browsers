@@ -105,7 +105,7 @@ fn main() {
 
     let behavioral_settings = config.get_behavior();
     // TODO: url should not be considered here in case of macos
-    //       and only the one in LinkOpenedFromBundle should be considered
+    //       and only the one in UrlPassedToMain should be considered
     let cleaned_url = unwrap_url(url.as_str(), behavioral_settings);
 
     let url_open_context = UrlOpenContext {
