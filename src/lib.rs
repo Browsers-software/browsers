@@ -705,6 +705,19 @@ pub fn handle_messages_to_main(
             MessageToMain::UrlPassedToMain(from_bundle_id, url, behavioral_config) => {
                 let new_modified_url = unwrap_url(url.as_str(), &behavioral_config);
 
+                let url_open_context = UrlOpenContext {
+                    cleaned_url: new_modified_url.clone(),
+                    source_app_maybe: Some(from_bundle_id.clone()),
+                };
+                if open_link_if_matching_rule(
+                    &url_open_context,
+                    opening_rules_and_default_profile,
+                    visible_and_hidden_profiles,
+                ) {
+                    ui_event_sink.open_link_completed();
+                    continue;
+                }
+
                 let url_open_info = UrlOpenInfo {
                     url: new_modified_url,
                     source_bundle_id: from_bundle_id,
