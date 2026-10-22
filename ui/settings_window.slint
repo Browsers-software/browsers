@@ -260,10 +260,18 @@ component RulesTab inherits VerticalLayout {
             }
 
             Text {
-                text: "URL matching examples:\n • github.com/Browsers-software/** starts with \"github.com/Browsers-software/\"\n • github.com/**/end starts with \"github.com/\" and ends with \"/end\"\n • github.com/*/end starts with \"github.com/\" and ends with \"/end\" but can have\n   only up to one path item in between\n\nSee https://github.com/Browsers-software/browsers/wiki/Rules for all the details.";
+                text: "URL matching examples:\n • github.com/Browsers-software/** starts with \"github.com/Browsers-software/\"\n • github.com/**/end starts with \"github.com/\" and ends with \"/end\"\n • github.com/*/end starts with \"github.com/\" and ends with \"/end\" but can have\n   only up to one path item in between";
                 font-size: 11px;
                 color: Palette.foreground.transparentize(0.4);
                 wrap: word-wrap;
+            }
+
+            StyledText {
+                text: @markdown("See [https://github.com/Browsers-software/browsers/wiki/Rules](https://github.com/Browsers-software/browsers/wiki/Rules) for all the details.");
+                default-font-size: 11px;
+                default-color: Palette.foreground.transparentize(0.4);
+                link-color: Palette.accent-background;
+                link-clicked(link) => { Platform.open-url(link); }
             }
         }
     }
