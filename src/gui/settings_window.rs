@@ -8,19 +8,8 @@ use crate::gui::generated::{
     SettingsWindow, ThemeChoice,
 };
 use crate::gui::main_window;
-use crate::gui::theme::ColorScheme;
+use crate::gui::theme::configured_color_scheme;
 use crate::utils::ConfiguredTheme;
-
-// forces std-widgets' own Palette (which otherwise just tracks the OS) so an explicit Light/Dark
-// choice also applies to native controls like Switch/LineEdit.
-// Auto maps to Unknown, un-forcing it.
-fn theme_to_color_scheme(theme: ConfiguredTheme) -> ColorScheme {
-    match theme {
-        ConfiguredTheme::Auto => ColorScheme::Unknown,
-        ConfiguredTheme::Light => ColorScheme::Light,
-        ConfiguredTheme::Dark => ColorScheme::Dark,
-    }
-}
 
 pub fn open(state: &SharedState) {
     // state.settings_window gets cleared to None on actual close, so Some here only ever means
@@ -53,8 +42,8 @@ pub fn open(state: &SharedState) {
 
     win.window().show().ok();
 
-    // otherwise this renders behind the always-on-top main popup - see app::make_window_floating
-    app::make_window_floating(&win);
+    // the main popup can show over full-screen apps, so these need to as well
+    app::allow_over_fullscreen_apps(&win);
 
     app::clear_on_close(&win, state, |st| st.settings_window = None);
 }
@@ -166,8 +155,10 @@ pub fn refresh(state: &SharedState) {
     win.set_unwrap_urls(settings.behavioral_settings.unwrap_urls);
     crate::gui::ui_util::sync_vec_model(&win.get_restorable_app_profiles(), restorable_items);
     win.set_theme(theme_to_choice(settings.visual_settings.theme));
+    // forces std-widgets' own Palette (which otherwise just tracks the OS) so an explicit
+    // Light/Dark choice also applies to native controls like Switch/LineEdit
     win.global::<StdWidgetPalette>()
-        .set_color_scheme(theme_to_color_scheme(settings.visual_settings.theme));
+        .set_color_scheme(configured_color_scheme(settings.visual_settings.theme));
     crate::gui::ui_util::sync_vec_model(&win.get_rules(), rule_items);
     win.set_default_rule(default_rule);
     crate::gui::ui_util::sync_vec_model(&win.get_browsers(), browser_items);

@@ -4,6 +4,9 @@ import { DirEntry, DirectoriesList } from "common.slint";
 
 export component AboutWindow inherits Window {
     title: " ";
+    // same level as the main popup, otherwise this renders behind it - NSWindowLevel stacking is
+    // absolute, not affected by which window is active
+    always-on-top: true;
     width: 340px;
     height: 320px;
 

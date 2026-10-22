@@ -1,24 +1,38 @@
-// central color/font palette, populated from Rust at startup and whenever the user changes theme
-// settings - see src/gui/theme.rs -> apply_palette
+import { Palette } from "std-widgets.slint";
+
+// central color/font palette. Colors are bindings on the effective color scheme, so they follow
+// OS light/dark changes by themselves, like std-widgets do - see src/gui/theme.rs for what Rust
+// feeds in.
 export global AppPalette {
-    in-out property <color> background-color;
-    in-out property <color> label-color;
-    in-out property <color> secondary-label-color;
-    in-out property <color> muted-label-color;
-    in-out property <color> stroke-color;
-    in-out property <color> secondary-stroke-color;
-    in-out property <color> highlight-background-color;
-    in-out property <color> secondary-background-color;
-    in-out property <color> accent-color;
-    in-out property <color> text-color;
-    in-out property <color> about-background-color;
+    // Light/Dark force the scheme (the user's Theme setting), Unknown means "Match System"
+    in property <ColorScheme> scheme-override: ColorScheme.unknown;
+    // Palette.color-scheme is a live binding to the OS setting - Slint's backend sets it before
+    // the window's first frame, and updates it when the OS appearance changes.
+    // it must not be bound to a window whose Palette.color-scheme Rust has set to Unknown (it
+    // then stops reflecting the OS) - only the Settings window does that, and it doesn't use
+    // AppPalette
+    out property <bool> dark: scheme-override != ColorScheme.unknown
+        ? scheme-override == ColorScheme.dark
+        : Palette.color-scheme == ColorScheme.dark;
 
-    in-out property <length> browser-label-size: 12px;
-    in-out property <length> profile-label-size: 11px;
-    in-out property <length> url-label-size: 12px;
+    out property <color> background-color: dark ? rgba(38, 38, 38, 0.9) : rgba(217, 217, 217, 0.9);
+    out property <color> label-color: dark ? #ffffff : #000000;
+    out property <color> secondary-label-color: dark ? rgb(190, 190, 190) : rgb(30, 30, 30);
+    out property <color> muted-label-color: rgb(128, 128, 128);
+    out property <color> stroke-color: dark ? rgba(255, 255, 255, 0.1) : rgba(179, 179, 179, 0.9);
+    out property <color> secondary-stroke-color: rgba(102, 102, 102, 0.9);
+    out property <color> highlight-background-color: rgba(255, 255, 255, 0.25);
+    out property <color> secondary-background-color: dark ? rgb(38, 38, 38) : rgb(215, 215, 215);
+    out property <color> accent-color: rgb(25, 90, 194);
+    out property <color> text-color: dark ? rgb(240, 240, 234) : rgb(10, 10, 10);
+    out property <color> about-background-color: dark ? rgb(27, 32, 32) : rgb(236, 236, 236);
 
-    in-out property <color> label-color-hover;
-    in-out property <color> secondary-label-color-hover;
-    in-out property <color> hotkey-background-color-hover;
-    in-out property <color> hotkey-text-color-hover;
+    out property <length> browser-label-size: 12px;
+    out property <length> profile-label-size: 11px;
+    out property <length> url-label-size: 12px;
+
+    out property <color> label-color-hover: label-color;
+    out property <color> secondary-label-color-hover: label-color;
+    out property <color> hotkey-background-color-hover: secondary-background-color;
+    out property <color> hotkey-text-color-hover: label-color;
 }

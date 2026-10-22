@@ -87,14 +87,12 @@ pub fn new(
 
 pub fn apply_theme(state: &SharedState) {
     let st = state.borrow();
-    let system_is_dark = theme::detect_system_is_dark(&st.main_window);
-    let palette = theme::resolve_palette(&st.ui_settings.visual_settings, system_is_dark);
-    theme::apply_to_window(&palette, &st.main_window);
-    if let Some(w) = &st.settings_window {
-        theme::apply_to_window(&palette, w);
-    }
+    let scheme = theme::configured_color_scheme(st.ui_settings.visual_settings.theme);
+    theme::apply_to_window(scheme, &st.main_window);
+    // the settings window doesn't use AppPalette - it forces std-widgets' Palette itself, see
+    // settings_window::refresh
     if let Some(w) = &st.about_window {
-        theme::apply_to_window(&palette, w);
+        theme::apply_to_window(scheme, w);
     }
 }
 
@@ -488,17 +486,10 @@ pub fn run(state: &SharedState) {
     win.invoke_grab_focus();
 
     {
-        let state = state.clone();
         on_native_window(
             &win,
-            "could not obtain the native window - initial theme/resize setup was skipped",
+            "could not obtain the native window - initial resize setup was skipped",
             move |winit_window| {
-                // re-apply the theme now that the native window actually exists - the eager call
-                // in new() runs before the OS dark/light watcher is wired up and can read a stale
-                // Palette.color-scheme (saw it launch light even with dark mode + "Match System"
-                // on)
-                apply_theme(&state);
-
                 // resize-border-width: 0 only removes the cursor hint, doesn't stop OS resizing -
                 // dragging this borderless popup hit a real Slint bug (slint-ui/slint#3990),
                 // easier to just turn off resizing than fight it
@@ -507,7 +498,7 @@ pub fn run(state: &SharedState) {
         );
     }
 
-    make_window_floating(&win);
+    allow_over_fullscreen_apps(&win);
 
     #[cfg(target_os = "windows")]
     hide_main_window_from_taskbar(&win);
@@ -538,31 +529,27 @@ where
     });
 }
 
-// always-on-top isn't documented for macOS in Slint and doesn't cover per-Space visibility or the
-// Windows taskbar either, so this goes through winit directly instead.
-//
-// Called for the main window, Settings, and About (see call sites in settings_window.rs/
-// about_window.rs) - Settings/About need the same floating level as the main window, otherwise
-// they render *behind* it whenever both are visible: NSWindowLevel stacking is absolute, not
-// affected by which window is active, so a normal-level window can never appear in front of a
-// floating-level one. No-op on non-macOS platforms - see macos_native::make_window_floating for
-// what this actually sets and why.
+// lets a window show over full-screen apps on macOS, which Slint's `always-on-top` doesn't cover
+// (that one only sets the window level).
+// called for the main window, Settings, and About, so all three behave the same.
+// No-op on non-macOS platforms - see macos_native::allow_over_fullscreen_apps for what this
+// actually sets.
 #[cfg(not(target_os = "macos"))]
-pub fn make_window_floating<T: ComponentHandle + 'static>(_win: &T) {}
+pub fn allow_over_fullscreen_apps<T: ComponentHandle + 'static>(_win: &T) {}
 
 #[cfg(target_os = "macos")]
-pub fn make_window_floating<T: ComponentHandle + 'static>(win: &T) {
+pub fn allow_over_fullscreen_apps<T: ComponentHandle + 'static>(win: &T) {
     use slint::winit_030::winit;
     use winit::raw_window_handle::{HasWindowHandle, RawWindowHandle};
 
     on_native_window(
         win,
-        "could not obtain the native window - it will not float above other windows",
+        "could not obtain the native window - it will not show over full-screen apps",
         |winit_window| {
             if let Ok(handle) = winit_window.window_handle()
                 && let RawWindowHandle::AppKit(appkit) = handle.as_raw()
             {
-                crate::macos::macos_native::make_window_floating(appkit.ns_view.as_ptr());
+                crate::macos::macos_native::allow_over_fullscreen_apps(appkit.ns_view.as_ptr());
             }
         },
     );
