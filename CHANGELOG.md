@@ -9,7 +9,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- macOS: Skip profile scan if access is denied for browser directory.
+- macOS: Skip profile scan if access is denied for browser directory. Thanks to @jeremiahlee for reporting #398
 
 ## [0.8.1] - 2026-10-23
 
