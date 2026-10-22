@@ -672,6 +672,7 @@ pub fn handle_messages_to_main(
     opening_rules_and_default_profile: &mut OpeningRulesAndDefaultProfile,
     visible_and_hidden_profiles: &mut VisibleAndHiddenProfiles,
     app_finder: &OSAppFinder,
+    mut behavioral_config: BehavioralConfig,
 ) {
     for message in main_receiver.iter() {
         match message {
@@ -695,21 +696,36 @@ pub fn handle_messages_to_main(
                 profile.open_link(url.as_str(), incognito_mode);
                 ui_event_sink.open_link_completed();
             }
-            MessageToMain::UrlOpenRequest(from_bundle_id, url) => {
-                let url_open_info = UrlOpenInfo {
-                    url: url,
-                    source_bundle_id: from_bundle_id,
-                };
-                ui_event_sink.cleaned_url_opened(url_open_info);
-            }
-            MessageToMain::UrlPassedToMain(from_bundle_id, url, behavioral_config) => {
+            MessageToMain::UrlPassedToMain(from_bundle_id, url) => {
                 let new_modified_url = unwrap_url(url.as_str(), &behavioral_config);
+                debug!("source_bundle_id: {}, url: {}", from_bundle_id, new_modified_url);
+
+                if from_bundle_id == "com.apple.Safari" {
+                    // workaround for weird bug where Safari opens default browser on hard launch
+                    // see https://github.com/Browsers-software/browsers/issues/79
+                    // We might need to remove this workaround if we want to allow Safari
+                    // to open Browsers via some extension
+                    info!("Safari has a weird bug and launched Browsers. Exiting Browsers.");
+                    exit(QUIT_EXIT_CODE);
+                }
+
+                let url_open_context = UrlOpenContext {
+                    cleaned_url: new_modified_url.clone(),
+                    source_app_maybe: Some(from_bundle_id.clone()),
+                };
+                if open_link_if_matching_rule(
+                    &url_open_context,
+                    opening_rules_and_default_profile,
+                    visible_and_hidden_profiles,
+                ) {
+                    ui_event_sink.open_link_completed();
+                    continue;
+                }
 
                 let url_open_info = UrlOpenInfo {
                     url: new_modified_url,
                     source_bundle_id: from_bundle_id,
                 };
-
                 ui_event_sink.cleaned_url_opened(url_open_info);
             }
             MessageToMain::SetBrowsersAsDefaultBrowser => {
@@ -871,12 +887,12 @@ pub fn handle_messages_to_main(
             }
             MessageToMain::SaveConfigUIBehavioralSettings(settings) => {
                 info!("Saving Behavioral settings");
-                let behavioral_config = BehavioralConfig {
+                behavioral_config = BehavioralConfig {
                     unwrap_urls: settings.unwrap_urls,
                 };
 
                 let mut config = app_finder.load_config();
-                config.set_behavior(behavioral_config);
+                config.set_behavior(behavioral_config.clone());
                 app_finder.save_config(&config);
             }
         }
@@ -1054,9 +1070,8 @@ pub enum MoveTo {
 pub enum MessageToMain {
     Refresh,
     OpenLink(usize, bool, String),
-    // UrlOpenRequest is almost like UrlPassedToMain, but the URL is already cleaned
-    UrlOpenRequest(String, String),
-    UrlPassedToMain(String, String, BehavioralConfig),
+    // (source bundle id, url) - the URL as received, unwrapping and routing is done by main
+    UrlPassedToMain(String, String),
     SetBrowsersAsDefaultBrowser,
     HideAppProfile(String),
     HideAllProfiles(String),

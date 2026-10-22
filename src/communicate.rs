@@ -102,9 +102,9 @@ pub fn check_single_instance(
                 let message: SocketMessage = serde_json::from_str(buffer.as_str())
                     .expect("socket message is not in valid json format");
 
-                let url_open_request =
-                    MessageToMain::UrlOpenRequest(message.opener.to_string(), message.url.clone());
-                main_sender.send(url_open_request).unwrap();
+                let url_passed_to_main =
+                    MessageToMain::UrlPassedToMain(message.opener.to_string(), message.url.clone());
+                main_sender.send(url_passed_to_main).unwrap();
 
                 // Clear the buffer so that the next iteration will display new data instead of messages
                 // stacking on top of one another.
