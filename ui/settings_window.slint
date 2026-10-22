@@ -114,7 +114,7 @@ component GeneralTab inherits VerticalLayout {
         height: 26px;
         Menu {
             if root.restorable-app-profiles.length == 0: MenuItem { title: "No hidden apps or profiles"; enabled: false; }
-            for p[i] in root.restorable-app-profiles: MenuItem {
+            for p in root.restorable-app-profiles: MenuItem {
                 title: p.full-name;
                 activated => { root.restore-profile(p.unique-id); }
             }
@@ -249,7 +249,7 @@ component RulesTab inherits VerticalLayout {
         VerticalLayout {
             alignment: start;
             spacing: 6px;
-            for rule[i] in root.rules: RuleCard {
+            for rule in root.rules: RuleCard {
                 rule: rule;
                 browsers: root.browsers;
                 profile-picker-options: root.profile-picker-options;
@@ -306,6 +306,9 @@ component AdvancedTab inherits VerticalLayout {
 
 export component SettingsWindow inherits Window {
     title: "Settings";
+    // same level as the main popup, otherwise this renders behind it - NSWindowLevel stacking is
+    // absolute, not affected by which window is active
+    always-on-top: true;
     // tried preferred-width/preferred-height here first, but they don't actually take effect -
     // the shown size just ends up being whatever the currently-visible tab's content computes to
     // (General's, since it's the default tab), so Rules' wider content (a 300px LineEdit plus its

@@ -56,124 +56,124 @@ component BrowserRow inherits Rectangle {
         }
 
         ta := TouchArea {
-        clicked => { root.open(item.browser-profile-index); }
-        // TouchArea's moved callback only fires while the mouse is pressed (dragging), not on
-        // plain hover.
-        // pointer-event's Move kind fires regardless, which is what we want here - hovering alone
-        // should move focus/highlight to this row.
-        pointer-event(event) => {
-            if (event.kind == PointerEventKind.move) {
-                root.set-focused(item.filtered-index);
+            clicked => { root.open(item.browser-profile-index); }
+            // TouchArea's moved callback only fires while the mouse is pressed (dragging), not on
+            // plain hover.
+            // pointer-event's Move kind fires regardless, which is what we want here - hovering alone
+            // should move focus/highlight to this row.
+            pointer-event(event) => {
+                if (event.kind == PointerEventKind.move) {
+                    root.set-focused(item.filtered-index);
+                }
             }
         }
-    }
 
-    // declared after ta on purpose: siblings hit-test front-to-back in declaration order, so
-    // being last makes cm the frontmost one. a TouchArea grabs every press it sees regardless of
-    // button, so with cm behind ta a right-click would never reach it no matter how it's sized.
-    // being in front, cm gets first look at every press, handles the right-click/Menu-key itself,
-    // and otherwise ignores the event so it falls through to ta underneath for left-click/hover.
-    // it also still needs an explicit size - it has no visual children of its own (just a
-    // non-visual Menu), so without one it defaults to 0x0 and never receives a click at all.
+        // declared after ta on purpose: siblings hit-test front-to-back in declaration order, so
+        // being last makes cm the frontmost one. a TouchArea grabs every press it sees regardless of
+        // button, so with cm behind ta a right-click would never reach it no matter how it's sized.
+        // being in front, cm gets first look at every press, handles the right-click/Menu-key itself,
+        // and otherwise ignores the event so it falls through to ta underneath for left-click/hover.
+        // it also still needs an explicit size - it has no visual children of its own (just a
+        // non-visual Menu), so without one it defaults to 0x0 and never receives a click at all.
         cm := ContextMenuArea {
-        width: 100%;
-        height: 100%;
-        Menu {
-            for m in item.has-priority-ordering ? [] : [
-                { suffix: "to Top", enabled: !item.is-first, dir: "top" },
-                { suffix: "Up", enabled: !item.is-first, dir: "up" },
-                { suffix: "Down", enabled: !item.is-last, dir: "down" },
-                { suffix: "to Bottom", enabled: !item.is-last, dir: "bottom" },
-            ]: MenuItem {
-                title: "Move \{item.full-name} \{m.suffix}";
-                enabled: m.enabled;
-                activated => { root.move-profile(item.unique-id, m.dir); }
-            }
-            MenuItem {
-                title: "Hide \{item.full-name}";
-                activated => { root.hide-profile(item.unique-id); }
-            }
-            if item.supports-profiles: MenuItem {
-                title: "Hide all profiles of \{item.browser-name}";
-                activated => { root.hide-app(item.unique-app-id); }
+            width: 100%;
+            height: 100%;
+            Menu {
+                for m in item.has-priority-ordering ? [] : [
+                    { suffix: "to Top", enabled: !item.is-first, dir: "top" },
+                    { suffix: "Up", enabled: !item.is-first, dir: "up" },
+                    { suffix: "Down", enabled: !item.is-last, dir: "down" },
+                    { suffix: "to Bottom", enabled: !item.is-last, dir: "bottom" },
+                ]: MenuItem {
+                    title: "Move \{item.full-name} \{m.suffix}";
+                    enabled: m.enabled;
+                    activated => { root.move-profile(item.unique-id, m.dir); }
+                }
+                MenuItem {
+                    title: "Hide \{item.full-name}";
+                    activated => { root.hide-profile(item.unique-id); }
+                }
+                if item.supports-profiles: MenuItem {
+                    title: "Hide all profiles of \{item.browser-name}";
+                    activated => { root.hide-app(item.unique-app-id); }
+                }
             }
         }
-    }
 
         HorizontalLayout {
-        padding-right: 15px;
-        padding-left: 4px;
-        spacing: 6px;
-        // center instead of the default stretch, so the fixed-size hotkey badge (18px tall in a
-        // 32px row) is vertically centered instead of pinned to the top.
-        // doesn't affect the icon or name/profile column since those end up the same
-        // size/position either way.
-        cross-axis-alignment: center;
-        // no alignment here on purpose - setting it to start (like it used to be) pins every
-        // child, including the stretch spacer below, to its minimum size instead of letting
-        // stretch actually distribute the leftover space.
-        // that quietly left the spacer at 0 width, so the hotkey badge sat right after the
-        // name/profile column instead of getting pushed to the row's edge, and its x position
-        // ended up tracking each row's text width instead of lining up across rows
+            padding-right: 15px;
+            padding-left: 4px;
+            spacing: 6px;
+            // center instead of the default stretch, so the fixed-size hotkey badge (18px tall in a
+            // 32px row) is vertically centered instead of pinned to the top.
+            // doesn't affect the icon or name/profile column since those end up the same
+            // size/position either way.
+            cross-axis-alignment: center;
+            // no alignment here on purpose - setting it to start (like it used to be) pins every
+            // child, including the stretch spacer below, to its minimum size instead of letting
+            // stretch actually distribute the leftover space.
+            // that quietly left the spacer at 0 width, so the hotkey badge sat right after the
+            // name/profile column instead of getting pushed to the row's edge, and its x position
+            // ended up tracking each row's text width instead of lining up across rows
 
-        Rectangle {
-            width: 32px;
-            height: 32px;
-            Image {
-                source: item.image;
-                width: icon-size;
-                height: icon-size;
-                image-fit: contain;
+            Rectangle {
+                width: 32px;
+                height: 32px;
+                Image {
+                    source: item.image;
+                    width: icon-size;
+                    height: icon-size;
+                    image-fit: contain;
+                }
+                Image {
+                    source: item.profile-image;
+                    width: 16px;
+                    height: 16px;
+                    x: 32px - self.width - 1px;
+                    y: 32px - self.height - 1px;
+                    visible: item.profile-image.width > 0;
+                }
             }
-            Image {
-                source: item.profile-image;
-                width: 16px;
-                height: 16px;
-                x: 32px - self.width - 1px;
-                y: 32px - self.height - 1px;
-                visible: item.profile-image.width > 0;
-            }
-        }
 
-        VerticalLayout {
-            alignment: center;
-            HorizontalLayout {
-                spacing: 4px;
-                Text {
-                    text: item.browser-name;
-                    font-size: AppPalette.browser-label-size;
-                    color: highlighted ? AppPalette.label-color-hover : AppPalette.label-color;
+            VerticalLayout {
+                alignment: center;
+                HorizontalLayout {
+                    spacing: 4px;
+                    Text {
+                        text: item.browser-name;
+                        font-size: AppPalette.browser-label-size;
+                        color: highlighted ? AppPalette.label-color-hover : AppPalette.label-color;
+                        overflow: elide;
+                    }
+                    Text {
+                        text: (item.show-incognito && incognito-mode) ? "👓" : "";
+                        font-size: AppPalette.browser-label-size;
+                        color: highlighted ? AppPalette.label-color-hover : AppPalette.label-color;
+                    }
+                }
+                if item.supports-profiles: Text {
+                    text: item.profile-name;
+                    font-size: AppPalette.profile-label-size;
+                    color: highlighted ? AppPalette.secondary-label-color-hover : AppPalette.secondary-label-color;
                     overflow: elide;
                 }
+            }
+
+            Rectangle { horizontal-stretch: 1; }
+
+            if item.show-hotkey: Rectangle {
+                width: 18px;
+                height: 18px;
+                border-radius: 5px;
+                border-width: 1px;
+                border-color: AppPalette.secondary-stroke-color;
+                background: highlighted ? AppPalette.hotkey-background-color-hover : AppPalette.secondary-background-color;
                 Text {
-                    text: (item.show-incognito && incognito-mode) ? "👓" : "";
-                    font-size: AppPalette.browser-label-size;
-                    color: highlighted ? AppPalette.label-color-hover : AppPalette.label-color;
+                    text: item.hotkey;
+                    font-size: 10px;
+                    color: highlighted ? AppPalette.hotkey-text-color-hover : AppPalette.muted-label-color;
                 }
             }
-            if item.supports-profiles: Text {
-                text: item.profile-name;
-                font-size: AppPalette.profile-label-size;
-                color: highlighted ? AppPalette.secondary-label-color-hover : AppPalette.secondary-label-color;
-                overflow: elide;
-            }
-        }
-
-        Rectangle { horizontal-stretch: 1; }
-
-        if item.show-hotkey: Rectangle {
-            width: 18px;
-            height: 18px;
-            border-radius: 5px;
-            border-width: 1px;
-            border-color: AppPalette.secondary-stroke-color;
-            background: highlighted ? AppPalette.hotkey-background-color-hover : AppPalette.secondary-background-color;
-            Text {
-                text: item.hotkey;
-                font-size: 10px;
-                color: highlighted ? AppPalette.hotkey-text-color-hover : AppPalette.muted-label-color;
-            }
-        }
         }
     }
 }
@@ -270,188 +270,188 @@ export component MainWindow inherits Window {
             border-width: 1px;
             border-radius: 7px;
 
-        fs := FocusScope {
-            key-pressed(event) => {
-                if (event.text == Key.Escape) {
-                    root.quit();
-                    return accept;
-                }
-                if (event.text == Key.Return || event.text == " ") {
-                    root.activate-focused();
-                    return accept;
-                }
-                if (event.text == Key.Shift) {
-                    root.incognito-mode = true;
-                    return accept;
-                }
-                if (event.text == Key.UpArrow) {
-                    if (root.browsers.length > 0) {
-                        root.focused-index = max(0, root.focused-index - 1);
-                        root.ensure-focused-visible();
+            fs := FocusScope {
+                key-pressed(event) => {
+                    if (event.text == Key.Escape) {
+                        root.quit();
+                        return accept;
                     }
-                    return accept;
-                }
-                if (event.text == Key.DownArrow) {
-                    if (root.browsers.length > 0) {
-                        root.focused-index = min(root.browsers.length - 1, root.focused-index + 1);
-                        root.ensure-focused-visible();
+                    if (event.text == Key.Return || event.text == " ") {
+                        root.activate-focused();
+                        return accept;
                     }
-                    return accept;
-                }
-                if (event.modifiers.control || event.modifiers.meta) {
-                    if (event.text == "c") { root.copy-link(); return accept; }
-                    if (event.text == ",") { root.show-settings(); return accept; }
-                }
-                return reject;
-            }
-            key-released(event) => {
-                if (event.text == Key.Shift) {
-                    root.incognito-mode = false;
-                    return accept;
-                }
-                return reject;
-            }
-
-            KeyBinding { keys: @keys("1"); activated => { root.open-hotkey(0); } }
-            KeyBinding { keys: @keys("2"); activated => { root.open-hotkey(1); } }
-            KeyBinding { keys: @keys("3"); activated => { root.open-hotkey(2); } }
-            KeyBinding { keys: @keys("4"); activated => { root.open-hotkey(3); } }
-            KeyBinding { keys: @keys("5"); activated => { root.open-hotkey(4); } }
-            KeyBinding { keys: @keys("6"); activated => { root.open-hotkey(5); } }
-            KeyBinding { keys: @keys("7"); activated => { root.open-hotkey(6); } }
-            KeyBinding { keys: @keys("8"); activated => { root.open-hotkey(7); } }
-            KeyBinding { keys: @keys("9"); activated => { root.open-hotkey(8); } }
-
-            VerticalLayout {
-                padding: 5px;
-                spacing: 5px;
-
-                browser-list-container := Rectangle {
-                    vertical-stretch: 1;
-                    clip: true;
-
-                    property <length> row-height: Layout.browser-row-height;
-                    property <length> drag-y;
-                    property <length> drag-content-y: self.drag-y - browser-list.content-y;
-                    property <int> drop-index: clamp(
-                        floor((self.drag-content-y - self.row-height / 2) / self.row-height) + 1,
-                        0,
-                        root.browsers.length
-                    );
-
-                    browser-drop-area := DropArea {
-                        width: 100%;
-                        height: 100%;
-
-                        can-drop(event) => {
-                            browser-list-container.drag-y = event.position.y;
-                            return root.can-drop-browser(event, browser-list-container.drop-index);
+                    if (event.text == Key.Shift) {
+                        root.incognito-mode = true;
+                        return accept;
+                    }
+                    if (event.text == Key.UpArrow) {
+                        if (root.browsers.length > 0) {
+                            root.focused-index = max(0, root.focused-index - 1);
+                            root.ensure-focused-visible();
                         }
-
-                        dropped(event) => {
-                            root.browser-dropped(event, browser-list-container.drop-index);
-                            return event.proposed-action;
+                        return accept;
+                    }
+                    if (event.text == Key.DownArrow) {
+                        if (root.browsers.length > 0) {
+                            root.focused-index = min(root.browsers.length - 1, root.focused-index + 1);
+                            root.ensure-focused-visible();
                         }
+                        return accept;
+                    }
+                    if (event.modifiers.control || event.modifiers.meta) {
+                        if (event.text == "c") { root.copy-link(); return accept; }
+                        if (event.text == ",") { root.show-settings(); return accept; }
+                    }
+                    return reject;
+                }
+                key-released(event) => {
+                    if (event.text == Key.Shift) {
+                        root.incognito-mode = false;
+                        return accept;
+                    }
+                    return reject;
+                }
 
-                        browser-list := ListView {
-                            for item[idx] in root.browsers: BrowserRow {
-                                item: item;
-                                incognito-mode: root.incognito-mode;
-                                is-focused: item.filtered-index == root.focused-index;
-                                icon-size: root.icon-size;
-                                drag-data: root.make-browser-drag-data(item.unique-id, idx);
-                                open(profile-index) => { root.open-browser(profile-index); }
-                                move-profile(id, dir) => { root.move-profile(id, dir); }
-                                hide-profile(id) => { root.hide-profile(id); }
-                                hide-app(id) => { root.hide-app(id); }
-                                set-focused(i) => { root.focused-index = i; }
-                                drag-state-changed(active) => {
-                                    root.browser-drag-active = active;
+                KeyBinding { keys: @keys("1"); activated => { root.open-hotkey(0); } }
+                KeyBinding { keys: @keys("2"); activated => { root.open-hotkey(1); } }
+                KeyBinding { keys: @keys("3"); activated => { root.open-hotkey(2); } }
+                KeyBinding { keys: @keys("4"); activated => { root.open-hotkey(3); } }
+                KeyBinding { keys: @keys("5"); activated => { root.open-hotkey(4); } }
+                KeyBinding { keys: @keys("6"); activated => { root.open-hotkey(5); } }
+                KeyBinding { keys: @keys("7"); activated => { root.open-hotkey(6); } }
+                KeyBinding { keys: @keys("8"); activated => { root.open-hotkey(7); } }
+                KeyBinding { keys: @keys("9"); activated => { root.open-hotkey(8); } }
+
+                VerticalLayout {
+                    padding: 5px;
+                    spacing: 5px;
+
+                    browser-list-container := Rectangle {
+                        vertical-stretch: 1;
+                        clip: true;
+
+                        property <length> row-height: Layout.browser-row-height;
+                        property <length> drag-y;
+                        property <length> drag-content-y: self.drag-y - browser-list.content-y;
+                        property <int> drop-index: clamp(
+                            floor((self.drag-content-y - self.row-height / 2) / self.row-height) + 1,
+                            0,
+                            root.browsers.length
+                        );
+
+                        browser-drop-area := DropArea {
+                            width: 100%;
+                            height: 100%;
+
+                            can-drop(event) => {
+                                browser-list-container.drag-y = event.position.y;
+                                return root.can-drop-browser(event, browser-list-container.drop-index);
+                            }
+
+                            dropped(event) => {
+                                root.browser-dropped(event, browser-list-container.drop-index);
+                                return event.proposed-action;
+                            }
+
+                            browser-list := ListView {
+                                for item[idx] in root.browsers: BrowserRow {
+                                    item: item;
+                                    incognito-mode: root.incognito-mode;
+                                    is-focused: item.filtered-index == root.focused-index;
+                                    icon-size: root.icon-size;
+                                    drag-data: root.make-browser-drag-data(item.unique-id, idx);
+                                    open(profile-index) => { root.open-browser(profile-index); }
+                                    move-profile(id, dir) => { root.move-profile(id, dir); }
+                                    hide-profile(id) => { root.hide-profile(id); }
+                                    hide-app(id) => { root.hide-app(id); }
+                                    set-focused(i) => { root.focused-index = i; }
+                                    drag-state-changed(active) => {
+                                        root.browser-drag-active = active;
+                                    }
                                 }
                             }
-                        }
 
-                        if browser-drop-area.has-drag: Rectangle {
-                            width: browser-list.visible-width;
-                            height: 2px;
-                            y: browser-list-container.drop-index * browser-list-container.row-height
-                                + browser-list.content-y - self.height / 2;
-                            background: Palette.accent-background;
+                            if browser-drop-area.has-drag: Rectangle {
+                                width: browser-list.visible-width;
+                                height: 2px;
+                                y: browser-list-container.drop-index * browser-list-container.row-height
+                                    + browser-list.content-y - self.height / 2;
+                                background: Palette.accent-background;
+                            }
                         }
                     }
-                }
 
-                HorizontalLayout {
-                    height: 18px;
-                    urlTa := TouchArea {
-                        clicked => { root.copy-link(); }
-                        Text {
-                            text: root.url-text;
-                            font-size: AppPalette.url-label-size;
-                            color: AppPalette.muted-label-color;
-                            overflow: elide;
-                            vertical-alignment: center;
+                    HorizontalLayout {
+                        height: 18px;
+                        urlTa := TouchArea {
+                            clicked => { root.copy-link(); }
+                            Text {
+                                text: root.url-text;
+                                font-size: AppPalette.url-label-size;
+                                color: AppPalette.muted-label-color;
+                                overflow: elide;
+                                vertical-alignment: center;
+                            }
                         }
-                    }
-                    Rectangle { horizontal-stretch: 1; }
-                    om := ContextMenuArea {
-                        Menu {
-                            MenuItem {
-                                title: "Refresh";
-                                activated => { root.refresh(); }
-                            }
-                            if root.show-set-as-default: MenuItem {
-                                title: "Make Browsers Default";
-                                activated => { root.set-browsers-default(); }
-                            }
+                        Rectangle { horizontal-stretch: 1; }
+                        om := ContextMenuArea {
                             Menu {
-                                title: "Restore";
-                                if root.restorable-app-profiles.length == 0: MenuItem {
-                                    title: "No hidden apps or profiles";
-                                    enabled: false;
+                                MenuItem {
+                                    title: "Refresh";
+                                    activated => { root.refresh(); }
                                 }
-                                for p[i] in root.restorable-app-profiles: MenuItem {
-                                    title: p.full-name;
-                                    activated => { root.restore-profile(p.unique-id); }
+                                if root.show-set-as-default: MenuItem {
+                                    title: "Make Browsers Default";
+                                    activated => { root.set-browsers-default(); }
+                                }
+                                Menu {
+                                    title: "Restore";
+                                    if root.restorable-app-profiles.length == 0: MenuItem {
+                                        title: "No hidden apps or profiles";
+                                        enabled: false;
+                                    }
+                                    for p in root.restorable-app-profiles: MenuItem {
+                                        title: p.full-name;
+                                        activated => { root.restore-profile(p.unique-id); }
+                                    }
+                                }
+                                MenuItem {
+                                    title: "Settings...";
+                                    activated => { root.show-settings(); }
+                                }
+                                MenuItem {
+                                    title: "About";
+                                    activated => { root.show-about(); }
+                                }
+                                MenuItem {
+                                    title: "Quit";
+                                    activated => { root.quit(); }
                                 }
                             }
-                            MenuItem {
-                                title: "Settings...";
-                                activated => { root.show-settings(); }
-                            }
-                            MenuItem {
-                                title: "About";
-                                activated => { root.show-about(); }
-                            }
-                            MenuItem {
-                                title: "Quit";
-                                activated => { root.quit(); }
-                            }
-                        }
 
-                        // keeping the visual content inside the ContextMenuArea instead of next
-                        // to it as a sibling, so .show()'s point argument and mouse-x/mouse-y
-                        // below share the same coordinate space
-                        optionsTa := TouchArea {
-                            width: 18px;
-                            height: 18px;
-                            clicked => { om.show({x: self.mouse-x, y: self.mouse-y}); }
-                            Rectangle {
+                            // keeping the visual content inside the ContextMenuArea instead of next
+                            // to it as a sibling, so .show()'s point argument and mouse-x/mouse-y
+                            // below share the same coordinate space
+                            optionsTa := TouchArea {
                                 width: 18px;
                                 height: 18px;
-                                border-radius: 9px;
-                                background: optionsTa.has-hover ? AppPalette.highlight-background-color : transparent;
-                                Text {
-                                    text: "⋮";
-                                    font-size: 15px;
-                                    color: AppPalette.muted-label-color;
+                                clicked => { om.show({x: self.mouse-x, y: self.mouse-y}); }
+                                Rectangle {
+                                    width: 18px;
+                                    height: 18px;
+                                    border-radius: 9px;
+                                    background: optionsTa.has-hover ? AppPalette.highlight-background-color : transparent;
+                                    Text {
+                                        text: "⋮";
+                                        font-size: 15px;
+                                        color: AppPalette.muted-label-color;
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-        }
         }
 
         delete-drop-slot := Rectangle {

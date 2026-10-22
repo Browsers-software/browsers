@@ -26,7 +26,7 @@ export struct DirEntry {
 export component DirectoriesList inherits HorizontalLayout {
     in property <[DirEntry]> directories;
     in property <length> entry-font-size: 11px;
-    in property <color> entry-color: black;
+    in property <brush> entry-color: Palette.foreground;
 
     spacing: 6px;
     VerticalLayout {

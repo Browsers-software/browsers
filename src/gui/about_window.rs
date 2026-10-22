@@ -61,8 +61,8 @@ pub fn open(state: &SharedState) {
     app::apply_theme(state);
     win.window().show().ok();
 
-    // otherwise this renders behind the always-on-top main popup - see app::make_window_floating
-    app::make_window_floating(&win);
+    // the main popup can show over full-screen apps, so these need to as well
+    app::allow_over_fullscreen_apps(&win);
 
     app::clear_on_close(&win, state, |st| st.about_window = None);
 }

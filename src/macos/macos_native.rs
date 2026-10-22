@@ -10,7 +10,7 @@ use objc2::runtime::AnyObject;
 use objc2::{DefinedClass, MainThreadOnly, define_class, msg_send, sel};
 use objc2_app_kit::{
     NSApplication, NSApplicationActivationPolicy, NSBitmapImageFileType, NSBitmapImageRep, NSEvent,
-    NSFloatingWindowLevel, NSScreen, NSView, NSWindowCollectionBehavior, NSWorkspace,
+    NSScreen, NSView, NSWindowCollectionBehavior, NSWorkspace,
 };
 use objc2_foundation::{
     MainThreadMarker, NSArray, NSBundle, NSDictionary, NSNotification, NSNotificationCenter,
@@ -67,17 +67,18 @@ pub fn mouse_position_and_work_area() -> (Point, Rect) {
     (point, rect)
 }
 
-// always-on-top isn't documented for macOS in Slint, so we do it natively here (see gui::app::run)
+// the window level itself comes from `always-on-top: true` in the .slint files (winit maps it to
+// the floating level), but Slint has no way to let a window show over full-screen apps, so that
+// part is done natively here.
 // not setting CanJoinAllSpaces on purpose, the popup should stay on the Space it was triggered
 // from and not follow you around
-pub fn make_window_floating(ns_view_ptr: *mut c_void) {
+pub fn allow_over_fullscreen_apps(ns_view_ptr: *mut c_void) {
     unsafe {
         let ns_view = &*(ns_view_ptr as *const NSView);
         if let Some(window) = ns_view.window() {
-            window.setLevel(NSFloatingWindowLevel);
             window.setCollectionBehavior(NSWindowCollectionBehavior::FullScreenAuxiliary);
         } else {
-            warn!("could not find NSWindow for view to make it floating");
+            warn!("could not find NSWindow for view to allow it over full-screen apps");
         }
     }
 }
@@ -183,19 +184,6 @@ pub fn hide_dock_icon() {
     };
     NSApplication::sharedApplication(mtm)
         .setActivationPolicy(NSApplicationActivationPolicy::Accessory);
-}
-
-// native dark mode check - works before any window exists, unlike Slint's Palette.color-scheme.
-// only used for the very first paint, see theme::detect_system_is_dark for why
-pub fn is_dark_mode() -> bool {
-    let Some(mtm) = MainThreadMarker::new() else {
-        warn!("is_dark_mode must be called from the main thread");
-        return false;
-    };
-    let appearance = NSApplication::sharedApplication(mtm).effectiveAppearance();
-
-    // https://developer.apple.com/documentation/appkit/nsappearance/name-swift.struct
-    appearance.name().to_string().contains("Dark")
 }
 
 // sets up native hooks for app-resign-active (quit_on_lost_focus) and GetURL apple events.
