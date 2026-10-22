@@ -213,6 +213,8 @@ export component MainWindow inherits Window {
     in property <[BrowserItem]> browsers;
     in property <[RestorableProfile]> restorable-app-profiles;
     in property <string> url-text;
+    // the untruncated URL, shown while hovering url-text
+    in property <string> full-url;
     in property <bool> show-set-as-default;
     in property <length> icon-size: 24px;
     in-out property <bool> incognito-mode: false;
@@ -449,6 +451,36 @@ export component MainWindow inherits Window {
                                 }
                             }
                         }
+                    }
+                }
+
+                // full URL on hover. Drawn inside the window, as a Tooltip would be clipped at its
+                // edge. Grows upwards from the URL row, so it fits much longer URLs.
+                // parent is the dialog's FocusScope, so the box ends 27px above its bottom (5px
+                // padding + 18px URL row + 4px gap).
+                if urlTa.has-hover: Rectangle {
+                    // the longest the box can get; whatever doesn't fit is elided
+                    property <length> max-box-height: parent.height - 32px;
+                    x: 5px;
+                    width: parent.width - 10px;
+                    height: min(url-measure.preferred-height + 12px, self.max-box-height);
+                    y: parent.height - 27px - self.height;
+                    background: AppPalette.secondary-background-color;
+                    border-radius: 5px;
+                    border-width: 1px;
+                    border-color: AppPalette.secondary-stroke-color;
+
+                    url-measure := Text {
+                        x: 6px;
+                        y: 6px;
+                        width: parent.width - 12px;
+                        height: parent.height - 12px;
+                        text: root.full-url;
+                        font-size: AppPalette.url-label-size;
+                        color: AppPalette.text-color;
+                        // URLs have no spaces to break at
+                        wrap: char-wrap;
+                        overflow: elide;
                     }
                 }
             }
