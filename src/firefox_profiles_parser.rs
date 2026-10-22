@@ -43,7 +43,20 @@ pub fn find_firefox_profiles(
     let mut profiles_ini_config = Ini::new_from_defaults(ini_default);
 
     // You can easily load a file to get a clone of the map:
-    let profiles_ini_map = profiles_ini_config.load(&profiles_ini_path).unwrap();
+    let profiles_ini_map = match profiles_ini_config.load(&profiles_ini_path) {
+        Ok(profiles_ini_map) => profiles_ini_map,
+        Err(_) => {
+            // Os { code: 1, kind: PermissionDenied, message: "Operation not permitted" }
+
+            info!(
+                "Could not access profile.info_cache found in {}. This is most likely macOS restriction. \
+                Nevertheless, this registered the wish to access, so user can enable it in macOS settings",
+                profiles_ini_path.display()
+            );
+            return browser_profiles;
+        }
+    };
+
     //info!("{:?}", map);
     // You can also safely not store the reference and access it later with get_map_ref() or get a clone with get_map()
 

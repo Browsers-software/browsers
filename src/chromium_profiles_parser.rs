@@ -88,7 +88,20 @@ impl ChromeInfoCacheMap {
 
     fn profiles_info_cache_map(local_state_file_path: &Path) -> Map<String, Value> {
         // Open the file in read-only mode with buffer.
-        let file = File::open(local_state_file_path).unwrap();
+        let file = match File::open(local_state_file_path) {
+            Ok(file) => file,
+            Err(_) => {
+                // Os { code: 1, kind: PermissionDenied, message: "Operation not permitted" }
+
+                info!(
+                    "Could not access profile.info_cache found in {}. This is most likely macOS restriction. \
+                    Nevertheless, this registered the wish to access, so user can enable it in macOS settings",
+                    local_state_file_path.display()
+                );
+                return Map::new();
+            }
+        };
+
         let reader = BufReader::new(file);
         let v: Value = serde_json::from_reader(reader).unwrap();
         let profiles = &v["profile"];
