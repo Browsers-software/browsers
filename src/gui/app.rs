@@ -125,6 +125,7 @@ pub fn refresh_main_window_model(state: &SharedState) {
     crate::gui::ui_util::sync_vec_model(&win.get_restorable_app_profiles(), restorable);
     win.set_show_set_as_default(show_set_as_default);
     win.set_url_text(crate::gui::ui_util::ellipsize(&url, 28).into());
+    win.set_full_url(url.as_str().into());
     win.set_icon_size(main_window::get_icon_size());
 
     // keep the focus index in range as the (filtered) list changes size - after a hide/restore/move,
