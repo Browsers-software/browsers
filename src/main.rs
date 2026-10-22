@@ -157,23 +157,16 @@ fn main() {
         });
 
         let open_urls_sender = main_sender.clone();
-        let open_urls_state = state.clone();
         bridge.set_open_urls_handler(move |sender_bundle_id, url| {
-            let unwrap_urls = open_urls_state
-                .borrow()
-                .ui_settings
-                .behavioral_settings
-                .unwrap_urls;
-            let behavioral_config = utils::BehavioralConfig { unwrap_urls };
             let _ = open_urls_sender.send(MessageToMain::UrlPassedToMain(
                 sender_bundle_id.unwrap_or_default(),
                 url,
-                behavioral_config,
             ));
         });
     }
 
     let ui_handle = UiHandle::new(&state);
+    let behavioral_config = behavioral_settings.clone();
     thread::spawn(move || {
         handle_messages_to_main(
             main_receiver,
@@ -181,6 +174,7 @@ fn main() {
             &mut opening_rules_and_default_profile,
             &mut visible_and_hidden_profiles,
             &app_finder,
+            behavioral_config,
         );
     });
 
