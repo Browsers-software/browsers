@@ -2,8 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres
-to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [unreleased]
+
+### Fixed
+
+- macOS: Fix directly opening from Rule. Thanks to @leipert for contribution #408
 
 ## [0.8.0] - 2026-10-09
 
@@ -47,8 +52,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- Windows: Don't show same browser twice if it has an entry for user and system at the same time. Thanks to @kfatehi for
-  contribution #337
+- Windows: Don't show same browser twice if it has an entry for user and system at the same time. Thanks to @kfatehi for contribution #337
 
 ## [0.7.2] - 2025-10-04
 
