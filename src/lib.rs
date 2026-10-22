@@ -327,7 +327,7 @@ impl CommonBrowserProfile {
         return self.profile_name.as_str();
     }
 
-    fn open_link(&self, url: &str, incognito_mode: bool) {
+    pub fn open_link(&self, url: &str, incognito_mode: bool) {
         let _ = &self.create_command(url, incognito_mode).spawn();
     }
 
@@ -697,36 +697,31 @@ pub fn handle_messages_to_main(
                 ui_event_sink.open_link_completed();
             }
             MessageToMain::UrlPassedToMain(from_bundle_id, url) => {
-                let new_modified_url = unwrap_url(url.as_str(), &behavioral_config);
-                debug!("source_bundle_id: {}, url: {}", from_bundle_id, new_modified_url);
-
-                if from_bundle_id == "com.apple.Safari" {
-                    // workaround for weird bug where Safari opens default browser on hard launch
-                    // see https://github.com/Browsers-software/browsers/issues/79
-                    // We might need to remove this workaround if we want to allow Safari
-                    // to open Browsers via some extension
-                    info!("Safari has a weird bug and launched Browsers. Exiting Browsers.");
-                    exit(QUIT_EXIT_CODE);
-                }
-
-                let url_open_context = UrlOpenContext {
-                    cleaned_url: new_modified_url.clone(),
-                    source_app_maybe: Some(from_bundle_id.clone()),
-                };
-                if open_link_if_matching_rule(
-                    &url_open_context,
+                let routing = route_url(
+                    Some(from_bundle_id.as_str()),
+                    url.as_str(),
+                    &behavioral_config,
                     opening_rules_and_default_profile,
                     visible_and_hidden_profiles,
-                ) {
-                    ui_event_sink.open_link_completed();
-                    continue;
+                );
+                match routing {
+                    UrlRouting::Quit => exit(QUIT_EXIT_CODE),
+                    UrlRouting::OpenInProfile {
+                        profile,
+                        incognito,
+                        url,
+                    } => {
+                        profile.open_link(url.as_str(), incognito);
+                        ui_event_sink.open_link_completed();
+                    }
+                    UrlRouting::ShowPicker { url } => {
+                        let url_open_info = UrlOpenInfo {
+                            url,
+                            source_bundle_id: from_bundle_id,
+                        };
+                        ui_event_sink.cleaned_url_opened(url_open_info);
+                    }
                 }
-
-                let url_open_info = UrlOpenInfo {
-                    url: new_modified_url,
-                    source_bundle_id: from_bundle_id,
-                };
-                ui_event_sink.cleaned_url_opened(url_open_info);
             }
             MessageToMain::SetBrowsersAsDefaultBrowser => {
                 utils::set_as_default_web_browser();
@@ -942,28 +937,63 @@ pub fn print_visible_options(prepared_ui: &PreparedUi) {
     }
 }
 
-pub fn open_link_if_matching_rule(
-    url_open_context: &UrlOpenContext,
+// what to do with a URL that was handed to Browsers
+pub enum UrlRouting<'a> {
+    // Safari hard-launch workaround, there is nothing to open
+    Quit,
+    // an opening rule picked the profile, so the picker is not needed
+    OpenInProfile {
+        profile: &'a CommonBrowserProfile,
+        incognito: bool,
+        url: String,
+    },
+    ShowPicker {
+        url: String,
+    },
+}
+
+// The one place that decides what happens with an incoming URL (unwrapping, the Safari
+// workaround and opening rules), so all entry points behave the same way.
+// source_app is None when the URL didn't come from another app (e.g. command line argument).
+pub fn route_url<'a>(
+    source_app: Option<&str>,
+    url: &str,
+    behavioral_config: &BehavioralConfig,
     opening_rules_and_default_profile: &OpeningRulesAndDefaultProfile,
-    visible_and_hidden_profiles: &VisibleAndHiddenProfiles,
-) -> bool {
-    let opening_profile_id_maybe =
-        opening_rules_and_default_profile.get_rule_for_source_app_and_url(url_open_context);
+    visible_and_hidden_profiles: &'a VisibleAndHiddenProfiles,
+) -> UrlRouting<'a> {
+    debug!("source_bundle_id: {:?}, url: {}", source_app, url);
 
-    if let Some(opening_profile_id) = opening_profile_id_maybe {
-        let profile_and_options = opening_profile_id.clone();
-        let profile_id = profile_and_options.profile;
-        let incognito = profile_and_options.incognito;
+    if source_app == Some("com.apple.Safari") {
+        // workaround for weird bug where Safari opens default browser on hard launch
+        // see https://github.com/Browsers-software/browsers/issues/79
+        // We might need to remove this workaround if we want to allow Safari
+        // to open Browsers via some extension
+        info!("Safari has a weird bug and launched Browsers. Exiting Browsers.");
+        return UrlRouting::Quit;
+    }
 
-        let profile_maybe =
-            visible_and_hidden_profiles.get_browser_profile_by_id(profile_id.as_str());
+    let cleaned_url = unwrap_url(url, behavioral_config);
+    let url_open_context = UrlOpenContext {
+        cleaned_url: cleaned_url.clone(),
+        source_app_maybe: source_app.map(|s| s.to_string()),
+    };
+
+    let profile_and_options_maybe =
+        opening_rules_and_default_profile.get_rule_for_source_app_and_url(&url_open_context);
+    if let Some(profile_and_options) = profile_and_options_maybe {
+        let profile_maybe = visible_and_hidden_profiles
+            .get_browser_profile_by_id(profile_and_options.profile.as_str());
         if let Some(profile) = profile_maybe {
-            profile.open_link(url_open_context.cleaned_url.as_str(), incognito);
-            return true;
+            return UrlRouting::OpenInProfile {
+                profile,
+                incognito: profile_and_options.incognito,
+                url: cleaned_url,
+            };
         }
     }
 
-    return false;
+    UrlRouting::ShowPicker { url: cleaned_url }
 }
 
 pub struct UrlOpenContext {
@@ -1081,4 +1111,158 @@ pub enum MessageToMain {
     SaveConfigDefaultOpener(Option<UIProfileAndIncognito>),
     SaveConfigUISettings(UIVisualSettings),
     SaveConfigUIBehavioralSettings(UIBehavioralSettings),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn profile(executable_path: &str, cli_arg: &str) -> CommonBrowserProfile {
+        let supported_app =
+            SupportedAppRepository::new().get_or_generate("test.browser", &Vec::new());
+        let app = BrowserCommon {
+            command: vec![executable_path.to_string()],
+            executable_path: executable_path.to_string(),
+            display_name: "Test Browser".to_string(),
+            icon_path: "".to_string(),
+            supported_app,
+            profiles_type: InstalledAppProfilesType::RealProfiles,
+        };
+        let installed_profile = InstalledBrowserProfile {
+            profile_cli_arg_value: cli_arg.to_string(),
+            profile_cli_container_name: None,
+            profile_name: cli_arg.to_string(),
+            profile_icon: None,
+            profile_restricted_url_patterns: Vec::new(),
+        };
+        CommonBrowserProfile::new(&installed_profile, Arc::new(app))
+    }
+
+    fn profiles() -> VisibleAndHiddenProfiles {
+        VisibleAndHiddenProfiles {
+            visible_browser_profiles: vec![profile("/bin/test", "Default")],
+            hidden_browser_profiles: Vec::new(),
+        }
+    }
+
+    fn rule(source_app: Option<&str>, url_pattern: Option<&str>, profile: &str) -> OpeningRule {
+        OpeningRule {
+            source_app: source_app.map(|s| s.to_string()),
+            url_pattern: url_pattern.map(|s| s.to_string()),
+            opener: Some(ProfileAndOptions {
+                profile: profile.to_string(),
+                incognito: true,
+            }),
+        }
+    }
+
+    fn rules(opening_rules: Vec<OpeningRule>) -> OpeningRulesAndDefaultProfile {
+        OpeningRulesAndDefaultProfile {
+            opening_rules,
+            default_profile: None,
+        }
+    }
+
+    const PROFILE_ID: &str = "/bin/test#Default";
+
+    fn no_unwrap() -> BehavioralConfig {
+        BehavioralConfig { unwrap_urls: false }
+    }
+
+    #[test]
+    fn matching_url_rule_opens_in_profile() {
+        let rules = rules(vec![rule(None, Some("example.com"), PROFILE_ID)]);
+        let profiles = profiles();
+
+        let routing = route_url(None, "https://example.com/a", &no_unwrap(), &rules, &profiles);
+
+        match routing {
+            UrlRouting::OpenInProfile {
+                profile,
+                incognito,
+                url,
+            } => {
+                assert_eq!(profile.get_unique_id(), PROFILE_ID);
+                assert!(incognito);
+                assert_eq!(url, "https://example.com/a");
+            }
+            _ => panic!("expected OpenInProfile"),
+        }
+    }
+
+    #[test]
+    fn source_app_rule_only_matches_that_app() {
+        let rules = rules(vec![rule(Some("com.example.Mail"), None, PROFILE_ID)]);
+        let profiles = profiles();
+        let url = "https://example.com/";
+
+        let from_mail = route_url(Some("com.example.Mail"), url, &no_unwrap(), &rules, &profiles);
+        assert!(matches!(from_mail, UrlRouting::OpenInProfile { .. }));
+
+        let from_other = route_url(Some("com.example.Other"), url, &no_unwrap(), &rules, &profiles);
+        assert!(matches!(from_other, UrlRouting::ShowPicker { .. }));
+
+        let no_source = route_url(None, url, &no_unwrap(), &rules, &profiles);
+        assert!(matches!(no_source, UrlRouting::ShowPicker { .. }));
+    }
+
+    #[test]
+    fn no_matching_rule_shows_picker() {
+        let rules = rules(vec![rule(None, Some("example.com"), PROFILE_ID)]);
+        let profiles = profiles();
+
+        let routing = route_url(None, "https://other.org/", &no_unwrap(), &rules, &profiles);
+
+        match routing {
+            UrlRouting::ShowPicker { url } => assert_eq!(url, "https://other.org/"),
+            _ => panic!("expected ShowPicker"),
+        }
+    }
+
+    #[test]
+    fn rule_for_missing_profile_shows_picker() {
+        let rules = rules(vec![rule(None, Some("example.com"), "/bin/gone#Default")]);
+        let profiles = profiles();
+
+        let routing = route_url(None, "https://example.com/", &no_unwrap(), &rules, &profiles);
+
+        assert!(matches!(routing, UrlRouting::ShowPicker { .. }));
+    }
+
+    #[test]
+    fn safari_hard_launch_quits() {
+        let rules = rules(vec![rule(None, None, PROFILE_ID)]);
+        let profiles = profiles();
+
+        let routing = route_url(
+            Some("com.apple.Safari"),
+            "https://example.com/",
+            &no_unwrap(),
+            &rules,
+            &profiles,
+        );
+
+        assert!(matches!(routing, UrlRouting::Quit));
+    }
+
+    #[test]
+    fn unwrapped_url_is_what_rules_match_and_picker_shows() {
+        let wrapped =
+            "https://eur01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fexample.com%2Fa";
+        let rules = rules(vec![rule(None, Some("example.com"), PROFILE_ID)]);
+        let profiles = profiles();
+        let unwrap = BehavioralConfig { unwrap_urls: true };
+
+        let unwrapped = route_url(None, wrapped, &unwrap, &rules, &profiles);
+        match unwrapped {
+            UrlRouting::OpenInProfile { url, .. } => assert_eq!(url, "https://example.com/a"),
+            _ => panic!("expected OpenInProfile"),
+        }
+
+        let not_unwrapped = route_url(None, wrapped, &no_unwrap(), &rules, &profiles);
+        match not_unwrapped {
+            UrlRouting::ShowPicker { url } => assert_eq!(url, wrapped),
+            _ => panic!("expected ShowPicker"),
+        }
+    }
 }
