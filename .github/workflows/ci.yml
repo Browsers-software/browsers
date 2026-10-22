@@ -292,10 +292,10 @@ jobs:
         shell: bash
       - name: Install tools
         run: |
-          curl https://raw.githubusercontent.com/Browsers-software/ci-utils/main/zip/bzip2.dll -o bzip2.dll
-          curl https://raw.githubusercontent.com/Browsers-software/ci-utils/main/zip/zip.exe -o zip.exe
-          cp bzip2.dll "C:\Program Files\Git\mingw64\bin"
-          cp zip.exe "C:\Program Files\Git\mingw64\bin"
+          curl -fsS https://raw.githubusercontent.com/Browsers-software/ci-utils/main/zip/bzip2.dll -o bzip2.dll
+          curl -fsS https://raw.githubusercontent.com/Browsers-software/ci-utils/main/zip/zip.exe -o zip.exe
+          cp bzip2.dll "C:\Program Files\Git\ucrt64\bin"
+          cp zip.exe "C:\Program Files\Git\ucrt64\bin"
         shell: bash
       - name: Build binaries and package
         env:
