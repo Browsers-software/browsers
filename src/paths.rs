@@ -72,6 +72,17 @@ pub fn get_firefox_user_dir_root() -> PathBuf {
     return windows_utils::get_unsandboxed_roaming_config_dir();
 }
 
+pub fn get_new_firefox_user_dir_root() -> PathBuf {
+    #[cfg(target_os = "macos")]
+    return macos_utils::macos_get_unsandboxed_application_support_dir();
+
+    #[cfg(target_os = "linux")]
+    return linux_utils::linux_get_unsandboxed_config_dir();
+
+    #[cfg(target_os = "windows")]
+    return windows_utils::get_unsandboxed_roaming_config_dir();
+}
+
 // ~/Library/Application Support/
 #[cfg(target_os = "macos")]
 pub fn get_user_home_for_unsandboxed_app() -> PathBuf {

@@ -355,21 +355,21 @@ os = "MAC"
 
 [[apps]]
 id = "firefox"
-config_dir_relative = ".mozilla/firefox"
+config_dir_relative = "mozilla/firefox"
 snap_id = "firefox"
 kind = "FIREFOX"
 os = "LINUX"
 
 [[apps]]
 id = "firefox_firefox"
-config_dir_relative = ".mozilla/firefox"
+config_dir_relative = "mozilla/firefox"
 snap_id = "firefox"
 kind = "FIREFOX"
 os = "LINUX"
 
 [[apps]]
 id = "firefox-esr"
-config_dir_relative = ".mozilla/firefox"
+config_dir_relative = "mozilla/firefox"
 snap_id = "firefox"
 kind = "FIREFOX"
 os = "LINUX"
@@ -418,7 +418,7 @@ os = "MAC"
 
 [[apps]]
 id = "floorp"
-config_dir_relative = ".floorp"
+config_dir_relative = "floorp"
 kind = "FIREFOX"
 os = "LINUX"
 
@@ -448,7 +448,7 @@ os = "MAC"
 
 [[apps]]
 id = "librewolf"
-config_dir_relative = ".librewolf"
+config_dir_relative = "librewolf"
 kind = "FIREFOX"
 os = "LINUX"
 
