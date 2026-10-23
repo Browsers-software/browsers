@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
-use std::{fs, u32};
+use std::fs;
 
 use image::imageops::FilterType;
 use image::{ImageFormat, Rgba};
