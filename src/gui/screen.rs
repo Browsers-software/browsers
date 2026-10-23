@@ -30,30 +30,6 @@ pub fn mouse_position_and_work_area() -> (Point, Rect) {
 
     #[cfg(target_os = "linux")]
     {
-        linux_mouse_position_and_work_area()
+        crate::linux::linux_utils::mouse_position_and_work_area()
     }
-}
-
-#[cfg(target_os = "linux")]
-fn linux_mouse_position_and_work_area() -> (Point, Rect) {
-    use mouse_position::mouse_position::Mouse;
-
-    let point = match Mouse::get_mouse_position() {
-        Mouse::Position { x, y } => Point {
-            x: x as f32,
-            y: y as f32,
-        },
-        Mouse::Error => Point { x: 0.0, y: 0.0 },
-    };
-
-    // can't reliably query the work area across Linux desktops without heavier deps, so we just
-    // skip clamping - popup won't get nudged back on-screen if it's near an edge, oh well
-    let work_area = Rect {
-        x0: f32::MIN / 2.0,
-        y0: f32::MIN / 2.0,
-        x1: f32::MAX / 2.0,
-        y1: f32::MAX / 2.0,
-    };
-
-    (point, work_area)
 }

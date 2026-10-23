@@ -9,6 +9,7 @@ use tracing::{info, warn};
 use freedesktop_desktop_entry::{DesktopEntry, Iter, default_paths, get_languages_from_env};
 use freedesktop_icons;
 
+use crate::gui::screen::{Point, Rect};
 use crate::{InstalledBrowser, SupportedAppRepository};
 
 const XDG_NAME: &'static str = "software.Browsers";
@@ -480,4 +481,35 @@ fn query_default_app(scheme: &str) -> Option<String> {
     let default_app = String::from_utf8(output.stdout).unwrap().trim().to_string();
     info!("Default for {scheme} is '{default_app}'");
     return Some(default_app);
+}
+
+// asks the X server (XWayland on Wayland) where the pointer is.
+// None if there is no X server to connect to, or the pointer is on another screen
+fn x11_pointer_position() -> Option<Point> {
+    use x11rb::connection::Connection;
+    use x11rb::protocol::xproto::ConnectionExt;
+
+    let (conn, screen_num) = x11rb::connect(None).ok()?;
+    let root = conn.setup().roots.get(screen_num)?.root;
+    let pointer = conn.query_pointer(root).ok()?.reply().ok()?;
+
+    pointer.same_screen.then_some(Point {
+        x: pointer.root_x as f32,
+        y: pointer.root_y as f32,
+    })
+}
+
+pub fn mouse_position_and_work_area() -> (Point, Rect) {
+    let point = x11_pointer_position().unwrap_or(Point { x: 0.0, y: 0.0 });
+
+    // can't reliably query the work area across Linux desktops without heavier deps, so we just
+    // skip clamping - popup won't get nudged back on-screen if it's near an edge, oh well
+    let work_area = Rect {
+        x0: f32::MIN / 2.0,
+        y0: f32::MIN / 2.0,
+        x1: f32::MAX / 2.0,
+        y1: f32::MAX / 2.0,
+    };
+
+    (point, work_area)
 }

@@ -84,6 +84,11 @@ libc = "0.2.189"
 slint = { version = "1.18.1", features = ["renderer-skia"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
+# global cursor position on X11, to put the popup where the mouse is (macOS/Windows do this
+# natively instead, see gui/screen.rs). Pure Rust, so connecting to a missing X server is a plain
+# error, unlike the mouse_position crate which crashes without one.
+# Keep the version matching what winit (via Slint) wants, so Cargo resolves to one shared copy.
+x11rb = "0.13.2"
 xdg-mime = "^0.4.0"
 
 # override ontconfig-dlopen to use dlopen, so it can be cross-compiled
@@ -101,10 +106,6 @@ freedesktop-icons = "0.4.0"
 
 # Helps parsing commands that are in Exec field in .desktop files
 shell-words = "1.1.1"
-
-# cross-platform global cursor position, used on Linux to put the popup where the mouse is
-# (macOS/Windows do this natively instead, see gui/screen.rs)
-mouse_position = "0.1.4"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winreg = "0.56.0"
