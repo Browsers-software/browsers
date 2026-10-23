@@ -113,6 +113,35 @@ jobs:
             exit 1
           fi
         shell: bash
+      - name: UI test - start with GUI
+        run: |
+          sudo apt-get install -y --no-install-recommends weston
+
+          # headless Wayland compositor, so winit picks its Wayland backend
+          export XDG_RUNTIME_DIR="$(mktemp -d)"
+          chmod 700 "$XDG_RUNTIME_DIR"
+          weston --backend=headless --socket=wl-test --width=1280 --height=800 &
+          weston_pid=$!
+          for _ in $(seq 1 50); do
+            [ -S "$XDG_RUNTIME_DIR/wl-test" ] && break
+            sleep 0.1
+          done
+          [ -S "$XDG_RUNTIME_DIR/wl-test" ] || { echo "weston did not start"; exit 1; }
+
+          # no DISPLAY, so there is no X11 to fall back to
+          unset DISPLAY
+          export WAYLAND_DISPLAY=wl-test
+          "$HOME/.local/bin/browsers" https://browsers.software &
+          pid=$!
+          sleep 5
+          if ! kill -0 "$pid"; then
+            echo "Browsers exited early"
+            kill "$weston_pid"
+            exit 1
+          fi
+          kill "$pid"
+          kill "$weston_pid"
+        shell: bash
       - name: Upload release artifact
         uses: actions/upload-artifact@v7
         with:
@@ -241,6 +270,14 @@ jobs:
           fi
         # special shell script to make tty working
         shell: 'script -q /dev/null bash -e {0}'
+      - name: UI test - start with GUI
+        run: |
+          target_dir='target/universal-apple-darwin/release'
+          open "$target_dir/Browsers.app" --args https://browsers.software
+          sleep 5
+          pgrep -f 'Browsers.app/Contents/MacOS' || { echo "Browsers exited early"; exit 1; }
+          pkill -f 'Browsers.app/Contents/MacOS' || true
+        shell: bash
       - name: Upload mac artifacts
         uses: actions/upload-artifact@v7
         with:
@@ -355,6 +392,13 @@ jobs:
             exit 1
           fi
         shell: bash
+      - name: UI test - start with GUI
+        run: |
+          $proc = Start-Process "$env:PROGRAMFILES\software.Browsers\browsers.exe" -ArgumentList "https://browsers.software" -PassThru
+          Start-Sleep -Seconds 5
+          if ($proc.HasExited) { throw "Browsers exited early" }
+          Stop-Process $proc
+        shell: pwsh
       - name: Upload release artifact
         uses: actions/upload-artifact@v7
         with:
