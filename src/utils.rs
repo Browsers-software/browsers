@@ -242,6 +242,7 @@ impl OSAppFinder {
     pub fn get_installed_browsers(&self) -> Vec<InstalledBrowser> {
         let schemes = vec![
             ("figma", vec!["figma.com", "www.figma.com"]),
+            ("freetube", vec!["youtube.com", "www.youtube.com", "youtu.be"]),
             ("linear", vec!["linear.app"]),
             ("mimestream", vec!["links.mimestream.com"]),
             ("notion", vec!["notion.so", "www.notion.so"]),
