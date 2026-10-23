@@ -20,6 +20,7 @@ pub struct SupportedAppRepository {
     snap_base: PathBuf,
     chromium_user_dir_base: PathBuf,
     firefox_user_dir_base: PathBuf,
+    new_firefox_user_dir_base: PathBuf,
     supported_apps: HashMap<String, SupportedApp>,
 }
 
@@ -80,6 +81,7 @@ impl SupportedAppRepository {
             snap_base: paths::get_snap_root(),
             chromium_user_dir_base: paths::get_chrome_user_dir_root(),
             firefox_user_dir_base: paths::get_firefox_user_dir_root(),
+            new_firefox_user_dir_base: paths::get_new_firefox_user_dir_root(),
             supported_apps: HashMap::new(),
         };
         repository.generate_app_id_to_supported_app();
@@ -185,13 +187,33 @@ impl SupportedAppRepository {
         linux_snap_id: &str,
         linux_config_dir_relative: &str,
     ) -> SupportedApp {
-        let app_config_dir = AppConfigDir::new_linux(
-            self.firefox_user_dir_base.clone(),
-            PathBuf::from(linux_config_dir_relative),
-        );
+        let legacy_dir_relative = format!(".{linux_config_dir_relative}");
 
+        // Match Firefox's LegacyHomeExists():
+        // https://github.com/mozilla-firefox/firefox/blob/main/toolkit/xre/nsXREDirProvider.cpp
+        // Regular Linux (legacy): ~/.mozilla/firefox
+        // Regular Linux (XDG): ~/.config/mozilla/firefox
+        let (root_path, relative_path) = if self
+            .firefox_user_dir_base
+            .join(&legacy_dir_relative)
+            .is_dir()
+        {
+            (&self.firefox_user_dir_base, legacy_dir_relative.clone())
+        } else {
+            (
+                &self.new_firefox_user_dir_base,
+                linux_config_dir_relative.to_string(),
+            )
+        };
+
+        let app_config_dir =
+            AppConfigDir::new_linux(root_path.clone(), PathBuf::from(&relative_path));
+
+        // Firefox Snap (legacy): ~/snap/firefox/common/.mozilla/firefox
+        // Firefox Snap package forces legacy path by using MOZ_LEGACY_HOME env var
+        // https://github.com/canonical/firefox-snap/blob/stable/snapcraft.yaml#L42
         let snap_app_config_dir_absolute =
-            self.snap_config_dir_absolute_path(linux_snap_id, linux_config_dir_relative);
+            self.snap_config_dir_absolute_path(linux_snap_id, legacy_dir_relative.as_str());
 
         let app_id = AppIdentifier::new_linux(linux_desktop_id);
         let app = Self::firefox_based_app(
