@@ -266,14 +266,12 @@ pub fn create_icon_for_app(full_path: &NSString, icon_path: &str) {
 pub fn get_bundle_url(bundle_id: &str) -> Option<Retained<NSString>> {
     debug!("Getting url for bundle: {}", bundle_id);
 
-    unsafe {
-        let shared_workspace = NSWorkspace::sharedWorkspace();
+    let shared_workspace = NSWorkspace::sharedWorkspace();
 
-        // The URL of the app, or None if no app has the bundle identifier.
-        shared_workspace
-            .URLForApplicationWithBundleIdentifier(&NSString::from_str(bundle_id))
-            .and_then(|url| url.relativePath())
-    }
+    // The URL of the app, or None if no app has the bundle identifier.
+    shared_workspace
+        .URLForApplicationWithBundleIdentifier(&NSString::from_str(bundle_id))
+        .and_then(|url| url.relativePath())
 }
 
 /// get macOS application support directory, supports sandboxing
@@ -294,9 +292,11 @@ pub fn macos_get_library_dir() -> PathBuf {
 
 /// get macOS standard directory, supports sandboxing
 pub fn macos_get_directory(directory: NSSearchPathDirectory) -> PathBuf {
-    let results = unsafe {
-        NSSearchPathForDirectoriesInDomains(directory, NSSearchPathDomainMask::UserDomainMask, true)
-    };
+    let results = NSSearchPathForDirectoriesInDomains(
+        directory,
+        NSSearchPathDomainMask::UserDomainMask,
+        true,
+    );
 
     //let results = unsafe { CFArray::<CFString>::wrap_under_get_rule(results) };
 
@@ -328,19 +328,15 @@ pub(crate) fn get_app_executable_path(bundle_path: &NSString) -> String {
     let bundle = get_bundle(bundle_path);
 
     //bundleWithURL
-    unsafe {
-        let executable_path = bundle.executablePath().unwrap();
-        executable_path.to_string()
-    }
+    let executable_path = bundle.executablePath().unwrap();
+    executable_path.to_string()
 }
 
 // returns NSBundle
 fn get_bundle(bundle_path: &NSString) -> Retained<NSBundle> {
     //bundleWithURL
-    unsafe {
-        let bundle = NSBundle::bundleWithPath(bundle_path).unwrap();
-        bundle
-    }
+    let bundle = NSBundle::bundleWithPath(bundle_path).unwrap();
+    bundle
 }
 
 // check schemes from an apps Info.plist CFBundleUrlTypes.CFBundleURLSchemes
@@ -412,34 +408,32 @@ pub fn is_default_web_browser() -> bool {
 }
 
 fn has_sandbox_entitlement2(bundle_url: &NSString) -> bool {
-    unsafe {
-        let is_sandboxed = false;
-        //SecStaticCodeCreateWithPath(bundle_url, 0, nil)
-        //CFUrlRef *bundleURL = [[NSBundle mainBundle] bundleURL];
+    let is_sandboxed = false;
+    //SecStaticCodeCreateWithPath(bundle_url, 0, nil)
+    //CFUrlRef *bundleURL = [[NSBundle mainBundle] bundleURL];
 
-        // Can use https://stackoverflow.com/a/42244464/752697
-        /*
-        BOOL isSandboxed = NO;
+    // Can use https://stackoverflow.com/a/42244464/752697
+    /*
+    BOOL isSandboxed = NO;
 
-        SecStaticCodeRef staticCode = NULL;
-        NSURL *bundleURL = [[NSBundle mainBundle] bundleURL];
+    SecStaticCodeRef staticCode = NULL;
+    NSURL *bundleURL = [[NSBundle mainBundle] bundleURL];
 
-        if (SecStaticCodeCreateWithPath((__bridge CFURLRef)bundleURL, kSecCSDefaultFlags, &staticCode) == errSecSuccess) {
-            if (SecStaticCodeCheckValidityWithErrors(staticCode, kSecCSBasicValidateOnly, NULL, NULL) == errSecSuccess) {
-                SecRequirementRef sandboxRequirement;
-                if (SecRequirementCreateWithString(CFSTR("entitlement[\"com.apple.security.app-sandbox\"] exists"), kSecCSDefaultFlags,
-                                               &sandboxRequirement) == errSecSuccess)
-                {
-                    OSStatus codeCheckResult = SecStaticCodeCheckValidityWithErrors(staticCode, kSecCSBasicValidateOnly, sandboxRequirement, NULL);
-                    if (codeCheckResult == errSecSuccess) {
-                        isSandboxed = YES;
-                    }
+    if (SecStaticCodeCreateWithPath((__bridge CFURLRef)bundleURL, kSecCSDefaultFlags, &staticCode) == errSecSuccess) {
+        if (SecStaticCodeCheckValidityWithErrors(staticCode, kSecCSBasicValidateOnly, NULL, NULL) == errSecSuccess) {
+            SecRequirementRef sandboxRequirement;
+            if (SecRequirementCreateWithString(CFSTR("entitlement[\"com.apple.security.app-sandbox\"] exists"), kSecCSDefaultFlags,
+                                           &sandboxRequirement) == errSecSuccess)
+            {
+                OSStatus codeCheckResult = SecStaticCodeCheckValidityWithErrors(staticCode, kSecCSBasicValidateOnly, sandboxRequirement, NULL);
+                if (codeCheckResult == errSecSuccess) {
+                    isSandboxed = YES;
                 }
             }
-            CFRelease(staticCode);
         }
-        */
+        CFRelease(staticCode);
     }
+    */
 
     return false;
 
