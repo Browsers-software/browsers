@@ -105,7 +105,7 @@ jobs:
           if echo "$command_output" | grep -q 'Microsoft Edge'; then
             echo "matched Microsoft Edge"
           else
-            echo "did NOT match Google Chrome"
+            echo "did NOT match Microsoft Edge"
             failed=true
           fi
           
