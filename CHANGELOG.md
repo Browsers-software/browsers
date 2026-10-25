@@ -13,6 +13,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Settings: "Visible browsers" to choose how many browsers the main window shows before the list scrolls
 - Settings: "Test a URL" to see which rule (or the default) would open a link
 - Ladybird profiles (needs a Ladybird build from 2026-07-13 or later)
+- Support Discord app for discord.com links
 
 ## [0.8.6] - 2026-11-06
 
@@ -486,7 +487,7 @@ Initial Release
 
 [0.6.0]: https://github.com/Browsers-software/browsers/releases/tag/0.6.0
 
-[0.5.8]: https://github.com/Browsers-software/browsers/releases/tag/0.5.9
+[0.5.9]: https://github.com/Browsers-software/browsers/releases/tag/0.5.9
 
 [0.5.8]: https://github.com/Browsers-software/browsers/releases/tag/0.5.8
 
