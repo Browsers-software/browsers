@@ -471,6 +471,27 @@ kind = "FIREFOX"
 os = "WINDOWS"
 
 [[apps]]
+id = "com.hnc.Discord"
+kind = "DISCORD"
+os = "MAC"
+
+[[apps]]
+id = "discord"
+kind = "DISCORD"
+os = "LINUX"
+
+# Snap package uses discord_discord.desktop
+[[apps]]
+id = "discord_discord"
+kind = "DISCORD"
+os = "LINUX"
+
+[[apps]]
+id = "URL:Discord Protocol"
+kind = "DISCORD"
+os = "WINDOWS"
+
+[[apps]]
 id = "com.linear"
 kind = "LINEAR"
 os = "MAC"

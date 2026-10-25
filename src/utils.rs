@@ -1,7 +1,7 @@
+use std::fs;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
-use std::fs;
 
 use image::imageops::FilterType;
 use image::{ImageFormat, Rgba};
@@ -264,6 +264,7 @@ impl OSAppFinder {
 
     pub fn get_installed_browsers(&self) -> Vec<InstalledBrowser> {
         let schemes = vec![
+            ("discord", vec!["discord.com"]),
             ("figma", vec!["figma.com", "www.figma.com"]),
             ("freetube", vec!["youtube.com", "www.youtube.com", "youtu.be"]),
             ("linear", vec!["linear.app"]),
