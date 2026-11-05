@@ -520,7 +520,9 @@ impl SupportedAppRepository {
             find_profiles_fn: Some(firefox_profiles_parser::find_firefox_profiles),
             restricted_url_matchers: vec![],
             profile_args_fn: |profile_cli_arg_value| {
-                vec!["-P".to_string(), profile_cli_arg_value.to_string()]
+                // profile_cli_arg_value is the profile directory, as selectable
+                // profiles (Firefox 144+) are not known to `-P <name>`
+                vec!["--profile".to_string(), profile_cli_arg_value.to_string()]
             },
             incognito_args: vec!["--private-window".to_string()],
             url_transform_fn: firefox_url_transform_fn,
