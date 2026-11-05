@@ -199,20 +199,27 @@ pub fn find_firefox_profiles(
     // Path (and so its name) to the most recently used profile in the group.
     // So the db is the source of truth for profiles in it, and profiles.ini is only used for the rest.
     let db_profile_dirs: HashSet<&PathBuf> = db_profiles.iter().map(|(dir, _)| dir).collect();
+
+    // (directory, name, value for the launch args)
+    // Profiles in profiles.ini are launched by name with `-P <name>`.
+    // Selectable profiles (Firefox 144+) are not known to it, so they are launched
+    // by directory with `--profile <dir>`.
     let all_profiles = ini_profiles
         .iter()
         .filter(|(dir, _)| !db_profile_dirs.contains(dir))
-        .chain(db_profiles.iter());
+        .map(|(dir, name)| (dir, name, name.to_string()))
+        .chain(
+            db_profiles
+                .iter()
+                .map(|(dir, name)| (dir, name, dir.to_string_lossy().to_string())),
+        );
 
-    // Identify all profiles by directory, because selectable profiles (Firefox 144+)
-    // are not known to `-P <name>` and we launch them with `--profile <dir>`.
     let mut listed_profile_dirs: HashSet<&PathBuf> = HashSet::new();
-    for (profile_dir, profile_name) in all_profiles {
+    for (profile_dir, profile_name, cli_arg_value) in all_profiles {
         if !listed_profile_dirs.insert(profile_dir) {
             continue;
         }
         let containers = find_containers(profile_dir.as_path());
-        let cli_arg_value = profile_dir.to_string_lossy().to_string();
         push_profile_with_containers(
             &mut browser_profiles,
             cli_arg_value,
@@ -435,7 +442,7 @@ mod tests {
         .unwrap();
         assert_eq!(
             find(root),
-            vec![("default".to_string(), dir_str(root, "Profiles/a.default"))]
+            vec![("default".to_string(), "default".to_string())]
         );
     }
 
@@ -465,7 +472,7 @@ mod tests {
         let mut found = find(root);
         found.sort();
         let mut expected = vec![
-            ("default".to_string(), dir_str(root, "Profiles/a.default")),
+            ("default".to_string(), "default".to_string()),
             (
                 "Original profile".to_string(),
                 dir_str(root, "Profiles/b.default-release"),
@@ -523,10 +530,7 @@ mod tests {
              StoreID=abcd1234\n",
         )
         .unwrap();
-        let expected = vec![(
-            "default-release".to_string(),
-            dir_str(root, "Profiles/b.default-release"),
-        )];
+        let expected = vec![("default-release".to_string(), "default-release".to_string())];
         assert_eq!(find(root), expected);
 
         std::fs::create_dir_all(root.join("Profile Groups")).unwrap();
