@@ -53,6 +53,9 @@ configparser = "3.2.0"
 # locked installation in profiles.ini
 naive-cityhash = "0.2.0"
 
+# Read Firefox selectable profiles (Profile Groups/<StoreID>.sqlite)
+rusqlite = { version = "0.41.1", features = ["bundled"] }
+
 # To create lazy static variables
 lazy_static = "1.5.0"
 
@@ -143,5 +146,8 @@ static_vcruntime = "3.0.0"
 [profile.release]
 #opt-level = 'z'     # Optimize for size.
 lto = true           # Enable Link Time Optimization
+
+[dev-dependencies]
+tempfile = "3.27.0"
 #codegen-units = 1   # Reduce number of codegen units to increase optimizations.
 #panic = 'abort'     # Abort on panic
