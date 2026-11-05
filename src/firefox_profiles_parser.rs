@@ -152,36 +152,7 @@ pub fn find_firefox_profiles(
             continue;
         }
 
-        let mut containers = Vec::new();
-
-        let mut open_url_in_container_extension_installed = false;
-        let extensions_json_file = profile_dir.join("extensions.json");
-        if !extensions_json_file.exists() {
-            info!(
-                "Skipping containers for profile '{}', because it does not have extensions.json file",
-                profile_dir.display()
-            );
-        } else {
-            open_url_in_container_extension_installed =
-                has_open_url_in_container_extension_installed(extensions_json_file.as_path());
-        }
-
-        if open_url_in_container_extension_installed {
-            let containers_json_file = profile_dir.join("containers.json");
-            if !containers_json_file.exists() {
-                info!(
-                    "Skipping containers for profile '{}', because it does not have containers.json file",
-                    profile_dir.display()
-                );
-            } else {
-                // containers for this profile
-                info!(
-                    "Checking containers from {}",
-                    containers_json_file.as_path().to_str().unwrap()
-                );
-                containers = containers_json_map(containers_json_file.as_path());
-            }
-        }
+        let containers = find_containers(profile_dir.as_path());
 
         let name_maybe = profile_values
             .get("Name")
@@ -190,29 +161,76 @@ pub fn find_firefox_profiles(
 
         let profile_name = name_maybe.unwrap();
 
-        // Even if profile has containers, also add a non-container option
-        browser_profiles.push(InstalledBrowserProfile {
-            profile_cli_arg_value: profile_name.to_string(),
-            profile_cli_container_name: None,
-            profile_name: profile_name.to_string(),
-            profile_icon: None,
-            profile_restricted_url_patterns: vec![],
-        });
-
-        if !containers.is_empty() {
-            for container in containers {
-                browser_profiles.push(InstalledBrowserProfile {
-                    profile_cli_arg_value: profile_name.to_string(),
-                    profile_cli_container_name: Some(container.id.to_string()),
-                    profile_name: profile_name.to_string() + " " + container.name.as_str(),
-                    profile_icon: None,
-                    profile_restricted_url_patterns: vec![],
-                })
-            }
-        }
+        push_profile_with_containers(
+            &mut browser_profiles,
+            profile_name.to_string(),
+            profile_name,
+            containers,
+        );
     }
 
     return browser_profiles;
+}
+
+fn push_profile_with_containers(
+    browser_profiles: &mut Vec<InstalledBrowserProfile>,
+    cli_arg_value: String,
+    profile_name: String,
+    containers: Vec<FirefoxContainer>,
+) {
+    // Even if profile has containers, also add a non-container option
+    browser_profiles.push(InstalledBrowserProfile {
+        profile_cli_arg_value: cli_arg_value.clone(),
+        profile_cli_container_name: None,
+        profile_name: profile_name.clone(),
+        profile_icon: None,
+        profile_restricted_url_patterns: vec![],
+    });
+
+    for container in containers {
+        browser_profiles.push(InstalledBrowserProfile {
+            profile_cli_arg_value: cli_arg_value.clone(),
+            profile_cli_container_name: Some(container.id.to_string()),
+            profile_name: profile_name.clone() + " " + container.name.as_str(),
+            profile_icon: None,
+            profile_restricted_url_patterns: vec![],
+        })
+    }
+}
+
+fn find_containers(profile_dir: &Path) -> Vec<FirefoxContainer> {
+    let mut containers = Vec::new();
+
+    let mut open_url_in_container_extension_installed = false;
+    let extensions_json_file = profile_dir.join("extensions.json");
+    if !extensions_json_file.exists() {
+        info!(
+            "Skipping containers for profile '{}', because it does not have extensions.json file",
+            profile_dir.display()
+        );
+    } else {
+        open_url_in_container_extension_installed =
+            has_open_url_in_container_extension_installed(extensions_json_file.as_path());
+    }
+
+    if open_url_in_container_extension_installed {
+        let containers_json_file = profile_dir.join("containers.json");
+        if !containers_json_file.exists() {
+            info!(
+                "Skipping containers for profile '{}', because it does not have containers.json file",
+                profile_dir.display()
+            );
+        } else {
+            // containers for this profile
+            info!(
+                "Checking containers from {}",
+                containers_json_file.as_path().to_str().unwrap()
+            );
+            containers = containers_json_map(containers_json_file.as_path());
+        }
+    }
+
+    containers
 }
 
 // has "open-url-in-container" extension installed, which adds "ext+container" protocol support
