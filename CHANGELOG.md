@@ -9,11 +9,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Firefox: Support Firefox new profiles. Thanks to @lweiss-fairphone for reporting #338
 - Support [Freetube](https://freetubeapp.io/) app for YouTube links. Thanks @Lockszmith-GH for requesting #414
 
 ### Fixed
 
-- Firefox: Fix Firefox new profiles parsing. Thanks to @lweiss-fairphone for reporting #338
 - Linux: Fix Firefox profiles directory for latest Firefox. Thanks to @mhasse1 for reporting #407
 
 ## [0.8.2] - 2026-10-23
