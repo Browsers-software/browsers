@@ -47,9 +47,15 @@ pub fn set_as_default_web_browser() -> bool {
     return true;
 }
 
+// Version of the config.json data layout, bumped when stored data needs a migration.
+// Config files written before versioning was added have no version, i.e. 0.
+const CURRENT_CONFIG_VERSION: u32 = 1;
+
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 #[serde(default)]
 pub struct Config {
+    // Not Config::default(), because that must stay 0 for files that predate this field.
+    config_version: u32,
     hidden_apps: Vec<String>,
     hidden_profiles: Vec<String>,
     profile_order: Vec<String>,
@@ -290,6 +296,24 @@ impl OSAppFinder {
         serde_json::to_writer_pretty(buffer, config).unwrap();
     }
 
+    // An empty config has nothing to migrate, so it starts at the current version
+    fn new_config() -> Config {
+        Config {
+            config_version: CURRENT_CONFIG_VERSION,
+            ..Config::default()
+        }
+    }
+
+    // Returns true if the config was changed and needs to be saved
+    fn migrate_config(config: &mut Config) -> bool {
+        if config.config_version >= CURRENT_CONFIG_VERSION {
+            return false;
+        }
+        // 0 -> 1: nothing to migrate, versioning was only introduced
+        config.config_version = CURRENT_CONFIG_VERSION;
+        return true;
+    }
+
     pub fn load_config(&self) -> Config {
         let config_root_dir = paths::get_config_root_dir();
         fs::create_dir_all(config_root_dir.as_path()).unwrap();
@@ -311,12 +335,15 @@ impl OSAppFinder {
 
                 // just use empty config, but don't write it yet, it will be overwritten on first
                 // change in config
-                return Config::default();
+                return Self::new_config();
             }
-            let config = result.unwrap();
+            let mut config = result.unwrap();
+            if Self::migrate_config(&mut config) {
+                self.save_config(&config);
+            }
             return config;
         } else {
-            let config = Config::default();
+            let config = Self::new_config();
             let buffer = File::create(config_json_path.as_path()).unwrap();
             serde_json::to_writer_pretty(buffer, &config).unwrap();
             return config;
@@ -453,4 +480,29 @@ pub fn save_as_circular(image_bytes: Vec<u8>, to_image_path: &Path) {
         .unwrap();
 
     debug!("WROTE TO : {:?}", png_file_path.as_path());
+}
+
+#[cfg(test)]
+mod config_version_tests {
+    use super::*;
+
+    #[test]
+    fn config_without_version_is_version_0_and_gets_migrated() {
+        let mut config: Config = serde_json::from_str(r#"{"hidden_profiles": ["a#b"]}"#).unwrap();
+        assert_eq!(config.config_version, 0);
+
+        assert!(OSAppFinder::migrate_config(&mut config));
+        assert_eq!(config.config_version, CURRENT_CONFIG_VERSION);
+        assert_eq!(config.hidden_profiles, vec!["a#b".to_string()]);
+
+        assert!(!OSAppFinder::migrate_config(&mut config));
+    }
+
+    #[test]
+    fn new_config_starts_at_current_version() {
+        assert_eq!(
+            OSAppFinder::new_config().config_version,
+            CURRENT_CONFIG_VERSION
+        );
+    }
 }
