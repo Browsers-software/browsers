@@ -115,7 +115,8 @@ pub fn find_firefox_profiles(
 
     // Selectable profiles (Firefox 144+) are listed in Profile Groups/<StoreID>.sqlite
     let mut store_ids: Vec<String> = Vec::new();
-    let mut known_profile_dirs: HashSet<PathBuf> = HashSet::new();
+    // Listed in profiles.ini, in the order they appear in it
+    let mut ini_profiles: Vec<(PathBuf, String)> = Vec::new();
 
     let profiles_ini_map = profiles_ini_config.load(&profiles_ini_path).unwrap();
     for (_profile_key, profile_values) in profiles_ini_map.into_iter() {
@@ -163,27 +164,16 @@ pub fn find_firefox_profiles(
             continue;
         }
 
-        known_profile_dirs.insert(profile_dir.clone());
-        let containers = find_containers(profile_dir.as_path());
-
         let name_maybe = profile_values
             .get("Name")
             .and_then(|a| a.as_ref())
             .map(|b| b.to_string());
 
         let profile_name = name_maybe.unwrap();
-
-        // Identify all profiles by directory, because selectable profiles (Firefox 144+)
-        // are not known to `-P <name>` and we launch them with `--profile <dir>`.
-        let cli_arg_value = profile_dir.to_string_lossy().to_string();
-        push_profile_with_containers(
-            &mut browser_profiles,
-            cli_arg_value,
-            profile_name,
-            containers,
-        );
+        ini_profiles.push((profile_dir, profile_name));
     }
 
+    let mut db_profiles: Vec<(PathBuf, String)> = Vec::new();
     for store_id in store_ids {
         let db_path = firefox_profiles_dir
             .join("Profile Groups")
@@ -201,14 +191,34 @@ pub fn find_firefox_profiles(
                 );
                 continue;
             }
-            // already listed via profiles.ini
-            if !known_profile_dirs.insert(profile_dir.clone()) {
-                continue;
-            }
-            let containers = find_containers(profile_dir.as_path());
-            let cli_arg_value = profile_dir.to_string_lossy().to_string();
-            push_profile_with_containers(&mut browser_profiles, cli_arg_value, name, containers);
+            db_profiles.push((profile_dir, name));
         }
+    }
+
+    // The profiles.ini entry with a StoreID stands for the whole group, and Firefox points its
+    // Path (and so its name) to the most recently used profile in the group.
+    // So the db is the source of truth for profiles in it, and profiles.ini is only used for the rest.
+    let db_profile_dirs: HashSet<&PathBuf> = db_profiles.iter().map(|(dir, _)| dir).collect();
+    let all_profiles = ini_profiles
+        .iter()
+        .filter(|(dir, _)| !db_profile_dirs.contains(dir))
+        .chain(db_profiles.iter());
+
+    // Identify all profiles by directory, because selectable profiles (Firefox 144+)
+    // are not known to `-P <name>` and we launch them with `--profile <dir>`.
+    let mut listed_profile_dirs: HashSet<&PathBuf> = HashSet::new();
+    for (profile_dir, profile_name) in all_profiles {
+        if !listed_profile_dirs.insert(profile_dir) {
+            continue;
+        }
+        let containers = find_containers(profile_dir.as_path());
+        let cli_arg_value = profile_dir.to_string_lossy().to_string();
+        push_profile_with_containers(
+            &mut browser_profiles,
+            cli_arg_value,
+            profile_name.to_string(),
+            containers,
+        );
     }
 
     return browser_profiles;
@@ -452,22 +462,54 @@ mod tests {
                 ("Profiles/missing.Profile 2", "Gone"),
             ],
         );
-        let c_dir = root
-            .join("Profiles/c.Profile 1")
-            .to_string_lossy()
-            .to_string();
         let mut found = find(root);
         found.sort();
         let mut expected = vec![
             ("default".to_string(), dir_str(root, "Profiles/a.default")),
             (
-                "default-release".to_string(),
+                "Original profile".to_string(),
                 dir_str(root, "Profiles/b.default-release"),
             ),
             ("Second".to_string(), dir_str(root, "Profiles/c.Profile 1")),
         ];
         expected.sort();
         assert_eq!(found, expected);
+    }
+
+    #[test]
+    fn storeid_entry_pointing_at_another_profile_does_not_rename_it() {
+        // Firefox points the StoreID entry's Path to the most recently used profile in the group
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        make_profile_dir(root, "Profiles/b.default-release");
+        make_profile_dir(root, "Profiles/c.Profile 3");
+        std::fs::write(
+            root.join("profiles.ini"),
+            "[Profile0]\nName=default-release\nIsRelative=1\nPath=Profiles/c.Profile 3\n\
+             StoreID=abcd1234\n",
+        )
+        .unwrap();
+        write_store(
+            root,
+            "abcd1234",
+            &[
+                ("Profiles/b.default-release", "Original profile"),
+                ("Profiles/c.Profile 3", "Neljas Neljas"),
+            ],
+        );
+        assert_eq!(
+            find(root),
+            vec![
+                (
+                    "Original profile".to_string(),
+                    dir_str(root, "Profiles/b.default-release")
+                ),
+                (
+                    "Neljas Neljas".to_string(),
+                    dir_str(root, "Profiles/c.Profile 3")
+                ),
+            ]
+        );
     }
 
     #[test]
