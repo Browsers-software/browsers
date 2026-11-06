@@ -198,7 +198,7 @@ export component MainWindow inherits Window {
     // info would depend on itself), which slint-viewer flags as a binding-loop warning that risks
     // a runtime panic.
     out property <length> pinned-width: browser-row-width + 2 * dialog-padding;
-    out property <length> pinned-height: dialog-height + delete-drop-area-height;
+    out property <length> pinned-height: dialog-height;
     // at most max-visible-browsers rows before the list scrolls, and at least 1 in case of errors (or no browsers)
     property <length> list-height: min(root.max-visible-browsers, max(1, root.browsers.length)) * root.row-height;
     property <length> dialog-padding: 5px;
@@ -222,7 +222,6 @@ export component MainWindow inherits Window {
     in-out property <bool> incognito-mode: false;
     in-out property <int> focused-index: 0;
     property <bool> browser-drag-active: false;
-    out property <length> delete-drop-area-height: 48px;
 
     callback open-browser(int);
     callback activate-focused();
@@ -447,6 +446,44 @@ export component MainWindow inherits Window {
                     }
                 }
 
+                // the drop target for hiding a profile. While a row is dragged it covers the URL row,
+                // so the window needs no extra (transparent) area for it
+                if root.browser-drag-active: delete-drop-target := Rectangle {
+                    x: root.dialog-padding;
+                    y: parent.height - root.dialog-padding - root.footer-height;
+                    width: parent.width - 2 * root.dialog-padding;
+                    height: root.footer-height;
+                    border-radius: 5px;
+                    border-width: 1px;
+                    border-color: delete-drop-area.has-drag ? #ef4444 : #991b1b;
+                    background: delete-drop-area.has-drag ? #b91c1c : #7f1d1d;
+
+                    Text {
+                        text: delete-drop-area.has-drag
+                            ? "Release to hide profile"
+                            : "Drop here to hide profile";
+                        color: white;
+                        font-size: 1rem;
+                        font-weight: 600;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+
+                    delete-drop-area := DropArea {
+                        width: 100%;
+                        height: 100%;
+
+                        can-drop(event) => {
+                            return root.can-drop-browser(event, 0);
+                        }
+
+                        dropped(event) => {
+                            root.browser-delete-dropped(event);
+                            return event.proposed-action;
+                        }
+                    }
+                }
+
                 // full URL on hover. Drawn inside the window, as a Tooltip would be clipped at its
                 // edge. Grows upwards from the URL row, so it fits much longer URLs.
                 // parent is the dialog's FocusScope, so the box ends 27px above its bottom (5px
@@ -474,47 +511,6 @@ export component MainWindow inherits Window {
                         // URLs have no spaces to break at
                         wrap: char-wrap;
                         overflow: elide;
-                    }
-                }
-            }
-        }
-
-        delete-drop-slot := Rectangle {
-            width: 100%;
-            height: root.delete-drop-area-height;
-
-            if root.browser-drag-active: delete-drop-target := Rectangle {
-                x: 5px;
-                y: 5px;
-                width: parent.width - 10px;
-                height: parent.height - 5px;
-                border-radius: 7px;
-                border-width: 1px;
-                border-color: delete-drop-area.has-drag ? #ef4444 : #991b1b;
-                background: delete-drop-area.has-drag ? #b91c1c : #7f1d1d;
-
-                Text {
-                    text: delete-drop-area.has-drag
-                        ? "Release to hide profile"
-                        : "Drop here to hide profile";
-                    color: white;
-                    font-size: 13px;
-                    font-weight: 600;
-                    horizontal-alignment: center;
-                    vertical-alignment: center;
-                }
-
-                delete-drop-area := DropArea {
-                    width: 100%;
-                    height: 100%;
-
-                    can-drop(event) => {
-                        return root.can-drop-browser(event, 0);
-                    }
-
-                    dropped(event) => {
-                        root.browser-delete-dropped(event);
-                        return event.proposed-action;
                     }
                 }
             }
