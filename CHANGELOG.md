@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
 
+### Fixed
+
+- Fix drag and drop reordering moving a profile to the top when some profiles are hidden for the current URL
+
 ## [0.8.5] - 2026-11-06
 
 ### Fixed

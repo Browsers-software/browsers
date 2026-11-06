@@ -347,9 +347,21 @@ fn wire_main_window(state: &SharedState) {
                 target_index
             };
 
+            // The indices above are positions in the URL-filtered list, but the backend orders the
+            // full list (including restricted profiles hidden for this URL).
+            // Translate to the position of the profile currently in the target slot.
+            let Some(unfiltered_index) = state
+                .borrow()
+                .filtered_browsers
+                .get(final_index)
+                .map(|b| b.browser_profile_index)
+            else {
+                return;
+            };
+
             let _ = sender.send(MessageToMain::MoveAppProfile(
                 payload.unique_id.clone(),
-                MoveTo::ToIndex(final_index),
+                MoveTo::ToIndex(unfiltered_index),
             ));
 
             win.set_focused_index(final_index as i32);
