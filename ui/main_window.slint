@@ -190,12 +190,18 @@ export component MainWindow inherits Window {
     // recompute permanently landing on "not resizable" instead of racing Rust's single early
     // call, which is what let the OS resize cursor show up over the window edges when the
     // cursor happened to be there right as the constraints flipped back.
-    // these mirror the size Rust already computes and passes to window().set_size() (see
-    // reposition-main-window/resize-main-window in app.rs) - binding straight to root.width/
-    // root.height instead would be circular (width's own layout info would depend on itself),
-    // which slint-viewer flags as a binding-loop warning that risks a runtime panic.
-    in property <length> pinned-width: 300px;
-    in property <length> pinned-height: 300px;
+    // the size the popup needs for its content. Rust reads these and passes them to
+    // window().set_size() (see reposition-main-window/resize-main-window in app.rs).
+    // binding straight to root.width/root.height instead would be circular (width's own layout
+    // info would depend on itself), which slint-viewer flags as a binding-loop warning that risks
+    // a runtime panic.
+    out property <length> pinned-width: browser-row-width + 2 * dialog-padding;
+    out property <length> pinned-height: dialog-height + delete-drop-area-height;
+    // at most 6 rows before the list scrolls, and at least 1 in case of errors (or no browsers)
+    property <length> list-height: min(6, max(1, root.browsers.length)) * Layout.browser-row-height;
+    property <length> dialog-padding: 5px;
+    property <length> browser-row-width: 210px * AppPalette.text-scale;
+    property <length> dialog-height: list-height + AppPalette.footer-height + 3 * dialog-padding;
     min-width: pinned-width;
     max-width: pinned-width;
     min-height: pinned-height;
@@ -247,7 +253,7 @@ export component MainWindow inherits Window {
 
         dialog := Rectangle {
             width: 100%;
-            height: root.pinned-height - root.delete-drop-area-height;
+            height: root.dialog-height;
             background: AppPalette.background-color;
             border-color: AppPalette.stroke-color;
             border-width: 1px;
@@ -306,8 +312,8 @@ export component MainWindow inherits Window {
                 KeyBinding { keys: @keys("9"); activated => { root.open-hotkey(8); } }
 
                 VerticalLayout {
-                    padding: 5px;
-                    spacing: 5px;
+                    padding: root.dialog-padding;
+                    spacing: root.dialog-padding;
 
                     browser-list-container := Rectangle {
                         vertical-stretch: 1;

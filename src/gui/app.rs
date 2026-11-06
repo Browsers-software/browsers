@@ -198,27 +198,12 @@ pub fn clear_on_close<W: ComponentHandle + 'static>(
     });
 }
 
-// sets the window's pinned/actual size for the given browser count, returning that size so
-// callers that also need to reposition (see reposition_main_window) don't recompute it
-fn apply_main_window_size(win: &MainWindow, browser_count: usize) -> (f32, f32) {
-    let row_height = win
-        .global::<crate::gui::generated::Layout>()
-        .get_browser_row_height();
-    let text_scale = win
-        .global::<crate::gui::generated::AppPalette>()
-        .get_text_scale();
-    let dialog_size = main_window::recalculate_window_size(browser_count, row_height, text_scale);
-    // the extra transparent part of the borderless window becomes a delete target while a
-    // browser row is being dragged
-    let size = (
-        dialog_size.0,
-        dialog_size.1 + win.get_delete_drop_area_height(),
-    );
+// sets the window's actual size to the one main_window.slint computes for its content (it
+// depends on the browser model and the text size), returning that size so callers that also
+// need to reposition (see reposition_main_window) don't recompute it
+fn apply_main_window_size(win: &MainWindow) -> (f32, f32) {
+    let size = (win.get_pinned_width(), win.get_pinned_height());
 
-    // keeps min-size == max-size in main_window.slint, so winit's own resizable-from-constraints
-    // logic never re-derives "resizable" from the window's natural (much wider) content bounds
-    win.set_pinned_width(size.0);
-    win.set_pinned_height(size.1);
     win.window()
         .set_size(slint::LogicalSize::new(size.0, size.1));
     size
@@ -228,13 +213,10 @@ fn apply_main_window_size(win: &MainWindow, browser_count: usize) -> (f32, f32) 
 // launch, or a new URL opened while already running), not a same-URL refresh of an already-visible
 // window
 pub fn reposition_main_window(state: &SharedState) {
-    let st = state.borrow();
-    let browser_count = st.filtered_browsers.len();
-    let win = st.main_window.clone_strong();
-    drop(st);
+    let win = state.borrow().main_window.clone_strong();
 
     let (mouse, work_area) = screen::mouse_position_and_work_area();
-    let size = apply_main_window_size(&win, browser_count);
+    let size = apply_main_window_size(&win);
     let position = main_window::calculate_window_position(mouse, work_area, size);
 
     win.window()
@@ -244,12 +226,8 @@ pub fn reposition_main_window(state: &SharedState) {
 // resizes for the current browser count without moving it - for refreshing an already-visible
 // window's content (Refresh, restoring a hidden profile)
 pub fn resize_main_window(state: &SharedState) {
-    let st = state.borrow();
-    let browser_count = st.filtered_browsers.len();
-    let win = st.main_window.clone_strong();
-    drop(st);
-
-    apply_main_window_size(&win, browser_count);
+    let win = state.borrow().main_window.clone_strong();
+    apply_main_window_size(&win);
 }
 
 fn wire_main_window(state: &SharedState) {
