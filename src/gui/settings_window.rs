@@ -1,4 +1,7 @@
+use std::str::FromStr;
+
 use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
+use url::Url;
 
 use crate::MessageToMain;
 use crate::gui::app::{self, SharedState};
@@ -9,7 +12,8 @@ use crate::gui::generated::{
 };
 use crate::gui::main_window;
 use crate::gui::theme::configured_color_scheme;
-use crate::utils::ConfiguredTheme;
+use crate::url_rule;
+use crate::utils::{BehavioralConfig, ConfiguredTheme};
 
 pub fn open(state: &SharedState) {
     // state.settings_window gets cleared to None on actual close, so Some here only ever means
@@ -124,6 +128,87 @@ fn choice_to_theme(choice: ThemeChoice) -> ConfiguredTheme {
     }
 }
 
+// "Test a URL": what would happen to `input`, and which rule (index into the rules list, -1 for
+// none) decides it. Mirrors route_url/get_rule_for_source_app_and_url in lib.rs: the URL is
+// unwrapped first, rules are tried in order and the first match wins, then the default opener.
+// A pasted URL has no source app, so rules that need one are skipped.
+fn test_url(settings: &UISettings, browsers: &[UIBrowser], input: &str) -> (String, i32) {
+    let input = input.trim();
+    if input.is_empty() {
+        return (String::new(), -1);
+    }
+
+    let with_scheme = if input.contains("://") {
+        input.to_string()
+    } else {
+        format!("https://{input}")
+    };
+    let behavioral = BehavioralConfig {
+        unwrap_urls: settings.behavioral_settings.unwrap_urls,
+    };
+    let cleaned = crate::unwrap_url(&with_scheme, &behavioral);
+    let Ok(url) = Url::from_str(&cleaned) else {
+        return ("Not a valid URL".to_string(), -1);
+    };
+
+    let describe = |opener: &Option<UIProfileAndIncognito>| match resolve_opener(opener, browsers) {
+        Some((_, b)) => {
+            let incognito = opener.as_ref().is_some_and(|o| o.incognito) && b.supports_incognito;
+            let suffix = if incognito { " (Incognito)" } else { "" };
+            format!("opens in {}{suffix}", b.get_full_name())
+        }
+        None => "shows the list of apps".to_string(),
+    };
+
+    let mut invalid_rules: Vec<usize> = Vec::new();
+    for (i, rule) in settings.rules.iter().enumerate() {
+        if rule.get_source_app().is_some() {
+            continue;
+        }
+        let matches = match rule.get_url_pattern() {
+            None => true,
+            Some(pattern) => match url_rule::try_pattern_matches_url(&pattern, &url) {
+                Some(matches) => matches,
+                None => {
+                    invalid_rules.push(i + 1);
+                    false
+                }
+            },
+        };
+        if matches {
+            let any_url = if rule.get_url_pattern().is_none() {
+                " (it has no URL, so it matches every link)"
+            } else {
+                ""
+            };
+            let mut text = format!("Rule {} matches{any_url}: {}", i + 1, describe(&rule.opener));
+            if cleaned != with_scheme {
+                text.push_str(&format!("\nUnwrapped to {cleaned}"));
+            }
+            return (text, i as i32);
+        }
+    }
+
+    let mut text = format!("No rule matches: {}", describe(&settings.default_opener));
+    if cleaned != with_scheme {
+        text.push_str(&format!("\nUnwrapped to {cleaned}"));
+    }
+    if !invalid_rules.is_empty() {
+        let numbers: Vec<String> = invalid_rules.iter().map(|n| n.to_string()).collect();
+        text.push_str(&format!("\nSkipped rule(s) with an invalid URL: {}", numbers.join(", ")));
+    }
+    (text, -1)
+}
+
+fn update_test_url_result(state: &SharedState, win: &SettingsWindow) {
+    let (text, index) = {
+        let st = state.borrow();
+        test_url(&st.ui_settings, &st.browsers, win.get_test_url_text().as_str())
+    };
+    win.set_test_url_result(text.into());
+    win.set_test_url_match_index(index);
+}
+
 pub fn refresh(state: &SharedState) {
     let st = state.borrow();
     let win = match &st.settings_window {
@@ -166,6 +251,8 @@ pub fn refresh(state: &SharedState) {
         &win.get_profile_picker_options(),
         profile_picker_options(&browsers),
     );
+    // rules or the default opener may have changed under the tested URL
+    update_test_url_result(state, &win);
 }
 
 fn save_and_refresh(state: &SharedState, message: MessageToMain) {
@@ -324,8 +411,224 @@ fn wire(state: &SharedState, win: &SettingsWindow) {
             save_opener_change(&state, idx);
         });
     }
+    {
+        let state = state.clone();
+        let win_weak = win.as_weak();
+        win.on_test_url_edited(move || {
+            if let Some(win) = win_weak.upgrade() {
+                update_test_url_result(&state, &win);
+            }
+        });
+    }
     win.on_set_default_browser(app::forward_handler(state, || {
         MessageToMain::SetBrowsersAsDefaultBrowser
     }));
     win.on_refresh(app::forward_handler(state, || MessageToMain::Refresh));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::gui::app_state::UIVisualSettings;
+
+    fn browser(unique_id: &str, name: &str, supports_incognito: bool) -> UIBrowser {
+        UIBrowser {
+            browser_profile_index: 0,
+            is_first: false,
+            is_last: false,
+            restricted_url_matchers: Default::default(),
+            browser_name: name.to_string(),
+            profile_name: String::new(),
+            supports_profiles: false,
+            supports_incognito,
+            icon_path: String::new(),
+            profile_icon_path: String::new(),
+            unique_id: unique_id.to_string(),
+            unique_app_id: unique_id.to_string(),
+            filtered_index: 0,
+        }
+    }
+
+    fn opener(profile: &str, incognito: bool) -> Option<UIProfileAndIncognito> {
+        Some(UIProfileAndIncognito {
+            profile: profile.to_string(),
+            incognito,
+        })
+    }
+
+    fn rule(
+        source_app: &str,
+        url_pattern: &str,
+        opener: Option<UIProfileAndIncognito>,
+    ) -> UISettingsRule {
+        UISettingsRule {
+            source_app: source_app.to_string(),
+            url_pattern: url_pattern.to_string(),
+            opener,
+        }
+    }
+
+    fn settings(
+        rules: Vec<UISettingsRule>,
+        default_opener: Option<UIProfileAndIncognito>,
+        unwrap_urls: bool,
+    ) -> UISettings {
+        UISettings {
+            default_opener,
+            rules,
+            visual_settings: UIVisualSettings {
+                show_hotkeys: false,
+                quit_on_lost_focus: false,
+                theme: ConfiguredTheme::Auto,
+            },
+            behavioral_settings: crate::gui::app_state::UIBehavioralSettings { unwrap_urls },
+        }
+    }
+
+    fn browsers() -> Vec<UIBrowser> {
+        vec![browser("chrome", "Chrome", true), browser("safari", "Safari", false)]
+    }
+
+    #[test]
+    fn empty_input_shows_nothing() {
+        let s = settings(vec![], None, false);
+
+        assert_eq!(test_url(&s, &browsers(), "  "), (String::new(), -1));
+    }
+
+    #[test]
+    fn first_matching_rule_wins() {
+        let s = settings(
+            vec![
+                rule("", "example.org", opener("safari", false)),
+                rule("", "github.com/**", opener("chrome", true)),
+                rule("", "github.com/Browsers-software/**", opener("safari", false)),
+            ],
+            None,
+            false,
+        );
+
+        let (text, index) = test_url(&s, &browsers(), "https://github.com/Browsers-software/x");
+
+        assert_eq!(index, 1);
+        assert_eq!(text, "Rule 2 matches: opens in Chrome (Incognito)");
+    }
+
+    #[test]
+    fn scheme_is_optional() {
+        let s = settings(vec![rule("", "github.com/**", opener("chrome", false))], None, false);
+
+        let (text, index) = test_url(&s, &browsers(), "github.com/Browsers-software");
+
+        assert_eq!(index, 0);
+        assert_eq!(text, "Rule 1 matches: opens in Chrome");
+    }
+
+    #[test]
+    fn no_match_uses_default_opener() {
+        let s = settings(
+            vec![rule("", "example.org", opener("safari", false))],
+            opener("chrome", false),
+            false,
+        );
+
+        let (text, index) = test_url(&s, &browsers(), "https://github.com/");
+
+        assert_eq!(index, -1);
+        assert_eq!(text, "No rule matches: opens in Chrome");
+    }
+
+    #[test]
+    fn no_match_and_no_default_shows_list() {
+        let s = settings(vec![], None, false);
+
+        let (text, index) = test_url(&s, &browsers(), "https://github.com/");
+
+        assert_eq!(index, -1);
+        assert_eq!(text, "No rule matches: shows the list of apps");
+    }
+
+    #[test]
+    fn rule_without_opener_or_with_missing_browser_shows_list() {
+        let s = settings(
+            vec![
+                rule("", "example.org", None),
+                rule("", "github.com", opener("gone", false)),
+            ],
+            None,
+            false,
+        );
+
+        assert_eq!(
+            test_url(&s, &browsers(), "https://example.org/").0,
+            "Rule 1 matches: shows the list of apps"
+        );
+        assert_eq!(
+            test_url(&s, &browsers(), "https://github.com/").0,
+            "Rule 2 matches: shows the list of apps"
+        );
+    }
+
+    #[test]
+    fn rule_without_url_matches_every_link() {
+        let s = settings(vec![rule("", "", None)], None, false);
+
+        let (text, index) = test_url(&s, &browsers(), "https://github.com/");
+
+        assert_eq!(index, 0);
+        assert!(text.starts_with("Rule 1 matches (it has no URL, so it matches every link)"));
+    }
+
+    #[test]
+    fn rule_needing_a_source_app_is_skipped() {
+        let s = settings(
+            vec![rule("com.example.Mail", "github.com", opener("safari", false))],
+            None,
+            false,
+        );
+
+        assert_eq!(test_url(&s, &browsers(), "https://github.com/").1, -1);
+    }
+
+    #[test]
+    fn invalid_pattern_is_skipped_and_reported() {
+        let s = settings(
+            vec![
+                rule("", "github.com/[", opener("safari", false)),
+                rule("", "github.com/**", opener("chrome", false)),
+            ],
+            None,
+            false,
+        );
+
+        let (text, index) = test_url(&s, &browsers(), "https://github.com/x");
+
+        // the broken rule can't decide, the next one does
+        assert_eq!(index, 1);
+        assert_eq!(text, "Rule 2 matches: opens in Chrome");
+
+        // and when nothing matches, the broken rule is named
+        let (text, index) = test_url(&s, &browsers(), "https://example.org/");
+        assert_eq!(index, -1);
+        assert!(text.contains("Skipped rule(s) with an invalid URL: 1"));
+    }
+
+    #[test]
+    fn unwrapped_url_is_what_gets_matched() {
+        let wrapped =
+            "https://eur01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fexample.org%2Fa";
+        let s = settings(vec![rule("", "example.org/**", opener("chrome", false))], None, true);
+
+        let (text, index) = test_url(&s, &browsers(), wrapped);
+
+        assert_eq!(index, 0);
+        assert!(text.contains("Unwrapped to https://example.org/a"));
+    }
+
+    #[test]
+    fn nonsense_is_not_a_valid_url() {
+        let s = settings(vec![], None, false);
+
+        assert_eq!(test_url(&s, &browsers(), "http://").0, "Not a valid URL");
+    }
 }
