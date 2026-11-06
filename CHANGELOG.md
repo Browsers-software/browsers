@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
 
+## [0.8.5] - 2026-11-06
+
 ### Fixed
 
 - Fix startup crash when a Chrome profile has an empty picture name. Thanks to @Lordy2001 for reporting #404
@@ -441,7 +443,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Initial Release
 
-[unreleased]: https://github.com/Browsers-software/browsers/compare/0.8.4..HEAD
+[unreleased]: https://github.com/Browsers-software/browsers/compare/0.8.5..HEAD
+
+[0.8.5]: https://github.com/Browsers-software/browsers/releases/tag/0.8.5
 
 [0.8.4]: https://github.com/Browsers-software/browsers/releases/tag/0.8.4
 
