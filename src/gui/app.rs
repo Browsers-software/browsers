@@ -79,6 +79,7 @@ pub fn new(
 
     apply_theme(&state);
     apply_text_scale(&state);
+    apply_max_visible_browsers(&state);
     refresh_main_window_model(&state);
     reposition_main_window(&state);
     wire_main_window(&state);
@@ -105,6 +106,17 @@ pub fn apply_text_scale(state: &SharedState) {
         .main_window
         .global::<crate::gui::generated::AppPalette>()
         .set_text_scale(scale);
+    resize_main_window(state);
+}
+
+pub const MIN_VISIBLE_BROWSERS: i32 = 1;
+pub const MAX_VISIBLE_BROWSERS: i32 = 20;
+
+pub fn apply_max_visible_browsers(state: &SharedState) {
+    let max = state.borrow().ui_settings.visual_settings.max_visible_browsers;
+    // clamped like the Settings spin box, so a hand-edited config can't make the list vanish
+    let max = max.clamp(MIN_VISIBLE_BROWSERS, MAX_VISIBLE_BROWSERS);
+    state.borrow().main_window.set_max_visible_browsers(max);
     resize_main_window(state);
 }
 

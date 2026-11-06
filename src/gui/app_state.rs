@@ -59,6 +59,7 @@ pub struct UIVisualSettings {
     pub quit_on_lost_focus: bool,
     pub theme: ConfiguredTheme,
     pub text_size: ConfiguredTextSize,
+    pub max_visible_browsers: i32,
 }
 
 #[derive(Clone, Debug)]
@@ -114,6 +115,7 @@ fn map_as_visual_settings(ui_config: &UIConfig) -> UIVisualSettings {
         quit_on_lost_focus: ui_config.quit_on_lost_focus,
         theme: ui_config.theme,
         text_size: ui_config.text_size,
+        max_visible_browsers: ui_config.max_visible_browsers,
     }
 }
 

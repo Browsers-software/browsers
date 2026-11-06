@@ -876,6 +876,7 @@ pub fn handle_messages_to_main(
                     quit_on_lost_focus: settings.quit_on_lost_focus,
                     theme: settings.theme,
                     text_size: settings.text_size,
+                    max_visible_browsers: settings.max_visible_browsers,
                 };
 
                 let mut config = app_finder.load_config();

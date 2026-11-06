@@ -256,6 +256,9 @@ pub fn refresh(state: &SharedState) {
     win.set_unwrap_urls(settings.behavioral_settings.unwrap_urls);
     crate::gui::ui_util::sync_vec_model(&win.get_restorable_app_profiles(), restorable_items);
     win.set_theme(theme_to_choice(settings.visual_settings.theme));
+    win.set_max_visible_browsers(settings.visual_settings.max_visible_browsers);
+    win.set_min_visible_browsers(app::MIN_VISIBLE_BROWSERS);
+    win.set_max_visible_browsers_limit(app::MAX_VISIBLE_BROWSERS);
     win.set_text_size(text_size_to_choice(settings.visual_settings.text_size));
     // forces std-widgets' own Palette (which otherwise just tracks the OS) so an explicit
     // Light/Dark choice also applies to native controls like Switch/LineEdit
@@ -341,6 +344,15 @@ fn wire(state: &SharedState, win: &SettingsWindow) {
         state,
         MessageToMain::RestoreAppProfile,
     ));
+    {
+        let state = state.clone();
+        win.on_max_visible_browsers_changed(move |max| {
+            state.borrow_mut().ui_settings.visual_settings.max_visible_browsers = max;
+            let settings = state.borrow().ui_settings.visual_settings.clone();
+            app::apply_max_visible_browsers(&state);
+            save_and_refresh(&state, MessageToMain::SaveConfigUISettings(settings));
+        });
+    }
     {
         let state = state.clone();
         win.on_text_size_changed(move |choice| {
@@ -507,6 +519,7 @@ mod tests {
                 quit_on_lost_focus: false,
                 theme: ConfiguredTheme::Auto,
                 text_size: ConfiguredTextSize::Normal,
+                max_visible_browsers: 6,
             },
             behavioral_settings: crate::gui::app_state::UIBehavioralSettings { unwrap_urls },
         }

@@ -197,8 +197,8 @@ export component MainWindow inherits Window {
     // a runtime panic.
     out property <length> pinned-width: browser-row-width + 2 * dialog-padding;
     out property <length> pinned-height: dialog-height + delete-drop-area-height;
-    // at most 6 rows before the list scrolls, and at least 1 in case of errors (or no browsers)
-    property <length> list-height: min(6, max(1, root.browsers.length)) * Layout.browser-row-height;
+    // at most max-visible-browsers rows before the list scrolls, and at least 1 in case of errors (or no browsers)
+    property <length> list-height: min(root.max-visible-browsers, max(1, root.browsers.length)) * Layout.browser-row-height;
     property <length> dialog-padding: 5px;
     property <length> browser-row-width: 210px * AppPalette.text-scale;
     property <length> dialog-height: list-height + AppPalette.footer-height + 3 * dialog-padding;
@@ -213,6 +213,7 @@ export component MainWindow inherits Window {
     // the untruncated URL, shown while hovering url-text
     in property <string> full-url;
     in property <bool> show-set-as-default;
+    in property <int> max-visible-browsers: 6;
     in property <length> icon-size: 24px;
     in-out property <bool> incognito-mode: false;
     in-out property <int> focused-index: 0;
@@ -317,6 +318,7 @@ export component MainWindow inherits Window {
 
                     browser-list-container := Rectangle {
                         vertical-stretch: 1;
+                        min-height: 0px;
                         clip: true;
 
                         property <length> row-height: Layout.browser-row-height;
