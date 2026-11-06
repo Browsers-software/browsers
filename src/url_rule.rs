@@ -59,9 +59,10 @@ impl UrlGlobMatcher {
 
     fn to_target_url(&self, url: &Url) -> TargetUrl {
         let scheme = url.scheme();
-        let host = url
-            .host_str()
-            .unwrap_or_else(|| panic!("no host found from url: {}", url.as_str()));
+
+        // file:// URLs have no host
+        let host = url.host_str().unwrap_or("");
+
         let path = url.path();
         let query = url.query().unwrap_or("");
         let fragment = url.fragment().unwrap_or("");

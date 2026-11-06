@@ -89,6 +89,9 @@ pub struct EventBridgeIvars {
     open_urls: RefCell<Option<Box<dyn Fn(Option<String>, String)>>>,
 }
 
+// '----' keyword for an Apple Event's direct object parameter
+const KEY_DIRECT_OBJECT: u32 = 0x2d2d2d2d;
+
 define_class!(
     // SAFETY:
     // - NSObject has no subclassing requirements.
@@ -112,7 +115,6 @@ define_class!(
         fn handle_get_url_event(&self, event: *mut AnyObject, _reply: *mut AnyObject) {
             // event is an NSAppleEventDescriptor*; paramDescriptorForKeyword: keyDirectObject
             // (four-char code '----') gives the URL as a UTF-8 string param.
-            const KEY_DIRECT_OBJECT: u32 = 0x2d2d2d2d; // '----'
             unsafe {
                 let desc: *mut AnyObject =
                     msg_send![event, paramDescriptorForKeyword: KEY_DIRECT_OBJECT];
@@ -127,6 +129,41 @@ define_class!(
                 let sender_bundle_id = sender_bundle_id(event);
                 if let Some(cb) = self.ivars().open_urls.borrow().as_ref() {
                     cb(sender_bundle_id, url_string);
+                }
+            }
+        }
+
+        // sent when a file is opened via our Info.plist CFBundleDocumentTypes (e.g. a .html file),
+        // unlike GetURL which is for URL schemes.
+        // The file arrives as a list of file URL descriptors, not as a command line argument
+        #[unsafe(method(handleOpenDocumentsEvent:withReplyEvent:))]
+        fn handle_open_documents_event(&self, event: *mut AnyObject, _reply: *mut AnyObject) {
+            unsafe {
+                let list: *mut AnyObject =
+                    msg_send![event, paramDescriptorForKeyword: KEY_DIRECT_OBJECT];
+                if list.is_null() {
+                    return;
+                }
+                let sender_bundle_id = sender_bundle_id(event);
+                let count: isize = msg_send![list, numberOfItems];
+                // descriptorAtIndex: is 1-based
+                for i in 1..=count {
+                    let item: *mut AnyObject = msg_send![list, descriptorAtIndex: i];
+                    if item.is_null() {
+                        continue;
+                    }
+                    let ns_url: *mut AnyObject = msg_send![item, fileURLValue];
+                    if ns_url.is_null() {
+                        continue;
+                    }
+                    let ns_string: *mut NSString = msg_send![ns_url, absoluteString];
+                    if ns_string.is_null() {
+                        continue;
+                    }
+                    let url_string = (*ns_string).to_string();
+                    if let Some(cb) = self.ivars().open_urls.borrow().as_ref() {
+                        cb(sender_bundle_id.clone(), url_string);
+                    }
                 }
             }
         }
@@ -224,6 +261,16 @@ pub fn register_event_bridge() -> Option<Retained<EventBridge>> {
             andSelector: sel!(handleGetURLEvent:withReplyEvent:),
             forEventClass: CLASS_INTERNET,
             andEventID: EVENT_ID_GET_URL
+        ];
+
+        const CLASS_CORE: u32 = 0x61657674; // 'aevt'
+        const EVENT_ID_OPEN_DOCUMENTS: u32 = 0x6f646f63; // 'odoc'
+        let _: () = msg_send![
+            manager,
+            setEventHandler: &*bridge,
+            andSelector: sel!(handleOpenDocumentsEvent:withReplyEvent:),
+            forEventClass: CLASS_CORE,
+            andEventID: EVENT_ID_OPEN_DOCUMENTS
         ];
     }
 
