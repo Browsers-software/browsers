@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
 
+## [0.8.4] - 2026-11-06
+
 ### Added
 
 - Support opening local files (e.g html)
@@ -433,7 +435,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Initial Release
 
-[unreleased]: https://github.com/Browsers-software/browsers/compare/0.8.3..HEAD
+[unreleased]: https://github.com/Browsers-software/browsers/compare/0.8.4..HEAD
+
+[0.8.4]: https://github.com/Browsers-software/browsers/releases/tag/0.8.4
 
 [0.8.3]: https://github.com/Browsers-software/browsers/releases/tag/0.8.3
 
