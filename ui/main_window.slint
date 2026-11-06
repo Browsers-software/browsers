@@ -183,6 +183,8 @@ export component MainWindow inherits Window {
     // popup is never meant to be resizable anyway (Rust sizes it based on content), so just turn
     // the hit-region off
     resize-border-width: 0px;
+    // everything in rem scales with this, see AppPalette.text-scale
+    default-font-size: 12px * AppPalette.text-scale;
     // winit derives its own "is this window resizable" purely from min-size < max-size, and
     // recomputes it (silently overriding Rust's one-time set_resizable(false) call) every time
     // this window's layout constraints change - which happens right after launch once the
@@ -198,10 +200,12 @@ export component MainWindow inherits Window {
     out property <length> pinned-width: browser-row-width + 2 * dialog-padding;
     out property <length> pinned-height: dialog-height + delete-drop-area-height;
     // at most max-visible-browsers rows before the list scrolls, and at least 1 in case of errors (or no browsers)
-    property <length> list-height: min(root.max-visible-browsers, max(1, root.browsers.length)) * Layout.browser-row-height;
+    property <length> list-height: min(root.max-visible-browsers, max(1, root.browsers.length)) * root.row-height;
     property <length> dialog-padding: 5px;
-    property <length> browser-row-width: 210px * AppPalette.text-scale;
-    property <length> dialog-height: list-height + AppPalette.footer-height + 3 * dialog-padding;
+    property <length> row-height: Layout.browser-row-height;
+    property <length> footer-height: AppPalette.footer-height;
+    property <length> browser-row-width: 17.5rem;
+    property <length> dialog-height: list-height + root.footer-height + 3 * dialog-padding;
     min-width: pinned-width;
     max-width: pinned-width;
     min-height: pinned-height;
@@ -373,7 +377,7 @@ export component MainWindow inherits Window {
                     }
 
                     HorizontalLayout {
-                        height: AppPalette.footer-height;
+                        height: root.footer-height;
                         urlTa := TouchArea {
                             clicked => { root.copy-link(); }
                             Text {
@@ -424,17 +428,17 @@ export component MainWindow inherits Window {
                             // to it as a sibling, so .show()'s point argument and mouse-x/mouse-y
                             // below share the same coordinate space
                             optionsTa := TouchArea {
-                                width: AppPalette.footer-height;
-                                height: AppPalette.footer-height;
+                                width: root.footer-height;
+                                height: root.footer-height;
                                 clicked => { om.show({x: self.mouse-x, y: self.mouse-y}); }
                                 Rectangle {
-                                    width: AppPalette.footer-height;
-                                    height: AppPalette.footer-height;
-                                    border-radius: AppPalette.footer-height / 2;
+                                    width: root.footer-height;
+                                    height: root.footer-height;
+                                    border-radius: root.footer-height / 2;
                                     background: optionsTa.has-hover ? AppPalette.highlight-background-color : transparent;
                                     Text {
                                         text: "⋮";
-                                        font-size: 15px * AppPalette.text-scale;
+                                        font-size: (15 / 12) * 1rem;
                                         color: AppPalette.muted-label-color;
                                     }
                                 }
@@ -449,11 +453,11 @@ export component MainWindow inherits Window {
                 // padding + footer row (18px at default text size) + 4px gap).
                 if urlTa.has-hover: Rectangle {
                     // the longest the box can get; whatever doesn't fit is elided
-                    property <length> max-box-height: parent.height - 14px - AppPalette.footer-height;
+                    property <length> max-box-height: parent.height - 14px - root.footer-height;
                     x: 5px;
                     width: parent.width - 10px;
                     height: min(url-measure.preferred-height + 12px, self.max-box-height);
-                    y: parent.height - 9px - AppPalette.footer-height - self.height;
+                    y: parent.height - 9px - root.footer-height - self.height;
                     background: AppPalette.secondary-background-color;
                     border-radius: 5px;
                     border-width: 1px;

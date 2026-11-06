@@ -1,5 +1,4 @@
 import { Palette } from "std-widgets.slint";
-import { AppPalette } from "theme.slint";
 
 // rounded/bordered container, used for rule cards and the default-opener card
 export component Card inherits Rectangle {
@@ -15,7 +14,7 @@ export enum TextSizeChoice { normal, large, larger }
 // single source of truth for the browser row height - main_window.slint's BrowserRow height
 // and its drag-drop index math have to agree on this value
 export global Layout {
-    out property <length> browser-row-height: 32px * AppPalette.text-scale;
+    out property <relative-font-size> browser-row-height: (32 / 12) * 1rem;
 }
 
 export struct DirEntry {
