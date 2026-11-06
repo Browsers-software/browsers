@@ -12,47 +12,57 @@ DMG_FROM_DIR="dmg_source"
 # Will also be used as the title of the installer
 DMG_SRC_DIR="Browsers"
 
-echo "Creating dmg"
-mkdir -p $DMG_SRC_DIR
-mkdir $DMG_SRC_DIR/.background
+create_dmg() {
+  echo "Creating dmg"
+  mkdir -p $DMG_SRC_DIR
+  mkdir $DMG_SRC_DIR/.background
 
-cp -r $MACOS_APP_DIR $DMG_SRC_DIR/Browsers.app
-cp $DMG_FROM_DIR/.VolumeIcon.icns $DMG_SRC_DIR/.VolumeIcon.icns
+  cp -r $MACOS_APP_DIR $DMG_SRC_DIR/Browsers.app
+  cp $DMG_FROM_DIR/.VolumeIcon.icns $DMG_SRC_DIR/.VolumeIcon.icns
 
-# Copies Finder settings (like custom background color and icon placements)
-cp $DMG_FROM_DIR/.DS_Store $DMG_SRC_DIR/.DS_Store
+  # Copies Finder settings (like custom background color and icon placements)
+  cp $DMG_FROM_DIR/.DS_Store $DMG_SRC_DIR/.DS_Store
 
-ln -s /Applications $DMG_SRC_DIR/Applications
-rm -rf $DMG_SRC_DIR/.Trashes
+  ln -s /Applications $DMG_SRC_DIR/Applications
+  rm -rf $DMG_SRC_DIR/.Trashes
 
-hdiutil create -volname "Browsers" -srcfolder $DMG_SRC_DIR -ov "$MACOS_RELEASE_DIR/Browsers.dmg"
+  hdiutil create -volname "Browsers" -srcfolder $DMG_SRC_DIR -ov "$MACOS_RELEASE_DIR/Browsers.dmg"
 
-# set creator of the file
-#SetFile -c icnC "$DMG_FROM_DIR/.VolumeIcon.icns"
+  # set creator of the file
+  #SetFile -c icnC "$DMG_FROM_DIR/.VolumeIcon.icns"
 
-cp $DMG_FROM_DIR/.VolumeIcon.icns "$DMG_SRC_DIR/copy_VolumeIcon.icns"
-sips -i "$DMG_SRC_DIR/copy_VolumeIcon.icns"
+  cp $DMG_FROM_DIR/.VolumeIcon.icns "$DMG_SRC_DIR/copy_VolumeIcon.icns"
+  sips -i "$DMG_SRC_DIR/copy_VolumeIcon.icns"
 
-# let's reuse the temp DMG_SRC_DIR for temp files
-DeRez -only icns "$DMG_SRC_DIR/copy_VolumeIcon.icns" > "$DMG_SRC_DIR/copy_VolumeIcon.rsrc"
-Rez -append "$DMG_SRC_DIR/copy_VolumeIcon.rsrc" -o "$MACOS_RELEASE_DIR/Browsers.dmg"
+  # let's reuse the temp DMG_SRC_DIR for temp files
+  DeRez -only icns "$DMG_SRC_DIR/copy_VolumeIcon.icns" > "$DMG_SRC_DIR/copy_VolumeIcon.rsrc"
+  Rez -append "$DMG_SRC_DIR/copy_VolumeIcon.rsrc" -o "$MACOS_RELEASE_DIR/Browsers.dmg"
 
-# Let's tell the file it has special icon flag set
-SetFile -a C "$MACOS_RELEASE_DIR/Browsers.dmg"
+  # Let's tell the file it has special icon flag set
+  SetFile -a C "$MACOS_RELEASE_DIR/Browsers.dmg"
 
-rm -rf $DMG_SRC_DIR
+  rm -rf $DMG_SRC_DIR
+}
 
-# Sign with hardened runtime (hardened runtime is required for notarization)
-rcodesign sign \
-  --p12-file "$P12_FILE" \
-  --p12-password "$P12_PASSWORD" \
-  --code-signature-flags runtime \
-  "$MACOS_RELEASE_DIR/Browsers.dmg"
+sign() {
+  # Sign with hardened runtime (hardened runtime is required for notarization)
+  rcodesign sign \
+    --p12-file "$P12_FILE" \
+    --p12-password "$P12_PASSWORD" \
+    --code-signature-flags runtime \
+    "$MACOS_RELEASE_DIR/Browsers.dmg"
+}
 
-# Once signed you can do the notarization
-# https://gregoryszorc.com/docs/apple-codesign/main/apple_codesign_getting_started.html#apple-codesign-app-store-connect-api-key
+notarize() {
+  # Once signed you can do the notarization
+  # https://gregoryszorc.com/docs/apple-codesign/main/apple_codesign_getting_started.html#apple-codesign-app-store-connect-api-key
 
-rcodesign notary-submit \
-  --api-key-path "$NOTARY_API_KEY_JSON_FILE" \
-  --staple \
-  "$MACOS_RELEASE_DIR/Browsers.dmg"
+  rcodesign notary-submit \
+    --api-key-path "$NOTARY_API_KEY_JSON_FILE" \
+    --staple \
+    "$MACOS_RELEASE_DIR/Browsers.dmg"
+}
+
+create_dmg
+sign
+notarize
