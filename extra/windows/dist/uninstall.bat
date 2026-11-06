@@ -101,6 +101,10 @@ if %is_local_install% == true (
 
 REG DELETE "%RegistryRoot%\Software\Classes\software.Browsers" /f
 REG DELETE "%RegistryRoot%\Software\Clients\StartMenuInternet\software.Browsers" /f
+REG DELETE "%RegistryRoot%\Software\Classes\.html\OpenWithProgids" /v software.Browsers /f
+REG DELETE "%RegistryRoot%\Software\Classes\.htm\OpenWithProgids" /v software.Browsers /f
+REG DELETE "%RegistryRoot%\Software\Classes\.xhtml\OpenWithProgids" /v software.Browsers /f
+REG DELETE "%RegistryRoot%\Software\Classes\.xht\OpenWithProgids" /v software.Browsers /f
 REG DELETE "%RegistryRoot%\Software\RegisteredApplications" /v software.Browsers /f
 REG DELETE "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\App Paths\browsers.exe" /f
 REG DELETE "%RegistryRoot%\Software\Microsoft\Windows\CurrentVersion\Uninstall\software.Browsers" /f
