@@ -8,12 +8,12 @@ use crate::gui::app::{self, SharedState};
 use crate::gui::app_state::{UIBrowser, UIProfileAndIncognito, UISettings, UISettingsRule};
 use crate::gui::generated::{
     BrowserItem, Palette as StdWidgetPalette, RestorableProfile, SettingsRule as SlintSettingsRule,
-    SettingsWindow, ThemeChoice,
+    SettingsWindow, TextSizeChoice, ThemeChoice,
 };
 use crate::gui::main_window;
 use crate::gui::theme::configured_color_scheme;
 use crate::url_rule;
-use crate::utils::{BehavioralConfig, ConfiguredTheme};
+use crate::utils::{BehavioralConfig, ConfiguredTextSize, ConfiguredTheme};
 
 pub fn open(state: &SharedState) {
     // state.settings_window gets cleared to None on actual close, so Some here only ever means
@@ -117,6 +117,22 @@ fn theme_to_choice(theme: ConfiguredTheme) -> ThemeChoice {
         ConfiguredTheme::Auto => ThemeChoice::Auto,
         ConfiguredTheme::Light => ThemeChoice::Light,
         ConfiguredTheme::Dark => ThemeChoice::Dark,
+    }
+}
+
+fn text_size_to_choice(size: ConfiguredTextSize) -> TextSizeChoice {
+    match size {
+        ConfiguredTextSize::Normal => TextSizeChoice::Normal,
+        ConfiguredTextSize::Large => TextSizeChoice::Large,
+        ConfiguredTextSize::Larger => TextSizeChoice::Larger,
+    }
+}
+
+fn choice_to_text_size(choice: TextSizeChoice) -> ConfiguredTextSize {
+    match choice {
+        TextSizeChoice::Normal => ConfiguredTextSize::Normal,
+        TextSizeChoice::Large => ConfiguredTextSize::Large,
+        TextSizeChoice::Larger => ConfiguredTextSize::Larger,
     }
 }
 
@@ -240,7 +256,7 @@ pub fn refresh(state: &SharedState) {
     win.set_unwrap_urls(settings.behavioral_settings.unwrap_urls);
     crate::gui::ui_util::sync_vec_model(&win.get_restorable_app_profiles(), restorable_items);
     win.set_theme(theme_to_choice(settings.visual_settings.theme));
-    win.set_text_scale(settings.visual_settings.text_scale);
+    win.set_text_size(text_size_to_choice(settings.visual_settings.text_size));
     // forces std-widgets' own Palette (which otherwise just tracks the OS) so an explicit
     // Light/Dark choice also applies to native controls like Switch/LineEdit
     win.global::<StdWidgetPalette>()
@@ -327,8 +343,8 @@ fn wire(state: &SharedState, win: &SettingsWindow) {
     ));
     {
         let state = state.clone();
-        win.on_text_scale_changed(move |scale| {
-            state.borrow_mut().ui_settings.visual_settings.text_scale = scale;
+        win.on_text_size_changed(move |choice| {
+            state.borrow_mut().ui_settings.visual_settings.text_size = choice_to_text_size(choice);
             let settings = state.borrow().ui_settings.visual_settings.clone();
             app::apply_text_scale(&state);
             save_and_refresh(&state, MessageToMain::SaveConfigUISettings(settings));
@@ -490,7 +506,7 @@ mod tests {
                 show_hotkeys: false,
                 quit_on_lost_focus: false,
                 theme: ConfiguredTheme::Auto,
-                text_scale: 1.0,
+                text_size: ConfiguredTextSize::Normal,
             },
             behavioral_settings: crate::gui::app_state::UIBehavioralSettings { unwrap_urls },
         }

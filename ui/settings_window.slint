@@ -7,7 +7,7 @@ import {
     Palette,
     ComboBox,
 } from "std-widgets.slint";
-import { Card, DirEntry, DirectoriesList, ThemeChoice } from "common.slint";
+import { Card, DirEntry, DirectoriesList, TextSizeChoice, ThemeChoice } from "common.slint";
 import { BrowserItem, RestorableProfile } from "main_window.slint";
 
 export enum SettingsTab { general, appearance, rules, advanced }
@@ -273,11 +273,11 @@ component GeneralTab inherits VerticalLayout {
 component AppearanceTab inherits VerticalLayout {
     in property <ThemeChoice> theme;
     in property <bool> show-hotkeys;
-    in property <float> text-scale;
+    in property <TextSizeChoice> text-size;
 
     callback theme-changed(ThemeChoice);
     callback show-hotkeys-changed(bool);
-    callback text-scale-changed(float);
+    callback text-size-changed(TextSizeChoice);
 
     padding: 20px;
     alignment: start;
@@ -305,9 +305,13 @@ component AppearanceTab inherits VerticalLayout {
             flush-right: true;
             SegmentedControl {
                 cross-axis-self-alignment: stretch;
-                options: ["Default", "Large", "Larger"];
-                current: root.text-scale >= 1.4 ? 2 : root.text-scale >= 1.2 ? 1 : 0;
-                selected(i) => { root.text-scale-changed(i == 0 ? 1.0 : i == 1 ? 1.25 : 1.5); }
+                options: ["Normal", "Large", "Larger"];
+                current: root.text-size == TextSizeChoice.normal ? 0
+                    : root.text-size == TextSizeChoice.large ? 1 : 2;
+                selected(i) => {
+                    root.text-size-changed(i == 0 ? TextSizeChoice.normal
+                        : i == 1 ? TextSizeChoice.large : TextSizeChoice.larger);
+                }
             }
         }
 
@@ -620,7 +624,7 @@ export component SettingsWindow inherits Window {
     in property <[RestorableProfile]> restorable-app-profiles;
 
     in property <ThemeChoice> theme;
-    in property <float> text-scale;
+    in property <TextSizeChoice> text-size;
 
     in property <[SettingsRule]> rules;
     in property <SettingsRule> default-rule;
@@ -640,7 +644,7 @@ export component SettingsWindow inherits Window {
     callback unwrap-urls-changed(bool);
     callback restore-profile(string);
     callback theme-changed(ThemeChoice);
-    callback text-scale-changed(float);
+    callback text-size-changed(TextSizeChoice);
     callback add-rule();
     callback remove-rule(int);
     callback rule-url-changed(int, string);
@@ -703,9 +707,9 @@ export component SettingsWindow inherits Window {
                 if root.current-tab == SettingsTab.appearance: AppearanceTab {
                     theme: root.theme;
                     show-hotkeys: root.show-hotkeys;
-                    text-scale: root.text-scale;
+                    text-size: root.text-size;
                     theme-changed(t) => { root.theme-changed(t); }
-                    text-scale-changed(v) => { root.text-scale-changed(v); }
+                    text-size-changed(v) => { root.text-size-changed(v); }
                     show-hotkeys-changed(v) => { root.show-hotkeys-changed(v); }
                 }
                 if root.current-tab == SettingsTab.rules: RulesTab {
