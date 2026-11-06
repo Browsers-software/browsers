@@ -20,5 +20,13 @@
       // 0.13.x
       allowedVersions: '~0.13',
     },
+    {
+      // must match the major/minor version Slint uses, so Cargo resolves to one copy
+      matchPackageNames: [
+        'resvg'
+      ],
+      // 0.48.x
+      allowedVersions: '~0.48',
+    },
   ],
 }

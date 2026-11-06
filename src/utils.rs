@@ -453,6 +453,27 @@ lazy_static! {
     };
 }
 
+// renders an SVG, scaled to fit and centered in a square, as a PNG
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+pub fn save_svg_as_png(svg_path: &Path, to_png_path: &Path, size: u32) -> Result<(), String> {
+    use resvg::{tiny_skia, usvg};
+
+    let svg_data = fs::read(svg_path).map_err(|e| e.to_string())?;
+    let tree =
+        usvg::Tree::from_data(&svg_data, &usvg::Options::default()).map_err(|e| e.to_string())?;
+    let mut pixmap =
+        tiny_skia::Pixmap::new(size, size).ok_or_else(|| "invalid icon size".to_string())?;
+
+    let svg_size = tree.size();
+    let scale = size as f32 / svg_size.width().max(svg_size.height());
+    let x = (size as f32 - svg_size.width() * scale) / 2.0;
+    let y = (size as f32 - svg_size.height() * scale) / 2.0;
+    let transform = tiny_skia::Transform::from_translate(x, y).pre_scale(scale, scale);
+
+    resvg::render(&tree, transform, &mut pixmap.as_mut());
+    pixmap.save_png(to_png_path).map_err(|e| e.to_string())
+}
+
 pub fn save_as_circular(image_bytes: Vec<u8>, to_image_path: &Path) {
     let vec = image_bytes;
     let result1 = image::load_from_memory(vec.as_slice());
@@ -504,5 +525,46 @@ mod config_version_tests {
             OSAppFinder::new_config().config_version,
             CURRENT_CONFIG_VERSION
         );
+    }
+}
+
+#[cfg(test)]
+mod svg_tests {
+    use super::*;
+
+    #[test]
+    fn non_square_svg_is_rendered_into_square_png() {
+        let dir = std::env::temp_dir().join("browsers_svg_test");
+        fs::create_dir_all(&dir).unwrap();
+        let svg_path = dir.join("icon.svg");
+        let png_path = dir.join("icon.png");
+        fs::write(
+            &svg_path,
+            r##"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50">
+                <rect width="100" height="50" fill="#ff0000"/></svg>"##,
+        )
+        .unwrap();
+
+        save_svg_as_png(&svg_path, &png_path, 64).unwrap();
+
+        let png = image::open(&png_path).unwrap().to_rgba8();
+        assert_eq!((png.width(), png.height()), (64, 64));
+        // wide image is centered, so the top row is transparent padding and the middle is red
+        assert_eq!(png.get_pixel(32, 0)[3], 0);
+        assert_eq!(png.get_pixel(32, 32).0, [255, 0, 0, 255]);
+
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn invalid_svg_is_an_error() {
+        let dir = std::env::temp_dir().join("browsers_svg_test_invalid");
+        fs::create_dir_all(&dir).unwrap();
+        let svg_path = dir.join("broken.svg");
+        fs::write(&svg_path, "not an svg").unwrap();
+
+        assert!(save_svg_as_png(&svg_path, &dir.join("broken.png"), 64).is_err());
+
+        fs::remove_dir_all(&dir).unwrap();
     }
 }

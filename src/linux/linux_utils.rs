@@ -10,6 +10,7 @@ use freedesktop_desktop_entry::{DesktopEntry, Iter, default_paths, get_languages
 use freedesktop_icons;
 
 use crate::gui::screen::{Point, Rect};
+use crate::utils;
 use crate::{InstalledBrowser, SupportedAppRepository};
 
 const XDG_NAME: &'static str = "software.Browsers";
@@ -288,6 +289,24 @@ fn create_icon_for_app(icon_str: &str, to_icon_path: &str) {
         return;
     }
     let image_file_name = image_file_name_maybe.unwrap();
+    if image_file_name.to_lowercase().ends_with(".svg") {
+        // some apps only ship a scalable icon
+        let result = utils::save_svg_as_png(&image_file_path, Path::new(to_icon_path), 64);
+        match result {
+            Ok(()) => info!(
+                "icon: from {} to {}",
+                image_file_path.display(),
+                to_icon_path
+            ),
+            Err(e) => warn!(
+                "Could not render svg {} (destination icon={}): {}",
+                image_file_path.display(),
+                to_icon_path,
+                e
+            ),
+        }
+        return;
+    }
     if !image_file_name.to_lowercase().ends_with(".png") {
         warn!(
             "Filename does not have .png extension: {} (destination icon={})",

@@ -63,6 +63,11 @@ lazy_static = "1.5.0"
 # wants internally, so Cargo resolves to one shared copy instead of two
 copypasta = "0.10"
 
+# Linux sometimes has only scalable icon (svg)
+# Slint also uses it, so keep the version matching Slint's to share one copy.
+# No text support is needed for icons, so default-features=false
+resvg = { version = "0.48", default-features = false }
+
 # macOS Core Foundation bindings
 # small selection of Core Foundation libs I happen to need
 [target.'cfg(target_os = "macos")'.dependencies]
