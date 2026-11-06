@@ -66,7 +66,7 @@ copypasta = "0.10"
 # Linux sometimes has only scalable icon (svg)
 # Slint also uses it, so keep the version matching Slint's to share one copy.
 # No text support is needed for icons, so default-features=false
-resvg = { version = "0.48", default-features = false }
+resvg = { version = "0.49", default-features = false }
 
 # macOS Core Foundation bindings
 # small selection of Core Foundation libs I happen to need
@@ -101,7 +101,7 @@ xdg-mime = "^0.4.0"
 
 # override ontconfig-dlopen to use dlopen, so it can be cross-compiled
 fontique = {
-    version = "0.11", # major and minor version must match what Slint is using
+    version = "0.12", # major and minor version must match what Slint is using
     default-features = false,
     features = ["fontconfig-dlopen", "std"]
 }
@@ -156,3 +156,19 @@ lto = true           # Enable Link Time Optimization
 tempfile = "3.27.0"
 #codegen-units = 1   # Reduce number of codegen units to increase optimizations.
 #panic = 'abort'     # Abort on panic
+
+# TEMPORARY: Slint 1.19 is unreleased, build from the pre-release/1.19 branch.
+[patch.crates-io]
+slint = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
+slint-build = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
+i-slint-core = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
+i-slint-core-macros = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
+i-slint-common = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
+i-slint-compiler = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
+i-slint-backend-selector = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
+i-slint-backend-winit = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
+i-slint-backend-testing = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
+i-slint-renderer-femtovg = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
+i-slint-renderer-skia = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
+i-slint-renderer-software = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
+slint-macros = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }

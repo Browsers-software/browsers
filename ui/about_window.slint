@@ -8,7 +8,7 @@ export component AboutWindow inherits Window {
     // absolute, not affected by which window is active
     always-on-top: true;
     width: 340px;
-    height: 320px;
+    height: 345px;
 
     in property <image> app-icon;
     in property <string> version-text;
@@ -31,37 +31,35 @@ export component AboutWindow inherits Window {
                 height: 64px;
             }
 
-            // TextInput with read-only instead of plain Text - Text has no built-in selection,
-            // TextInput does (drag/double-click to select, Cmd/Ctrl+C to copy), and read-only
-            // still blocks actually editing it
-            TextInput {
-                text: "Browsers";
-                font-size: 14px;
-                font-weight: 700;
-                color: AppPalette.text-color;
+            // StyledText with selectable instead of plain Text - Text has no built-in selection
+            // (drag/double-click to select, Cmd/Ctrl+C to copy)
+            StyledText {
+                text: @markdown("**Browsers**");
+                default-font-size: 14px;
+                default-color: AppPalette.text-color;
                 horizontal-alignment: center;
-                read-only: true;
+                selectable: true;
             }
 
-            TextInput {
-                text: root.version-text;
-                font-size: 10px;
-                color: AppPalette.text-color;
+            StyledText {
+                text: @markdown("\{root.version-text}");
+                default-font-size: 11px;
+                default-color: AppPalette.text-color;
                 horizontal-alignment: center;
-                read-only: true;
+                selectable: true;
             }
 
-            TextInput {
-                text: "© 2022-2026 Browsers.software team.";
-                font-size: 10px;
-                color: AppPalette.text-color;
+            StyledText {
+                text: @markdown("© 2022-2026 Browsers.software team.");
+                default-font-size: 11px;
+                default-color: AppPalette.text-color;
                 horizontal-alignment: center;
-                read-only: true;
+                selectable: true;
             }
 
             StyledText {
                 text: @markdown("Visit us at [https://browsers.software](https://browsers.software).");
-                default-font-size: 10px;
+                default-font-size: 11px;
                 default-color: AppPalette.text-color;
                 link-color: AppPalette.accent-color;
                 link-clicked(link) => { Platform.open-url(link); }
@@ -69,7 +67,7 @@ export component AboutWindow inherits Window {
 
             DirectoriesList {
                 directories: root.directories;
-                entry-font-size: 8px;
+                entry-font-size: 9px;
                 entry-color: AppPalette.text-color;
             }
 

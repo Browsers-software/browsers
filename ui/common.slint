@@ -10,8 +10,8 @@ export component Card inherits Rectangle {
 
 export enum ThemeChoice { auto, light, dark }
 
-// single source of truth for the browser row height - main_window.slint's BrowserRow height,
-// its keyboard-scroll math, and its drag-drop index math all have to agree on this value
+// single source of truth for the browser row height - main_window.slint's BrowserRow height
+// and its drag-drop index math have to agree on this value
 export global Layout {
     out property <length> browser-row-height: 32px;
 }

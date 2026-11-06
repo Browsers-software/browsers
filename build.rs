@@ -38,7 +38,7 @@ fn copy_resources() {
 }
 
 fn compile_slint_files() {
-    slint_build::compile("ui/app.slint").unwrap();
+    slint_build::compile(".").unwrap();
 }
 
 #[cfg(target_os = "macos")]
