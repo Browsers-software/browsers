@@ -4,7 +4,10 @@ use url::Url;
 pub fn convert_slack_uri(profile_team_id: &str, profile_team_domain: &str, url: &Url) -> String {
     let unknown = format!("slack://channel?team={}", profile_team_id);
 
-    let url_host_str = (&url.host_str().unwrap()).to_string();
+    // e.g. file:// urls have no host
+    let Some(url_host_str) = url.host_str().map(str::to_string) else {
+        return unknown;
+    };
 
     let path_segments_maybe = url.path_segments();
     let url_path_segments_maybe = path_segments_maybe.map(|c| {
@@ -120,4 +123,18 @@ pub fn convert_slack_uri(profile_team_id: &str, profile_team_domain: &str, url: 
     } else {
         format!("slack://channel?team={}", profile_team_id)
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_hostless_url_falls_back_to_team_channel() {
+        let url = Url::parse("file:///Users/me/page.html").unwrap();
+        assert_eq!(
+            convert_slack_uri("T123", "mycompany", &url),
+            "slack://channel?team=T123"
+        );
+    }
 }
