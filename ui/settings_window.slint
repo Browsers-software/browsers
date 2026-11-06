@@ -273,9 +273,11 @@ component GeneralTab inherits VerticalLayout {
 component AppearanceTab inherits VerticalLayout {
     in property <ThemeChoice> theme;
     in property <bool> show-hotkeys;
+    in property <float> text-scale;
 
     callback theme-changed(ThemeChoice);
     callback show-hotkeys-changed(bool);
+    callback text-scale-changed(float);
 
     padding: 20px;
     alignment: start;
@@ -295,6 +297,17 @@ component AppearanceTab inherits VerticalLayout {
                 selected(i) => {
                     root.theme-changed(i == 0 ? ThemeChoice.auto : i == 1 ? ThemeChoice.light : ThemeChoice.dark);
                 }
+            }
+        }
+
+        SettingRow {
+            title: "Text size";
+            flush-right: true;
+            SegmentedControl {
+                cross-axis-self-alignment: stretch;
+                options: ["Default", "Large", "Larger"];
+                current: root.text-scale >= 1.4 ? 2 : root.text-scale >= 1.2 ? 1 : 0;
+                selected(i) => { root.text-scale-changed(i == 0 ? 1.0 : i == 1 ? 1.25 : 1.5); }
             }
         }
 
@@ -607,6 +620,7 @@ export component SettingsWindow inherits Window {
     in property <[RestorableProfile]> restorable-app-profiles;
 
     in property <ThemeChoice> theme;
+    in property <float> text-scale;
 
     in property <[SettingsRule]> rules;
     in property <SettingsRule> default-rule;
@@ -626,6 +640,7 @@ export component SettingsWindow inherits Window {
     callback unwrap-urls-changed(bool);
     callback restore-profile(string);
     callback theme-changed(ThemeChoice);
+    callback text-scale-changed(float);
     callback add-rule();
     callback remove-rule(int);
     callback rule-url-changed(int, string);
@@ -688,7 +703,9 @@ export component SettingsWindow inherits Window {
                 if root.current-tab == SettingsTab.appearance: AppearanceTab {
                     theme: root.theme;
                     show-hotkeys: root.show-hotkeys;
+                    text-scale: root.text-scale;
                     theme-changed(t) => { root.theme-changed(t); }
+                    text-scale-changed(v) => { root.text-scale-changed(v); }
                     show-hotkeys-changed(v) => { root.show-hotkeys-changed(v); }
                 }
                 if root.current-tab == SettingsTab.rules: RulesTab {

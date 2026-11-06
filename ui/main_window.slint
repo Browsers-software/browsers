@@ -108,20 +108,20 @@ component BrowserRow inherits Rectangle {
             // ended up tracking each row's text width instead of lining up across rows
 
             Rectangle {
-                width: 32px;
-                height: 32px;
+                width: Layout.browser-row-height;
+                height: Layout.browser-row-height;
                 Image {
                     source: item.image;
-                    width: icon-size;
-                    height: icon-size;
+                    width: icon-size * AppPalette.text-scale;
+                    height: icon-size * AppPalette.text-scale;
                     image-fit: contain;
                 }
                 Image {
                     source: item.profile-image;
-                    width: 16px;
-                    height: 16px;
-                    x: 32px - self.width - 1px;
-                    y: 32px - self.height - 1px;
+                    width: 16px * AppPalette.text-scale;
+                    height: 16px * AppPalette.text-scale;
+                    x: parent.width - self.width - 1px;
+                    y: parent.height - self.height - 1px;
                     visible: item.profile-image.width > 0;
                 }
             }
@@ -153,15 +153,15 @@ component BrowserRow inherits Rectangle {
             Rectangle { horizontal-stretch: 1; }
 
             if item.show-hotkey: Rectangle {
-                width: 18px;
-                height: 18px;
+                width: AppPalette.hotkey-badge-size;
+                height: AppPalette.hotkey-badge-size;
                 border-radius: 5px;
                 border-width: 1px;
                 border-color: AppPalette.secondary-stroke-color;
                 background: highlighted ? AppPalette.hotkey-background-color-hover : AppPalette.secondary-background-color;
                 Text {
                     text: item.hotkey;
-                    font-size: 10px;
+                    font-size: AppPalette.hotkey-label-size;
                     color: highlighted ? AppPalette.hotkey-text-color-hover : AppPalette.muted-label-color;
                 }
             }
@@ -365,7 +365,7 @@ export component MainWindow inherits Window {
                     }
 
                     HorizontalLayout {
-                        height: 18px;
+                        height: AppPalette.footer-height;
                         urlTa := TouchArea {
                             clicked => { root.copy-link(); }
                             Text {
@@ -416,17 +416,17 @@ export component MainWindow inherits Window {
                             // to it as a sibling, so .show()'s point argument and mouse-x/mouse-y
                             // below share the same coordinate space
                             optionsTa := TouchArea {
-                                width: 18px;
-                                height: 18px;
+                                width: AppPalette.footer-height;
+                                height: AppPalette.footer-height;
                                 clicked => { om.show({x: self.mouse-x, y: self.mouse-y}); }
                                 Rectangle {
-                                    width: 18px;
-                                    height: 18px;
-                                    border-radius: 9px;
+                                    width: AppPalette.footer-height;
+                                    height: AppPalette.footer-height;
+                                    border-radius: AppPalette.footer-height / 2;
                                     background: optionsTa.has-hover ? AppPalette.highlight-background-color : transparent;
                                     Text {
                                         text: "⋮";
-                                        font-size: 15px;
+                                        font-size: 15px * AppPalette.text-scale;
                                         color: AppPalette.muted-label-color;
                                     }
                                 }
@@ -438,14 +438,14 @@ export component MainWindow inherits Window {
                 // full URL on hover. Drawn inside the window, as a Tooltip would be clipped at its
                 // edge. Grows upwards from the URL row, so it fits much longer URLs.
                 // parent is the dialog's FocusScope, so the box ends 27px above its bottom (5px
-                // padding + 18px URL row + 4px gap).
+                // padding + footer row (18px at default text size) + 4px gap).
                 if urlTa.has-hover: Rectangle {
                     // the longest the box can get; whatever doesn't fit is elided
-                    property <length> max-box-height: parent.height - 32px;
+                    property <length> max-box-height: parent.height - 14px - AppPalette.footer-height;
                     x: 5px;
                     width: parent.width - 10px;
                     height: min(url-measure.preferred-height + 12px, self.max-box-height);
-                    y: parent.height - 27px - self.height;
+                    y: parent.height - 9px - AppPalette.footer-height - self.height;
                     background: AppPalette.secondary-background-color;
                     border-radius: 5px;
                     border-width: 1px;

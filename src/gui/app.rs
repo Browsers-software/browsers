@@ -78,6 +78,7 @@ pub fn new(
     }));
 
     apply_theme(&state);
+    apply_text_scale(&state);
     refresh_main_window_model(&state);
     reposition_main_window(&state);
     wire_main_window(&state);
@@ -94,6 +95,17 @@ pub fn apply_theme(state: &SharedState) {
     if let Some(w) = &st.about_window {
         theme::apply_to_window(scheme, w);
     }
+}
+
+// the main window's width and height follow the text size, so it needs a resize too
+pub fn apply_text_scale(state: &SharedState) {
+    let scale = state.borrow().ui_settings.visual_settings.text_scale;
+    state
+        .borrow()
+        .main_window
+        .global::<crate::gui::generated::AppPalette>()
+        .set_text_scale(scale);
+    resize_main_window(state);
 }
 
 pub fn refresh_main_window_model(state: &SharedState) {
@@ -192,7 +204,10 @@ fn apply_main_window_size(win: &MainWindow, browser_count: usize) -> (f32, f32) 
     let row_height = win
         .global::<crate::gui::generated::Layout>()
         .get_browser_row_height();
-    let dialog_size = main_window::recalculate_window_size(browser_count, row_height);
+    let text_scale = win
+        .global::<crate::gui::generated::AppPalette>()
+        .get_text_scale();
+    let dialog_size = main_window::recalculate_window_size(browser_count, row_height, text_scale);
     // the extra transparent part of the borderless window becomes a delete target while a
     // browser row is being dragged
     let size = (

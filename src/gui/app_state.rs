@@ -58,6 +58,7 @@ pub struct UIVisualSettings {
     pub show_hotkeys: bool,
     pub quit_on_lost_focus: bool,
     pub theme: ConfiguredTheme,
+    pub text_scale: f32,
 }
 
 #[derive(Clone, Debug)]
@@ -112,6 +113,7 @@ fn map_as_visual_settings(ui_config: &UIConfig) -> UIVisualSettings {
         show_hotkeys: ui_config.show_hotkeys,
         quit_on_lost_focus: ui_config.quit_on_lost_focus,
         theme: ui_config.theme,
+        text_scale: ui_config.text_scale,
     }
 }
 

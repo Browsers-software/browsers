@@ -81,6 +81,9 @@ pub struct UIConfig {
     pub quit_on_lost_focus: bool,
 
     pub theme: ConfiguredTheme,
+
+    // 1.0 = default; scales the main window's text and rows
+    pub text_scale: f32,
 }
 
 impl Default for UIConfig {
@@ -89,6 +92,7 @@ impl Default for UIConfig {
             show_hotkeys: true,
             quit_on_lost_focus: false,
             theme: ConfiguredTheme::Auto,
+            text_scale: 1.0,
         }
     }
 }
