@@ -27,9 +27,17 @@ export global AppPalette {
     out property <color> text-color: dark ? rgb(240, 240, 234) : rgb(10, 10, 10);
     out property <color> about-background-color: dark ? rgb(27, 32, 32) : rgb(236, 236, 236);
 
-    out property <length> browser-label-size: 12px;
-    out property <length> profile-label-size: 11px;
-    out property <length> url-label-size: 12px;
+    // the user's Text size setting (1 = default), set from Rust. Scales the main window's text,
+    // row height and width
+    in property <float> text-scale: 1;
+
+    out property <length> browser-label-size: 12px * text-scale;
+    out property <length> profile-label-size: 11px * text-scale;
+    out property <length> url-label-size: 12px * text-scale;
+    out property <length> hotkey-label-size: 10px * text-scale;
+    out property <length> hotkey-badge-size: 18px * text-scale;
+    // the URL / options-button row below the browser list
+    out property <length> footer-height: 18px * text-scale;
 
     out property <color> label-color-hover: label-color;
     out property <color> secondary-label-color-hover: label-color;

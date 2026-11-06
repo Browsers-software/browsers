@@ -240,6 +240,7 @@ pub fn refresh(state: &SharedState) {
     win.set_unwrap_urls(settings.behavioral_settings.unwrap_urls);
     crate::gui::ui_util::sync_vec_model(&win.get_restorable_app_profiles(), restorable_items);
     win.set_theme(theme_to_choice(settings.visual_settings.theme));
+    win.set_text_scale(settings.visual_settings.text_scale);
     // forces std-widgets' own Palette (which otherwise just tracks the OS) so an explicit
     // Light/Dark choice also applies to native controls like Switch/LineEdit
     win.global::<StdWidgetPalette>()
@@ -324,6 +325,15 @@ fn wire(state: &SharedState, win: &SettingsWindow) {
         state,
         MessageToMain::RestoreAppProfile,
     ));
+    {
+        let state = state.clone();
+        win.on_text_scale_changed(move |scale| {
+            state.borrow_mut().ui_settings.visual_settings.text_scale = scale;
+            let settings = state.borrow().ui_settings.visual_settings.clone();
+            app::apply_text_scale(&state);
+            save_and_refresh(&state, MessageToMain::SaveConfigUISettings(settings));
+        });
+    }
     {
         let state = state.clone();
         win.on_theme_changed(move |choice| {
@@ -480,6 +490,7 @@ mod tests {
                 show_hotkeys: false,
                 quit_on_lost_focus: false,
                 theme: ConfiguredTheme::Auto,
+                text_scale: 1.0,
             },
             behavioral_settings: crate::gui::app_state::UIBehavioralSettings { unwrap_urls },
         }

@@ -35,16 +35,26 @@ fn visible_scroll_area_height(browsers_count_f32: f32, row_height: f32) -> f32 {
 
 // row_height comes from ui/common.slint's Layout.browser-row-height, the single source of truth
 // also used for the row layout and drag-drop math in main_window.slint
-pub fn recalculate_window_size(browser_count: usize, row_height: f32) -> (f32, f32) {
+pub fn recalculate_window_size(
+    browser_count: usize,
+    row_height: f32,
+    text_scale: f32,
+) -> (f32, f32) {
     let item_count = calculate_visible_browser_count(browser_count);
-    calculate_window_size(item_count, row_height)
+    calculate_window_size(item_count, row_height, text_scale)
 }
 
-fn calculate_window_size(item_count: usize, row_height: f32) -> (f32, f32) {
+fn calculate_window_size(item_count: usize, row_height: f32, text_scale: f32) -> (f32, f32) {
     let browsers_count_f32 = item_count as f32;
-    let window_width = ITEM_WIDTH + PADDING_X * 2.0 + WINDOW_BORDER_WIDTH * 2.0;
+    let window_width = ITEM_WIDTH * text_scale + PADDING_X * 2.0 + WINDOW_BORDER_WIDTH * 2.0;
     let visible_scroll_area_height = visible_scroll_area_height(browsers_count_f32, row_height);
-    let window_height = visible_scroll_area_height + 5.0 + 12.0 + PADDING_Y * 2.0 + 10.0;
+    // the footer row (18px at default text size) grows with the text
+    let window_height = visible_scroll_area_height
+        + 5.0
+        + 12.0
+        + 18.0 * (text_scale - 1.0)
+        + PADDING_Y * 2.0
+        + 10.0;
     (window_width, window_height)
 }
 
