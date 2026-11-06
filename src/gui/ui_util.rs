@@ -1,8 +1,8 @@
 pub fn ellipsize(text: &str, max_length: usize) -> String {
-    if text.len() <= max_length {
+    if text.chars().count() <= max_length {
         return text.to_string();
     }
-    text[0..max_length - 1].to_string() + "…"
+    text.chars().take(max_length - 1).collect::<String>() + "…"
 }
 
 // updates a Slint list model in place instead of replacing it wholesale - swapping out the
@@ -45,5 +45,12 @@ mod tests {
     #[test]
     fn test_ellipsize_enough() {
         assert_eq!(ellipsize("some text", 9), "some text");
+    }
+
+    #[test]
+    fn test_ellipsize_multibyte_does_not_panic() {
+        // each of these characters is 3 bytes, so a byte-based cut would land mid-character
+        assert_eq!(ellipsize("file:///文書文書文書文書", 11), "file:///文書…");
+        assert_eq!(ellipsize("文書文書文書", 6), "文書文書文書");
     }
 }
