@@ -88,6 +88,9 @@ fn main() {
         .find(|i| i.starts_with("http:") || i.starts_with("https:") || i.starts_with("file:"));
     if let Some(url_input) = url_input_maybe {
         url = url_input.to_string();
+    } else if let Some(file_url) = args.iter().skip(1).find_map(|i| absolute_path_to_url(i)) {
+        // Windows passes a file opened via file association as a plain path, not a file:// url
+        url = file_url;
     }
 
     let show_gui = !args.contains(&"--no-gui".to_string());
@@ -198,4 +201,29 @@ fn main() {
     }
 
     app::run(&state);
+}
+
+// a command line argument that is an absolute file path, as a file:// url
+fn absolute_path_to_url(arg: &str) -> Option<String> {
+    url::Url::from_file_path(arg).ok().map(|u| u.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn absolute_path_becomes_file_url() {
+        let path = env::temp_dir().join("browsers test page.html");
+
+        let url = absolute_path_to_url(path.to_str().unwrap()).unwrap();
+        assert!(url.starts_with("file:///"), "{url}");
+        assert!(url.ends_with("/browsers%20test%20page.html"), "{url}");
+    }
+
+    #[test]
+    fn flags_and_relative_paths_are_not_urls() {
+        assert_eq!(absolute_path_to_url("--no-gui"), None);
+        assert_eq!(absolute_path_to_url("page.html"), None);
+    }
 }
