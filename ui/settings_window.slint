@@ -1,12 +1,11 @@
 import {
     LineEdit,
     Switch,
+    Button,
     CheckBox,
     ScrollView,
     Palette,
     ComboBox,
-    Button,
-    RadioGroup,
 } from "std-widgets.slint";
 import { Card, DirEntry, DirectoriesList, ThemeChoice } from "common.slint";
 import { BrowserItem, RestorableProfile } from "main_window.slint";
@@ -81,147 +80,229 @@ component ProfilePicker inherits HorizontalLayout {
     }
 }
 
+component SectionLabel inherits VerticalLayout {
+    in property <string> text;
+    // the tabs only space their children 8px apart, this separates a section from the group above
+    padding-top: 12px;
+    padding-left: 4px;
+    Text {
+        text: root.text;
+        font-size: 13px;
+        font-weight: 600;
+        color: Palette.foreground.transparentize(0.4);
+    }
+}
+
+// rounded container for a list of SettingRows
+component SettingsGroup inherits Card {
+    clip: true;
+    border-width: 0px;
+    border-radius: 12px;
+    VerticalLayout {
+        spacing: 0px;
+        @children
+    }
+}
+
+// title (and optional description) on the left, the control (@children) on the right.
+// `divider` draws a hairline above the row - off for the first row of a group
+component SettingRow inherits VerticalLayout {
+    in property <string> title;
+    in property <string> description;
+    in property <bool> divider: true;
+    // the control fills the row's full height and touches its right edge (the card clips the corners)
+    in property <bool> flush-right: false;
+    spacing: 0px;
+
+    if root.divider: HorizontalLayout {
+        padding-left: 14px;
+        padding-right: 14px;
+        Rectangle {
+            height: 1px;
+            background: Palette.border.transparentize(0.6);
+        }
+    }
+
+    HorizontalLayout {
+        padding-left: 14px;
+        padding-right: root.flush-right ? 0px : 14px;
+        padding-top: root.flush-right ? 0px : 10px;
+        padding-bottom: root.flush-right ? 0px : 10px;
+        spacing: 12px;
+        min-height: 40px;
+        // center instead of the default stretch, so a fixed-height control (Switch, Button)
+        // is vertically centered next to the title
+        cross-axis-alignment: center;
+
+        VerticalLayout {
+            spacing: 2px;
+            max-width: 430px;
+            Text {
+                text: root.title;
+                font-size: 13px;
+                color: Palette.foreground;
+            }
+
+            if root.description != "": Text {
+                text: root.description;
+                font-size: 11px;
+                color: Palette.foreground.transparentize(0.4);
+                wrap: word-wrap;
+            }
+        }
+
+        Rectangle {
+            horizontal-stretch: 1;
+        }
+
+        @children
+    }
+}
+
+// selector with one segment per option; stretches to the height of the row it is in
+component SegmentedControl inherits Rectangle {
+    in property <[string]> options;
+    in property <int> current;
+    callback selected(int);
+
+    width: root.options.length * 88px;
+    background: Palette.foreground.transparentize(0.94);
+    // rounds all four corners, so the first and last segments get rounded ends
+    border-radius: 10px;
+    clip: true;
+
+    HorizontalLayout {
+        for option[i] in root.options: Rectangle {
+            background: root.current == i ? Palette.accent-background : transparent;
+            Text {
+                text: option;
+                font-size: 12px;
+                color: root.current == i ? Palette.accent-foreground : Palette.foreground;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+
+            if i > 0: Rectangle {
+                x: 0px;
+                width: 1px;
+                background: Palette.border.transparentize(0.5);
+            }
+
+            TouchArea {
+                clicked => { root.selected(i); }
+            }
+        }
+    }
+}
+
 component GeneralTab inherits VerticalLayout {
-    in property <bool> show-hotkeys;
     in property <bool> quit-on-lost-focus;
     in property <bool> show-quit-on-lost-focus;
     in property <bool> unwrap-urls;
     in property <[RestorableProfile]> restorable-app-profiles;
 
-    callback show-hotkeys-changed(bool);
     callback quit-on-lost-focus-changed(bool);
     callback unwrap-urls-changed(bool);
     callback restore-profile(string);
 
+    padding: 20px;
     alignment: start;
-    spacing: 10px;
+    spacing: 8px;
 
-    HorizontalLayout {
-        Text {
-            text: "Show hotkeys";
-            font-size: 13px;
-            vertical-alignment: center;
+    SettingsGroup {
+        if show-quit-on-lost-focus: SettingRow {
+            title: "Quit when focus is lost";
+            divider: false;
+            Switch {
+                checked: root.quit-on-lost-focus;
+                toggled => { root.quit-on-lost-focus-changed(self.checked); }
+            }
         }
 
-        Rectangle {
-            horizontal-stretch: 1;
-        }
-
-        Switch {
-            checked: root.show-hotkeys;
-            toggled => { root.show-hotkeys-changed(self.checked); }
-        }
-    }
-
-    if show-quit-on-lost-focus: HorizontalLayout {
-        Text {
-            text: "Quit when focus is lost";
-            font-size: 13px;
-            vertical-alignment: center;
-        }
-
-        Rectangle {
-            horizontal-stretch: 1;
-        }
-
-        Switch {
-            checked: root.quit-on-lost-focus;
-            toggled => { root.quit-on-lost-focus-changed(self.checked); }
+        SettingRow {
+            title: "Unwrap URLs";
+            divider: root.show-quit-on-lost-focus;
+            Switch {
+                checked: root.unwrap-urls;
+                toggled => { root.unwrap-urls-changed(self.checked); }
+            }
         }
     }
 
-    HorizontalLayout {
-        Text {
-            text: "Unwrap URLs";
-            font-size: 13px;
-            vertical-alignment: center;
-        }
-
-        Rectangle {
-            horizontal-stretch: 1;
-        }
-
-        Switch {
-            checked: root.unwrap-urls;
-            toggled => { root.unwrap-urls-changed(self.checked); }
-        }
-    }
-
-    Text {
+    SectionLabel {
         text: "Applications and Profiles";
-        font-size: 13px;
     }
 
-    ram := ContextMenuArea {
-        // ContextMenuArea doesn't forward the Button's size to the layout it sits in, so without
-        // a height here the row collapses and the button overlaps its neighbours
-        height: 26px;
-        Menu {
-            if root.restorable-app-profiles.length == 0: MenuItem {
-                title: "No hidden apps or profiles";
-                enabled: false;
-            }
-            for p in root.restorable-app-profiles: MenuItem {
-                title: p.full-name;
-                activated => { root.restore-profile(p.unique-id); }
+    SettingsGroup {
+        SettingRow {
+            title: "Hidden applications and profiles";
+            description: "Hide and re-order applications and profiles in the main window, "
+                + "by drag-and-drop or right-click.";
+            divider: false;
+
+            ram := ContextMenuArea {
+                // ContextMenuArea doesn't forward the Button's size to the layout it sits in, so
+                // it needs the Button's size spelled out here
+                width: 130px;
+                height: 26px;
+                Menu {
+                    if root.restorable-app-profiles.length == 0: MenuItem {
+                        title: "No hidden apps or profiles";
+                        enabled: false;
+                    }
+                    for p in root.restorable-app-profiles: MenuItem {
+                        title: p.full-name;
+                        activated => { root.restore-profile(p.unique-id); }
+                    }
+                }
+
+                Button {
+                    x: 0px;
+                    width: 130px;
+                    height: 26px;
+                    text: "Restore App...";
+                    // Button doesn't expose a mouse-x/mouse-y like TouchArea does, so just anchor
+                    // the menu under the button's bottom-left corner instead of the click position
+                    clicked => { ram.show({ x: 0px, y: self.height }); }
+                }
             }
         }
-
-        Button {
-            // without x, Slint centers a fixed-width element in its parent
-            x: 0px;
-            width: 130px;
-            height: 26px;
-            text: "Restore App...";
-            // Button doesn't expose a mouse-x/mouse-y like TouchArea does, so just anchor the
-            // menu under the button's bottom-left corner instead of the click position
-            clicked => { ram.show({ x: 0px, y: self.height }); }
-        }
-    }
-
-    Text {
-        text: "Hiding and re-ordering applications/profiles is not done here.\n"
-            + "Just drag-and-drop or right-click them in the main window";
-        font-size: 11px;
-        color: Palette.foreground.transparentize(0.4);
-        wrap: word-wrap;
     }
 }
 
 component AppearanceTab inherits VerticalLayout {
     in property <ThemeChoice> theme;
+    in property <bool> show-hotkeys;
 
     callback theme-changed(ThemeChoice);
+    callback show-hotkeys-changed(bool);
 
+    padding: 20px;
     alignment: start;
-    spacing: 12px;
+    spacing: 8px;
 
-    RadioGroup {
-        title: "Theme";
-        RadioButton {
-            text: "Match System";
-            checked: root.theme == ThemeChoice.auto;
+    SettingsGroup {
+        SettingRow {
+            title: "Theme";
+            divider: false;
+            flush-right: true;
+            // Rust re-echoes root.theme right back after every change (see save_and_refresh in
+            // settings_window.rs), so the highlighted segment follows `theme` one-way
+            SegmentedControl {
+                cross-axis-self-alignment: stretch;
+                options: ["Match System", "Light", "Dark"];
+                current: root.theme == ThemeChoice.auto ? 0 : root.theme == ThemeChoice.light ? 1 : 2;
+                selected(i) => {
+                    root.theme-changed(i == 0 ? ThemeChoice.auto : i == 1 ? ThemeChoice.light : ThemeChoice.dark);
+                }
+            }
         }
 
-        RadioButton {
-            text: "Light";
-            checked: root.theme == ThemeChoice.light;
-        }
-
-        RadioButton {
-            text: "Dark";
-            checked: root.theme == ThemeChoice.dark;
-        }
-        // matching on the picked label rather than a two-way `checked` binding per button - Rust
-        // re-echoes root.theme right back after every change anyway (see save_and_refresh in
-        // settings_window.rs), so the one-way `checked:` bindings above staying in sync is enough
-        selected(value) => {
-            if (value == "Match System") {
-                root.theme-changed(ThemeChoice.auto);
-            } else if (value == "Light") {
-                root.theme-changed(ThemeChoice.light);
-            } else {
-                root.theme-changed(ThemeChoice.dark);
+        SettingRow {
+            title: "Show hotkeys";
+            Switch {
+                checked: root.show-hotkeys;
+                toggled => { root.show-hotkeys-changed(self.checked); }
             }
         }
     }
@@ -229,6 +310,10 @@ component AppearanceTab inherits VerticalLayout {
 
 component RuleCard inherits Card {
     in property <SettingsRule> rule;
+    // the rule that the "Test a URL" field matched
+    in property <bool> highlighted;
+    border-color: root.highlighted ? Palette.accent-background : Palette.border;
+    border-width: root.highlighted ? 2px : 1px;
     in property <[BrowserItem]> browsers;
     in property <[string]> profile-picker-options;
     callback url-changed(int, string);
@@ -237,11 +322,11 @@ component RuleCard inherits Card {
     callback remove(int);
 
     HorizontalLayout {
-        padding: 10px;
+        padding: 12px;
         spacing: 10px;
 
         VerticalLayout {
-            spacing: 6px;
+            spacing: 8px;
             HorizontalLayout {
                 spacing: 6px;
                 Text {
@@ -271,15 +356,26 @@ component RuleCard inherits Card {
             horizontal-stretch: 1;
         }
 
-        TouchArea {
-            width: 28px;
-            height: 28px;
+        remove-ta := TouchArea {
+            width: 26px;
+            height: 26px;
             clicked => { root.remove(rule.index); }
-            Text {
-                text: "➖";
-                font-size: 12px;
-                horizontal-alignment: center;
-                vertical-alignment: center;
+            Rectangle {
+                border-radius: 13px;
+                background: remove-ta.has-hover ? Palette.border : transparent;
+                // a trash can, drawn as a Path: it can't be mistaken for the "x" that clears a text field
+                Path {
+                    width: 12px;
+                    height: 12px;
+                    viewbox-width: 12;
+                    viewbox-height: 12;
+                    commands: "M 1.5 3 L 10.5 3 M 4.5 3 L 4.5 1.5 L 7.5 1.5 L 7.5 3 "
+                        + "M 2.5 3 L 3.2 10.5 L 8.8 10.5 L 9.5 3 M 5 5 L 5 8.5 M 7 5 L 7 8.5";
+                    stroke: Palette.foreground.transparentize(0.3);
+                    stroke-width: 1.2px;
+                    stroke-line-cap: round;
+                    stroke-line-join: round;
+                }
             }
         }
     }
@@ -296,41 +392,120 @@ component RulesTab inherits VerticalLayout {
     callback url-changed(int, string);
     callback profile-changed(int, string);
     callback incognito-changed(int, bool);
+    callback test-url-edited();
+
+    in-out property <string> test-url-text;
+    in property <string> test-url-result;
+    in property <int> test-url-match-index: -1;
+
+    // set by "Add Rule": the next time the list's content height changes (the new card being laid
+    // out), scroll to the very bottom so the hint text below the cards stays visible too
+    property <bool> scroll-to-new-rule: false;
 
     // no alignment here on purpose (leaving it at the default stretch) - it used to be set to
     // start, which pinned every child, including the ScrollView below, to its minimum/preferred
     // size instead of letting stretch hand out the leftover space, so the rule list never
     // actually grew to fill the tab.
     // same bug as the hotkey badges in main_window.slint's BrowserRow, just a different symptom.
-    spacing: 8px;
+    spacing: 0px;
 
-    Card {
-        HorizontalLayout {
-            padding: 10px;
-            VerticalLayout {
-                Text {
-                    text: "If no rules match";
-                    font-size: 12px;
+    // full-width header bar (edge to edge, square corners) holding the default rule
+    VerticalLayout {
+        spacing: 0px;
+        vertical-stretch: 0;
+        Rectangle {
+            background: Palette.alternate-background;
+            // fixed: left to the layout, this row grows to fill the whole page
+            height: 84px;
+            HorizontalLayout {
+                padding-left: 20px;
+                padding-right: 20px;
+                padding-top: 12px;
+                padding-bottom: 12px;
+                VerticalLayout {
+                    alignment: start;
+                    spacing: 6px;
+                    Text {
+                        text: "If no rules match";
+                        font-size: 13px;
+                        font-weight: 600;
+                    }
+
+                    ProfilePicker {
+                        rule: root.default-rule;
+                        browsers: root.browsers;
+                        profile-picker-options: root.profile-picker-options;
+                        profile-changed(id) => { root.profile-changed(-1, id); }
+                        incognito-changed(v) => { root.incognito-changed(-1, v); }
+                    }
                 }
 
-                ProfilePicker {
-                    rule: root.default-rule;
-                    browsers: root.browsers;
-                    profile-picker-options: root.profile-picker-options;
-                    profile-changed(id) => { root.profile-changed(-1, id); }
-                    incognito-changed(v) => { root.incognito-changed(-1, v); }
+                Rectangle {
+                    horizontal-stretch: 1;
+                }
+
+                Button {
+                    text: "Add Rule";
+                    primary: true;
+                    // keeps the Button's own height and centers it next to the default rule
+                    cross-axis-self-alignment: center;
+                    clicked => {
+                        root.scroll-to-new-rule = true;
+                        root.add-rule();
+                    }
                 }
             }
+        }
+
+        Rectangle {
+            height: 1px;
+            background: Palette.border.transparentize(0.5);
+        }
+    }
+
+    VerticalLayout {
+        padding-left: 20px;
+        padding-right: 20px;
+        padding-top: 12px;
+        spacing: 6px;
+        HorizontalLayout {
+            spacing: 8px;
+            Text {
+                text: "Test a URL";
+                font-size: 13px;
+                vertical-alignment: center;
+            }
+
+            LineEdit {
+                text <=> root.test-url-text;
+                placeholder-text: "Paste a link to see which rule applies";
+                edited(t) => { root.test-url-edited(); }
+            }
+        }
+
+        if root.test-url-result != "": Text {
+            text: root.test-url-result;
+            font-size: 12px;
+            wrap: word-wrap;
         }
     }
 
     ScrollView {
         vertical-stretch: 1;
+        changed content-height => {
+            if root.scroll-to-new-rule {
+                root.scroll-to-new-rule = false;
+                self.content-y = min(0px, self.visible-height - self.content-height);
+            }
+        }
         VerticalLayout {
             alignment: start;
             spacing: 6px;
+            padding: 20px;
+            padding-top: 14px;
             for rule in root.rules: RuleCard {
                 rule: rule;
+                highlighted: rule.index == root.test-url-match-index;
                 browsers: root.browsers;
                 profile-picker-options: root.profile-picker-options;
                 url-changed(idx, t) => { root.url-changed(idx, t); }
@@ -361,14 +536,6 @@ component RulesTab inherits VerticalLayout {
             }
         }
     }
-
-    HorizontalLayout {
-        alignment: end;
-        Button {
-            text: "Add Rule";
-            clicked => { root.add-rule(); }
-        }
-    }
 }
 
 component AdvancedTab inherits VerticalLayout {
@@ -376,37 +543,49 @@ component AdvancedTab inherits VerticalLayout {
     callback set-default();
     callback refresh();
 
+    padding: 20px;
     alignment: start;
-    spacing: 10px;
+    spacing: 8px;
 
-    HorizontalLayout {
-        alignment: start;
-        Button {
-            text: "Set Browsers as a Default Browser";
-            clicked => { root.set-default(); }
+    SettingsGroup {
+        SettingRow {
+            title: "Default browser";
+            divider: false;
+            Button {
+                text: "Set Browsers as a Default Browser";
+                clicked => { root.set-default(); }
+            }
+        }
+
+        SettingRow {
+            title: "Installed applications";
+            Button {
+                text: "Refresh Installed Applications";
+                clicked => { root.refresh(); }
+            }
         }
     }
 
-    HorizontalLayout {
-        alignment: start;
-        Button {
-            text: "Refresh Installed Applications";
-            clicked => { root.refresh(); }
-        }
-    }
-
-    Text {
+    SectionLabel {
         text: "Directories";
-        font-size: 13px;
     }
 
-    DirectoriesList {
-        directories: root.directories;
+    SettingsGroup {
+        HorizontalLayout {
+            padding: 14px;
+            DirectoriesList {
+                directories: root.directories;
+            }
+        }
     }
 }
 
 export component SettingsWindow inherits Window {
-    title: "Settings";
+    // like System Settings, the title bar names the current page
+    title: root.current-tab == SettingsTab.general ? "General"
+        : root.current-tab == SettingsTab.appearance ? "Appearance"
+        : root.current-tab == SettingsTab.rules ? "Rules"
+        : "Advanced";
     // same level as the main popup, otherwise this renders behind it - NSWindowLevel stacking is
     // absolute, not affected by which window is active
     always-on-top: true;
@@ -436,6 +615,12 @@ export component SettingsWindow inherits Window {
 
     in property <[DirEntry]> directories;
 
+    // the "Test a URL" field of the Rules tab: what was typed, and the result Rust worked out
+    in-out property <string> test-url-text;
+    in property <string> test-url-result;
+    in property <int> test-url-match-index: -1;
+
+    callback test-url-edited();
     callback show-hotkeys-changed(bool);
     callback quit-on-lost-focus-changed(bool);
     callback unwrap-urls-changed(bool);
@@ -453,53 +638,64 @@ export component SettingsWindow inherits Window {
         background: Palette.background;
 
         HorizontalLayout {
-            sidebar := VerticalLayout {
-                width: 190px;
-                padding: 10px;
-                spacing: 4px;
-                alignment: start;
+            sidebar := Rectangle {
+                width: 200px;
+                background: Palette.alternate-background;
 
-                for t in [
-                    { tab: SettingsTab.general, label: "General" },
-                    { tab: SettingsTab.appearance, label: "Appearance" },
-                    { tab: SettingsTab.rules, label: "Rules" },
-                    { tab: SettingsTab.advanced, label: "Advanced" },
-                ]: TouchArea {
-                    height: 30px;
-                    clicked => { root.current-tab = t.tab; }
-                    Rectangle {
-                        background: root.current-tab == t.tab ? Palette.accent-background : transparent;
-                        border-radius: 5px;
+                VerticalLayout {
+                    padding: 10px;
+                    padding-top: 14px;
+                    spacing: 2px;
+                    alignment: start;
+
+                    for t in [
+                        { tab: SettingsTab.general, label: "General" },
+                        { tab: SettingsTab.appearance, label: "Appearance" },
+                        { tab: SettingsTab.rules, label: "Rules" },
+                        { tab: SettingsTab.advanced, label: "Advanced" },
+                    ]: Rectangle {
+                        height: 32px;
+                        border-radius: 8px;
+                        background: root.current-tab == t.tab ? Palette.accent-background
+                            : tab-ta.has-hover ? Palette.border.transparentize(0.5)
+                            : transparent;
                         Text {
                             text: t.label;
-                            font-size: 14px;
-                            x: 12px;
+                            font-size: 13px;
+                            x: 10px;
                             color: root.current-tab == t.tab ? Palette.accent-foreground : Palette.foreground;
                             vertical-alignment: center;
+                        }
+
+                        tab-ta := TouchArea {
+                            clicked => { root.current-tab = t.tab; }
                         }
                     }
                 }
             }
 
             VerticalLayout {
-                padding: 10px;
 
                 if root.current-tab == SettingsTab.general: GeneralTab {
-                    show-hotkeys: root.show-hotkeys;
                     quit-on-lost-focus: root.quit-on-lost-focus;
                     show-quit-on-lost-focus: root.show-quit-on-lost-focus;
                     unwrap-urls: root.unwrap-urls;
                     restorable-app-profiles: root.restorable-app-profiles;
-                    show-hotkeys-changed(v) => { root.show-hotkeys-changed(v); }
                     quit-on-lost-focus-changed(v) => { root.quit-on-lost-focus-changed(v); }
                     unwrap-urls-changed(v) => { root.unwrap-urls-changed(v); }
                     restore-profile(id) => { root.restore-profile(id); }
                 }
                 if root.current-tab == SettingsTab.appearance: AppearanceTab {
                     theme: root.theme;
+                    show-hotkeys: root.show-hotkeys;
                     theme-changed(t) => { root.theme-changed(t); }
+                    show-hotkeys-changed(v) => { root.show-hotkeys-changed(v); }
                 }
                 if root.current-tab == SettingsTab.rules: RulesTab {
+                    test-url-text <=> root.test-url-text;
+                    test-url-result: root.test-url-result;
+                    test-url-match-index: root.test-url-match-index;
+                    test-url-edited => { root.test-url-edited(); }
                     rules: root.rules;
                     default-rule: root.default-rule;
                     browsers: root.browsers;

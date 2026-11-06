@@ -161,6 +161,16 @@ fn extract_part_matchers(full_rule: &str) -> UrlMatcher {
     };
 }
 
+/// Whether `pattern` matches `url`, or None if the pattern is not valid.
+/// Parsing a pattern panics on malformed input, which is fine for saved rules but not for the
+/// "Test a URL" field, where the user types against a rule that may be half written.
+pub fn try_pattern_matches_url(pattern: &str, url: &Url) -> Option<bool> {
+    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        to_url_matcher(pattern).to_glob_matcher().url_matches(url)
+    }))
+    .ok()
+}
+
 pub fn to_url_matcher(rule: &str) -> UrlMatcher {
     let full_rule = transform_to_full_match(rule);
     let url_matcher = extract_part_matchers(&full_rule);
@@ -417,5 +427,21 @@ mod tests {
                 "pattern {pattern}"
             );
         }
+    }
+
+    #[test]
+    fn try_pattern_matches_url_reports_matches() {
+        let url = Url::from_str("https://github.com/Browsers-software/browsers").unwrap();
+
+        assert_eq!(try_pattern_matches_url("github.com/Browsers-software/**", &url), Some(true));
+        assert_eq!(try_pattern_matches_url("example.com", &url), Some(false));
+    }
+
+    #[test]
+    fn try_pattern_matches_url_returns_none_for_malformed_pattern() {
+        let url = Url::from_str("https://github.com/").unwrap();
+
+        // an unclosed character class is not a valid glob
+        assert_eq!(try_pattern_matches_url("github.com/[", &url), None);
     }
 }
