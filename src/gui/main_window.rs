@@ -34,7 +34,7 @@ fn visible_scroll_area_height(browsers_count_f32: f32, row_height: f32) -> f32 {
 }
 
 // row_height comes from ui/common.slint's Layout.browser-row-height, the single source of truth
-// also used for the row layout, keyboard-scroll, and drag-drop math in main_window.slint
+// also used for the row layout and drag-drop math in main_window.slint
 pub fn recalculate_window_size(browser_count: usize, row_height: f32) -> (f32, f32) {
     let item_count = calculate_visible_browser_count(browser_count);
     calculate_window_size(item_count, row_height)

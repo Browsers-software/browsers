@@ -55,29 +55,7 @@ component BrowserRow inherits Rectangle {
             root.drag-state-changed(self.dragging);
         }
 
-        ta := TouchArea {
-            clicked => { root.open(item.browser-profile-index); }
-            // TouchArea's moved callback only fires while the mouse is pressed (dragging), not on
-            // plain hover.
-            // pointer-event's Move kind fires regardless, which is what we want here - hovering alone
-            // should move focus/highlight to this row.
-            pointer-event(event) => {
-                if (event.kind == PointerEventKind.move) {
-                    root.set-focused(item.filtered-index);
-                }
-            }
-        }
-
-        // declared after ta on purpose: siblings hit-test front-to-back in declaration order, so
-        // being last makes cm the frontmost one. a TouchArea grabs every press it sees regardless of
-        // button, so with cm behind ta a right-click would never reach it no matter how it's sized.
-        // being in front, cm gets first look at every press, handles the right-click/Menu-key itself,
-        // and otherwise ignores the event so it falls through to ta underneath for left-click/hover.
-        // it also still needs an explicit size - it has no visual children of its own (just a
-        // non-visual Menu), so without one it defaults to 0x0 and never receives a click at all.
         cm := ContextMenuArea {
-            width: 100%;
-            height: 100%;
             Menu {
                 for m in item.has-priority-ordering ? [] : [
                     { suffix: "to Top", enabled: !item.is-first, dir: "top" },
@@ -96,6 +74,19 @@ component BrowserRow inherits Rectangle {
                 if item.supports-profiles: MenuItem {
                     title: "Hide all profiles of \{item.browser-name}";
                     activated => { root.hide-app(item.unique-app-id); }
+                }
+            }
+
+            ta := TouchArea {
+                clicked => { root.open(item.browser-profile-index); }
+                // TouchArea's moved callback only fires while the mouse is pressed (dragging), not on
+                // plain hover.
+                // pointer-event's Move kind fires regardless, which is what we want here - hovering alone
+                // should move focus/highlight to this row.
+                pointer-event(event) => {
+                    if (event.kind == PointerEventKind.move) {
+                        root.set-focused(item.filtered-index);
+                    }
                 }
             }
         }
@@ -243,17 +234,7 @@ export component MainWindow inherits Window {
 
     function ensure-focused-visible() {
         if (root.browsers.length > 0) {
-            let row-height = Layout.browser-row-height;
-            let row-top = root.focused-index * row-height;
-            let row-bottom = row-top + row-height;
-            let visible-top = -browser-list.content-y;
-            let visible-bottom = visible-top + browser-list.visible-height;
-
-            if (row-top < visible-top) {
-                browser-list.content-y = -row-top;
-            } else if (row-bottom > visible-bottom) {
-                browser-list.content-y = browser-list.visible-height - row-bottom;
-            }
+            browser-list.ensure-row-visible(root.focused-index, ScrollBehavior.instant);
         }
     }
 

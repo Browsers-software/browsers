@@ -1,4 +1,13 @@
-import { LineEdit, Switch, ScrollView, Palette, ComboBox, Button, RadioGroup } from "std-widgets.slint";
+import {
+    LineEdit,
+    Switch,
+    CheckBox,
+    ScrollView,
+    Palette,
+    ComboBox,
+    Button,
+    RadioGroup,
+} from "std-widgets.slint";
 import { Card, DirEntry, DirectoriesList, ThemeChoice } from "common.slint";
 import { BrowserItem, RestorableProfile } from "main_window.slint";
 
@@ -51,20 +60,22 @@ component ProfilePicker inherits HorizontalLayout {
         }
     }
 
-    if rule.show-incognito: TouchArea {
-        clicked => { root.incognito-changed(!rule.incognito); }
-        HorizontalLayout {
-            spacing: 4px;
-            Rectangle {
-                width: 12px;
-                height: 12px;
-                border-width: 1px;
-                border-color: Palette.border;
-                background: rule.incognito ? Palette.accent-background : transparent;
-            }
+    // CheckBox's own gap between box and label is fixed, so the label is a separate Text
+    // (clickable, like the CheckBox's own) and the CheckBox is cut to just the box
+    if rule.show-incognito: HorizontalLayout {
+        spacing: 4px;
+        CheckBox {
+            width: 16px;
+            checked: root.rule.incognito;
+            toggled => { root.incognito-changed(self.checked); }
+        }
+
+        TouchArea {
+            clicked => { root.incognito-changed(!root.rule.incognito); }
             Text {
                 text: "In Incognito";
                 font-size: 12px;
+                vertical-alignment: center;
             }
         }
     }
@@ -86,34 +97,70 @@ component GeneralTab inherits VerticalLayout {
     spacing: 10px;
 
     HorizontalLayout {
-        Text { text: "Show hotkeys"; font-size: 13px; vertical-alignment: center; }
-        Rectangle { horizontal-stretch: 1; }
-        Switch { checked: root.show-hotkeys; toggled => { root.show-hotkeys-changed(self.checked); } }
+        Text {
+            text: "Show hotkeys";
+            font-size: 13px;
+            vertical-alignment: center;
+        }
+
+        Rectangle {
+            horizontal-stretch: 1;
+        }
+
+        Switch {
+            checked: root.show-hotkeys;
+            toggled => { root.show-hotkeys-changed(self.checked); }
+        }
     }
 
     if show-quit-on-lost-focus: HorizontalLayout {
-        Text { text: "Quit when focus is lost"; font-size: 13px; vertical-alignment: center; }
-        Rectangle { horizontal-stretch: 1; }
-        Switch { checked: root.quit-on-lost-focus; toggled => { root.quit-on-lost-focus-changed(self.checked); } }
+        Text {
+            text: "Quit when focus is lost";
+            font-size: 13px;
+            vertical-alignment: center;
+        }
+
+        Rectangle {
+            horizontal-stretch: 1;
+        }
+
+        Switch {
+            checked: root.quit-on-lost-focus;
+            toggled => { root.quit-on-lost-focus-changed(self.checked); }
+        }
     }
 
     HorizontalLayout {
-        Text { text: "Unwrap URLs"; font-size: 13px; vertical-alignment: center; }
-        Rectangle { horizontal-stretch: 1; }
-        Switch { checked: root.unwrap-urls; toggled => { root.unwrap-urls-changed(self.checked); } }
+        Text {
+            text: "Unwrap URLs";
+            font-size: 13px;
+            vertical-alignment: center;
+        }
+
+        Rectangle {
+            horizontal-stretch: 1;
+        }
+
+        Switch {
+            checked: root.unwrap-urls;
+            toggled => { root.unwrap-urls-changed(self.checked); }
+        }
     }
 
-    Text { text: "Applications and Profiles"; font-size: 13px; }
+    Text {
+        text: "Applications and Profiles";
+        font-size: 13px;
+    }
 
-    // explicit width/height here (matches the Button below) - ContextMenuArea doesn't forward its
-    // visual content's size to the layout it sits in, so without this the enclosing
-    // VerticalLayout reserved zero height for this row and the "Restore App..." button (still
-    // rendered at 130x26) just overlapped the hint text below it instead of pushing it down
     ram := ContextMenuArea {
-        width: 130px;
+        // ContextMenuArea doesn't forward the Button's size to the layout it sits in, so without
+        // a height here the row collapses and the button overlaps its neighbours
         height: 26px;
         Menu {
-            if root.restorable-app-profiles.length == 0: MenuItem { title: "No hidden apps or profiles"; enabled: false; }
+            if root.restorable-app-profiles.length == 0: MenuItem {
+                title: "No hidden apps or profiles";
+                enabled: false;
+            }
             for p in root.restorable-app-profiles: MenuItem {
                 title: p.full-name;
                 activated => { root.restore-profile(p.unique-id); }
@@ -121,17 +168,20 @@ component GeneralTab inherits VerticalLayout {
         }
 
         Button {
+            // without x, Slint centers a fixed-width element in its parent
+            x: 0px;
             width: 130px;
             height: 26px;
             text: "Restore App...";
             // Button doesn't expose a mouse-x/mouse-y like TouchArea does, so just anchor the
             // menu under the button's bottom-left corner instead of the click position
-            clicked => { ram.show({x: 0px, y: self.height}); }
+            clicked => { ram.show({ x: 0px, y: self.height }); }
         }
     }
 
     Text {
-        text: "To hide and move applications/profiles just right-click on the application in the main dialog";
+        text: "Hiding and re-ordering applications/profiles is not done here.\n"
+            + "Just drag-and-drop or right-click them in the main window";
         font-size: 11px;
         color: Palette.foreground.transparentize(0.4);
         wrap: word-wrap;
@@ -148,9 +198,20 @@ component AppearanceTab inherits VerticalLayout {
 
     RadioGroup {
         title: "Theme";
-        RadioButton { text: "Match System"; checked: root.theme == ThemeChoice.auto; }
-        RadioButton { text: "Light"; checked: root.theme == ThemeChoice.light; }
-        RadioButton { text: "Dark"; checked: root.theme == ThemeChoice.dark; }
+        RadioButton {
+            text: "Match System";
+            checked: root.theme == ThemeChoice.auto;
+        }
+
+        RadioButton {
+            text: "Light";
+            checked: root.theme == ThemeChoice.light;
+        }
+
+        RadioButton {
+            text: "Dark";
+            checked: root.theme == ThemeChoice.dark;
+        }
         // matching on the picked label rather than a two-way `checked` binding per button - Rust
         // re-echoes root.theme right back after every change anyway (see save_and_refresh in
         // settings_window.rs), so the one-way `checked:` bindings above staying in sync is enough
@@ -183,7 +244,12 @@ component RuleCard inherits Card {
             spacing: 6px;
             HorizontalLayout {
                 spacing: 6px;
-                Text { text: "If URL matches"; font-size: 12px; vertical-alignment: center; }
+                Text {
+                    text: "If URL matches";
+                    font-size: 12px;
+                    vertical-alignment: center;
+                }
+
                 LineEdit {
                     width: 300px;
                     text: rule.url-pattern;
@@ -191,6 +257,7 @@ component RuleCard inherits Card {
                     edited(t) => { root.url-changed(rule.index, t); }
                 }
             }
+
             ProfilePicker {
                 rule: rule;
                 browsers: browsers;
@@ -199,12 +266,21 @@ component RuleCard inherits Card {
                 incognito-changed(v) => { root.incognito-changed(rule.index, v); }
             }
         }
-        Rectangle { horizontal-stretch: 1; }
+
+        Rectangle {
+            horizontal-stretch: 1;
+        }
+
         TouchArea {
             width: 28px;
             height: 28px;
             clicked => { root.remove(rule.index); }
-            Text { text: "➖"; font-size: 12px; horizontal-alignment: center; vertical-alignment: center; }
+            Text {
+                text: "➖";
+                font-size: 12px;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
         }
     }
 }
@@ -232,7 +308,11 @@ component RulesTab inherits VerticalLayout {
         HorizontalLayout {
             padding: 10px;
             VerticalLayout {
-                Text { text: "If no rules match"; font-size: 12px; }
+                Text {
+                    text: "If no rules match";
+                    font-size: 12px;
+                }
+
                 ProfilePicker {
                     rule: root.default-rule;
                     browsers: root.browsers;
@@ -260,14 +340,20 @@ component RulesTab inherits VerticalLayout {
             }
 
             Text {
-                text: "URL matching examples:\n • github.com/Browsers-software/** starts with \"github.com/Browsers-software/\"\n • github.com/**/end starts with \"github.com/\" and ends with \"/end\"\n • github.com/*/end starts with \"github.com/\" and ends with \"/end\" but can have\n   only up to one path item in between";
+                text: "URL matching examples:\n"
+                    + " • github.com/Browsers-software/** starts with \"github.com/Browsers-software/\"\n"
+                    + " • github.com/**/end starts with \"github.com/\" and ends with \"/end\"\n"
+                    + " • github.com/*/end starts with \"github.com/\" and ends with \"/end\" "
+                    + "but can have\n   only up to one path item in between";
                 font-size: 11px;
                 color: Palette.foreground.transparentize(0.4);
                 wrap: word-wrap;
             }
 
             StyledText {
-                text: @markdown("See [https://github.com/Browsers-software/browsers/wiki/Rules](https://github.com/Browsers-software/browsers/wiki/Rules) for all the details.");
+                // a markdown literal can't be split over lines (or concatenated), so the visible
+                // link text is kept short instead
+                text: @markdown("See the [Rules wiki](https://github.com/Browsers-software/browsers/wiki/Rules) for all the details.");
                 default-font-size: 11px;
                 default-color: Palette.foreground.transparentize(0.4);
                 link-color: Palette.accent-background;
@@ -300,6 +386,7 @@ component AdvancedTab inherits VerticalLayout {
             clicked => { root.set-default(); }
         }
     }
+
     HorizontalLayout {
         alignment: start;
         Button {
@@ -308,8 +395,14 @@ component AdvancedTab inherits VerticalLayout {
         }
     }
 
-    Text { text: "Directories"; font-size: 13px; }
-    DirectoriesList { directories: root.directories; }
+    Text {
+        text: "Directories";
+        font-size: 13px;
+    }
+
+    DirectoriesList {
+        directories: root.directories;
+    }
 }
 
 export component SettingsWindow inherits Window {
@@ -390,12 +483,6 @@ export component SettingsWindow inherits Window {
 
             VerticalLayout {
                 padding: 10px;
-                // a VerticalLayout-based child (which every *Tab component is) doesn't stretch
-                // to fill available width when nested inside a HorizontalLayout - horizontal-
-                // stretch alone doesn't fix it, reproduced down to the simplest case of a bare
-                // HorizontalLayout wrapping a single VerticalLayout child. Computing the width
-                // explicitly sidesteps the whole stretch-across-a-perpendicular-layout quirk.
-                width: root.width - sidebar.width;
 
                 if root.current-tab == SettingsTab.general: GeneralTab {
                     show-hotkeys: root.show-hotkeys;
