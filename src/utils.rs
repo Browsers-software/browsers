@@ -82,8 +82,7 @@ pub struct UIConfig {
 
     pub theme: ConfiguredTheme,
 
-    // 1.0 = default; scales the main window's text and rows
-    pub text_scale: f32,
+    pub text_size: ConfiguredTextSize,
 }
 
 impl Default for UIConfig {
@@ -92,9 +91,19 @@ impl Default for UIConfig {
             show_hotkeys: true,
             quit_on_lost_focus: false,
             theme: ConfiguredTheme::Auto,
-            text_scale: 1.0,
+            text_size: ConfiguredTextSize::default(),
         }
     }
+}
+
+// scales the main window's text and rows. There is no reliable cross-desktop way to read the
+// system font size yet (see xdg-desktop-portal#1591), so it is a setting of our own
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, Default, PartialEq)]
+pub enum ConfiguredTextSize {
+    #[default]
+    Normal,
+    Large,
+    Larger,
 }
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq)]

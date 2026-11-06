@@ -4,7 +4,7 @@ use url::Url;
 
 use crate::CommonBrowserProfile;
 use crate::url_rule::UrlGlobMatcher;
-use crate::utils::{BehavioralConfig, Config, ConfiguredTheme, ProfileAndOptions, UIConfig};
+use crate::utils::{BehavioralConfig, Config, ConfiguredTextSize, ConfiguredTheme, ProfileAndOptions, UIConfig};
 
 // plain, framework-agnostic mirror of a browser (+ profile) entry - gets converted into the
 // generated slint::BrowserItem for display, see gui::main_window::to_browser_item
@@ -58,7 +58,7 @@ pub struct UIVisualSettings {
     pub show_hotkeys: bool,
     pub quit_on_lost_focus: bool,
     pub theme: ConfiguredTheme,
-    pub text_scale: f32,
+    pub text_size: ConfiguredTextSize,
 }
 
 #[derive(Clone, Debug)]
@@ -113,7 +113,7 @@ fn map_as_visual_settings(ui_config: &UIConfig) -> UIVisualSettings {
         show_hotkeys: ui_config.show_hotkeys,
         quit_on_lost_focus: ui_config.quit_on_lost_focus,
         theme: ui_config.theme,
-        text_scale: ui_config.text_scale,
+        text_size: ui_config.text_size,
     }
 }
 

@@ -1,6 +1,6 @@
 use slint::ComponentHandle;
 
-use crate::utils::ConfiguredTheme;
+use crate::utils::{ConfiguredTextSize, ConfiguredTheme};
 
 pub type ColorScheme = slint::language::ColorScheme;
 
@@ -25,4 +25,12 @@ where
 {
     use crate::gui::generated::AppPalette as SlintPalette;
     window.global::<SlintPalette>().set_scheme_override(scheme);
+}
+
+pub fn text_scale(text_size: ConfiguredTextSize) -> f32 {
+    match text_size {
+        ConfiguredTextSize::Normal => 1.0,
+        ConfiguredTextSize::Large => 1.25,
+        ConfiguredTextSize::Larger => 1.5,
+    }
 }

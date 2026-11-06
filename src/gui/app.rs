@@ -99,7 +99,7 @@ pub fn apply_theme(state: &SharedState) {
 
 // the main window's width and height follow the text size, so it needs a resize too
 pub fn apply_text_scale(state: &SharedState) {
-    let scale = state.borrow().ui_settings.visual_settings.text_scale;
+    let scale = theme::text_scale(state.borrow().ui_settings.visual_settings.text_size);
     state
         .borrow()
         .main_window
