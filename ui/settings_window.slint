@@ -6,6 +6,7 @@ import {
     ScrollView,
     Palette,
     ComboBox,
+    SpinBox,
 } from "std-widgets.slint";
 import { Card, DirEntry, DirectoriesList, TextSizeChoice, ThemeChoice } from "common.slint";
 import { BrowserItem, RestorableProfile } from "main_window.slint";
@@ -274,10 +275,14 @@ component AppearanceTab inherits VerticalLayout {
     in property <ThemeChoice> theme;
     in property <bool> show-hotkeys;
     in property <TextSizeChoice> text-size;
+    in property <int> max-visible-browsers;
+    in property <int> min-visible-browsers;
+    in property <int> max-visible-browsers-limit;
 
     callback theme-changed(ThemeChoice);
     callback show-hotkeys-changed(bool);
     callback text-size-changed(TextSizeChoice);
+    callback max-visible-browsers-changed(int);
 
     padding: 20px;
     alignment: start;
@@ -312,6 +317,17 @@ component AppearanceTab inherits VerticalLayout {
                     root.text-size-changed(i == 0 ? TextSizeChoice.normal
                         : i == 1 ? TextSizeChoice.large : TextSizeChoice.larger);
                 }
+            }
+        }
+
+        SettingRow {
+            title: "Visible browsers";
+            description: "How many are shown before the list scrolls";
+            SpinBox {
+                minimum: root.min-visible-browsers;
+                maximum: root.max-visible-browsers-limit;
+                value: root.max-visible-browsers;
+                edited(v) => { root.max-visible-browsers-changed(v); }
             }
         }
 
@@ -625,6 +641,9 @@ export component SettingsWindow inherits Window {
 
     in property <ThemeChoice> theme;
     in property <TextSizeChoice> text-size;
+    in property <int> max-visible-browsers;
+    in property <int> min-visible-browsers;
+    in property <int> max-visible-browsers-limit;
 
     in property <[SettingsRule]> rules;
     in property <SettingsRule> default-rule;
@@ -645,6 +664,7 @@ export component SettingsWindow inherits Window {
     callback restore-profile(string);
     callback theme-changed(ThemeChoice);
     callback text-size-changed(TextSizeChoice);
+    callback max-visible-browsers-changed(int);
     callback add-rule();
     callback remove-rule(int);
     callback rule-url-changed(int, string);
@@ -708,8 +728,12 @@ export component SettingsWindow inherits Window {
                     theme: root.theme;
                     show-hotkeys: root.show-hotkeys;
                     text-size: root.text-size;
+                    max-visible-browsers: root.max-visible-browsers;
+                    min-visible-browsers: root.min-visible-browsers;
+                    max-visible-browsers-limit: root.max-visible-browsers-limit;
                     theme-changed(t) => { root.theme-changed(t); }
                     text-size-changed(v) => { root.text-size-changed(v); }
+                    max-visible-browsers-changed(v) => { root.max-visible-browsers-changed(v); }
                     show-hotkeys-changed(v) => { root.show-hotkeys-changed(v); }
                 }
                 if root.current-tab == SettingsTab.rules: RulesTab {

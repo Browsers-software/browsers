@@ -83,6 +83,9 @@ pub struct UIConfig {
     pub theme: ConfiguredTheme,
 
     pub text_size: ConfiguredTextSize,
+
+    // how many browsers the main window shows before the list scrolls
+    pub max_visible_browsers: i32,
 }
 
 impl Default for UIConfig {
@@ -92,6 +95,7 @@ impl Default for UIConfig {
             quit_on_lost_focus: false,
             theme: ConfiguredTheme::Auto,
             text_size: ConfiguredTextSize::default(),
+            max_visible_browsers: 6,
         }
     }
 }
