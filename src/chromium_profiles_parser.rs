@@ -41,8 +41,10 @@ pub fn find_chromium_profiles(
             .avatar_file_path_relative_to_config
             .map(|image_file_path_from_config| {
                 let image_file_path = chromium_user_dir.join(image_file_path_from_config);
-                if image_file_path.exists() {
-                    let png_file = File::open(image_file_path.as_path()).unwrap();
+                if image_file_path.is_file() {
+                    let Ok(png_file) = File::open(image_file_path.as_path()) else {
+                        return None;
+                    };
                     let mut png_file_reader = BufReader::new(png_file);
                     let mut buffer = Vec::new();
                     // Read file into vector
@@ -413,8 +415,12 @@ impl ChromeProfileAttributesEntry {
     }*/
 
     fn get_gaia_picture_file_name(&self) -> Option<String> {
+        // Chrome's GetString() returns "" for a missing key,
+        // and it writes "" for profiles that have never had a GAIA picture.
+        // So an empty name means there is no picture, same as a missing one.
         self.profile["gaia_picture_file_name"]
             .as_str()
+            .filter(|a| !a.is_empty())
             .map(|a| a.to_string())
     }
 
@@ -474,4 +480,35 @@ pub struct ChromeProfilePreferences {
     pub profile_dir_name: String,
     pub name: String,
     pub avatar_file_path_relative_to_config: Option<PathBuf>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn empty_gaia_picture_file_name_means_no_gaia_picture() {
+        // signed out profile that never had a Google account picture
+        let profile = json!({
+            "is_using_default_avatar": true,
+            "gaia_picture_file_name": "",
+            "avatar_icon": "chrome://theme/IDR_PROFILE_AVATAR_26"
+        });
+        let entry = ChromeProfileAttributesEntry::new("Profile 5", &profile);
+
+        assert_eq!(entry.get_gaia_picture_file_name(), None);
+        assert!(!entry.is_using_gaia_picture());
+    }
+
+    #[test]
+    fn gaia_picture_file_name_is_used_when_present() {
+        let profile = json!({
+            "is_using_default_avatar": true,
+            "gaia_picture_file_name": "Google Profile Picture.png"
+        });
+        let entry = ChromeProfileAttributesEntry::new("Default", &profile);
+
+        assert!(entry.is_using_gaia_picture());
+    }
 }

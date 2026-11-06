@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
 
+### Fixed
+
+- Fix startup crash when a Chrome profile has an empty picture name. Thanks to @Lordy2001 for reporting #404
+
 ## [0.8.4] - 2026-11-06
 
 ### Added
