@@ -83,7 +83,9 @@ fn main() {
     //info!("{:?}", args);
 
     let mut url = "".to_string();
-    let url_input_maybe = args.iter().find(|i| i.starts_with("http"));
+    let url_input_maybe = args
+        .iter()
+        .find(|i| i.starts_with("http:") || i.starts_with("https:") || i.starts_with("file:"));
     if let Some(url_input) = url_input_maybe {
         url = url_input.to_string();
     }
