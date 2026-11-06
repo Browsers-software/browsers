@@ -27,17 +27,20 @@ export global AppPalette {
     out property <color> text-color: dark ? rgb(240, 240, 234) : rgb(10, 10, 10);
     out property <color> about-background-color: dark ? rgb(27, 32, 32) : rgb(236, 236, 236);
 
-    // the user's Text size setting (1 = default), set from Rust. Scales the main window's text,
-    // row height and width
+    // the user's Text size setting (1 = normal), set from Rust. MainWindow multiplies its
+    // default-font-size with it, which scales everything below (they are in rem, 1rem = 12px at
+    // normal size)
     in property <float> text-scale: 1;
 
-    out property <length> browser-label-size: 12px * text-scale;
-    out property <length> profile-label-size: 11px * text-scale;
-    out property <length> url-label-size: 12px * text-scale;
-    out property <length> hotkey-label-size: 10px * text-scale;
-    out property <length> hotkey-badge-size: 18px * text-scale;
+    // a global can't convert rem to px itself, so these are relative-font-size and get converted
+    // where they are used
+    out property <relative-font-size> browser-label-size: 1rem;
+    out property <relative-font-size> profile-label-size: (11 / 12) * 1rem;
+    out property <relative-font-size> url-label-size: 1rem;
+    out property <relative-font-size> hotkey-label-size: (10 / 12) * 1rem;
+    out property <relative-font-size> hotkey-badge-size: 1.5rem;
     // the URL / options-button row below the browser list
-    out property <length> footer-height: 18px * text-scale;
+    out property <relative-font-size> footer-height: 1.5rem;
 
     out property <color> label-color-hover: label-color;
     out property <color> secondary-label-color-hover: label-color;
