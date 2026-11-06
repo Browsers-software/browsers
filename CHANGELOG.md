@@ -11,6 +11,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Fix startup crash when a Chrome profile has an empty picture name. Thanks to @Lordy2001 for reporting #404
 - Linux: Show icons of apps that only have an SVG icon (e.g. Epiphany). Thanks to @alsoLut for reporting #334
+- macOS: Fix opening local files (e.g html) from Finder. Thanks to @MathPlayer for reporting #419
 
 ## [0.8.4] - 2026-11-06
 

@@ -111,6 +111,27 @@ define_class!(
             }
         }
 
+        #[unsafe(method(handleAppWillFinishLaunching:))]
+        fn handle_app_will_finish_launching(&self, _notification: &NSNotification) {
+            // AppKit installs its own default handler for the open documents event during
+            // finishLaunching, which would replace one registered any earlier and shows
+            // "cannot open files in the ... format" instead of calling ours.
+            // This notification is posted after that, so register here to take it back.
+            const CLASS_CORE: u32 = 0x61657674; // 'aevt'
+            const EVENT_ID_OPEN_DOCUMENTS: u32 = 0x6f646f63; // 'odoc'
+            unsafe {
+                let manager: *mut AnyObject =
+                    msg_send![objc2::class!(NSAppleEventManager), sharedAppleEventManager];
+                let _: () = msg_send![
+                    manager,
+                    setEventHandler: self,
+                    andSelector: sel!(handleOpenDocumentsEvent:withReplyEvent:),
+                    forEventClass: CLASS_CORE,
+                    andEventID: EVENT_ID_OPEN_DOCUMENTS
+                ];
+            }
+        }
+
         #[unsafe(method(handleGetURLEvent:withReplyEvent:))]
         fn handle_get_url_event(&self, event: *mut AnyObject, _reply: *mut AnyObject) {
             // event is an NSAppleEventDescriptor*; paramDescriptorForKeyword: keyDirectObject
@@ -263,15 +284,13 @@ pub fn register_event_bridge() -> Option<Retained<EventBridge>> {
             andEventID: EVENT_ID_GET_URL
         ];
 
-        const CLASS_CORE: u32 = 0x61657674; // 'aevt'
-        const EVENT_ID_OPEN_DOCUMENTS: u32 = 0x6f646f63; // 'odoc'
-        let _: () = msg_send![
-            manager,
-            setEventHandler: &*bridge,
-            andSelector: sel!(handleOpenDocumentsEvent:withReplyEvent:),
-            forEventClass: CLASS_CORE,
-            andEventID: EVENT_ID_OPEN_DOCUMENTS
-        ];
+        // the open documents handler can't be registered yet, see handle_app_will_finish_launching
+        center.addObserver_selector_name_object(
+            &bridge,
+            sel!(handleAppWillFinishLaunching:),
+            Some(objc2_app_kit::NSApplicationWillFinishLaunchingNotification),
+            None,
+        );
     }
 
     Some(bridge)
