@@ -19,9 +19,9 @@ export global AppPalette {
     out property <color> label-color: dark ? #ffffff : #000000;
     out property <color> secondary-label-color: dark ? rgb(190, 190, 190) : rgb(30, 30, 30);
     out property <color> muted-label-color: rgb(128, 128, 128);
-    // a faint line in light mode - a solid gray one made the window edge look several pixels wide
-    // on a Retina screen
-    out property <color> stroke-color: dark ? rgba(255, 255, 255, 0.1) : rgba(0, 0, 0, 0.1);
+    // none in light mode: macOS already draws an outline of its own there, and ours right next to it
+    // made the window edge look several pixels wide
+    out property <color> stroke-color: dark ? rgba(255, 255, 255, 0.1) : transparent;
     out property <color> secondary-stroke-color: rgba(102, 102, 102, 0.9);
     // white on the light background has to be stronger than on the dark one to still show
     out property <color> highlight-background-color: dark ? rgba(255, 255, 255, 0.25) : rgba(255, 255, 255, 0.6);
