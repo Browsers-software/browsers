@@ -260,7 +260,8 @@ export component MainWindow inherits Window {
             height: root.dialog-height;
             background: AppPalette.background-color;
             border-color: AppPalette.stroke-color;
-            border-width: 1px;
+            // a hairline: one device pixel on a Retina screen, like native macOS windows
+            border-width: 0.5px;
             border-radius: 7px;
 
             fs := FocusScope {
