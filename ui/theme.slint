@@ -15,14 +15,18 @@ export global AppPalette {
         ? scheme-override == ColorScheme.dark
         : Palette.color-scheme == ColorScheme.dark;
 
-    out property <color> background-color: dark ? rgba(38, 38, 38, 0.9) : rgba(217, 217, 217, 0.9);
+    out property <color> background-color: dark ? rgba(38, 38, 38, 0.9) : rgba(236, 236, 236, 0.9);
     out property <color> label-color: dark ? #ffffff : #000000;
     out property <color> secondary-label-color: dark ? rgb(190, 190, 190) : rgb(30, 30, 30);
     out property <color> muted-label-color: rgb(128, 128, 128);
-    out property <color> stroke-color: dark ? rgba(255, 255, 255, 0.1) : rgba(179, 179, 179, 0.9);
+    // a faint line in light mode - a solid gray one made the window edge look several pixels wide
+    // on a Retina screen
+    out property <color> stroke-color: dark ? rgba(255, 255, 255, 0.1) : rgba(0, 0, 0, 0.1);
     out property <color> secondary-stroke-color: rgba(102, 102, 102, 0.9);
-    out property <color> highlight-background-color: rgba(255, 255, 255, 0.25);
-    out property <color> secondary-background-color: dark ? rgb(38, 38, 38) : rgb(215, 215, 215);
+    // white on the light background has to be stronger than on the dark one to still show
+    out property <color> highlight-background-color: dark ? rgba(255, 255, 255, 0.25) : rgba(255, 255, 255, 0.6);
+    // just off the background, like before
+    out property <color> secondary-background-color: dark ? rgb(38, 38, 38) : rgb(232, 232, 232);
     out property <color> accent-color: rgb(25, 90, 194);
     out property <color> text-color: dark ? rgb(240, 240, 234) : rgb(10, 10, 10);
     out property <color> about-background-color: dark ? rgb(27, 32, 32) : rgb(236, 236, 236);
