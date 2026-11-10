@@ -32,6 +32,8 @@ pub fn open(state: &SharedState) {
     win.set_rules(ModelRc::new(VecModel::default()));
     win.set_browsers(ModelRc::new(VecModel::default()));
     win.set_profile_picker_options(ModelRc::new(VecModel::default()));
+    win.set_default_browsers(ModelRc::new(VecModel::default()));
+    win.set_default_profile_picker_options(ModelRc::new(VecModel::default()));
     win.set_restorable_app_profiles(ModelRc::new(VecModel::default()));
     // directories (Config/Cache/Logs/Resources paths) don't change during a run, so this is set
     // once here rather than recomputed on every refresh() call
@@ -110,6 +112,12 @@ fn profile_picker_options(browsers: &[UIBrowser]) -> Vec<SharedString> {
     std::iter::once("List of Apps".into())
         .chain(browsers.iter().map(|b| b.get_full_name().into()))
         .collect()
+}
+
+// what "If no rules match" can pick from: apps that only handle some websites (Figma, Slack, ...)
+// can't be the fallback for any link, so they are left out
+fn default_opener_choices(browsers: &[UIBrowser]) -> Vec<UIBrowser> {
+    browsers.iter().filter(|b| !b.has_priority_ordering()).cloned().collect()
 }
 
 fn theme_to_choice(theme: ConfiguredTheme) -> ThemeChoice {
@@ -249,7 +257,11 @@ pub fn refresh(state: &SharedState) {
         .enumerate()
         .map(|(i, r)| to_slint_rule(i as i32, &r.url_pattern, &r.opener, &browsers))
         .collect();
-    let default_rule = to_slint_rule(-1, "", &settings.default_opener, &browsers);
+    // the default opener has its own, shorter list, so its ComboBox index is relative to that
+    let default_choices = default_opener_choices(&browsers);
+    let default_rule = to_slint_rule(-1, "", &settings.default_opener, &default_choices);
+    let default_browser_items: Vec<BrowserItem> =
+        default_choices.iter().map(to_lightweight_browser_item).collect();
     let restorable_items: Vec<RestorableProfile> = restorable
         .iter()
         .map(main_window::to_restorable_profile)
@@ -272,6 +284,11 @@ pub fn refresh(state: &SharedState) {
         .set_color_scheme(configured_color_scheme(settings.visual_settings.theme));
     crate::gui::ui_util::sync_vec_model(&win.get_rules(), rule_items);
     win.set_default_rule(default_rule);
+    crate::gui::ui_util::sync_vec_model(&win.get_default_browsers(), default_browser_items);
+    crate::gui::ui_util::sync_vec_model(
+        &win.get_default_profile_picker_options(),
+        profile_picker_options(&default_choices),
+    );
     crate::gui::ui_util::sync_vec_model(&win.get_browsers(), browser_items);
     crate::gui::ui_util::sync_vec_model(
         &win.get_profile_picker_options(),
@@ -533,6 +550,18 @@ mod tests {
 
     fn browsers() -> Vec<UIBrowser> {
         vec![browser("chrome", "Chrome", true), browser("safari", "Safari", false)]
+    }
+
+    #[test]
+    fn default_opener_choices_leave_out_url_restricted_apps() {
+        let mut figma = browser("figma", "Figma", false);
+        figma.restricted_url_matchers =
+            std::sync::Arc::new(vec![crate::url_rule::to_url_matcher("figma.com").to_glob_matcher()]);
+        let all = vec![browser("chrome", "Chrome", true), figma, browser("safari", "Safari", false)];
+
+        let ids = |v: Vec<UIBrowser>| v.into_iter().map(|b| b.unique_id).collect::<Vec<_>>();
+
+        assert_eq!(ids(default_opener_choices(&all)), ["chrome", "safari"]);
     }
 
     #[test]
