@@ -113,6 +113,9 @@ component SettingRow inherits VerticalLayout {
     in property <bool> divider: true;
     // the control fills the row's full height and touches its right edge (the card clips the corners)
     in property <bool> flush-right: false;
+    // for a control taller than the title (the theme tiles): the title goes to the top left
+    // instead of being centered next to it
+    in property <bool> title-at-top: false;
     spacing: 0px;
 
     if root.divider: HorizontalLayout {
@@ -120,7 +123,7 @@ component SettingRow inherits VerticalLayout {
         padding-right: 14px;
         Rectangle {
             height: 1px;
-            background: Palette.border.transparentize(0.6);
+            background: Palette.foreground.transparentize(0.94);
         }
     }
 
@@ -138,15 +141,20 @@ component SettingRow inherits VerticalLayout {
         VerticalLayout {
             spacing: 2px;
             max-width: 430px;
+            cross-axis-self-alignment: root.title-at-top ? CrossAxisAlignment.start : CrossAxisAlignment.auto;
+            // measured against System Settings at 2x: the title comes out narrower here than in
+            // macOS (the same font, but macOS tracks it), so it gets a little letter spacing, and the
+            // description matches macOS at 12px without any
             Text {
                 text: root.title;
                 font-size: 13px;
+                letter-spacing: 0.25px;
                 color: Palette.foreground;
             }
 
             if root.description != "": Text {
                 text: root.description;
-                font-size: 11px;
+                font-size: 12px;
                 color: Palette.foreground.transparentize(0.4);
                 wrap: word-wrap;
             }
@@ -441,6 +449,7 @@ component AppearanceTab inherits VerticalLayout {
         SettingRow {
             title: "Appearance";
             divider: false;
+            title-at-top: true;
             // Rust re-echoes root.theme right back after every change (see save_and_refresh in
             // settings_window.rs), so the selected tile follows `theme` one-way
             HorizontalLayout {
@@ -483,6 +492,8 @@ component AppearanceTab inherits VerticalLayout {
             title: "Visible browsers";
             description: "How many are shown before the list scrolls";
             SpinBox {
+                // the limit is 20, so two digits are enough
+                width: 112px;
                 minimum: root.min-visible-browsers;
                 maximum: root.max-visible-browsers-limit;
                 value: root.max-visible-browsers;
@@ -660,7 +671,7 @@ component RulesTab inherits VerticalLayout {
 
         Rectangle {
             height: 1px;
-            background: Palette.border.transparentize(0.5);
+            background: Palette.foreground.transparentize(0.94);
         }
     }
 
@@ -734,7 +745,7 @@ component RulesTab inherits VerticalLayout {
         vertical-stretch: 0;
         Rectangle {
             height: 1px;
-            background: Palette.border.transparentize(0.5);
+            background: Palette.foreground.transparentize(0.94);
         }
 
         Rectangle {
