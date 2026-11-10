@@ -45,7 +45,7 @@ component ProfilePicker inherits HorizontalLayout {
 
     Text {
         text: rule.opener-id == "" ? "Show" : "Open in";
-        font-size: 12px;
+        font-size: 13px;
         vertical-alignment: center;
     }
 
@@ -74,7 +74,7 @@ component ProfilePicker inherits HorizontalLayout {
             clicked => { root.incognito-changed(!root.rule.incognito); }
             Text {
                 text: "In Incognito";
-                font-size: 12px;
+                font-size: 13px;
                 vertical-alignment: center;
             }
         }
@@ -85,12 +85,12 @@ component SectionLabel inherits VerticalLayout {
     in property <string> text;
     // the tabs only space their children 8px apart, this separates a section from the group above
     padding-top: 12px;
-    padding-left: 4px;
+    padding-left: 14px;
     Text {
         text: root.text;
         font-size: 13px;
-        font-weight: 600;
-        color: Palette.foreground.transparentize(0.4);
+        font-weight: 700;
+        color: Palette.foreground;
     }
 }
 
@@ -160,20 +160,22 @@ component SettingRow inherits VerticalLayout {
     }
 }
 
-// selector with one segment per option; stretches to the height of the row it is in
+// selector with one segment per option
 component SegmentedControl inherits Rectangle {
     in property <[string]> options;
     in property <int> current;
     callback selected(int);
 
     width: root.options.length * 88px;
+    height: 28px;
     background: Palette.foreground.transparentize(0.94);
-    // rounds all four corners, so the first and last segments get rounded ends
-    border-radius: 10px;
-    clip: true;
+    // a large radius is clamped to half the height, so the control and the selected segment are pills
+    border-radius: 100px;
 
     HorizontalLayout {
+        padding: 2px;
         for option[i] in root.options: Rectangle {
+            border-radius: 100px;
             background: root.current == i ? Palette.accent-background : transparent;
             Text {
                 text: option;
@@ -183,16 +185,155 @@ component SegmentedControl inherits Rectangle {
                 vertical-alignment: center;
             }
 
-            if i > 0: Rectangle {
-                x: 0px;
-                width: 1px;
-                background: Palette.border.transparentize(0.5);
-            }
-
             TouchArea {
                 clicked => { root.selected(i); }
             }
         }
+    }
+}
+
+// miniature desktop with the main popup on it (no title bar or window controls, just the list of
+// apps with their hotkeys), like System Settings' appearance picker
+component ThemePreview inherits Rectangle {
+    in property <bool> dark;
+    background: root.dark
+        ? @linear-gradient(135deg, #1b1f6b 0%, #3a2d9c 100%)
+        : @linear-gradient(135deg, #8fb8f0 0%, #5a8fe0 100%);
+
+    // the popup's own light/dark colors, as in AppPalette (which follows the real theme, so it
+    // can't be used for a preview of the other one)
+    property <color> label: root.dark ? #ffffff : #000000;
+
+    Rectangle {
+        width: 38px;
+        height: 38px;
+        border-radius: 4px;
+        background: root.dark ? #262626 : #d9d9d9;
+        VerticalLayout {
+            padding: 3px;
+            spacing: 1px;
+            for c[i] in [#4285f4, #ff9f0a, #34c759]: Rectangle {
+                height: 10px;
+                border-radius: 2.5px;
+                background: i == 0 ? #ffffff40 : transparent;
+                HorizontalLayout {
+                    padding-left: 2px;
+                    padding-right: 2px;
+                    spacing: 2px;
+                    Rectangle {
+                        width: 6px;
+                        height: 6px;
+                        y: 2px;
+                        border-radius: 3px;
+                        background: c;
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+                        spacing: 1.5px;
+                        Rectangle {
+                            width: 12px;
+                            height: 2.4px;
+                            border-radius: 1.2px;
+                            background: root.label;
+                        }
+
+                        Rectangle {
+                            width: 8px;
+                            height: 1.8px;
+                            border-radius: 0.9px;
+                            background: root.label.transparentize(0.55);
+                        }
+                    }
+
+                    Rectangle {
+                        horizontal-stretch: 1;
+                    }
+
+                    Rectangle {
+                        width: 5px;
+                        height: 5px;
+                        y: 2.5px;
+                        border-radius: 1.5px;
+                        background: root.dark ? #ffffff26 : #0000001f;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// kind: 0 follows the system (half light, half dark), 1 light, 2 dark
+component ThemeTile inherits VerticalLayout {
+    in property <string> label;
+    in property <int> kind;
+    in property <bool> selected;
+    callback clicked;
+    width: 76px;
+    spacing: 4px;
+
+    Rectangle {
+        height: 52px;
+        border-radius: 9px;
+        border-width: 2px;
+        border-color: root.selected ? Palette.accent-background : transparent;
+        Rectangle {
+            x: 3px;
+            y: 3px;
+            width: parent.width - 6px;
+            height: parent.height - 6px;
+            border-radius: 6px;
+            clip: true;
+            if root.kind != 0: ThemePreview {
+                x: 0px;
+                y: 0px;
+                width: parent.width;
+                height: parent.height;
+                dark: root.kind == 2;
+            }
+
+            // System: the left half of the light preview next to the right half of the dark one
+            if root.kind == 0: Rectangle {
+                x: 0px;
+                y: 0px;
+                width: parent.width / 2;
+                height: parent.height;
+                clip: true;
+                ThemePreview {
+                    x: 0px;
+                    y: 0px;
+                    width: parent.width * 2;
+                    height: parent.height;
+                    dark: false;
+                }
+            }
+
+            if root.kind == 0: Rectangle {
+                x: parent.width / 2;
+                y: 0px;
+                width: parent.width / 2;
+                height: parent.height;
+                clip: true;
+                ThemePreview {
+                    x: -parent.width;
+                    y: 0px;
+                    width: parent.width * 2;
+                    height: parent.height;
+                    dark: true;
+                }
+            }
+        }
+
+        TouchArea {
+            clicked => { root.clicked(); }
+        }
+    }
+
+    Text {
+        text: root.label;
+        font-size: 12px;
+        horizontal-alignment: center;
+        color: root.selected ? Palette.foreground : Palette.foreground.transparentize(0.4);
     }
 }
 
@@ -209,6 +350,10 @@ component GeneralTab inherits VerticalLayout {
     padding: 20px;
     alignment: start;
     spacing: 8px;
+
+    SectionLabel {
+        text: "Behavior";
+    }
 
     SettingsGroup {
         if show-quit-on-lost-focus: SettingRow {
@@ -288,28 +433,42 @@ component AppearanceTab inherits VerticalLayout {
     alignment: start;
     spacing: 8px;
 
+    SectionLabel {
+        text: "Theme";
+    }
+
     SettingsGroup {
         SettingRow {
-            title: "Theme";
+            title: "Appearance";
             divider: false;
-            flush-right: true;
             // Rust re-echoes root.theme right back after every change (see save_and_refresh in
-            // settings_window.rs), so the highlighted segment follows `theme` one-way
-            SegmentedControl {
-                cross-axis-self-alignment: stretch;
-                options: ["Match System", "Light", "Dark"];
-                current: root.theme == ThemeChoice.auto ? 0 : root.theme == ThemeChoice.light ? 1 : 2;
-                selected(i) => {
-                    root.theme-changed(i == 0 ? ThemeChoice.auto : i == 1 ? ThemeChoice.light : ThemeChoice.dark);
+            // settings_window.rs), so the selected tile follows `theme` one-way
+            HorizontalLayout {
+                spacing: 12px;
+                padding-top: 4px;
+                for opt[i] in [
+                    { label: "System", choice: ThemeChoice.auto },
+                    { label: "Light", choice: ThemeChoice.light },
+                    { label: "Dark", choice: ThemeChoice.dark },
+                ]: ThemeTile {
+                    label: opt.label;
+                    kind: i;
+                    selected: root.theme == opt.choice;
+                    clicked => { root.theme-changed(opt.choice); }
                 }
             }
         }
+    }
 
+    SectionLabel {
+        text: "Main Window";
+    }
+
+    SettingsGroup {
         SettingRow {
             title: "Text size";
-            flush-right: true;
+            divider: false;
             SegmentedControl {
-                cross-axis-self-alignment: stretch;
                 options: ["Normal", "Large", "Larger"];
                 current: root.text-size == TextSizeChoice.normal ? 0
                     : root.text-size == TextSizeChoice.large ? 1 : 2;
@@ -341,12 +500,33 @@ component AppearanceTab inherits VerticalLayout {
     }
 }
 
+// not a std-widgets Button, which has a hover effect (macOS has none) - only pressed is darker
+component AddRuleButton inherits TouchArea {
+    width: 80px;
+    height: 24px;
+    accessible-role: button;
+    accessible-label: "Add Rule";
+    accessible-action-default => { self.clicked(); }
+    Rectangle {
+        border-radius: 5.5px;
+        background: Palette.foreground.transparentize(root.pressed ? 0.85 : 0.92);
+        Text {
+            text: "Add Rule";
+            font-size: 13px;
+            color: Palette.foreground;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+    }
+}
+
 component RuleCard inherits Card {
     in property <SettingsRule> rule;
     // the rule that the "Test a URL" field matched
     in property <bool> highlighted;
-    border-color: root.highlighted ? Palette.accent-background : Palette.border;
-    border-width: root.highlighted ? 2px : 1px;
+    border-color: Palette.accent-background;
+    border-width: root.highlighted ? 2px : 0px;
+    border-radius: 12px;
     in property <[BrowserItem]> browsers;
     in property <[string]> profile-picker-options;
     callback url-changed(int, string);
@@ -355,7 +535,7 @@ component RuleCard inherits Card {
     callback remove(int);
 
     HorizontalLayout {
-        padding: 12px;
+        padding: 14px;
         spacing: 10px;
 
         VerticalLayout {
@@ -364,7 +544,7 @@ component RuleCard inherits Card {
                 spacing: 6px;
                 Text {
                     text: "If URL matches";
-                    font-size: 12px;
+                    font-size: 13px;
                     vertical-alignment: center;
                 }
 
@@ -393,22 +573,19 @@ component RuleCard inherits Card {
             width: 26px;
             height: 26px;
             clicked => { root.remove(rule.index); }
-            Rectangle {
-                border-radius: 13px;
-                background: remove-ta.has-hover ? Palette.border : transparent;
-                // a trash can, drawn as a Path: it can't be mistaken for the "x" that clears a text field
-                Path {
-                    width: 12px;
-                    height: 12px;
-                    viewbox-width: 12;
-                    viewbox-height: 12;
-                    commands: "M 1.5 3 L 10.5 3 M 4.5 3 L 4.5 1.5 L 7.5 1.5 L 7.5 3 "
-                        + "M 2.5 3 L 3.2 10.5 L 8.8 10.5 L 9.5 3 M 5 5 L 5 8.5 M 7 5 L 7 8.5";
-                    stroke: Palette.foreground.transparentize(0.3);
-                    stroke-width: 1.2px;
-                    stroke-line-cap: round;
-                    stroke-line-join: round;
-                }
+            // a trash can, drawn as a Path: it can't be mistaken for the "x" that clears a text field
+            // no hover effect, like macOS - only the stroke goes full black while pressed
+            Path {
+                width: 12px;
+                height: 12px;
+                viewbox-width: 12;
+                viewbox-height: 12;
+                commands: "M 1.5 3 L 10.5 3 M 4.5 3 L 4.5 1.5 L 7.5 1.5 L 7.5 3 "
+                    + "M 2.5 3 L 3.2 10.5 L 8.8 10.5 L 9.5 3 M 5 5 L 5 8.5 M 7 5 L 7 8.5";
+                stroke: remove-ta.pressed ? Palette.foreground : Palette.foreground.transparentize(0.3);
+                stroke-width: 1.2px;
+                stroke-line-cap: round;
+                stroke-line-join: round;
             }
         }
     }
@@ -429,7 +606,7 @@ component RulesTab inherits VerticalLayout {
 
     in-out property <string> test-url-text;
     in property <string> test-url-result;
-    in property <int> test-url-match-index: -1;
+    in property <int> test-url-match-index: -2;
 
     // set by "Add Rule": the next time the list's content height changes (the new card being laid
     // out), scroll to the very bottom so the hint text below the cards stays visible too
@@ -442,50 +619,41 @@ component RulesTab inherits VerticalLayout {
     // same bug as the hotkey badges in main_window.slint's BrowserRow, just a different symptom.
     spacing: 0px;
 
-    // full-width header bar (edge to edge, square corners) holding the default rule
+    // full-width header bar (edge to edge, square corners) holding the URL tester, so it stays
+    // visible while the rules scroll
     VerticalLayout {
         spacing: 0px;
         vertical-stretch: 0;
         Rectangle {
             background: Palette.alternate-background;
-            // fixed: left to the layout, this row grows to fill the whole page
-            height: 84px;
-            HorizontalLayout {
+            // the height comes from the layout below, not stretch - left to stretch this would
+            // grow to fill the whole page
+            vertical-stretch: 0;
+            VerticalLayout {
                 padding-left: 20px;
                 padding-right: 20px;
                 padding-top: 12px;
                 padding-bottom: 12px;
-                VerticalLayout {
-                    alignment: start;
-                    spacing: 6px;
+                spacing: 10px;
+                HorizontalLayout {
+                    spacing: 8px;
                     Text {
-                        text: "If no rules match";
+                        text: "Test a URL";
                         font-size: 13px;
-                        font-weight: 600;
+                        vertical-alignment: center;
                     }
 
-                    ProfilePicker {
-                        rule: root.default-rule;
-                        browsers: root.browsers;
-                        profile-picker-options: root.profile-picker-options;
-                        profile-changed(id) => { root.profile-changed(-1, id); }
-                        incognito-changed(v) => { root.incognito-changed(-1, v); }
+                    LineEdit {
+                        text <=> root.test-url-text;
+                        placeholder-text: "Paste a link to see which rule applies";
+                        edited(t) => { root.test-url-edited(); }
                     }
                 }
 
-                Rectangle {
-                    horizontal-stretch: 1;
-                }
-
-                Button {
-                    text: "Add Rule";
-                    primary: true;
-                    // keeps the Button's own height and centers it next to the default rule
-                    cross-axis-self-alignment: center;
-                    clicked => {
-                        root.scroll-to-new-rule = true;
-                        root.add-rule();
-                    }
+                if root.test-url-result != "": Text {
+                    text: root.test-url-result;
+                    font-size: 12px;
+                    wrap: word-wrap;
                 }
             }
         }
@@ -493,33 +661,6 @@ component RulesTab inherits VerticalLayout {
         Rectangle {
             height: 1px;
             background: Palette.border.transparentize(0.5);
-        }
-    }
-
-    VerticalLayout {
-        padding-left: 20px;
-        padding-right: 20px;
-        padding-top: 12px;
-        spacing: 6px;
-        HorizontalLayout {
-            spacing: 8px;
-            Text {
-                text: "Test a URL";
-                font-size: 13px;
-                vertical-alignment: center;
-            }
-
-            LineEdit {
-                text <=> root.test-url-text;
-                placeholder-text: "Paste a link to see which rule applies";
-                edited(t) => { root.test-url-edited(); }
-            }
-        }
-
-        if root.test-url-result != "": Text {
-            text: root.test-url-result;
-            font-size: 12px;
-            wrap: word-wrap;
         }
     }
 
@@ -533,9 +674,22 @@ component RulesTab inherits VerticalLayout {
         }
         VerticalLayout {
             alignment: start;
-            spacing: 6px;
+            spacing: 8px;
             padding: 20px;
-            padding-top: 14px;
+
+            SectionLabel {
+                text: "Rules";
+            }
+
+            // the footer's button is easy to miss when the list is empty
+            if root.rules.length == 0: HorizontalLayout {
+                padding-left: 14px;
+                alignment: start;
+                AddRuleButton {
+                    clicked => { root.add-rule(); }
+                }
+            }
+
             for rule in root.rules: RuleCard {
                 rule: rule;
                 highlighted: rule.index == root.test-url-match-index;
@@ -547,25 +701,100 @@ component RulesTab inherits VerticalLayout {
                 remove(idx) => { root.remove-rule(idx); }
             }
 
-            Text {
-                text: "URL matching examples:\n"
-                    + " • github.com/Browsers-software/** starts with \"github.com/Browsers-software/\"\n"
-                    + " • github.com/**/end starts with \"github.com/\" and ends with \"/end\"\n"
-                    + " • github.com/*/end starts with \"github.com/\" and ends with \"/end\" "
-                    + "but can have\n   only up to one path item in between";
-                font-size: 11px;
-                color: Palette.foreground.transparentize(0.4);
-                wrap: word-wrap;
-            }
+            VerticalLayout {
+                padding-left: 14px;
+                padding-top: 4px;
+                spacing: 6px;
+                Text {
+                    text: "URL matching examples:\n"
+                        + " • github.com/Browsers-software/** starts with \"github.com/Browsers-software/\"\n"
+                        + " • github.com/**/end starts with \"github.com/\" and ends with \"/end\"\n"
+                        + " • github.com/*/end starts with \"github.com/\" and ends with \"/end\" "
+                        + "but can have\n   only up to one path item in between";
+                    font-size: 11px;
+                    color: Palette.foreground.transparentize(0.4);
+                    wrap: word-wrap;
+                }
 
-            StyledText {
-                // a markdown literal can't be split over lines (or concatenated), so the visible
-                // link text is kept short instead
-                text: @markdown("See the [Rules wiki](https://github.com/Browsers-software/browsers/wiki/Rules) for all the details.");
-                default-font-size: 11px;
-                default-color: Palette.foreground.transparentize(0.4);
-                link-color: Palette.accent-background;
-                link-clicked(link) => { Platform.open-url(link); }
+                StyledText {
+                    // a markdown literal can't be split over lines (or concatenated), so the visible
+                    // link text is kept short instead
+                    text: @markdown("See the [Rules wiki](https://github.com/Browsers-software/browsers/wiki/Rules) for all the details.");
+                    default-font-size: 11px;
+                    default-color: Palette.foreground.transparentize(0.4);
+                    link-color: Palette.accent-background;
+                    link-clicked(link) => { Platform.open-url(link); }
+                }
+            }
+        }
+    }
+    // full-width footer bar, like the header: the default rule and "Add Rule" stay visible too
+    VerticalLayout {
+        spacing: 0px;
+        vertical-stretch: 0;
+        Rectangle {
+            height: 1px;
+            background: Palette.border.transparentize(0.5);
+        }
+
+        Rectangle {
+            background: Palette.alternate-background;
+            vertical-stretch: 0;
+            VerticalLayout {
+                padding-left: 20px;
+                padding-right: 20px;
+                padding-top: 12px;
+                padding-bottom: 12px;
+                HorizontalLayout {
+                    VerticalLayout {
+                        alignment: start;
+                        spacing: 6px;
+                        Text {
+                            text: "If no rules match";
+                            font-size: 13px;
+                            font-weight: 600;
+                        }
+
+                        Rectangle {
+                            // the outline of the default opener being the one that decides the tested
+                            // URL, drawn outside the picker so the picker stays in line with the title
+                            Rectangle {
+                                x: -6px;
+                                y: -4px;
+                                width: parent.width + 12px;
+                                height: parent.height + 8px;
+                                border-radius: 8px;
+                                border-width: 2px;
+                                border-color: root.test-url-match-index == root.default-rule.index
+                                    ? Palette.accent-background : transparent;
+                            }
+
+                            ProfilePicker {
+                                rule: root.default-rule;
+                                browsers: root.browsers;
+                                profile-picker-options: root.profile-picker-options;
+                                profile-changed(id) => { root.profile-changed(-1, id); }
+                                incognito-changed(v) => { root.incognito-changed(-1, v); }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        horizontal-stretch: 1;
+                    }
+
+                    // the padding lines the button up with the dropdown's vertical center
+                    VerticalLayout {
+                        alignment: end;
+                        padding-bottom: 3px;
+                        AddRuleButton {
+                            clicked => {
+                                root.scroll-to-new-rule = true;
+                                root.add-rule();
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -573,6 +802,7 @@ component RulesTab inherits VerticalLayout {
 
 component AdvancedTab inherits VerticalLayout {
     in property <[DirEntry]> directories;
+    in property <bool> is-default-browser;
     callback set-default();
     callback refresh();
 
@@ -583,9 +813,12 @@ component AdvancedTab inherits VerticalLayout {
     SettingsGroup {
         SettingRow {
             title: "Default browser";
+            description: root.is-default-browser ? "Browsers is your default browser."
+                : "Browsers is not your default browser.";
             divider: false;
+            // always clickable, so it can be set again
             Button {
-                text: "Set Browsers as a Default Browser";
+                text: root.is-default-browser ? "Set as Default Again" : "Set Browsers as a Default Browser";
                 clicked => { root.set-default(); }
             }
         }
@@ -593,7 +826,7 @@ component AdvancedTab inherits VerticalLayout {
         SettingRow {
             title: "Installed applications";
             Button {
-                text: "Refresh Installed Applications";
+                text: "Rescan Installed Apps";
                 clicked => { root.refresh(); }
             }
         }
@@ -618,7 +851,7 @@ export component SettingsWindow inherits Window {
     title: root.current-tab == SettingsTab.general ? "General"
         : root.current-tab == SettingsTab.appearance ? "Appearance"
         : root.current-tab == SettingsTab.rules ? "Rules"
-        : "Advanced";
+        : "System";
     // same level as the main popup, otherwise this renders behind it - NSWindowLevel stacking is
     // absolute, not affected by which window is active
     always-on-top: true;
@@ -651,11 +884,12 @@ export component SettingsWindow inherits Window {
     in property <[string]> profile-picker-options;
 
     in property <[DirEntry]> directories;
+    in property <bool> is-default-browser;
 
     // the "Test a URL" field of the Rules tab: what was typed, and the result Rust worked out
     in-out property <string> test-url-text;
     in property <string> test-url-result;
-    in property <int> test-url-match-index: -1;
+    in property <int> test-url-match-index: -2;
 
     callback test-url-edited();
     callback show-hotkeys-changed(bool);
@@ -678,7 +912,7 @@ export component SettingsWindow inherits Window {
 
         HorizontalLayout {
             sidebar := Rectangle {
-                width: 200px;
+                width: 180px;
                 background: Palette.alternate-background;
 
                 VerticalLayout {
@@ -688,21 +922,96 @@ export component SettingsWindow inherits Window {
                     alignment: start;
 
                     for t in [
-                        { tab: SettingsTab.general, label: "General" },
-                        { tab: SettingsTab.appearance, label: "Appearance" },
-                        { tab: SettingsTab.rules, label: "Rules" },
-                        { tab: SettingsTab.advanced, label: "Advanced" },
+                        {
+                            tab: SettingsTab.general,
+                            label: "General",
+                            icon: "M 6.57 3.00 L 6.89 1.39 L 9.11 1.39 L 9.43 3.00 L 10.52 3.45 L 11.89 2.55"
+                                + " L 13.45 4.11 L 12.55 5.48 L 13.00 6.57 L 14.61 6.89 L 14.61 9.11 L 13.00 9.43"
+                                + " L 12.55 10.52 L 13.45 11.89 L 11.89 13.45 L 10.52 12.55 L 9.43 13.00"
+                                + " L 9.11 14.61 L 6.89 14.61 L 6.57 13.00 L 5.48 12.55 L 4.11 13.45 L 2.55 11.89"
+                                + " L 3.45 10.52 L 3.00 9.43 L 1.39 9.11 L 1.39 6.89 L 3.00 6.57 L 3.45 5.48"
+                                + " L 2.55 4.11 L 4.11 2.55"
+                                + " L 5.48 3.45 Z M 8 5.9 A 2.1 2.1 0 1 1 8 10.1 A 2.1 2.1 0 1 1 8 5.9 Z",
+                            fill-a: "",
+                            fill-b: "",
+                        },
+                        {
+                            tab: SettingsTab.appearance,
+                            label: "Appearance",
+                            // a ring, its right half filled with the small inner circle cut out
+                            // of it, and the inner circle's left half filled
+                            icon: "M 8 1.5 A 6.5 6.5 0 1 0 8 14.5 A 6.5 6.5 0 1 0 8 1.5 Z",
+                            fill-a: "M 8 1.5 A 6.5 6.5 0 0 1 8 14.5 Z M 8 5.4 A 2.6 2.6 0 0 1 8 10.6 Z",
+                            fill-b: "M 8 5.4 A 2.6 2.6 0 0 0 8 10.6 Z",
+                        },
+                        {
+                            tab: SettingsTab.rules,
+                            label: "Rules",
+                            // a list inside a rounded rectangle
+                            icon: "M 4 2 L 12 2 A 2 2 0 0 1 14 4 L 14 12 A 2 2 0 0 1 12 14 "
+                                + "L 4 14 A 2 2 0 0 1 2 12 L 2 4 A 2 2 0 0 1 4 2 Z "
+                                + "M 7 5.5 L 11.2 5.5 M 7 8 L 11.2 8 M 7 10.5 L 11.2 10.5 "
+                                + "M 4.8 5.5 L 4.9 5.5 M 4.8 8 L 4.9 8 M 4.8 10.5 L 4.9 10.5",
+                            fill-a: "",
+                            fill-b: "",
+                        },
+                        {
+                            tab: SettingsTab.advanced,
+                            label: "System",
+                            // a monitor on a stand
+                            icon: "M 4 2.5 L 12 2.5 A 2 2 0 0 1 14 4.5 L 14 8.5 A 2 2 0 0 1 12 10.5 "
+                                + "L 4 10.5 A 2 2 0 0 1 2 8.5 L 2 4.5 A 2 2 0 0 1 4 2.5 Z "
+                                + "M 8 10.5 L 8 13.5 M 5 13.5 L 11 13.5",
+                            fill-a: "",
+                            fill-b: "",
+                        },
                     ]: Rectangle {
                         height: 32px;
-                        border-radius: 8px;
-                        background: root.current-tab == t.tab ? Palette.accent-background
-                            : tab-ta.has-hover ? Palette.border.transparentize(0.5)
-                            : transparent;
+                        border-radius: 8.5px;
+                        // the blue is fixed, so the text on it is a fixed white too - Palette.accent-foreground
+                        // is dark in the dark theme
+                        background: root.current-tab == t.tab ? #316def : transparent;
+                        Path {
+                            x: 10px;
+                            width: 18px;
+                            height: 18px;
+                            viewbox-width: 16;
+                            viewbox-height: 16;
+                            commands: t.icon;
+                            stroke: root.current-tab == t.tab ? #ffffff : Palette.accent-background;
+                            stroke-width: 1.4px;
+                            stroke-line-cap: round;
+                            stroke-line-join: round;
+                        }
+
+                        // filled parts of an icon (only Appearance has them)
+                        Path {
+                            x: 10px;
+                            width: 18px;
+                            height: 18px;
+                            viewbox-width: 16;
+                            viewbox-height: 16;
+                            commands: t.fill-a;
+                            fill: root.current-tab == t.tab ? #ffffff : Palette.accent-background;
+                            fill-rule: FillRule.evenodd;
+                        }
+
+                        Path {
+                            x: 10px;
+                            width: 18px;
+                            height: 18px;
+                            viewbox-width: 16;
+                            viewbox-height: 16;
+                            commands: t.fill-b;
+                            fill: root.current-tab == t.tab ? #ffffff : Palette.accent-background;
+                        }
+
                         Text {
                             text: t.label;
                             font-size: 13px;
-                            x: 10px;
-                            color: root.current-tab == t.tab ? Palette.accent-foreground : Palette.foreground;
+                            x: 36px;
+                            font-weight: root.current-tab == t.tab ? 700 : 400;
+                            color: root.current-tab == t.tab ? #ffffff : Palette.foreground;
                             vertical-alignment: center;
                         }
 
@@ -753,6 +1062,7 @@ export component SettingsWindow inherits Window {
                 }
                 if root.current-tab == SettingsTab.advanced: AdvancedTab {
                     directories: root.directories;
+                    is-default-browser: root.is-default-browser;
                     set-default => { root.set-default-browser(); }
                     refresh => { root.refresh(); }
                 }
