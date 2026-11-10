@@ -608,6 +608,8 @@ component RulesTab inherits VerticalLayout {
     in property <SettingsRule> default-rule;
     in property <[BrowserItem]> browsers;
     in property <[string]> profile-picker-options;
+    in property <[BrowserItem]> default-browsers;
+    in property <[string]> default-profile-picker-options;
 
     callback add-rule();
     callback remove-rule(int);
@@ -785,8 +787,8 @@ component RulesTab inherits VerticalLayout {
 
                             ProfilePicker {
                                 rule: root.default-rule;
-                                browsers: root.browsers;
-                                profile-picker-options: root.profile-picker-options;
+                                browsers: root.default-browsers;
+                                profile-picker-options: root.default-profile-picker-options;
                                 profile-changed(id) => { root.profile-changed(-1, id); }
                                 incognito-changed(v) => { root.incognito-changed(-1, v); }
                             }
@@ -896,6 +898,9 @@ export component SettingsWindow inherits Window {
     in property <SettingsRule> default-rule;
     in property <[BrowserItem]> browsers;
     in property <[string]> profile-picker-options;
+    // "If no rules match" has its own, shorter list - see default_opener_choices in Rust
+    in property <[BrowserItem]> default-browsers;
+    in property <[string]> default-profile-picker-options;
 
     in property <[DirEntry]> directories;
     in property <bool> is-default-browser;
@@ -1068,6 +1073,8 @@ export component SettingsWindow inherits Window {
                     default-rule: root.default-rule;
                     browsers: root.browsers;
                     profile-picker-options: root.profile-picker-options;
+                    default-browsers: root.default-browsers;
+                    default-profile-picker-options: root.default-profile-picker-options;
                     add-rule => { root.add-rule(); }
                     remove-rule(i) => { root.remove-rule(i); }
                     url-changed(i, t) => { root.rule-url-changed(i, t); }
