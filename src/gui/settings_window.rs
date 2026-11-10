@@ -144,14 +144,19 @@ fn choice_to_theme(choice: ThemeChoice) -> ConfiguredTheme {
     }
 }
 
+// what "Test a URL" reports when there is nothing to say, an empty or invalid URL. Kept apart from
+// -1, which is the default opener's index (see SettingsRule.index) - it decides when no rule matches
+const TEST_URL_NO_VERDICT: i32 = -2;
+
 // "Test a URL": what would happen to `input`, and which rule (index into the rules list, -1 for
-// none) decides it. Mirrors route_url/get_rule_for_source_app_and_url in lib.rs: the URL is
-// unwrapped first, rules are tried in order and the first match wins, then the default opener.
+// the default opener, TEST_URL_NO_VERDICT for none) decides it.
+// Mirrors route_url/get_rule_for_source_app_and_url in lib.rs: the URL is unwrapped first, rules
+// are tried in order and the first match wins, then the default opener.
 // A pasted URL has no source app, so rules that need one are skipped.
 fn test_url(settings: &UISettings, browsers: &[UIBrowser], input: &str) -> (String, i32) {
     let input = input.trim();
     if input.is_empty() {
-        return (String::new(), -1);
+        return (String::new(), TEST_URL_NO_VERDICT);
     }
 
     let with_scheme = if input.contains("://") {
@@ -164,7 +169,7 @@ fn test_url(settings: &UISettings, browsers: &[UIBrowser], input: &str) -> (Stri
     };
     let cleaned = crate::unwrap_url(&with_scheme, &behavioral);
     let Ok(url) = Url::from_str(&cleaned) else {
-        return ("Not a valid URL".to_string(), -1);
+        return ("Not a valid URL".to_string(), TEST_URL_NO_VERDICT);
     };
 
     let describe = |opener: &Option<UIProfileAndIncognito>| match resolve_opener(opener, browsers) {
@@ -254,6 +259,7 @@ pub fn refresh(state: &SharedState) {
     win.set_quit_on_lost_focus(settings.visual_settings.quit_on_lost_focus);
     win.set_show_quit_on_lost_focus(cfg!(target_os = "macos"));
     win.set_unwrap_urls(settings.behavioral_settings.unwrap_urls);
+    win.set_is_default_browser(crate::utils::is_default_web_browser());
     crate::gui::ui_util::sync_vec_model(&win.get_restorable_app_profiles(), restorable_items);
     win.set_theme(theme_to_choice(settings.visual_settings.theme));
     win.set_max_visible_browsers(settings.visual_settings.max_visible_browsers);
@@ -533,7 +539,10 @@ mod tests {
     fn empty_input_shows_nothing() {
         let s = settings(vec![], None, false);
 
-        assert_eq!(test_url(&s, &browsers(), "  "), (String::new(), -1));
+        assert_eq!(
+            test_url(&s, &browsers(), "  "),
+            (String::new(), TEST_URL_NO_VERDICT)
+        );
     }
 
     #[test]
