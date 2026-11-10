@@ -513,16 +513,17 @@ component AppearanceTab inherits VerticalLayout {
 
 // not a std-widgets Button, which has a hover effect (macOS has none) - only pressed is darker
 component AddRuleButton inherits TouchArea {
+    in property <string> text: "Add Rule";
     width: 80px;
     height: 24px;
     accessible-role: button;
-    accessible-label: "Add Rule";
+    accessible-label: root.text;
     accessible-action-default => { self.clicked(); }
     Rectangle {
         border-radius: 5.5px;
         background: Palette.foreground.transparentize(root.pressed ? 0.85 : 0.92);
         Text {
-            text: "Add Rule";
+            text: root.text;
             font-size: 13px;
             color: Palette.foreground;
             horizontal-alignment: center;
@@ -697,6 +698,8 @@ component RulesTab inherits VerticalLayout {
                 padding-left: 14px;
                 alignment: start;
                 AddRuleButton {
+                    text: "Add Your First Rule";
+                    width: 140px;
                     clicked => { root.add-rule(); }
                 }
             }
@@ -824,7 +827,7 @@ component AdvancedTab inherits VerticalLayout {
     SettingsGroup {
         SettingRow {
             title: "Default browser";
-            description: root.is-default-browser ? "Browsers is your default browser."
+            description: root.is-default-browser ? "Browsers is already your default browser."
                 : "Browsers is not your default browser.";
             divider: false;
             // always clickable, so it can be set again
