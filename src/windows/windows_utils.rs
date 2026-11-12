@@ -28,29 +28,36 @@ use winapi::{
 
 use crate::gui::screen::{Point as ScreenPoint, Rect as ScreenRect};
 
-// cursor position + usable screen area (excludes the taskbar)
-pub fn mouse_position_and_work_area() -> (ScreenPoint, ScreenRect) {
+// cursor position
+pub fn mouse_position() -> ScreenPoint {
+    let mut point: POINT = unsafe { mem::zeroed() };
     unsafe {
-        let mut point: POINT = mem::zeroed();
         GetCursorPos(&mut point);
+    }
+    ScreenPoint {
+        x: point.x as f32,
+        y: point.y as f32,
+    }
+}
 
+// usable area (excludes the taskbar) of the monitor nearest to `point`
+pub fn work_area_at(point: ScreenPoint) -> ScreenRect {
+    unsafe {
+        let point = POINT {
+            x: point.x as i32,
+            y: point.y as i32,
+        };
         let monitor: HMONITOR = MonitorFromPoint(point, MONITOR_DEFAULTTONEAREST);
         let mut info: MONITORINFO = mem::zeroed();
         info.cbSize = mem::size_of::<MONITORINFO>() as u32;
         GetMonitorInfoW(monitor, &mut info);
 
-        let screen_point = ScreenPoint {
-            x: point.x as f32,
-            y: point.y as f32,
-        };
-        let work_area = ScreenRect {
+        ScreenRect {
             x0: info.rcWork.left as f32,
             y0: info.rcWork.top as f32,
             x1: info.rcWork.right as f32,
             y1: info.rcWork.bottom as f32,
-        };
-
-        (screen_point, work_area)
+        }
     }
 }
 

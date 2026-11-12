@@ -113,7 +113,11 @@ pub const MIN_VISIBLE_BROWSERS: i32 = 1;
 pub const MAX_VISIBLE_BROWSERS: i32 = 20;
 
 pub fn apply_max_visible_browsers(state: &SharedState) {
-    let max = state.borrow().ui_settings.visual_settings.max_visible_browsers;
+    let max = state
+        .borrow()
+        .ui_settings
+        .visual_settings
+        .max_visible_browsers;
     // clamped like the Settings spin box, so a hand-edited config can't make the list vanish
     let max = max.clamp(MIN_VISIBLE_BROWSERS, MAX_VISIBLE_BROWSERS);
     state.borrow().main_window.set_max_visible_browsers(max);
@@ -210,36 +214,71 @@ pub fn clear_on_close<W: ComponentHandle + 'static>(
     });
 }
 
-// sets the window's actual size to the one main_window.slint computes for its content (it
-// depends on the browser model and the text size), returning that size so callers that also
-// need to reposition (see reposition_main_window) don't recompute it
-fn apply_main_window_size(win: &MainWindow) -> (f32, f32) {
-    let size = (win.get_pinned_width(), win.get_pinned_height());
+// Sizing and placing the main window.
+// Positions are the window's top-left corner in logical desktop pixels, and a work area is a
+// monitor's usable part (without the menu bar, Dock or taskbar).
 
-    win.window()
-        .set_size(slint::LogicalSize::new(size.0, size.1));
-    size
-}
-
-// resizes and moves the window to the cursor - only for a genuinely new appearance (initial
-// launch, or a new URL opened while already running), not a same-URL refresh of an already-visible
-// window
+// opens at the cursor, on the monitor the cursor is on - only for a genuinely new appearance
+// (initial launch, or a new URL opened while already running), not a same-URL refresh of an
+// already-visible window
 pub fn reposition_main_window(state: &SharedState) {
     let win = state.borrow().main_window.clone_strong();
-
     let (mouse, work_area) = screen::mouse_position_and_work_area();
-    let size = apply_main_window_size(&win);
-    let position = main_window::calculate_window_position(mouse, work_area, size);
-
-    win.window()
-        .set_position(slint::LogicalPosition::new(position.x, position.y));
+    resize_and_place_main_window(&win, mouse, work_area);
 }
 
-// resizes for the current browser count without moving it - for refreshing an already-visible
-// window's content (Refresh, restoring a hidden profile)
+// for refreshing an already-visible window's content (Refresh, restoring a hidden profile, a new
+// text size or browser limit): it stays where it is and on the monitor it is on, except that a
+// bigger window is moved back inside that monitor's edges
 pub fn resize_main_window(state: &SharedState) {
     let win = state.borrow().main_window.clone_strong();
-    apply_main_window_size(&win);
+    let corner = main_window_corner(&win);
+    let work_area = main_window_work_area(&win);
+    resize_and_place_main_window(&win, corner, work_area);
+}
+
+// sets the window's size to the one main_window.slint computes for its content (it depends on the
+// browser model and the text size), then moves it as close to `wanted` as it can while all of it
+// stays inside `work_area`
+fn resize_and_place_main_window(win: &MainWindow, wanted: screen::Point, work_area: screen::Rect) {
+    let size = (win.get_pinned_width(), win.get_pinned_height());
+    win.window()
+        .set_size(slint::LogicalSize::new(size.0, size.1));
+
+    let position = main_window::calculate_window_position(wanted, work_area, size);
+    // Only move if that changes anything. Where the platform can't tell the window's position
+    // (Wayland), it is reported as (0, 0), and "moving" there would send the window to the corner.
+    let current = main_window_corner(win);
+    if position.x != current.x || position.y != current.y {
+        win.window()
+            .set_position(slint::LogicalPosition::new(position.x, position.y));
+    }
+}
+
+fn main_window_corner(win: &MainWindow) -> screen::Point {
+    let corner = win
+        .window()
+        .position()
+        .to_logical(win.window().scale_factor());
+    screen::Point {
+        x: corner.x,
+        y: corner.y,
+    }
+}
+
+// the work area of the monitor the window is on. The monitor is the one under the window's center,
+// so a window straddling two monitors counts as being on the one that has most of it.
+// (Not the cursor's monitor, which can be another one, e.g. while the cursor is over Settings.)
+fn main_window_work_area(win: &MainWindow) -> screen::Rect {
+    let corner = main_window_corner(win);
+    let size = win
+        .window()
+        .size()
+        .to_logical(win.window().scale_factor());
+    screen::work_area_at(screen::Point {
+        x: corner.x + size.width / 2.0,
+        y: corner.y + size.height / 2.0,
+    })
 }
 
 fn wire_main_window(state: &SharedState) {

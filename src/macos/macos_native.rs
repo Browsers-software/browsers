@@ -21,24 +21,40 @@ use tracing::{debug, warn};
 
 use crate::gui::screen::{Point, Rect};
 
-// cursor position + usable screen area, so the popup shows up where you clicked
-pub fn mouse_position_and_work_area() -> (Point, Rect) {
-    let mtm = MainThreadMarker::new().expect("must be called from the main thread");
-    let mouse_location = NSEvent::mouseLocation();
-    let screens = NSScreen::screens(mtm);
-
-    let primary_height = screens
+// y is flipped between Cocoa (origin at the bottom-left of the primary screen) and Slint's logical
+// desktop pixels (origin top-left), so both functions below need the primary screen's height
+fn primary_screen_height(mtm: MainThreadMarker) -> f64 {
+    NSScreen::screens(mtm)
         .firstObject()
         .map(|s| s.frame().size.height)
-        .unwrap_or(0.0);
+        .unwrap_or(0.0)
+}
+
+// cursor position, so the popup shows up where you clicked
+pub fn mouse_position() -> Point {
+    let mtm = MainThreadMarker::new().expect("must be called from the main thread");
+    let mouse_location = NSEvent::mouseLocation();
+
+    Point {
+        x: mouse_location.x as f32,
+        y: (primary_screen_height(mtm) - mouse_location.y) as f32,
+    }
+}
+
+// the usable area (excluding the menu bar and Dock) of the monitor containing `point`
+pub fn work_area_at(point: Point) -> Rect {
+    let mtm = MainThreadMarker::new().expect("must be called from the main thread");
+    let screens = NSScreen::screens(mtm);
+    let primary_height = primary_screen_height(mtm);
+    let (x, y) = (point.x as f64, primary_height - point.y as f64);
 
     let mut visible_frame: Option<NSRect> = None;
     for screen in screens.iter() {
         let frame = screen.frame();
-        let contains = mouse_location.x >= frame.origin.x
-            && mouse_location.x <= frame.origin.x + frame.size.width
-            && mouse_location.y >= frame.origin.y
-            && mouse_location.y <= frame.origin.y + frame.size.height;
+        let contains = x >= frame.origin.x
+            && x <= frame.origin.x + frame.size.width
+            && y >= frame.origin.y
+            && y <= frame.origin.y + frame.size.height;
         if contains {
             visible_frame = Some(screen.visibleFrame());
             break;
@@ -52,19 +68,12 @@ pub fn mouse_position_and_work_area() -> (Point, Rect) {
             .unwrap_or(NSRect::new(NSPoint::new(0.0, 0.0), NSSize::new(1920.0, 1080.0)))
     });
 
-    let point = Point {
-        x: mouse_location.x as f32,
-        y: (primary_height - mouse_location.y) as f32,
-    };
-
-    let rect = Rect {
+    Rect {
         x0: visible_frame.origin.x as f32,
         y0: (primary_height - (visible_frame.origin.y + visible_frame.size.height)) as f32,
         x1: (visible_frame.origin.x + visible_frame.size.width) as f32,
         y1: (primary_height - visible_frame.origin.y) as f32,
-    };
-
-    (point, rect)
+    }
 }
 
 // the window level itself comes from `always-on-top: true` in the .slint files (winit maps it to

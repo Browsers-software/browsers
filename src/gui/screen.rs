@@ -15,21 +15,47 @@ pub struct Rect {
     pub y1: f32,
 }
 
-// global cursor position + monitor work area.
-// winit only knows about its own windows, so each platform has to implement this natively
-pub fn mouse_position_and_work_area() -> (Point, Rect) {
+// winit only knows about its own windows, so each platform has to implement these natively
+
+// the global cursor position
+fn mouse_position() -> Point {
     #[cfg(target_os = "macos")]
     {
-        crate::macos::macos_native::mouse_position_and_work_area()
+        crate::macos::macos_native::mouse_position()
     }
 
     #[cfg(target_os = "windows")]
     {
-        crate::windows::windows_utils::mouse_position_and_work_area()
+        crate::windows::windows_utils::mouse_position()
     }
 
     #[cfg(target_os = "linux")]
     {
-        crate::linux::linux_utils::mouse_position_and_work_area()
+        crate::linux::linux_utils::mouse_position()
     }
+}
+
+// the work area of the monitor that contains `point` - for a window that is already on screen,
+// whose own monitor is not necessarily the cursor's
+pub fn work_area_at(point: Point) -> Rect {
+    #[cfg(target_os = "macos")]
+    {
+        crate::macos::macos_native::work_area_at(point)
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        crate::windows::windows_utils::work_area_at(point)
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        crate::linux::linux_utils::work_area_at(point)
+    }
+}
+
+// global cursor position + the work area of the monitor it is on
+pub fn mouse_position_and_work_area() -> (Point, Rect) {
+    let mouse = mouse_position();
+    (mouse, work_area_at(mouse))
 }
