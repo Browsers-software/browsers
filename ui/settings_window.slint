@@ -6,7 +6,7 @@ import {
     ScrollView,
     Palette,
     ComboBox,
-    SpinBox,
+    Slider,
 } from "std-widgets.slint";
 import { Card, DirEntry, DirectoriesList, TextSizeChoice, ThemeChoice } from "common.slint";
 import { BrowserItem, RestorableProfile } from "main_window.slint";
@@ -491,13 +491,31 @@ component AppearanceTab inherits VerticalLayout {
         SettingRow {
             title: "Visible browsers";
             description: "How many are shown before the list scrolls";
-            SpinBox {
-                // the limit is 20, so two digits are enough
-                width: 112px;
-                minimum: root.min-visible-browsers;
-                maximum: root.max-visible-browsers-limit;
-                value: root.max-visible-browsers;
-                edited(v) => { root.max-visible-browsers-changed(v); }
+            HorizontalLayout {
+                spacing: 10px;
+                Slider {
+                    width: 140px;
+                    minimum: root.min-visible-browsers;
+                    maximum: root.max-visible-browsers-limit;
+                    step: 1;
+                    value: root.max-visible-browsers;
+                    changed(v) => {
+                        // dragging is continuous: snap to whole numbers, and only save when
+                        // the number actually changes
+                        self.value = Math.round(v);
+                        if (Math.round(v) != root.max-visible-browsers) {
+                            root.max-visible-browsers-changed(Math.round(v));
+                        }
+                    }
+                }
+
+                Text {
+                    text: root.max-visible-browsers;
+                    width: 20px;
+                    horizontal-alignment: right;
+                    vertical-alignment: center;
+                    color: Palette.foreground;
+                }
             }
         }
 
