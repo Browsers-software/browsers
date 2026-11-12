@@ -96,3 +96,22 @@ pub fn to_restorable_profile(b: &UIBrowser) -> RestorableProfile {
         full_name: b.get_full_name().into(),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const SCREEN: Rect = Rect { x0: 0.0, y0: 25.0, x1: 1000.0, y1: 800.0 };
+
+    #[test]
+    fn a_window_that_grew_past_the_bottom_moves_up() {
+        let p = calculate_window_position(Point { x: 100.0, y: 700.0 }, SCREEN, (300.0, 400.0));
+        assert_eq!((p.x, p.y), (100.0, 400.0));
+    }
+
+    #[test]
+    fn a_window_that_fits_stays_where_it_is() {
+        let p = calculate_window_position(Point { x: 100.0, y: 200.0 }, SCREEN, (300.0, 400.0));
+        assert_eq!((p.x, p.y), (100.0, 200.0));
+    }
+}
