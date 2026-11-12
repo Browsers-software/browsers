@@ -39,13 +39,15 @@ export component DirectoriesList inherits HorizontalLayout {
             color: root.entry-color;
         }
     }
+
     VerticalLayout {
         alignment: start;
-        for d in root.directories: TextInput {
-            text: d.path;
-            font-size: root.entry-font-size;
-            color: root.entry-color;
-            read-only: true;
+        for d in root.directories: StyledText {
+            // interpolated values are inserted as plain text, so `_` or `*` in a path are not treated as markdown
+            text: @markdown("\{d.path}");
+            selectable: true;
+            default-font-size: root.entry-font-size;
+            default-color: root.entry-color;
             // like macOS: a light blue fill, and the selected text goes to full black (white in
             // the dark theme), whatever the text color was. The dark fill is an approximation
             selection-background-color: Palette.color-scheme == ColorScheme.dark ? #3e6190 : #bbd6fc;
