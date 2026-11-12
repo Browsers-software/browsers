@@ -7,6 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
 
+### Added
+
+- Settings: "Text size" (Normal, Large, Larger) to scale the main window
+- Settings: "Visible browsers" to choose how many browsers the main window shows before the list scrolls
+- Settings: "Test a URL" to see which rule (or the default) would open a link
+
 ## [0.8.6] - 2026-11-06
 
 ### Fixed
