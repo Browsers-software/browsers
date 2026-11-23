@@ -553,3 +553,13 @@ os = "LINUX"
 id = "URL:Zoom Launcher"
 kind = "ZOOM"
 os = "WINDOWS"
+
+[[apps]]
+id = "org.ladybird.Ladybird"
+kind = "LADYBIRD"
+os = "MAC"
+
+[[apps]]
+id = "org.ladybird.Ladybird"
+kind = "LADYBIRD"
+os = "LINUX"
