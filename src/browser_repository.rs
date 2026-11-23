@@ -36,6 +36,7 @@ enum AppKind {
     GENERIC,
     CHROMIUM,
     FIREFOX,
+    LADYBIRD,
     SLACK,
     LINEAR,
     MIMESTREAM,
@@ -256,6 +257,7 @@ impl SupportedAppRepository {
                 AppOS::MAC => self.create_firefox_based_mac(app_id, config_dir_relative),
                 AppOS::WINDOWS => self.create_firefox_based_windows(app_id, config_dir_relative),
             },
+            AppKind::LADYBIRD => Self::create_ladybird_based(app_config.os, app_id),
             AppKind::LINEAR => {
                 let restricted_domain_patterns = vec!["linear.app".to_string()];
                 Self::create_generic_app(app_config.os, app_id, restricted_domain_patterns)
@@ -530,6 +532,30 @@ impl SupportedAppRepository {
             },
             incognito_args: vec!["--private-window".to_string()],
             url_transform_fn: firefox_url_transform_fn,
+            url_as_first_arg: true,
+        }
+    }
+
+    fn create_ladybird_based(os: AppOS, app_id: &str) -> SupportedApp {
+        let app_identifier = Self::create_app_identifier(os, app_id);
+        return Self::ladybird_based_app(app_identifier);
+    }
+
+    fn ladybird_based_app(app_id: AppIdentifier) -> SupportedApp {
+        SupportedApp {
+            app_id: app_id,
+            app_config_dir_absolute: PathBuf::new(),
+            snap_app_config_dir_absolute: PathBuf::new(),
+            macos_sandbox_app_config_dir_absolute: PathBuf::new(),
+            // todo: find the profiles in `<data dir>/Ladybird/Profiles`
+            find_profiles_fn: None,
+            restricted_url_matchers: vec![],
+            profile_args_fn: |profile_cli_arg_value| {
+                vec!["--profile".to_string(), profile_cli_arg_value.to_string()]
+            },
+            // Ladybird has no command line option for private windows
+            incognito_args: vec![],
+            url_transform_fn: |_, url| url.to_string(),
             url_as_first_arg: true,
         }
     }
