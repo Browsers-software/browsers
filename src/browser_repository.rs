@@ -5,8 +5,8 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 use tracing::info;
-use url::Url;
 use url::form_urlencoded::byte_serialize;
+use url::{Position, Url};
 
 use crate::url_rule::UrlGlobMatcher;
 use crate::{
@@ -39,6 +39,7 @@ enum AppKind {
     CHROMIUM,
     FIREFOX,
     LADYBIRD,
+    DISCORD,
     SLACK,
     LINEAR,
     MIMESTREAM,
@@ -261,6 +262,15 @@ impl SupportedAppRepository {
                 AppOS::WINDOWS => self.create_firefox_based_windows(app_id, config_dir_relative),
             },
             AppKind::LADYBIRD => self.create_ladybird_based(app_config.os, app_id),
+            AppKind::DISCORD => {
+                let restricted_domain_patterns = vec!["discord.com".to_string()];
+                Self::create_generic_app_with_url(
+                    app_config.os,
+                    app_id,
+                    restricted_domain_patterns,
+                    convert_discord_uri,
+                )
+            }
             AppKind::LINEAR => {
                 let restricted_domain_patterns = vec!["linear.app".to_string()];
                 Self::create_generic_app(app_config.os, app_id, restricted_domain_patterns)
@@ -890,10 +900,8 @@ fn convert_mimestream_uri(_: &CommonBrowserProfile, url_str: &str) -> String {
     if result.is_err() {
         return "".to_string();
     }
-    let mut url = result.unwrap();
-    let _ = url.set_scheme("mimestream");
-
-    return url.as_str().to_string();
+    let original_url = result.unwrap();
+    return replace_url_scheme(original_url, "mimestream");
 }
 
 fn convert_slack_uri(common_browser_profile: &CommonBrowserProfile, url_str: &str) -> String {
@@ -918,10 +926,28 @@ fn convert_workflowy_uri(_: &CommonBrowserProfile, url_str: &str) -> String {
     if result.is_err() {
         return "".to_string();
     }
-    let mut url = result.unwrap();
-    let _ = url.set_scheme("workflowy");
+    let original_url = result.unwrap();
+    return replace_url_scheme(original_url, "workflowy");
+}
 
-    return url.as_str().to_string();
+// replaces https scheme with discord scheme
+fn convert_discord_uri(_: &CommonBrowserProfile, url_str: &str) -> String {
+    let result = Url::parse(url_str);
+    if result.is_err() {
+        return "".to_string();
+    }
+    let original_url = result.unwrap();
+
+    return replace_url_scheme(original_url, "discord");
+}
+
+// url::Url::set_scheme does not allow changing https scheme to custom scheme
+// because url rules might differ.
+// So re-create the url instead.
+fn replace_url_scheme(url: Url, new_scheme: &str) -> String {
+    return Url::parse(&format!("{}{}", new_scheme, &url[Position::AfterScheme..]))
+        .map(|url| url.to_string())
+        .unwrap_or_default();
 }
 
 fn convert_spotify_uri(_: &CommonBrowserProfile, url_str: &str) -> String {
