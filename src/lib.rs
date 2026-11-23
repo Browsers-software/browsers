@@ -50,6 +50,7 @@ mod windows;
 mod chromium_profiles_parser;
 mod firefox_profiles_parser;
 mod firefox_selectable_profiles;
+mod ladybird_profiles_parser;
 mod slack_profiles_parser;
 mod slack_url_parser;
 mod url_rule;

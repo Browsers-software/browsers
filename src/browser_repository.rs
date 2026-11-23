@@ -11,7 +11,8 @@ use url::form_urlencoded::byte_serialize;
 use crate::url_rule::UrlGlobMatcher;
 use crate::{
     CommonBrowserProfile, InstalledAppProfiles, InstalledBrowserProfile, chromium_profiles_parser,
-    firefox_profiles_parser, paths, slack_profiles_parser, slack_url_parser, url_rule,
+    firefox_profiles_parser, ladybird_profiles_parser, paths, slack_profiles_parser,
+    slack_url_parser, url_rule,
 };
 
 // Holds list of custom SupportedApp configurations
@@ -21,6 +22,7 @@ pub struct SupportedAppRepository {
     chromium_user_dir_base: PathBuf,
     firefox_user_dir_base: PathBuf,
     new_firefox_user_dir_base: PathBuf,
+    ladybird_user_dir_base: PathBuf,
     supported_apps: HashMap<String, SupportedApp>,
 }
 
@@ -83,6 +85,7 @@ impl SupportedAppRepository {
             chromium_user_dir_base: paths::get_chrome_user_dir_root(),
             firefox_user_dir_base: paths::get_firefox_user_dir_root(),
             new_firefox_user_dir_base: paths::get_new_firefox_user_dir_root(),
+            ladybird_user_dir_base: paths::get_ladybird_user_dir_root(),
             supported_apps: HashMap::new(),
         };
         repository.generate_app_id_to_supported_app();
@@ -257,7 +260,7 @@ impl SupportedAppRepository {
                 AppOS::MAC => self.create_firefox_based_mac(app_id, config_dir_relative),
                 AppOS::WINDOWS => self.create_firefox_based_windows(app_id, config_dir_relative),
             },
-            AppKind::LADYBIRD => Self::create_ladybird_based(app_config.os, app_id),
+            AppKind::LADYBIRD => self.create_ladybird_based(app_config.os, app_id),
             AppKind::LINEAR => {
                 let restricted_domain_patterns = vec!["linear.app".to_string()];
                 Self::create_generic_app(app_config.os, app_id, restricted_domain_patterns)
@@ -536,19 +539,21 @@ impl SupportedAppRepository {
         }
     }
 
-    fn create_ladybird_based(os: AppOS, app_id: &str) -> SupportedApp {
+    fn create_ladybird_based(&self, os: AppOS, app_id: &str) -> SupportedApp {
         let app_identifier = Self::create_app_identifier(os, app_id);
-        return Self::ladybird_based_app(app_identifier);
+        return Self::ladybird_based_app(
+            app_identifier,
+            self.ladybird_user_dir_base.join("Ladybird"),
+        );
     }
 
-    fn ladybird_based_app(app_id: AppIdentifier) -> SupportedApp {
+    fn ladybird_based_app(app_id: AppIdentifier, app_config_dir_absolute: PathBuf) -> SupportedApp {
         SupportedApp {
             app_id: app_id,
-            app_config_dir_absolute: PathBuf::new(),
+            app_config_dir_absolute: app_config_dir_absolute,
             snap_app_config_dir_absolute: PathBuf::new(),
             macos_sandbox_app_config_dir_absolute: PathBuf::new(),
-            // todo: find the profiles in `<data dir>/Ladybird/Profiles`
-            find_profiles_fn: None,
+            find_profiles_fn: Some(ladybird_profiles_parser::find_ladybird_profiles),
             restricted_url_matchers: vec![],
             profile_args_fn: |profile_cli_arg_value| {
                 vec!["--profile".to_string(), profile_cli_arg_value.to_string()]

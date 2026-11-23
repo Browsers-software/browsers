@@ -83,6 +83,12 @@ pub fn get_new_firefox_user_dir_root() -> PathBuf {
     return windows_utils::get_unsandboxed_roaming_config_dir();
 }
 
+// Where Ladybird keeps its data dir, `Ladybird/` is inside of it:
+// macOS: ~/Library/Application Support, Linux: ~/.local/share, Windows: %LOCALAPPDATA%
+pub fn get_ladybird_user_dir_root() -> PathBuf {
+    return dirs::data_local_dir().unwrap();
+}
+
 // ~/Library/Application Support/
 #[cfg(target_os = "macos")]
 pub fn get_user_home_for_unsandboxed_app() -> PathBuf {
