@@ -12,6 +12,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Settings: "Text size" (Normal, Large, Larger) to scale the main window
 - Settings: "Visible browsers" to choose how many browsers the main window shows before the list scrolls
 - Settings: "Test a URL" to see which rule (or the default) would open a link
+- Ladybird profiles (needs a Ladybird build from 2026-07-13 or later)
 
 ## [0.8.6] - 2026-11-06
 
