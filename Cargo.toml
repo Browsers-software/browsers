@@ -35,7 +35,7 @@ serde = { version = "1.0.229", features = ["derive"] }
 # - skip-taskbar (Windows),
 # - the macOS window level (visible across Spaces, Settings/About stacking above the main window)
 #   and disabling resizing, see gui::app::run
-slint = { version = "1.18.1", features = ["unstable-winit-030"] }
+slint = { version = "1.19.0", features = ["unstable-winit-030"] }
 
 # decodes browser/profile icon files into slint::Image, also used by the platform icon-extraction code
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
@@ -89,7 +89,7 @@ libc = "0.2.189"
 #
 # Must stay in sync with the other `slint` entry above (same version, same features union) or
 # Cargo fails to unify the two.
-slint = { version = "1.18.1", features = ["renderer-skia"] }
+slint = { version = "1.19.0", features = ["renderer-skia"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 # global cursor position on X11, to put the popup where the mouse is (macOS/Windows do this
@@ -135,7 +135,7 @@ winsplit = "0.1.0"
 dunce = "1.0.5"
 
 [build-dependencies]
-slint-build = "1.18.1"
+slint-build = "1.19.0"
 
 [target.'cfg(target_os = "windows")'.build-dependencies]
 # To embed .ico into .exe
@@ -156,19 +156,3 @@ lto = true           # Enable Link Time Optimization
 tempfile = "3.27.0"
 #codegen-units = 1   # Reduce number of codegen units to increase optimizations.
 #panic = 'abort'     # Abort on panic
-
-# TEMPORARY: Slint 1.19 is unreleased, build from the pre-release/1.19 branch.
-[patch.crates-io]
-slint = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
-slint-build = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
-i-slint-core = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
-i-slint-core-macros = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
-i-slint-common = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
-i-slint-compiler = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
-i-slint-backend-selector = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
-i-slint-backend-winit = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
-i-slint-backend-testing = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
-i-slint-renderer-femtovg = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
-i-slint-renderer-skia = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
-i-slint-renderer-software = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
-slint-macros = { git = "https://github.com/slint-ui/slint", branch = "pre-release/1.19" }
