@@ -97,33 +97,54 @@ fn main() {
     // https://doc.rust-lang.org/reference/conditional-compilation.html#target_arch
     let rust_target_arch = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap();
 
-    // e.g target/
-    //  or target/aarch64-unknown-linux-gnu/
-    let target_build_path = get_target_build_path();
-    let arch_target_dir = target_build_path.parent().unwrap();
+    let arch_target_dir = get_arch_target_dir();
 
-    create_deb_control(rust_target_arch.as_str(), arch_target_dir);
-    create_rpm_spec(rust_target_arch.as_str(), arch_target_dir);
+    create_deb_control(rust_target_arch.as_str(), arch_target_dir.as_path());
+    create_rpm_spec(rust_target_arch.as_str(), arch_target_dir.as_path());
+}
+
+// e.g target/
+//  or target/aarch64-unknown-linux-gnu/
+//
+// Not derived from OUT_DIR's depth, because Cargo's build directory layout is not stable
+// (it changed in Cargo 1.100).
+#[cfg(target_os = "linux")]
+fn get_arch_target_dir() -> PathBuf {
+    const ROOT_DIR: &str = env!("CARGO_MANIFEST_DIR");
+
+    let target_dir = match std::env::var_os("CARGO_TARGET_DIR") {
+        Some(dir) => Path::new(ROOT_DIR).join(dir),
+        None => Path::new(ROOT_DIR).join("target"),
+    };
+    let target = std::env::var("TARGET").unwrap();
+    let host = std::env::var("HOST").unwrap();
+    let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
+
+    // With an explicit --target (even the host one) artifacts are in target/<triple>/,
+    // which can't be told from TARGET alone when it equals HOST.
+    let target_triple_dir = target_dir.join(target.as_str());
+    if out_dir.starts_with(&target_triple_dir) || target != host {
+        target_triple_dir
+    } else {
+        target_dir
+    }
 }
 
 // e.g target/release/
 //  or target/aarch64-unknown-linux-gnu/release/
 fn get_target_build_path() -> PathBuf {
-    // e.g "/target/aarch64-unknown-linux-gnu/release/build/browsers-f4fff742057613df/out"
-    //  or "/target/release/build/browsers-f4fff742057613df/out"
+    // Cargo's layout inside build/ is not stable, so find build/ instead of counting parents.
+    // e.g "/target/aarch64-unknown-linux-gnu/release/build/browsers-f4fff742057613df/out" (old)
+    //  or "/target/aarch64-unknown-linux-gnu/release/build/browsers/f4fff742057613df/out" (new)
     let out_dir = std::env::var("OUT_DIR").unwrap();
     let out_dir = PathBuf::from(out_dir.as_str());
 
-    // /target/aarch64-unknown-linux-gnu
-    let arch_target_dir = out_dir
-        .parent() // release/build/browsers/
-        .map(|a| a.parent()) // target/.../release/build/
-        .flatten()
-        .map(|a| a.parent()) // target/.../release/
-        .flatten()
-        .unwrap();
+    let build_dir = out_dir
+        .ancestors()
+        .find(|p| p.file_name().is_some_and(|n| n == "build"))
+        .expect("OUT_DIR is not inside a build directory");
 
-    return arch_target_dir.to_path_buf();
+    return build_dir.parent().unwrap().to_path_buf();
 }
 
 #[cfg(target_os = "linux")]
