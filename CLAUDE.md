@@ -17,9 +17,6 @@ Do not start a new sentence near the end of a comment line.
 
 ## Slint version and build
 
-- 1.19 is still unreleased: `Cargo.toml` has a temporary `[patch.crates-io]` on the
-  `pre-release/1.19` branch.
-  Drop it and bump the `slint*` version requirements once 1.19 ships.
 - `slint-project.json` sets the edition (1.19) and the main file (`ui/app.slint`).
   `build.rs` compiles the project directory (`slint_build::compile(".")`) so the edition applies.
 - The widget style is Slint's default, Fluent, on every platform.
