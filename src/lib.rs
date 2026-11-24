@@ -330,7 +330,16 @@ impl CommonBrowserProfile {
     }
 
     pub fn open_link(&self, url: &str, incognito_mode: bool) {
-        let _ = &self.create_command(url, incognito_mode).spawn();
+        self.open_link_with_activation(url, incognito_mode, None);
+    }
+
+    fn open_link_with_activation(&self, url: &str, incognito_mode: bool, token: Option<&str>) {
+        let mut command = self.create_command(url, incognito_mode);
+        if let Some(token) = token {
+            command.env("XDG_ACTIVATION_TOKEN", token);
+        }
+        command.stdin(std::process::Stdio::null());
+        let _ = command.spawn();
     }
 
     fn create_command(&self, url: &str, incognito_mode: bool) -> Command {
@@ -690,13 +699,23 @@ pub fn handle_messages_to_main(
                     real_to_ui_browsers(&visible_and_hidden_profiles.visible_browser_profiles);
                 ui_event_sink.new_browsers_received(ui_browsers);
             }
-            MessageToMain::OpenLink(profile_index, incognito_mode, url) => {
-                let option = &visible_and_hidden_profiles
+            MessageToMain::OpenLink(profile_unique_id, incognito_mode, url, token) => {
+                match visible_and_hidden_profiles
                     .visible_browser_profiles
-                    .get(profile_index);
-                let profile = option.unwrap();
-                profile.open_link(url.as_str(), incognito_mode);
-                ui_event_sink.open_link_completed();
+                    .iter()
+                    .find(|p| p.get_unique_id() == profile_unique_id)
+                {
+                    Some(profile) => {
+                        profile.open_link_with_activation(
+                            url.as_str(),
+                            incognito_mode,
+                            token.as_deref(),
+                        );
+                        ui_event_sink.open_link_completed();
+                    },
+                    // keep the picker open so the user can choose another profile
+                    None => warn!("profile {profile_unique_id} is no longer visible; link not opened"),
+                }
             }
             MessageToMain::UrlPassedToMain(from_bundle_id, url) => {
                 let routing = route_url(
@@ -1103,7 +1122,8 @@ pub enum MoveTo {
 #[derive(Debug)]
 pub enum MessageToMain {
     Refresh,
-    OpenLink(usize, bool, String),
+    // (profile unique id, incognito, url, activation token)
+    OpenLink(String, bool, String, Option<String>),
     // (source bundle id, url) - the URL as received, unwrapping and routing is done by main
     UrlPassedToMain(String, String),
     SetBrowsersAsDefaultBrowser,

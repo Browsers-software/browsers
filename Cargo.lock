@@ -587,6 +587,8 @@ dependencies = [
  "tracing-appender",
  "tracing-subscriber",
  "url",
+ "wayland-protocols",
+ "wayland-server",
  "winapi",
  "winreg",
  "winres",
@@ -5487,6 +5489,7 @@ dependencies = [
  "wayland-backend",
  "wayland-client",
  "wayland-scanner",
+ "wayland-server",
 ]
 
 [[package]]
@@ -5550,6 +5553,19 @@ dependencies = [
  "proc-macro2",
  "quick-xml",
  "quote",
+]
+
+[[package]]
+name = "wayland-server"
+version = "0.31.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0dde9c29be0f723a573977de51ee455bf3dfa03652730a74f9dd3b337e374d75"
+dependencies = [
+ "bitflags 2.13.2",
+ "downcast-rs",
+ "rustix 1.1.6",
+ "wayland-backend",
+ "wayland-scanner",
 ]
 
 [[package]]
@@ -6053,8 +6069,6 @@ checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
 [[package]]
 name = "winit"
 version = "0.30.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a6755fa58a9f8350bd1e472d4c3fcc25f824ec358933bba33306d0b63df5978d"
 dependencies = [
  "ahash",
  "android-activity",

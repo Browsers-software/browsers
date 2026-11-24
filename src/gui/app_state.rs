@@ -10,8 +10,8 @@ use crate::utils::{BehavioralConfig, Config, ConfiguredTextSize, ConfiguredTheme
 // generated slint::BrowserItem for display, see gui::main_window::to_browser_item
 #[derive(Clone, Debug)]
 pub struct UIBrowser {
-    // index in the not-explicitly-hidden browsers list, used to send OpenLink
-    // to the main event loop. Not impacted by the current url filter.
+    // index in the not-explicitly-hidden browsers list, used to look up the profile's
+    // unique_id before sending OpenLink. Not impacted by the current url filter.
     pub browser_profile_index: usize,
     pub is_first: bool,
     pub is_last: bool,

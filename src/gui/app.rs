@@ -30,6 +30,11 @@ pub struct AppState {
     pub restorable_app_profiles: Vec<UIBrowser>,
     pub show_set_as_default: bool,
     pub ui_settings: UISettings,
+    #[cfg(target_os = "linux")]
+    pending_activation: Option<(
+        slint::winit_030::winit::event_loop::AsyncRequestSerial,
+        MessageToMain,
+    )>,
 }
 
 #[derive(Clone)]
@@ -75,6 +80,8 @@ pub fn new(
         restorable_app_profiles,
         show_set_as_default,
         ui_settings,
+        #[cfg(target_os = "linux")]
+        pending_activation: None,
     }));
 
     apply_theme(&state);
@@ -459,11 +466,85 @@ fn open_browser(state: &SharedState, browser_profile_index: i64) {
         return;
     }
     let st = state.borrow();
-    let _ = st.main_sender.send(MessageToMain::OpenLink(
-        browser_profile_index as usize,
+    // send the profile's stable id, not its index: the list can change while an activation
+    // token is pending, and an index would then point at a different profile
+    let Some(profile_unique_id) = st
+        .browsers
+        .iter()
+        .find(|b| b.browser_profile_index == browser_profile_index as usize)
+        .map(|b| b.unique_id.clone())
+    else {
+        tracing::debug!("no visible profile at index {browser_profile_index}; not opening");
+        return;
+    };
+    let message = MessageToMain::OpenLink(
+        profile_unique_id,
         st.main_window.get_incognito_mode(),
         st.url.clone(),
-    ));
+        None,
+    );
+    #[cfg(target_os = "linux")]
+    {
+        use slint::winit_030::{WinitWindowAccessor, winit};
+        use winit::platform::startup_notify::WindowExtStartupNotify;
+        use winit::raw_window_handle::{HasWindowHandle, RawWindowHandle};
+
+        if st.pending_activation.is_some() {
+            tracing::debug!("a link is already waiting for an activation token; ignoring");
+            return;
+        }
+        let serial = st
+            .main_window
+            .window()
+            .with_winit_window(|window| {
+                if matches!(
+                    window.window_handle().ok()?.as_raw(),
+                    RawWindowHandle::Wayland(_)
+                ) {
+                    window.request_activation_token().ok()
+                } else {
+                    None
+                }
+            })
+            .flatten();
+        if let Some(serial) = serial {
+            drop(st);
+            state.borrow_mut().pending_activation = Some((serial, message));
+            let state = Rc::downgrade(state);
+            slint::Timer::single_shot(std::time::Duration::from_millis(500), move || {
+                if let Some(state) = state.upgrade() {
+                    finish_activation(&state, serial, None);
+                }
+            });
+            return;
+        }
+    }
+    let _ = st.main_sender.send(message);
+}
+
+#[cfg(target_os = "linux")]
+fn finish_activation(
+    state: &SharedState,
+    serial: slint::winit_030::winit::event_loop::AsyncRequestSerial,
+    token: Option<String>,
+) {
+    let mut st = state.borrow_mut();
+    if st
+        .pending_activation
+        .as_ref()
+        .is_some_and(|(pending, _)| *pending == serial)
+    {
+        if let Some((_, MessageToMain::OpenLink(profile_unique_id, incognito, url, _))) =
+            st.pending_activation.take()
+        {
+            if token.is_none() {
+                tracing::debug!("no activation token received; opening link without one");
+            }
+            let _ = st
+                .main_sender
+                .send(MessageToMain::OpenLink(profile_unique_id, incognito, url, token));
+        }
+    }
 }
 
 thread_local! {
@@ -541,6 +622,22 @@ pub fn run(state: &SharedState) {
     let win = state.borrow().main_window.clone_strong();
     win.window().show().ok();
     win.invoke_grab_focus();
+
+    #[cfg(target_os = "linux")]
+    {
+        use slint::winit_030::{EventResult, WinitWindowAccessor, winit::event::WindowEvent};
+
+        let state = Rc::downgrade(state);
+        win.window().on_winit_window_event(move |_, event| {
+            if let WindowEvent::ActivationTokenDone { serial, token } = event {
+                if let Some(state) = state.upgrade() {
+                    let token = token.clone().into_raw();
+                    finish_activation(&state, *serial, (!token.is_empty()).then_some(token));
+                }
+            }
+            EventResult::Propagate
+        });
+    }
 
     {
         on_native_window(

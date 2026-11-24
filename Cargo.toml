@@ -91,6 +91,12 @@ libc = "0.2.189"
 # Cargo fails to unify the two.
 slint = { version = "1.19.0", features = ["renderer-skia"] }
 
+# Vendored winit 0.30.13 with a Wayland fix: records the last pointer/keyboard input serial so
+# xdg-activation tokens are accepted by Niri (see vendor/winit/PATCHES.md). Drop this once an
+# upstream winit release carries the same change.
+[patch.crates-io]
+winit = { path = "vendor/winit" }
+
 [target.'cfg(target_os = "linux")'.dependencies]
 # global cursor position on X11, to put the popup where the mouse is (macOS/Windows do this
 # natively instead, see gui/screen.rs). Pure Rust, so connecting to a missing X server is a plain
@@ -156,3 +162,7 @@ lto = true           # Enable Link Time Optimization
 tempfile = "3.27.0"
 #codegen-units = 1   # Reduce number of codegen units to increase optimizations.
 #panic = 'abort'     # Abort on panic
+
+[target.'cfg(target_os = "linux")'.dev-dependencies]
+wayland-server = "0.31"
+wayland-protocols = { version = "0.32", features = ["server", "staging"] }
