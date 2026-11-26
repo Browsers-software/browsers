@@ -162,7 +162,7 @@ pub fn refresh_main_window_model(state: &SharedState) {
 }
 
 // builds a zero-arg callback handler that just fires a message at main - shared by every
-// no-argument callback (refresh, set-browsers-default, ...) that both the main and settings
+// no-argument callback (set-browsers-default, ...) that both the main and settings
 // windows expose and wire up identically
 pub fn forward_handler(
     state: &SharedState,
@@ -171,6 +171,17 @@ pub fn forward_handler(
     let state = state.clone();
     move || {
         let _ = state.borrow().main_sender.send(to_message());
+    }
+}
+
+// builds the Refresh handler of the main and settings windows.
+// The main window shows a spinner until UiHandle::refresh_completed.
+pub fn refresh_handler(state: &SharedState) -> impl Fn() + 'static {
+    let state = state.clone();
+    move || {
+        let st = state.borrow();
+        st.main_window.set_refreshing(true);
+        let _ = st.main_sender.send(MessageToMain::Refresh);
     }
 }
 
@@ -310,7 +321,7 @@ fn wire_main_window(state: &SharedState) {
             }
         });
     }
-    win.on_refresh(forward_handler(state, || MessageToMain::Refresh));
+    win.on_refresh(refresh_handler(state));
     win.on_set_browsers_default(forward_handler(state, || {
         MessageToMain::SetBrowsersAsDefaultBrowser
     }));
@@ -513,6 +524,10 @@ impl UiHandle {
             state.borrow_mut().restorable_app_profiles = hidden;
             refresh_main_window_model(state);
         });
+    }
+
+    pub fn refresh_completed(&self) {
+        self.with_state(|state| state.borrow().main_window.set_refreshing(false));
     }
 
     pub fn cleaned_url_opened(&self, info: UrlOpenInfo) {

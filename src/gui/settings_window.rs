@@ -484,7 +484,7 @@ fn wire(state: &SharedState, win: &SettingsWindow) {
     win.on_set_default_browser(app::forward_handler(state, || {
         MessageToMain::SetBrowsersAsDefaultBrowser
     }));
-    win.on_refresh(app::forward_handler(state, || MessageToMain::Refresh));
+    win.on_refresh(app::refresh_handler(state));
 }
 
 #[cfg(test)]
