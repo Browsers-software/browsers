@@ -156,3 +156,9 @@ lto = true           # Enable Link Time Optimization
 tempfile = "3.27.0"
 #codegen-units = 1   # Reduce number of codegen units to increase optimizations.
 #panic = 'abort'     # Abort on panic
+
+# temporary: winit 0.30.13 plus https://github.com/rust-windowing/winit/pull/4783
+[patch.crates-io]
+winit = { git = "https://github.com/dmkenney/winit", rev = "e43311ecc717f5f74c2d0a958e6e4e16171ec075" }
+# winit from git brings its own copy of dpi, which muda has to share, or macOS fails to compile
+dpi = { git = "https://github.com/dmkenney/winit", rev = "e43311ecc717f5f74c2d0a958e6e4e16171ec075" }
