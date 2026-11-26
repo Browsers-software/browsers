@@ -470,11 +470,33 @@ fn open_browser(state: &SharedState, browser_profile_index: i64) {
         return;
     }
     let st = state.borrow();
+    #[cfg(target_os = "linux")]
+    request_activation_token(&st.main_window);
     let _ = st.main_sender.send(MessageToMain::OpenLink(
         browser_profile_index as usize,
         st.main_window.get_incognito_mode(),
         st.url.clone(),
     ));
+}
+
+// asks the Wayland compositor for a token that lets the launched browser take focus.
+// It arrives later, as a WindowEvent::ActivationTokenDone.
+#[cfg(target_os = "linux")]
+fn request_activation_token(win: &MainWindow) {
+    use slint::winit_030::{WinitWindowAccessor, winit};
+    use winit::platform::startup_notify::WindowExtStartupNotify;
+    use winit::raw_window_handle::{HasWindowHandle, RawWindowHandle};
+
+    win.window().with_winit_window(|window| {
+        let handle = window.window_handle().map(|handle| handle.as_raw());
+        if !matches!(handle, Ok(RawWindowHandle::Wayland(_))) {
+            return;
+        }
+        match window.request_activation_token() {
+            Ok(serial) => tracing::debug!("requested an activation token: {serial:?}"),
+            Err(err) => tracing::debug!("could not request an activation token: {err}"),
+        }
+    });
 }
 
 thread_local! {
