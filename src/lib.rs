@@ -683,12 +683,16 @@ pub fn handle_messages_to_main(
 
                 let config = app_finder.load_config();
 
-                let visible_and_hidden_profiles =
+                *visible_and_hidden_profiles =
                     generate_all_browser_profiles(&config, &app_finder, true);
 
                 let ui_browsers =
                     real_to_ui_browsers(&visible_and_hidden_profiles.visible_browser_profiles);
                 ui_event_sink.new_browsers_received(ui_browsers);
+
+                let ui_hidden_browsers =
+                    real_to_ui_browsers(&visible_and_hidden_profiles.hidden_browser_profiles);
+                ui_event_sink.new_hidden_browsers_received(ui_hidden_browsers);
             }
             MessageToMain::OpenLink(profile_index, incognito_mode, url) => {
                 let option = &visible_and_hidden_profiles
