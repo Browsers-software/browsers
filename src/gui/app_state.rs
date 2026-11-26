@@ -65,6 +65,7 @@ pub struct UIVisualSettings {
 #[derive(Clone, Debug)]
 pub struct UIBehavioralSettings {
     pub unwrap_urls: bool,
+    pub wayland_activation: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -122,6 +123,7 @@ fn map_as_visual_settings(ui_config: &UIConfig) -> UIVisualSettings {
 fn map_as_ui_behavioural_settings(behavior: &BehavioralConfig) -> UIBehavioralSettings {
     UIBehavioralSettings {
         unwrap_urls: behavior.unwrap_urls,
+        wayland_activation: behavior.wayland_activation,
     }
 }
 

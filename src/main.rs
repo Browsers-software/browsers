@@ -123,7 +123,7 @@ fn main() {
             incognito,
             url,
         } => {
-            profile.open_link(url.as_str(), incognito);
+            profile.open_link(url.as_str(), incognito, None);
             // opened in a browser because of an opening rule, so we are done here
             return;
         }

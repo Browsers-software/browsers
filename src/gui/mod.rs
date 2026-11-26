@@ -14,3 +14,5 @@ pub mod screen;
 pub mod settings_window;
 pub mod theme;
 pub mod ui_util;
+#[cfg(target_os = "linux")]
+mod wayland_activation;
