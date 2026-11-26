@@ -25,7 +25,7 @@ rolling-file = { git = "https://github.com/browsers-software/rolling-file-rs.git
 dirs = "7.0.0"
 
 toml = "1.2.3"
-serde_json = "1.0.151"
+serde_json = "1.0.154"
 serde = { version = "1.0.229", features = ["derive"] }
 
 # UI library
@@ -41,13 +41,13 @@ slint = { version = "1.19.0", features = ["unstable-winit-030"] }
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
 
 # parse urls
-url = "2.5.8"
+url = "2.5.9"
 
 # parse url rules
-globset = "0.4.20"
+globset = "0.4.22"
 
 # Parse .ini files (e.g Firefox profiles.ini)
-configparser = "3.2.0"
+configparser = "3.3.0"
 
 # Hash Firefox path with cityhash64, to map it to
 # locked installation in profiles.ini
@@ -57,7 +57,7 @@ naive-cityhash = "0.2.0"
 rusqlite = { version = "0.43.0", features = ["bundled"] }
 
 # To create lazy static variables
-lazy_static = "1.5.0"
+lazy_static = "1.5.1"
 
 # clipboard access (copy URL to clipboard) - keep this version matching what i-slint-backend-winit
 # wants internally, so Cargo resolves to one shared copy instead of two
@@ -74,10 +74,10 @@ resvg = { version = "0.49", default-features = false }
 # for macos_native
 objc2-foundation = "0.3.2"
 objc2-app-kit = "0.3.2"
-objc2 = "0.6.4"
+objc2 = "0.6.5"
 
 # for mac_paths (to get unsandboxed_home_dir for mac)
-libc = "0.2.189"
+libc = "0.2.191"
 
 # macOS-only.
 # femtovg (Slint's default renderer elsewhere) has no font hinting and that causes small-text
@@ -107,7 +107,7 @@ fontique = {
 }
 
 # to find application .desktop files
-freedesktop-desktop-entry = "0.8.2"
+freedesktop-desktop-entry = "0.8.4"
 
 # to find icon theme and icon;
 freedesktop-icons = "0.4.0"
