@@ -174,6 +174,7 @@ fn test_url(settings: &UISettings, browsers: &[UIBrowser], input: &str) -> (Stri
     };
     let behavioral = BehavioralConfig {
         unwrap_urls: settings.behavioral_settings.unwrap_urls,
+        ..Default::default()
     };
     let cleaned = crate::unwrap_url(&with_scheme, &behavioral);
     let Ok(url) = Url::from_str(&cleaned) else {
@@ -271,6 +272,8 @@ pub fn refresh(state: &SharedState) {
     win.set_quit_on_lost_focus(settings.visual_settings.quit_on_lost_focus);
     win.set_show_quit_on_lost_focus(cfg!(target_os = "macos"));
     win.set_unwrap_urls(settings.behavioral_settings.unwrap_urls);
+    win.set_wayland_activation(settings.behavioral_settings.wayland_activation);
+    win.set_show_wayland_activation(cfg!(target_os = "linux"));
     win.set_is_default_browser(crate::utils::is_default_web_browser());
     crate::gui::ui_util::sync_vec_model(&win.get_restorable_app_profiles(), restorable_items);
     win.set_theme(theme_to_choice(settings.visual_settings.theme));
@@ -359,6 +362,18 @@ fn wire(state: &SharedState, win: &SettingsWindow) {
                 .ui_settings
                 .behavioral_settings
                 .unwrap_urls = v;
+            let settings = state.borrow().ui_settings.behavioral_settings.clone();
+            save_and_refresh(&state, MessageToMain::SaveConfigUIBehavioralSettings(settings));
+        });
+    }
+    {
+        let state = state.clone();
+        win.on_wayland_activation_changed(move |v| {
+            state
+                .borrow_mut()
+                .ui_settings
+                .behavioral_settings
+                .wayland_activation = v;
             let settings = state.borrow().ui_settings.behavioral_settings.clone();
             save_and_refresh(&state, MessageToMain::SaveConfigUIBehavioralSettings(settings));
         });
@@ -544,7 +559,10 @@ mod tests {
                 text_size: ConfiguredTextSize::Normal,
                 max_visible_browsers: 6,
             },
-            behavioral_settings: crate::gui::app_state::UIBehavioralSettings { unwrap_urls },
+            behavioral_settings: crate::gui::app_state::UIBehavioralSettings {
+                unwrap_urls,
+                wayland_activation: false,
+            },
         }
     }
 

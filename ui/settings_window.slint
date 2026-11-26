@@ -837,8 +837,11 @@ component RulesTab inherits VerticalLayout {
 component AdvancedTab inherits VerticalLayout {
     in property <[DirEntry]> directories;
     in property <bool> is-default-browser;
+    in property <bool> wayland-activation;
+    in property <bool> show-wayland-activation;
     callback set-default();
     callback refresh();
+    callback wayland-activation-changed(bool);
 
     padding: 20px;
     alignment: start;
@@ -862,6 +865,15 @@ component AdvancedTab inherits VerticalLayout {
             Button {
                 text: "Rescan Installed Apps";
                 clicked => { root.refresh(); }
+            }
+        }
+
+        if root.show-wayland-activation: SettingRow {
+            title: "Focus the opened browser";
+            description: "Experimental, Wayland only: lets the browser you pick come to the front.";
+            Switch {
+                checked: root.wayland-activation;
+                toggled => { root.wayland-activation-changed(self.checked); }
             }
         }
     }
@@ -904,6 +916,8 @@ export component SettingsWindow inherits Window {
     in property <bool> quit-on-lost-focus;
     in property <bool> show-quit-on-lost-focus;
     in property <bool> unwrap-urls;
+    in property <bool> wayland-activation;
+    in property <bool> show-wayland-activation;
     in property <[RestorableProfile]> restorable-app-profiles;
 
     in property <ThemeChoice> theme;
@@ -932,6 +946,7 @@ export component SettingsWindow inherits Window {
     callback show-hotkeys-changed(bool);
     callback quit-on-lost-focus-changed(bool);
     callback unwrap-urls-changed(bool);
+    callback wayland-activation-changed(bool);
     callback restore-profile(string);
     callback theme-changed(ThemeChoice);
     callback text-size-changed(TextSizeChoice);
@@ -1102,8 +1117,11 @@ export component SettingsWindow inherits Window {
                 if root.current-tab == SettingsTab.advanced: AdvancedTab {
                     directories: root.directories;
                     is-default-browser: root.is-default-browser;
+                    wayland-activation: root.wayland-activation;
+                    show-wayland-activation: root.show-wayland-activation;
                     set-default => { root.set-default-browser(); }
                     refresh => { root.refresh(); }
+                    wayland-activation-changed(v) => { root.wayland-activation-changed(v); }
                 }
             }
         }

@@ -69,6 +69,9 @@ pub struct Config {
 #[serde(default)]
 pub struct BehavioralConfig {
     pub unwrap_urls: bool,
+
+    // Linux only: pass the opened browser an activation token, so it can take focus on Wayland
+    pub wayland_activation: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

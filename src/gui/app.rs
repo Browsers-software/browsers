@@ -12,6 +12,8 @@ use crate::MessageToMain;
 use crate::gui::app_state::{UIBrowser, UISettings, get_filtered_browsers};
 use crate::gui::generated::{AboutWindow, MainWindow, SettingsWindow};
 use crate::gui::icon_loader::IconLoader;
+#[cfg(target_os = "linux")]
+use crate::gui::wayland_activation;
 use crate::gui::{about_window, main_window, screen, settings_window, theme};
 use crate::{MoveTo, UrlOpenInfo};
 
@@ -30,6 +32,8 @@ pub struct AppState {
     pub restorable_app_profiles: Vec<UIBrowser>,
     pub show_set_as_default: bool,
     pub ui_settings: UISettings,
+    #[cfg(target_os = "linux")]
+    pub(super) pending_link: Option<wayland_activation::PendingLink>,
 }
 
 #[derive(Clone)]
@@ -75,6 +79,8 @@ pub fn new(
         restorable_app_profiles,
         show_set_as_default,
         ui_settings,
+        #[cfg(target_os = "linux")]
+        pending_link: None,
     }));
 
     apply_theme(&state);
@@ -295,6 +301,9 @@ fn main_window_work_area(win: &MainWindow) -> screen::Rect {
 fn wire_main_window(state: &SharedState) {
     let win = state.borrow().main_window.clone_strong();
 
+    #[cfg(target_os = "linux")]
+    wayland_activation::watch_for_tokens(state);
+
     {
         let state = state.clone();
         win.on_open_browser(move |profile_index| {
@@ -469,34 +478,17 @@ fn open_browser(state: &SharedState, browser_profile_index: i64) {
     if browser_profile_index < 0 {
         return;
     }
-    let st = state.borrow();
     #[cfg(target_os = "linux")]
-    request_activation_token(&st.main_window);
+    if wayland_activation::defer_open_link(state, browser_profile_index as usize) {
+        return;
+    }
+    let st = state.borrow();
     let _ = st.main_sender.send(MessageToMain::OpenLink(
         browser_profile_index as usize,
         st.main_window.get_incognito_mode(),
         st.url.clone(),
+        None,
     ));
-}
-
-// asks the Wayland compositor for a token that lets the launched browser take focus.
-// It arrives later, as a WindowEvent::ActivationTokenDone.
-#[cfg(target_os = "linux")]
-fn request_activation_token(win: &MainWindow) {
-    use slint::winit_030::{WinitWindowAccessor, winit};
-    use winit::platform::startup_notify::WindowExtStartupNotify;
-    use winit::raw_window_handle::{HasWindowHandle, RawWindowHandle};
-
-    win.window().with_winit_window(|window| {
-        let handle = window.window_handle().map(|handle| handle.as_raw());
-        if !matches!(handle, Ok(RawWindowHandle::Wayland(_))) {
-            return;
-        }
-        match window.request_activation_token() {
-            Ok(serial) => tracing::debug!("requested an activation token: {serial:?}"),
-            Err(err) => tracing::debug!("could not request an activation token: {err}"),
-        }
-    });
 }
 
 thread_local! {

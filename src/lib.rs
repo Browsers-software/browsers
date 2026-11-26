@@ -329,8 +329,13 @@ impl CommonBrowserProfile {
         return self.profile_name.as_str();
     }
 
-    pub fn open_link(&self, url: &str, incognito_mode: bool) {
-        let _ = &self.create_command(url, incognito_mode).spawn();
+    // activation_token is a Wayland xdg-activation token, which lets the opened app take focus
+    pub fn open_link(&self, url: &str, incognito_mode: bool, activation_token: Option<&str>) {
+        let mut command = self.create_command(url, incognito_mode);
+        if let Some(token) = activation_token {
+            command.env("XDG_ACTIVATION_TOKEN", token);
+        }
+        let _ = command.spawn();
     }
 
     fn create_command(&self, url: &str, incognito_mode: bool) -> Command {
@@ -695,12 +700,12 @@ pub fn handle_messages_to_main(
                 ui_event_sink.new_hidden_browsers_received(ui_hidden_browsers);
                 ui_event_sink.refresh_completed();
             }
-            MessageToMain::OpenLink(profile_index, incognito_mode, url) => {
+            MessageToMain::OpenLink(profile_index, incognito_mode, url, activation_token) => {
                 let option = &visible_and_hidden_profiles
                     .visible_browser_profiles
                     .get(profile_index);
                 let profile = option.unwrap();
-                profile.open_link(url.as_str(), incognito_mode);
+                profile.open_link(url.as_str(), incognito_mode, activation_token.as_deref());
                 ui_event_sink.open_link_completed();
             }
             MessageToMain::UrlPassedToMain(from_bundle_id, url) => {
@@ -718,7 +723,7 @@ pub fn handle_messages_to_main(
                         incognito,
                         url,
                     } => {
-                        profile.open_link(url.as_str(), incognito);
+                        profile.open_link(url.as_str(), incognito, None);
                         ui_event_sink.open_link_completed();
                     }
                     UrlRouting::ShowPicker { url } => {
@@ -893,6 +898,7 @@ pub fn handle_messages_to_main(
                 info!("Saving Behavioral settings");
                 behavioral_config = BehavioralConfig {
                     unwrap_urls: settings.unwrap_urls,
+                    wayland_activation: settings.wayland_activation,
                 };
 
                 let mut config = app_finder.load_config();
@@ -1108,7 +1114,8 @@ pub enum MoveTo {
 #[derive(Debug)]
 pub enum MessageToMain {
     Refresh,
-    OpenLink(usize, bool, String),
+    // (profile index, incognito, url, activation token)
+    OpenLink(usize, bool, String, Option<String>),
     // (source bundle id, url) - the URL as received, unwrapping and routing is done by main
     UrlPassedToMain(String, String),
     SetBrowsersAsDefaultBrowser,
@@ -1175,7 +1182,7 @@ mod tests {
     const PROFILE_ID: &str = "/bin/test#Default";
 
     fn no_unwrap() -> BehavioralConfig {
-        BehavioralConfig { unwrap_urls: false }
+        BehavioralConfig::default()
     }
 
     #[test]
@@ -1260,7 +1267,10 @@ mod tests {
             "https://eur01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fexample.com%2Fa";
         let rules = rules(vec![rule(None, Some("example.com"), PROFILE_ID)]);
         let profiles = profiles();
-        let unwrap = BehavioralConfig { unwrap_urls: true };
+        let unwrap = BehavioralConfig {
+            unwrap_urls: true,
+            ..Default::default()
+        };
 
         let unwrapped = route_url(None, wrapped, &unwrap, &rules, &profiles);
         match unwrapped {
