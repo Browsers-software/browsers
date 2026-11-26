@@ -1,4 +1,4 @@
-import { ListView, Palette } from "std-widgets.slint";
+import { ListView, Palette, Spinner } from "std-widgets.slint";
 import { AppPalette } from "theme.slint";
 import { Layout } from "common.slint";
 
@@ -217,6 +217,8 @@ export component MainWindow inherits Window {
     // the untruncated URL, shown while hovering url-text
     in property <string> full-url;
     in property <bool> show-set-as-default;
+    // the installed apps are being rescanned
+    in property <bool> refreshing: false;
     in property <int> max-visible-browsers: 6;
     in property <length> icon-size: 24px;
     in-out property <bool> incognito-mode: false;
@@ -389,6 +391,15 @@ export component MainWindow inherits Window {
                             }
                         }
                         Rectangle { horizontal-stretch: 1; }
+                        if root.refreshing: Rectangle {
+                            width: root.footer-height;
+                            Spinner {
+                                width: 1.2rem;
+                                height: 1.2rem;
+                                indeterminate: true;
+                                accessible-label: "Refreshing";
+                            }
+                        }
                         om := ContextMenuArea {
                             Menu {
                                 MenuItem {

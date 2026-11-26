@@ -693,6 +693,7 @@ pub fn handle_messages_to_main(
                 let ui_hidden_browsers =
                     real_to_ui_browsers(&visible_and_hidden_profiles.hidden_browser_profiles);
                 ui_event_sink.new_hidden_browsers_received(ui_hidden_browsers);
+                ui_event_sink.refresh_completed();
             }
             MessageToMain::OpenLink(profile_index, incognito_mode, url) => {
                 let option = &visible_and_hidden_profiles
