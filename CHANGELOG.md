@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Show a spinner in the main window while Refresh is running
+
+### Fixed
+
+- Fix opening the wrong browser after Refresh, and update the list of hidden profiles on Refresh too
+
 ## [0.8.7] - 2026-11-23
 
 ### Added
