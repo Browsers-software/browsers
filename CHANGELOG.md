@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.8.8] - 2026-11-27
 
 ### Added
 
@@ -467,7 +467,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Initial Release
 
-[unreleased]: https://github.com/Browsers-software/browsers/compare/0.8.7..HEAD
+[unreleased]: https://github.com/Browsers-software/browsers/compare/0.8.8..HEAD
+
+[0.8.8]: https://github.com/Browsers-software/browsers/releases/tag/0.8.8
 
 [0.8.7]: https://github.com/Browsers-software/browsers/releases/tag/0.8.7
 
